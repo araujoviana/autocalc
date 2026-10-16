@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.session.curl
+# saved-list corpus fixtures (user data) and local sessions
+tests/fixtures/corpus/
+# customer quotation notes (never commit)
+docs/quotes.md
+.ruff_cache/
