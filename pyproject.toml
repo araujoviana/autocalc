@@ -1,0 +1,39 @@
+[project]
+name = "autocalc"
+version = "0.1.0"
+description = "Headless Huawei Cloud pricing calculator (CLI + MCP server) using the calculator's public backend"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27",
+    "keyring>=25.7.0",
+    "mcp>=1.2,<2",
+    "playwright>=1.63.0",
+    "pydantic>=2.14.1",
+]
+
+[project.scripts]
+autocalc = "autocalc.cli:main"
+autocalc-mcp = "autocalc.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/autocalc"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.17.0",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = [".agents", ".claude", ".gemini", ".github", ".opencode", "docs", "openspec"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]
