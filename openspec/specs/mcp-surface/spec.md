@@ -42,7 +42,7 @@ payload with `error` (code), `message`, and `hint` and `details` when known, so 
 on the code instead of parsing prose.
 
 #### Scenario: Unknown flavor
-- **WHEN** `create_price_list` gets an ECS flavor not sold in the region
+- **WHEN** `publish_quote` is called for a draft with an ECS flavor not sold in the region
 - **THEN** the result has `error: "SPEC_NOT_FOUND"` and a hint naming the closest flavors
 
 ### Requirement: Capability matrix is live
@@ -55,7 +55,7 @@ availability and catalog groups.
 - **THEN** `supported_services` lists it without any documentation change
 
 ### Requirement: Friendly regions in every tool
-Every tool that takes a region, including the items of `create_price_list`, SHALL accept the
+Every tool that takes a region, including the requirements of `draft_quote`, SHALL accept the
 friendly names defined in the region-availability capability.
 
 #### Scenario: Draft in Santiago
