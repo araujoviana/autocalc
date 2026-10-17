@@ -1,9 +1,8 @@
-# rating Specification
+# huawei/rating Specification
 
 ## Purpose
 
-Price a bill of materials with the calculator's own live rating engine, so quotes match
-what the Huawei Cloud website would show, in any billing mode, without login.
+Price a bill of materials with the Huawei calculator's own live rating engine, so quotes match what the Huawei Cloud website would show, in any billing mode, without login.
 
 ## Requirements
 
@@ -85,8 +84,9 @@ business exceptions SHALL map to typed errors: `CBC.0101` → `AUTH_EXPIRED`; `C
 - **THEN** a `SPEC_NOT_FOUND` error is raised whose hint suggests `search_skus`
 
 ### Requirement: Polite, sequential use
-Callers SHALL rate and publish sequentially. The calculator rate-limits parallel load
-(HTTP 429, about 4 requests per second), so parallel fan-out is not supported.
+Callers SHALL rate and publish sequentially until a bounded-concurrency policy is specified.
+The calculator's own page fires a card's rating requests concurrently, and no calculator rate
+limit has been measured, so this is a politeness limit, not a known server limit.
 
 #### Scenario: Batch of quotes
 - **WHEN** an agent needs to price many items
