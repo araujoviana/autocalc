@@ -35,6 +35,7 @@ nav:
       - Run the tests: how-to/run-tests.md
       - Refresh the golden corpus: how-to/refresh-corpus.md
       - Fetch the calculator bundle: how-to/fetch-bundle.md
+      - Cut a release: how-to/release.md
   - Reference:
       - CLI: reference/cli.md
       - Errors: reference/errors.md

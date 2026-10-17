@@ -27,9 +27,10 @@ Each item is either assigned to the change that will close it or left unschedule
 | Refresh the two golden tests that query the live catalog: `test_golden_ecs_ri` (the 'AlmaLinux 9.4 64bit' image is gone from `sa-brazil-1`) and `test_ecs_template_render` (21 of 779 corpus cards drift, limit is 2) | unscheduled |
 | Migrate the MCP server from `FastMCP` to `MCPServer` (not in `mcp` 1.x, which is pinned `<2`) | unscheduled, when the SDK ships it |
 | `publish_quote` for CCE, ELB, OBS and the services beyond the seven (their builders take no ranked-candidate spec) | the builder waves |
-| Drop the `keyring` dependency once the legacy session cleanup has run | `distribution` |
 | Quotes that span several regions in one saved list | `quote-core` |
 | Availability-zone handling for services that price per AZ | `quote-core` |
+| The once-a-day update notice in tool results ([ADR-0013](adr/0013-distribution-uv-tool-from-git-tags.md)) | unscheduled |
+| Browser setup by the installer (`autocalc doctor` says when `install-browser` is needed) | unscheduled |
 | Nightly frontend drift check (alert when the calculator version or a service config changes) | unscheduled, after `distribution` |
 | Nightly live and render test jobs on CI (they need a stored session) | unscheduled, after `distribution` |
 | The calculator's EU and China sites | unscheduled, after v1 |

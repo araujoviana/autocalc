@@ -10,6 +10,7 @@
   autocalc lists
   autocalc doctor
   autocalc install-browser
+  autocalc update [--to vX.Y.Z]
 """
 
 from __future__ import annotations
@@ -123,6 +124,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("list_id")
     sub.add_parser("doctor")
     sub.add_parser("install-browser")
+    p = sub.add_parser("update")
+    p.add_argument("--to", help="a release tag, vX.Y.Z (default: the newest)")
     tool_cmds = _add_tool_commands(sub, set(sub.choices))
     a = ap.parse_args(argv)
 
@@ -151,6 +154,10 @@ def main(argv: list[str] | None = None) -> int:
         if a.cmd == "install-browser":
             import subprocess
             return subprocess.call([sys.executable, "-m", "playwright", "install", "chromium"])
+        if a.cmd == "update":
+            from autocalc import update
+            print(update.update(a.to))
+            return 0
         if a.cmd == "lists":
             from autocalc.share import Session
             for x in Session().lists():

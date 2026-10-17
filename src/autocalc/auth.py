@@ -6,7 +6,7 @@ The browser profile directory is the only credential store (ADR-0011):
     profile directory. Huawei's sign-on cookie is session-only, and Chromium does not reliably
     keep it across a relaunch, so the browser's own cookie store alone cannot carry the sign-in.
   * Writes use that file, cached in memory per process (``session_cookies``). Nothing is copied
-    outside the profile directory or to the keyring; ``logout`` deletes the whole directory.
+    outside the profile directory; ``logout`` deletes the whole directory.
   * A stale session (``CBC.0101``) re-reads the profile once before ``AUTH_EXPIRED``.
 
 Only ``share/*`` (save, list, update, delete, copy) and ``formExport`` need this.
@@ -39,7 +39,6 @@ _LAUNCH_ARGS = ["--no-first-run", "--no-default-browser-check", "--disable-dev-s
 _LOCK_ARTIFACTS = ("SingletonLock", "lockfile")
 _LEGACY_MARKER = ".legacy-sessions-cleaned"
 _SESSION_FILE = "autocalc-session"
-_LEGACY_KEYRING_SERVICE = "autocalc"
 
 
 def config_dir() -> Path:
@@ -423,47 +422,23 @@ def logout(prof: str | None = None) -> list[str]:
 _cleanup_done = False
 
 
-def _legacy_keyring() -> Any:
-    try:
-        import keyring  # type: ignore[import-untyped]
-        backend = keyring.get_keyring().__class__.__name__.lower()
-        if "fail" in backend or "null" in backend:
-            return None
-        return keyring
-    except Exception:
-        return None
-
-
 def _cleanup_legacy(force: bool = False) -> int:
-    """Delete legacy keyring entries and ``session*.json`` files once per machine; never raises."""
+    """Delete legacy ``session*.json`` files once per machine; never raises."""
     global _cleanup_done
     marker = data_dir() / _LEGACY_MARKER
     if not force and (_cleanup_done or marker.exists()):
         _cleanup_done = True
         return 0
     removed = 0
-    names = {"default"}
     try:
         cfg = config_dir()
         files = [cfg / "session.json", *cfg.glob("session-*.json")] if cfg.is_dir() else []
         for f in files:
-            if f.stem != "session":
-                names.add(f.stem.removeprefix("session-"))
             if f.exists():
                 f.unlink()
                 removed += 1
-        if data_dir().is_dir():
-            names.update(p.name.removeprefix("browser-profile-") for p in data_dir().glob("browser-profile-*"))
     except OSError:
         pass
-    kr = _legacy_keyring()
-    if kr is not None:
-        for name in sorted(names):
-            try:
-                kr.delete_password(_LEGACY_KEYRING_SERVICE, f"session:{name}")
-                removed += 1
-            except Exception:  # no such entry, locked keyring...
-                pass
     try:
         marker.parent.mkdir(parents=True, exist_ok=True)
         marker.touch()
