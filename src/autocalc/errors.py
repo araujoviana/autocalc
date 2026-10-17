@@ -109,6 +109,27 @@ class AuthProfileBusy(AuthRequired):
         super().__init__(message, hint=hint, **kw)
 
 
+# ---- page encoder -----------------------------------------------------------
+
+
+class PageEncodeFailed(CalculatorError):
+    """The calculator page did not produce a card: a field, a value, the price or the capture failed."""
+
+    code = "PAGE_ENCODE_FAILED"
+
+    def __init__(self, message: str, *, service: str, step: str | None = None, field: str | None = None,
+                 frontend_version: str | None = None, **kw: Any):
+        details = {"service": service}
+        if step:
+            details["step"] = step
+        if field:
+            details["field"] = field
+        if frontend_version:
+            details["frontend_version"] = frontend_version
+        hint = kw.pop("hint", None) or "Re-run with AUTOCALC_PAGE_HEADED=1 to watch the calculator page."
+        super().__init__(message, hint=hint, details=details, **kw)
+
+
 # ---- upstream / transport ---------------------------------------------------
 
 

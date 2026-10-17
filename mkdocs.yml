@@ -50,5 +50,6 @@ nav:
           - Catalog drift: explanation/huawei/catalog-drift.md
           - Sessions: explanation/huawei/sessions.md
           - Concurrency: explanation/huawei/concurrency.md
+          - Page encoder: explanation/huawei/page-encoder.md
   - Roadmap: roadmap.md
   - Decisions (ADRs): adr/index.md

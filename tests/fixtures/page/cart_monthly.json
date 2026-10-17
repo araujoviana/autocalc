@@ -1,0 +1,3412 @@
+{
+ "cartListDataBase": {
+  "SYNTHETICCARTID0000000000000000001": {
+   "rewriteValue": {
+    "global_TITLE": {
+     "tag": "general.online.portal"
+    },
+    "global_DESCRIPTION": "Elastic Cloud Server",
+    "global_REGIONINFO": {
+     "region": "sa-brazil-1",
+     "locationType": "commonAZ",
+     "chargeMode": "PERIOD"
+    },
+    "template_RENDER": {
+     "calculator_ecs_radio": {
+      "arch": "dataInfo_32_",
+      "vmType": "dataInfo_3_",
+      "generation": "C7n",
+      "cpu": "2dataInfo_36_",
+      "mem": "4BSSUNIT.pluralUnit.102"
+     },
+     "calculator_eip_switch": {
+      "UNSET_Switch": "calc_14_"
+     },
+     "calculator_eip_radio": {
+      "eipSpec": "dataInfo_14_",
+      "shareType": "dataInfo_16_",
+      "eipType": "dataInfo_18_",
+      "UNSET_Stepper_1": {
+       "measureId": 15,
+       "measureValue": 5,
+       "measureNameBeforeTrans": "",
+       "measurePluralNameBeforeTrans": "",
+       "transRate": "",
+       "transTarget": ""
+      }
+     },
+     "calculator_ims_select": {
+      "__platform": "Ubuntu",
+      "name": "Ubuntu 22.04 server 64bit"
+     },
+     "calculator_evs_stepper": {
+      "calculator_evs_stepper_main": {
+       "type": "dataInfo_43_",
+       "UNSET_Stepper_0": {
+        "measureId": 17,
+        "measureValue": 40,
+        "measureNameBeforeTrans": "",
+        "measurePluralNameBeforeTrans": "",
+        "transRate": "",
+        "transTarget": ""
+       }
+      },
+      "calculator_evs_stepper_|addible0|_0": {
+       "type": "dataInfo_43_",
+       "UNSET_Stepper_0": {
+        "measureId": 17,
+        "measureValue": 50,
+        "measureNameBeforeTrans": "",
+        "measurePluralNameBeforeTrans": "",
+        "transRate": "",
+        "transTarget": ""
+       }
+      },
+      "calculator_evs_stepper_|addible0|_1": {
+       "type": "dataInfo_43_",
+       "UNSET_Stepper_0": {
+        "measureId": 17,
+        "measureValue": 50,
+        "measureNameBeforeTrans": "",
+        "measurePluralNameBeforeTrans": "",
+        "transRate": "",
+        "transTarget": ""
+       }
+      }
+     }
+    },
+    "global_PERIODTIME": {
+     "UNSET_PeriodTime": {
+      "measureValue": 1,
+      "measureId": 20
+     }
+    },
+    "global_QUANTITY": {
+     "UNSET_Stepper_0": {
+      "measureId": 41,
+      "measureValue": 1,
+      "measureNameBeforeTrans": "calc_29_",
+      "measurePluralNameBeforeTrans": "calc_30_",
+      "transRate": "",
+      "transTarget": ""
+     }
+    }
+   },
+   "selectedProduct": {
+    "region": "sa-brazil-1",
+    "locationType": "commonAZ",
+    "chargeMode": "PERIOD",
+    "tag": "general.online.portal",
+    "serviceCode": "ecs",
+    "timeTag": 1792254488274,
+    "chargeModeName": "MONTHLY",
+    "periodType": 2,
+    "periodNum": 1,
+    "subscriptionNum": 1,
+    "purchaseTime": {
+     "measureValue": 1,
+     "measureId": 20,
+     "measureNameBeforeTrans": "",
+     "measurePluralNameBeforeTrans": ""
+    },
+    "purchaseNum": {
+     "measureValue": 1,
+     "measureId": 41,
+     "measureNameBeforeTrans": "calc_29_",
+     "measurePluralNameBeforeTrans": "calc_30_"
+    },
+    "description": "Elastic Cloud Server",
+    "productAllInfos": [
+     {
+      "resourceType": "hws.resource.type.vm",
+      "cloudServiceType": "hws.service.type.ec2",
+      "resourceSpecCode": "c7n.large.2.linux",
+      "productSpecSysDesc": "Memory:4096MB;vCPUs:2CORE;CPU Architecture:x86;Type:General Computing-plus;System Disk:40GB;Series:C7n;Image:Linux;Spot Duartion:On Demand, Period, Dynamic Price Spot;Local Disk:No Local-Disk;Remark:normal;accelerator card:No Accelerator Card",
+      "resourceSpecType": "c7n",
+      "periodList": 0,
+      "_skuInfo": [
+       "Memory: 4096BSSUNIT.pluralUnit.21",
+       "vCPUs: 2BSSUNIT.pluralUnit.23",
+       "CPU Architecture: x86",
+       "Type: General Computing-plus",
+       "System Disk: 40BSSUNIT.pluralUnit.17",
+       "Series: C7n",
+       "Image: Linux",
+       "Spot Duartion: On Demand, Period, Dynamic Price Spot",
+       "Local Disk: No Local-Disk",
+       "Remark: normal",
+       "accelerator card: No Accelerator Card"
+      ],
+      "mem": "4BSSUNIT.pluralUnit.102",
+      "cpu": "2dataInfo_36_",
+      "instanceArch": "x86",
+      "performType": "General Computing-plus",
+      "disk": "40BSSUNIT.pluralUnit.17",
+      "series": "C7n",
+      "image": "Linux",
+      "spot_duartion": "On Demand, Period, Dynamic Price Spot",
+      "localDisk": "No Local-Disk",
+      "type": "normal",
+      "acceleratorCard": "No Accelerator Card",
+      "arch": "dataInfo_32_",
+      "generation": "C7n",
+      "spec": "c7n.large.2",
+      "physical": "dataInfo_44_",
+      "vmType": "dataInfo_3_",
+      "generationType": "dataInfo_3_ C7n dataInfo_44_",
+      "generationTypeMap": "dataInfo_3_",
+      "imageSpec": "linux",
+      "riResourceSepc": "c7n.large.2",
+      "addToList_title": "calc_2_",
+      "addToList_product": "dataInfo_32_ | dataInfo_3_ | c7n.large.2 | 2dataInfo_36_ | 4BSSUNIT.pluralUnit.102",
+      "bakPlanList": [
+       {
+        "productId": "OFFI959429067048849408",
+        "billingMode": "MONTHLY",
+        "siteCode": "HWC",
+        "planType": "PRICEPLAN",
+        "periodNum": 1,
+        "billingEvent": "event.type.onetime",
+        "measureUnitStep": null,
+        "measureUnit": null,
+        "amount": 62.02
+       },
+       {
+        "productId": "OFFI959429066776219651",
+        "billingMode": "YEARLY",
+        "siteCode": "HWC",
+        "planType": "PRICEPLAN",
+        "periodNum": 1,
+        "billingEvent": "event.type.onetime",
+        "measureUnitStep": null,
+        "measureUnit": null,
+        "amount": 620.2
+       }
+      ],
+      "productId": "OFFI959429067048849408",
+      "billingMode": "MONTHLY",
+      "siteCode": "HWC",
+      "planType": "PRICEPLAN",
+      "periodNum": 1,
+      "billingEvent": "event.type.onetime",
+      "measureUnitStep": null,
+      "measureUnit": null,
+      "amount": 62.02,
+      "productNum": 1,
+      "inquiryTag": "normal",
+      "selfProductNum": 1,
+      "selectIndex": 0,
+      "inquiryResult": {
+       "id": "1792254488274-0-OFFI959429067048849408",
+       "productId": "OFFI959429067048849408",
+       "amount": 62.02,
+       "officialWebsiteAmount": 62.02,
+       "officialWebsiteDiscountAmount": 0,
+       "officialCheapAmount": null,
+       "officialCheapDiscountAmount": null,
+       "discountAmount": 0,
+       "originalAmount": 62.02,
+       "perAmount": null,
+       "perDiscountAmount": null,
+       "perOriginalAmount": null,
+       "perPeriodType": null,
+       "measureId": 1,
+       "extendParams": null
+      }
+     },
+     {
+      "type": [
+       "c3",
+       "d2",
+       "d3",
+       "hc1",
+       "hc2",
+       "h3",
+       "t6",
+       "s2",
+       "s3",
+       "m2",
+       "m3",
+       "sn3",
+       "s6",
+       "cc3",
+       "t2",
+       "s7",
+       "c7n",
+       "s7n",
+       "m7n",
+       "x1",
+       "x0",
+       "m6",
+       "m7",
+       "d6",
+       "c6ne",
+       "d7",
+       "c7e",
+       "c7ne",
+       "c7t",
+       "m7ne",
+       "c3ne",
+       "c6",
+       "c6s",
+       "c7",
+       "c9",
+       "m9",
+       "m3ne",
+       "h3ne",
+       "d3ne"
+      ],
+      "min_ram": 1024,
+      "id": "5f67dd87-7685-4a71-ae63-1dca02fd724c",
+      "__os_type": "Linux",
+      "__platform": "Ubuntu",
+      "__os_bit": "64",
+      "name": "Ubuntu 22.04 server 64bit",
+      "__account_code": "",
+      "__productcode": "",
+      "addToList_title": "calc_4_",
+      "addToList_product": "Ubuntu | Ubuntu 22.04 server 64bit",
+      "productNum": 1,
+      "inquiryTag": "localImage",
+      "selfProductNum": 1,
+      "selectIndex": 1,
+      "inquiryResult": {
+       "amount": 0,
+       "originalAmount": 0,
+       "discountAmount": 0,
+       "productId": "noId",
+       "id": "1792254488274-1-noId"
+      }
+     },
+     {
+      "resourceType": "hws.resource.type.volume",
+      "cloudServiceType": "hws.service.type.ebs",
+      "resourceSpecCode": "GPSSD",
+      "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+      "resourceSpecType": "GPSSD",
+      "periodList": 4,
+      "_skuInfo": [
+       "Disk Specifications: General Purpose SSD",
+       "Disk Size: nullBSSUNIT.unit.17"
+      ],
+      "volumeType": "General Purpose SSD",
+      "linearDisk": "nullBSSUNIT.unit.17",
+      "billingItem": "detail_68_",
+      "type": "dataInfo_43_",
+      "info": "dataInfo_26_",
+      "specifications": "dataInfo_27_",
+      "tableUnit": "detail_26_",
+      "resourceSize": 40,
+      "resouceSizeMeasureId": 17,
+      "resourceMeasureName": "",
+      "resourceMeasurePluralName": "",
+      "addToList_title": "calc_11_",
+      "addToList_product": "dataInfo_43_ | 40BSSUNIT.pluralUnit.17",
+      "_productType": "main",
+      "bakPlanList": [
+       {
+        "productId": "OFFI472256171180654593",
+        "billingMode": "YEARLY",
+        "siteCode": "HWC",
+        "planType": "PRICEPLAN",
+        "periodNum": 1,
+        "billingEvent": "event.type.onetime",
+        "measureUnitStep": null,
+        "measureUnit": null,
+        "amount": 1.8
+       },
+       {
+        "productId": "OFFI472256171180654592",
+        "billingMode": "MONTHLY",
+        "siteCode": "HWC",
+        "planType": "PRICEPLAN",
+        "periodNum": 1,
+        "billingEvent": "event.type.onetime",
+        "measureUnitStep": null,
+        "measureUnit": null,
+        "amount": 0.18
+       }
+      ],
+      "productId": "OFFI472256171180654592",
+      "billingMode": "MONTHLY",
+      "siteCode": "HWC",
+      "planType": "PRICEPLAN",
+      "periodNum": 1,
+      "billingEvent": "event.type.onetime",
+      "measureUnitStep": null,
+      "measureUnit": null,
+      "amount": 0.18,
+      "productNum": 1,
+      "inquiryTag": "normal",
+      "selfProductNum": 1,
+      "selectIndex": 2,
+      "inquiryResult": {
+       "id": "1792254488274-2-OFFI472256171180654592",
+       "productId": "OFFI472256171180654592",
+       "amount": 7.2,
+       "officialWebsiteAmount": 7.2,
+       "officialWebsiteDiscountAmount": 0,
+       "officialCheapAmount": null,
+       "officialCheapDiscountAmount": null,
+       "discountAmount": 0,
+       "originalAmount": 7.2,
+       "perAmount": null,
+       "perDiscountAmount": null,
+       "perOriginalAmount": null,
+       "perPeriodType": null,
+       "measureId": 1,
+       "extendParams": null
+      }
+     },
+     {
+      "resourceType": "hws.resource.type.volume",
+      "cloudServiceType": "hws.service.type.ebs",
+      "resourceSpecCode": "GPSSD",
+      "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+      "resourceSpecType": "GPSSD",
+      "periodList": 4,
+      "_skuInfo": [
+       "Disk Specifications: General Purpose SSD",
+       "Disk Size: nullBSSUNIT.unit.17"
+      ],
+      "volumeType": "General Purpose SSD",
+      "linearDisk": "nullBSSUNIT.unit.17",
+      "billingItem": "detail_68_",
+      "type": "dataInfo_43_",
+      "info": "dataInfo_26_",
+      "specifications": "dataInfo_27_",
+      "tableUnit": "detail_26_",
+      "resourceSize": 50,
+      "resouceSizeMeasureId": 17,
+      "resourceMeasureName": "",
+      "resourceMeasurePluralName": "",
+      "addToList_title": "calc_12_",
+      "addToList_product": "dataInfo_43_ | 50BSSUNIT.pluralUnit.17",
+      "_productType": "addible",
+      "bakPlanList": [
+       {
+        "productId": "OFFI472256171180654593",
+        "billingMode": "YEARLY",
+        "siteCode": "HWC",
+        "planType": "PRICEPLAN",
+        "periodNum": 1,
+        "billingEvent": "event.type.onetime",
+        "measureUnitStep": null,
+        "measureUnit": null,
+        "amount": 1.8
+       },
+       {
+        "productId": "OFFI472256171180654592",
+        "billingMode": "MONTHLY",
+        "siteCode": "HWC",
+        "planType": "PRICEPLAN",
+        "periodNum": 1,
+        "billingEvent": "event.type.onetime",
+        "measureUnitStep": null,
+        "measureUnit": null,
+        "amount": 0.18
+       }
+      ],
+      "productId": "OFFI472256171180654592",
+      "billingMode": "MONTHLY",
+      "siteCode": "HWC",
+      "planType": "PRICEPLAN",
+      "periodNum": 1,
+      "billingEvent": "event.type.onetime",
+      "measureUnitStep": null,
+      "measureUnit": null,
+      "amount": 0.18,
+      "productNum": 1,
+      "inquiryTag": "normal",
+      "selfProductNum": 1,
+      "selectIndex": 3,
+      "inquiryResult": {
+       "id": "1792254488274-3-OFFI472256171180654592",
+       "productId": "OFFI472256171180654592",
+       "amount": 9,
+       "officialWebsiteAmount": 9,
+       "officialWebsiteDiscountAmount": 0,
+       "officialCheapAmount": null,
+       "officialCheapDiscountAmount": null,
+       "discountAmount": 0,
+       "originalAmount": 9,
+       "perAmount": null,
+       "perDiscountAmount": null,
+       "perOriginalAmount": null,
+       "perPeriodType": null,
+       "measureId": 1,
+       "extendParams": null
+      }
+     },
+     {
+      "resourceType": "hws.resource.type.volume",
+      "cloudServiceType": "hws.service.type.ebs",
+      "resourceSpecCode": "GPSSD",
+      "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+      "resourceSpecType": "GPSSD",
+      "periodList": 4,
+      "_skuInfo": [
+       "Disk Specifications: General Purpose SSD",
+       "Disk Size: nullBSSUNIT.unit.17"
+      ],
+      "volumeType": "General Purpose SSD",
+      "linearDisk": "nullBSSUNIT.unit.17",
+      "billingItem": "detail_68_",
+      "type": "dataInfo_43_",
+      "info": "dataInfo_26_",
+      "specifications": "dataInfo_27_",
+      "tableUnit": "detail_26_",
+      "resourceSize": 50,
+      "resouceSizeMeasureId": 17,
+      "resourceMeasureName": "",
+      "resourceMeasurePluralName": "",
+      "addToList_title": "calc_12_",
+      "addToList_product": "dataInfo_43_ | 50BSSUNIT.pluralUnit.17",
+      "_productType": "addible",
+      "bakPlanList": [
+       {
+        "productId": "OFFI472256171180654593",
+        "billingMode": "YEARLY",
+        "siteCode": "HWC",
+        "planType": "PRICEPLAN",
+        "periodNum": 1,
+        "billingEvent": "event.type.onetime",
+        "measureUnitStep": null,
+        "measureUnit": null,
+        "amount": 1.8
+       },
+       {
+        "productId": "OFFI472256171180654592",
+        "billingMode": "MONTHLY",
+        "siteCode": "HWC",
+        "planType": "PRICEPLAN",
+        "periodNum": 1,
+        "billingEvent": "event.type.onetime",
+        "measureUnitStep": null,
+        "measureUnit": null,
+        "amount": 0.18
+       }
+      ],
+      "productId": "OFFI472256171180654592",
+      "billingMode": "MONTHLY",
+      "siteCode": "HWC",
+      "planType": "PRICEPLAN",
+      "periodNum": 1,
+      "billingEvent": "event.type.onetime",
+      "measureUnitStep": null,
+      "measureUnit": null,
+      "amount": 0.18,
+      "productNum": 1,
+      "inquiryTag": "normal",
+      "selfProductNum": 1,
+      "selectIndex": 4,
+      "inquiryResult": {
+       "id": "1792254488274-4-OFFI472256171180654592",
+       "productId": "OFFI472256171180654592",
+       "amount": 9,
+       "officialWebsiteAmount": 9,
+       "officialWebsiteDiscountAmount": 0,
+       "officialCheapAmount": null,
+       "officialCheapDiscountAmount": null,
+       "discountAmount": 0,
+       "originalAmount": 9,
+       "perAmount": null,
+       "perDiscountAmount": null,
+       "perOriginalAmount": null,
+       "perPeriodType": null,
+       "measureId": 1,
+       "extendParams": null
+      }
+     },
+     {
+      "resourceType": "hws.resource.type.bandwidth",
+      "cloudServiceType": "hws.service.type.vpc",
+      "resourceSpecCode": "19_bgp",
+      "productSpecSysDesc": "Package Validity:unknown;type:19_bgp",
+      "resourceSpecType": "DEFAULT",
+      "periodList": 2,
+      "_skuInfo": [
+       "Package Validity: unknown",
+       "type: 19_bgp",
+       "Bandwidth: nullBSSUNIT.unit.15"
+      ],
+      "PackageValidity": "unknown",
+      "type": "19_bgp",
+      "linearBandwidth": "nullBSSUNIT.unit.15",
+      "eipSpec": "dataInfo_14_",
+      "shareType": "dataInfo_16_",
+      "eipType": "dataInfo_18_",
+      "name": "dataInfo_14_",
+      "resourceSize": 5,
+      "resouceSizeMeasureId": 15,
+      "resourceMeasureName": "",
+      "resourceMeasurePluralName": "",
+      "addToList_title": "calc_5_",
+      "addToList_product": "dataInfo_14_ | dataInfo_16_ | dataInfo_18_ | 5BSSUNIT.pluralUnit.15",
+      "bakPlanList": [
+       {
+        "productId": "OFFI954296642696609792",
+        "billingMode": "MONTHLY",
+        "siteCode": "HWC",
+        "planType": "PRICEPLAN",
+        "periodNum": 1,
+        "billingEvent": "event.type.onetime",
+        "measureUnitStep": null,
+        "measureUnit": null,
+        "amount": 9
+       },
+       {
+        "productId": "OFFI954296642692415488",
+        "billingMode": "YEARLY",
+        "siteCode": "HWC",
+        "planType": "PRICEPLAN",
+        "periodNum": 1,
+        "billingEvent": "event.type.onetime",
+        "measureUnitStep": null,
+        "measureUnit": null,
+        "amount": 90
+       },
+       {
+        "productId": "OFFI954296642692415488",
+        "billingMode": "YEARLY",
+        "siteCode": "HWC",
+        "planType": "PRICEPLAN",
+        "periodNum": 2,
+        "billingEvent": "event.type.onetime",
+        "measureUnitStep": null,
+        "measureUnit": null,
+        "amount": 180
+       },
+       {
+        "productId": "OFFI954296642692415488",
+        "billingMode": "YEARLY",
+        "siteCode": "HWC",
+        "planType": "PRICEPLAN",
+        "periodNum": 3,
+        "billingEvent": "event.type.onetime",
+        "measureUnitStep": null,
+        "measureUnit": null,
+        "amount": 270
+       }
+      ],
+      "productId": "OFFI954296642696609792",
+      "billingMode": "MONTHLY",
+      "siteCode": "HWC",
+      "planType": "PRICEPLAN",
+      "periodNum": 1,
+      "billingEvent": "event.type.onetime",
+      "measureUnitStep": null,
+      "measureUnit": null,
+      "amount": 9,
+      "productNum": 1,
+      "inquiryTag": "normal",
+      "selfProductNum": 1,
+      "selectIndex": 5,
+      "inquiryResult": {
+       "id": "1792254488274-5-OFFI954296642696609792",
+       "productId": "OFFI954296642696609792",
+       "amount": 45,
+       "officialWebsiteAmount": 45,
+       "officialWebsiteDiscountAmount": 0,
+       "officialCheapAmount": null,
+       "officialCheapDiscountAmount": null,
+       "discountAmount": 0,
+       "originalAmount": 45,
+       "perAmount": null,
+       "perDiscountAmount": null,
+       "perOriginalAmount": null,
+       "perPeriodType": null,
+       "measureId": 1,
+       "extendParams": null
+      }
+     }
+    ],
+    "amount": 132.22,
+    "discountAmount": 0,
+    "originalAmount": 132.22,
+    "_cartId": "SYNTHETICCARTID0000000000000000001",
+    "_customTitle": "custom.ecs 1"
+   },
+   "valueWatcher": {
+    "global_TITLE": {
+     "tag": "general.online.portal"
+    },
+    "global_DESCRIPTION": "Elastic Cloud Server",
+    "global_REGIONINFO": {
+     "region": "sa-brazil-1",
+     "locationType": "commonAZ",
+     "chargeMode": "PERIOD"
+    },
+    "template_RENDER": {
+     "value": {
+      "calculator_ecs_radio": {
+       "arch": "dataInfo_32_",
+       "vmType": "dataInfo_3_",
+       "generation": "C7n",
+       "cpu": "2dataInfo_36_",
+       "mem": "4BSSUNIT.pluralUnit.102"
+      },
+      "calculator_eip_switch": {
+       "UNSET_Switch": "calc_14_"
+      },
+      "calculator_eip_radio": {
+       "eipSpec": "dataInfo_14_",
+       "shareType": "dataInfo_16_",
+       "eipType": "dataInfo_18_",
+       "UNSET_Stepper_1": {
+        "measureId": 15,
+        "measureValue": 5,
+        "measureNameBeforeTrans": "",
+        "measurePluralNameBeforeTrans": "",
+        "transRate": "",
+        "transTarget": ""
+       }
+      },
+      "calculator_ims_select": {
+       "__platform": "Ubuntu",
+       "name": "Ubuntu 22.04 server 64bit"
+      },
+      "calculator_evs_stepper": {
+       "calculator_evs_stepper_main": {
+        "type": "dataInfo_43_",
+        "UNSET_Stepper_0": {
+         "measureId": 17,
+         "measureValue": 40,
+         "measureNameBeforeTrans": "",
+         "measurePluralNameBeforeTrans": "",
+         "transRate": "",
+         "transTarget": ""
+        }
+       },
+       "calculator_evs_stepper_|addible0|_0": {
+        "type": "dataInfo_43_",
+        "UNSET_Stepper_0": {
+         "measureId": 17,
+         "measureValue": 50,
+         "measureNameBeforeTrans": "",
+         "measurePluralNameBeforeTrans": "",
+         "transRate": "",
+         "transTarget": ""
+        }
+       },
+       "calculator_evs_stepper_|addible0|_1": {
+        "type": "dataInfo_43_",
+        "UNSET_Stepper_0": {
+         "measureId": 17,
+         "measureValue": 50,
+         "measureNameBeforeTrans": "",
+         "measurePluralNameBeforeTrans": "",
+         "transRate": "",
+         "transTarget": ""
+        }
+       }
+      }
+     },
+     "product": {
+      "calculator_ecs_radio": [
+       {
+        "resourceType": "hws.resource.type.vm",
+        "cloudServiceType": "hws.service.type.ec2",
+        "resourceSpecCode": "c7n.large.2.linux",
+        "productSpecSysDesc": "Memory:4096MB;vCPUs:2CORE;CPU Architecture:x86;Type:General Computing-plus;System Disk:40GB;Series:C7n;Image:Linux;Spot Duartion:On Demand, Period, Dynamic Price Spot;Local Disk:No Local-Disk;Remark:normal;accelerator card:No Accelerator Card",
+        "resourceSpecType": "c7n",
+        "periodList": 0,
+        "_skuInfo": [
+         "Memory: 4096BSSUNIT.pluralUnit.21",
+         "vCPUs: 2BSSUNIT.pluralUnit.23",
+         "CPU Architecture: x86",
+         "Type: General Computing-plus",
+         "System Disk: 40BSSUNIT.pluralUnit.17",
+         "Series: C7n",
+         "Image: Linux",
+         "Spot Duartion: On Demand, Period, Dynamic Price Spot",
+         "Local Disk: No Local-Disk",
+         "Remark: normal",
+         "accelerator card: No Accelerator Card"
+        ],
+        "mem": "4BSSUNIT.pluralUnit.102",
+        "cpu": "2dataInfo_36_",
+        "instanceArch": "x86",
+        "performType": "General Computing-plus",
+        "disk": "40BSSUNIT.pluralUnit.17",
+        "series": "C7n",
+        "image": "Linux",
+        "spot_duartion": "On Demand, Period, Dynamic Price Spot",
+        "localDisk": "No Local-Disk",
+        "type": "normal",
+        "acceleratorCard": "No Accelerator Card",
+        "planList": [
+         {
+          "productId": "OFFI959429067048849408",
+          "billingMode": "MONTHLY",
+          "siteCode": "HWC",
+          "planType": "PRICEPLAN",
+          "periodNum": 1,
+          "billingEvent": "event.type.onetime",
+          "measureUnitStep": null,
+          "measureUnit": null,
+          "amount": 62.02
+         },
+         {
+          "productId": "OFFI959429066776219651",
+          "billingMode": "YEARLY",
+          "siteCode": "HWC",
+          "planType": "PRICEPLAN",
+          "periodNum": 1,
+          "billingEvent": "event.type.onetime",
+          "measureUnitStep": null,
+          "measureUnit": null,
+          "amount": 620.2
+         }
+        ],
+        "arch": "dataInfo_32_",
+        "generation": "C7n",
+        "spec": "c7n.large.2",
+        "physical": "dataInfo_44_",
+        "vmType": "dataInfo_3_",
+        "generationType": "dataInfo_3_ C7n dataInfo_44_",
+        "generationTypeMap": "dataInfo_3_",
+        "imageSpec": "linux",
+        "riResourceSepc": "c7n.large.2",
+        "addToList_title": "calc_25_",
+        "addToList_product": "dataInfo_32_ | dataInfo_3_ | C7n | 2dataInfo_36_ | 4BSSUNIT.pluralUnit.102"
+       },
+       {
+        "resourceType": "hws.resource.type.vm",
+        "cloudServiceType": "hws.service.type.ec2",
+        "resourceSpecCode": "c7n.large.2.byol",
+        "productSpecSysDesc": "Memory:4096MB;vCPUs:2CORE;CPU Architecture:x86;Type:General Computing-plus;System Disk:40GB;Series:C7n;Image:Byol;Spot Duartion:On Demand, Period, Dynamic Price Spot;Local Disk:No Local-Disk;Remark:normal;accelerator card:No Accelerator Card",
+        "resourceSpecType": "c7n",
+        "periodList": 0,
+        "_skuInfo": [
+         "Memory: 4096BSSUNIT.pluralUnit.21",
+         "vCPUs: 2BSSUNIT.pluralUnit.23",
+         "CPU Architecture: x86",
+         "Type: General Computing-plus",
+         "System Disk: 40BSSUNIT.pluralUnit.17",
+         "Series: C7n",
+         "Image: Byol",
+         "Spot Duartion: On Demand, Period, Dynamic Price Spot",
+         "Local Disk: No Local-Disk",
+         "Remark: normal",
+         "accelerator card: No Accelerator Card"
+        ],
+        "mem": "4BSSUNIT.pluralUnit.102",
+        "cpu": "2dataInfo_36_",
+        "instanceArch": "x86",
+        "performType": "General Computing-plus",
+        "disk": "40BSSUNIT.pluralUnit.17",
+        "series": "C7n",
+        "image": "detail_77_",
+        "spot_duartion": "On Demand, Period, Dynamic Price Spot",
+        "localDisk": "No Local-Disk",
+        "type": "normal",
+        "acceleratorCard": "No Accelerator Card",
+        "planList": [
+         {
+          "productId": "OFFI959429066562310151",
+          "billingMode": "YEARLY",
+          "siteCode": "HWC",
+          "planType": "PRICEPLAN",
+          "periodNum": 1,
+          "billingEvent": "event.type.onetime",
+          "measureUnitStep": null,
+          "measureUnit": null,
+          "amount": 620.2
+         },
+         {
+          "productId": "OFFI959429065962524678",
+          "billingMode": "MONTHLY",
+          "siteCode": "HWC",
+          "planType": "PRICEPLAN",
+          "periodNum": 1,
+          "billingEvent": "event.type.onetime",
+          "measureUnitStep": null,
+          "measureUnit": null,
+          "amount": 62.02
+         }
+        ],
+        "arch": "dataInfo_32_",
+        "generation": "C7n",
+        "spec": "c7n.large.2",
+        "physical": "dataInfo_44_",
+        "vmType": "dataInfo_3_",
+        "generationType": "dataInfo_3_ C7n dataInfo_44_",
+        "generationTypeMap": "dataInfo_3_",
+        "imageSpec": "byol",
+        "riResourceSepc": "c7n.large.2",
+        "addToList_title": "calc_25_",
+        "addToList_product": "dataInfo_32_ | dataInfo_3_ | C7n | 2dataInfo_36_ | 4BSSUNIT.pluralUnit.102"
+       }
+      ],
+      "calculator_eip_radio": [
+       {
+        "resourceType": "hws.resource.type.bandwidth",
+        "cloudServiceType": "hws.service.type.vpc",
+        "resourceSpecCode": "19_bgp",
+        "productSpecSysDesc": "Package Validity:unknown;type:19_bgp",
+        "resourceSpecType": "DEFAULT",
+        "periodList": 2,
+        "_skuInfo": [
+         "Package Validity: unknown",
+         "type: 19_bgp",
+         "Bandwidth: nullBSSUNIT.unit.15"
+        ],
+        "PackageValidity": "unknown",
+        "type": "19_bgp",
+        "linearBandwidth": "nullBSSUNIT.unit.15",
+        "planList": [
+         {
+          "productId": "OFFI954296642696609792",
+          "billingMode": "MONTHLY",
+          "siteCode": "HWC",
+          "planType": "PRICEPLAN",
+          "periodNum": 1,
+          "billingEvent": "event.type.onetime",
+          "measureUnitStep": null,
+          "measureUnit": null,
+          "amount": 9
+         },
+         {
+          "productId": "OFFI954296642692415488",
+          "billingMode": "YEARLY",
+          "siteCode": "HWC",
+          "planType": "PRICEPLAN",
+          "periodNum": 1,
+          "billingEvent": "event.type.onetime",
+          "measureUnitStep": null,
+          "measureUnit": null,
+          "amount": 90
+         },
+         {
+          "productId": "OFFI954296642692415488",
+          "billingMode": "YEARLY",
+          "siteCode": "HWC",
+          "planType": "PRICEPLAN",
+          "periodNum": 2,
+          "billingEvent": "event.type.onetime",
+          "measureUnitStep": null,
+          "measureUnit": null,
+          "amount": 180
+         },
+         {
+          "productId": "OFFI954296642692415488",
+          "billingMode": "YEARLY",
+          "siteCode": "HWC",
+          "planType": "PRICEPLAN",
+          "periodNum": 3,
+          "billingEvent": "event.type.onetime",
+          "measureUnitStep": null,
+          "measureUnit": null,
+          "amount": 270
+         }
+        ],
+        "eipSpec": "dataInfo_14_",
+        "shareType": "dataInfo_16_",
+        "eipType": "dataInfo_18_",
+        "name": "dataInfo_14_",
+        "resourceSize": 5,
+        "resouceSizeMeasureId": 15,
+        "resourceMeasureName": "",
+        "resourceMeasurePluralName": "",
+        "addToList_title": "calc_6_",
+        "addToList_product": "dataInfo_14_ | dataInfo_16_ | dataInfo_18_ | 5BSSUNIT.pluralUnit.15"
+       }
+      ],
+      "calculator_ims_select": [
+       {
+        "type": [
+         "c3",
+         "d2",
+         "d3",
+         "hc1",
+         "hc2",
+         "h3",
+         "t6",
+         "s2",
+         "s3",
+         "m2",
+         "m3",
+         "sn3",
+         "s6",
+         "cc3",
+         "t2",
+         "s7",
+         "c7n",
+         "s7n",
+         "m7n",
+         "x1",
+         "x0",
+         "m6",
+         "m7",
+         "d6",
+         "c6ne",
+         "d7",
+         "c7e",
+         "c7ne",
+         "c7t",
+         "m7ne",
+         "c3ne",
+         "c6",
+         "c6s",
+         "c7",
+         "c9",
+         "m9",
+         "m3ne",
+         "h3ne",
+         "d3ne"
+        ],
+        "min_ram": 1024,
+        "id": "5f67dd87-7685-4a71-ae63-1dca02fd724c",
+        "__os_type": "Linux",
+        "__platform": "Ubuntu",
+        "__os_bit": "64",
+        "name": "Ubuntu 22.04 server 64bit",
+        "__account_code": "",
+        "__productcode": "",
+        "addToList_title": "calc_4_",
+        "addToList_product": "Ubuntu | Ubuntu 22.04 server 64bit"
+       }
+      ],
+      "calculator_evs_stepper": [
+       {
+        "resourceType": "hws.resource.type.volume",
+        "cloudServiceType": "hws.service.type.ebs",
+        "resourceSpecCode": "GPSSD",
+        "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+        "resourceSpecType": "GPSSD",
+        "periodList": 4,
+        "_skuInfo": [
+         "Disk Specifications: General Purpose SSD",
+         "Disk Size: nullBSSUNIT.unit.17"
+        ],
+        "volumeType": "General Purpose SSD",
+        "linearDisk": "nullBSSUNIT.unit.17",
+        "planList": [
+         {
+          "productId": "OFFI472256171180654593",
+          "billingMode": "YEARLY",
+          "siteCode": "HWC",
+          "planType": "PRICEPLAN",
+          "periodNum": 1,
+          "billingEvent": "event.type.onetime",
+          "measureUnitStep": null,
+          "measureUnit": null,
+          "amount": 1.8
+         },
+         {
+          "productId": "OFFI472256171180654592",
+          "billingMode": "MONTHLY",
+          "siteCode": "HWC",
+          "planType": "PRICEPLAN",
+          "periodNum": 1,
+          "billingEvent": "event.type.onetime",
+          "measureUnitStep": null,
+          "measureUnit": null,
+          "amount": 0.18
+         }
+        ],
+        "billingItem": "detail_68_",
+        "type": "dataInfo_43_",
+        "info": "dataInfo_26_",
+        "specifications": "dataInfo_27_",
+        "tableUnit": "detail_26_",
+        "resourceSize": 40,
+        "resouceSizeMeasureId": 17,
+        "resourceMeasureName": "",
+        "resourceMeasurePluralName": "",
+        "addToList_title": "calc_11_",
+        "addToList_product": "dataInfo_43_ | 40BSSUNIT.pluralUnit.17",
+        "_productType": "main"
+       },
+       {
+        "resourceType": "hws.resource.type.volume",
+        "cloudServiceType": "hws.service.type.ebs",
+        "resourceSpecCode": "GPSSD",
+        "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+        "resourceSpecType": "GPSSD",
+        "periodList": 4,
+        "_skuInfo": [
+         "Disk Specifications: General Purpose SSD",
+         "Disk Size: nullBSSUNIT.unit.17"
+        ],
+        "volumeType": "General Purpose SSD",
+        "linearDisk": "nullBSSUNIT.unit.17",
+        "planList": [
+         {
+          "productId": "OFFI472256171180654593",
+          "billingMode": "YEARLY",
+          "siteCode": "HWC",
+          "planType": "PRICEPLAN",
+          "periodNum": 1,
+          "billingEvent": "event.type.onetime",
+          "measureUnitStep": null,
+          "measureUnit": null,
+          "amount": 1.8
+         },
+         {
+          "productId": "OFFI472256171180654592",
+          "billingMode": "MONTHLY",
+          "siteCode": "HWC",
+          "planType": "PRICEPLAN",
+          "periodNum": 1,
+          "billingEvent": "event.type.onetime",
+          "measureUnitStep": null,
+          "measureUnit": null,
+          "amount": 0.18
+         }
+        ],
+        "billingItem": "detail_68_",
+        "type": "dataInfo_43_",
+        "info": "dataInfo_26_",
+        "specifications": "dataInfo_27_",
+        "tableUnit": "detail_26_",
+        "resourceSize": 50,
+        "resouceSizeMeasureId": 17,
+        "resourceMeasureName": "",
+        "resourceMeasurePluralName": "",
+        "addToList_title": "calc_12_",
+        "addToList_product": "dataInfo_43_ | 50BSSUNIT.pluralUnit.17",
+        "_productType": "addible"
+       },
+       {
+        "resourceType": "hws.resource.type.volume",
+        "cloudServiceType": "hws.service.type.ebs",
+        "resourceSpecCode": "GPSSD",
+        "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+        "resourceSpecType": "GPSSD",
+        "periodList": 4,
+        "_skuInfo": [
+         "Disk Specifications: General Purpose SSD",
+         "Disk Size: nullBSSUNIT.unit.17"
+        ],
+        "volumeType": "General Purpose SSD",
+        "linearDisk": "nullBSSUNIT.unit.17",
+        "planList": [
+         {
+          "productId": "OFFI472256171180654593",
+          "billingMode": "YEARLY",
+          "siteCode": "HWC",
+          "planType": "PRICEPLAN",
+          "periodNum": 1,
+          "billingEvent": "event.type.onetime",
+          "measureUnitStep": null,
+          "measureUnit": null,
+          "amount": 1.8
+         },
+         {
+          "productId": "OFFI472256171180654592",
+          "billingMode": "MONTHLY",
+          "siteCode": "HWC",
+          "planType": "PRICEPLAN",
+          "periodNum": 1,
+          "billingEvent": "event.type.onetime",
+          "measureUnitStep": null,
+          "measureUnit": null,
+          "amount": 0.18
+         }
+        ],
+        "billingItem": "detail_68_",
+        "type": "dataInfo_43_",
+        "info": "dataInfo_26_",
+        "specifications": "dataInfo_27_",
+        "tableUnit": "detail_26_",
+        "resourceSize": 50,
+        "resouceSizeMeasureId": 17,
+        "resourceMeasureName": "",
+        "resourceMeasurePluralName": "",
+        "addToList_title": "calc_12_",
+        "addToList_product": "dataInfo_43_ | 50BSSUNIT.pluralUnit.17",
+        "_productType": "addible"
+       }
+      ]
+     },
+     "valueWatcher": {
+      "calculator_ecs_radio": {
+       "value": {
+        "arch": "dataInfo_32_",
+        "vmType": "dataInfo_3_",
+        "generation": "C7n",
+        "cpu": "2dataInfo_36_",
+        "mem": "4BSSUNIT.pluralUnit.102"
+       },
+       "product": [
+        {
+         "resourceType": "hws.resource.type.vm",
+         "cloudServiceType": "hws.service.type.ec2",
+         "resourceSpecCode": "c7n.large.2.linux",
+         "productSpecSysDesc": "Memory:4096MB;vCPUs:2CORE;CPU Architecture:x86;Type:General Computing-plus;System Disk:40GB;Series:C7n;Image:Linux;Spot Duartion:On Demand, Period, Dynamic Price Spot;Local Disk:No Local-Disk;Remark:normal;accelerator card:No Accelerator Card",
+         "resourceSpecType": "c7n",
+         "periodList": 0,
+         "_skuInfo": [
+          "Memory: 4096BSSUNIT.pluralUnit.21",
+          "vCPUs: 2BSSUNIT.pluralUnit.23",
+          "CPU Architecture: x86",
+          "Type: General Computing-plus",
+          "System Disk: 40BSSUNIT.pluralUnit.17",
+          "Series: C7n",
+          "Image: Linux",
+          "Spot Duartion: On Demand, Period, Dynamic Price Spot",
+          "Local Disk: No Local-Disk",
+          "Remark: normal",
+          "accelerator card: No Accelerator Card"
+         ],
+         "mem": "4BSSUNIT.pluralUnit.102",
+         "cpu": "2dataInfo_36_",
+         "instanceArch": "x86",
+         "performType": "General Computing-plus",
+         "disk": "40BSSUNIT.pluralUnit.17",
+         "series": "C7n",
+         "image": "Linux",
+         "spot_duartion": "On Demand, Period, Dynamic Price Spot",
+         "localDisk": "No Local-Disk",
+         "type": "normal",
+         "acceleratorCard": "No Accelerator Card",
+         "planList": [
+          {
+           "productId": "OFFI959429067048849408",
+           "billingMode": "MONTHLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 62.02
+          },
+          {
+           "productId": "OFFI959429066776219651",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 620.2
+          }
+         ],
+         "arch": "dataInfo_32_",
+         "generation": "C7n",
+         "spec": "c7n.large.2",
+         "physical": "dataInfo_44_",
+         "vmType": "dataInfo_3_",
+         "generationType": "dataInfo_3_ C7n dataInfo_44_",
+         "generationTypeMap": "dataInfo_3_",
+         "imageSpec": "linux",
+         "riResourceSepc": "c7n.large.2",
+         "addToList_title": "calc_25_",
+         "addToList_product": "dataInfo_32_ | dataInfo_3_ | C7n | 2dataInfo_36_ | 4BSSUNIT.pluralUnit.102"
+        },
+        {
+         "resourceType": "hws.resource.type.vm",
+         "cloudServiceType": "hws.service.type.ec2",
+         "resourceSpecCode": "c7n.large.2.byol",
+         "productSpecSysDesc": "Memory:4096MB;vCPUs:2CORE;CPU Architecture:x86;Type:General Computing-plus;System Disk:40GB;Series:C7n;Image:Byol;Spot Duartion:On Demand, Period, Dynamic Price Spot;Local Disk:No Local-Disk;Remark:normal;accelerator card:No Accelerator Card",
+         "resourceSpecType": "c7n",
+         "periodList": 0,
+         "_skuInfo": [
+          "Memory: 4096BSSUNIT.pluralUnit.21",
+          "vCPUs: 2BSSUNIT.pluralUnit.23",
+          "CPU Architecture: x86",
+          "Type: General Computing-plus",
+          "System Disk: 40BSSUNIT.pluralUnit.17",
+          "Series: C7n",
+          "Image: Byol",
+          "Spot Duartion: On Demand, Period, Dynamic Price Spot",
+          "Local Disk: No Local-Disk",
+          "Remark: normal",
+          "accelerator card: No Accelerator Card"
+         ],
+         "mem": "4BSSUNIT.pluralUnit.102",
+         "cpu": "2dataInfo_36_",
+         "instanceArch": "x86",
+         "performType": "General Computing-plus",
+         "disk": "40BSSUNIT.pluralUnit.17",
+         "series": "C7n",
+         "image": "detail_77_",
+         "spot_duartion": "On Demand, Period, Dynamic Price Spot",
+         "localDisk": "No Local-Disk",
+         "type": "normal",
+         "acceleratorCard": "No Accelerator Card",
+         "planList": [
+          {
+           "productId": "OFFI959429066562310151",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 620.2
+          },
+          {
+           "productId": "OFFI959429065962524678",
+           "billingMode": "MONTHLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 62.02
+          }
+         ],
+         "arch": "dataInfo_32_",
+         "generation": "C7n",
+         "spec": "c7n.large.2",
+         "physical": "dataInfo_44_",
+         "vmType": "dataInfo_3_",
+         "generationType": "dataInfo_3_ C7n dataInfo_44_",
+         "generationTypeMap": "dataInfo_3_",
+         "imageSpec": "byol",
+         "riResourceSepc": "c7n.large.2",
+         "addToList_title": "calc_25_",
+         "addToList_product": "dataInfo_32_ | dataInfo_3_ | C7n | 2dataInfo_36_ | 4BSSUNIT.pluralUnit.102"
+        }
+       ],
+       "rewrite": false
+      },
+      "calculator_eip_switch": {
+       "value": {
+        "UNSET_Switch": "calc_14_"
+       },
+       "product": [],
+       "rewrite": false
+      },
+      "calculator_eip_radio": {
+       "value": {
+        "eipSpec": "dataInfo_14_",
+        "shareType": "dataInfo_16_",
+        "eipType": "dataInfo_18_",
+        "UNSET_Stepper_1": {
+         "measureId": 15,
+         "measureValue": 5,
+         "measureNameBeforeTrans": "",
+         "measurePluralNameBeforeTrans": "",
+         "transRate": "",
+         "transTarget": ""
+        }
+       },
+       "product": [
+        {
+         "resourceType": "hws.resource.type.bandwidth",
+         "cloudServiceType": "hws.service.type.vpc",
+         "resourceSpecCode": "19_bgp",
+         "productSpecSysDesc": "Package Validity:unknown;type:19_bgp",
+         "resourceSpecType": "DEFAULT",
+         "periodList": 2,
+         "_skuInfo": [
+          "Package Validity: unknown",
+          "type: 19_bgp",
+          "Bandwidth: nullBSSUNIT.unit.15"
+         ],
+         "PackageValidity": "unknown",
+         "type": "19_bgp",
+         "linearBandwidth": "nullBSSUNIT.unit.15",
+         "planList": [
+          {
+           "productId": "OFFI954296642696609792",
+           "billingMode": "MONTHLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 9
+          },
+          {
+           "productId": "OFFI954296642692415488",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 90
+          },
+          {
+           "productId": "OFFI954296642692415488",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 2,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 180
+          },
+          {
+           "productId": "OFFI954296642692415488",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 3,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 270
+          }
+         ],
+         "eipSpec": "dataInfo_14_",
+         "shareType": "dataInfo_16_",
+         "eipType": "dataInfo_18_",
+         "name": "dataInfo_14_",
+         "resourceSize": 5,
+         "resouceSizeMeasureId": 15,
+         "resourceMeasureName": "",
+         "resourceMeasurePluralName": "",
+         "addToList_title": "calc_6_",
+         "addToList_product": "dataInfo_14_ | dataInfo_16_ | dataInfo_18_ | 5BSSUNIT.pluralUnit.15"
+        }
+       ],
+       "rewrite": false
+      },
+      "calculator_ims_select": {
+       "value": {
+        "__platform": "Ubuntu",
+        "name": "Ubuntu 22.04 server 64bit"
+       },
+       "product": [
+        {
+         "type": [
+          "c3",
+          "d2",
+          "d3",
+          "hc1",
+          "hc2",
+          "h3",
+          "t6",
+          "s2",
+          "s3",
+          "m2",
+          "m3",
+          "sn3",
+          "s6",
+          "cc3",
+          "t2",
+          "s7",
+          "c7n",
+          "s7n",
+          "m7n",
+          "x1",
+          "x0",
+          "m6",
+          "m7",
+          "d6",
+          "c6ne",
+          "d7",
+          "c7e",
+          "c7ne",
+          "c7t",
+          "m7ne",
+          "c3ne",
+          "c6",
+          "c6s",
+          "c7",
+          "c9",
+          "m9",
+          "m3ne",
+          "h3ne",
+          "d3ne"
+         ],
+         "min_ram": 1024,
+         "id": "5f67dd87-7685-4a71-ae63-1dca02fd724c",
+         "__os_type": "Linux",
+         "__platform": "Ubuntu",
+         "__os_bit": "64",
+         "name": "Ubuntu 22.04 server 64bit",
+         "__account_code": "",
+         "__productcode": "",
+         "addToList_title": "calc_4_",
+         "addToList_product": "Ubuntu | Ubuntu 22.04 server 64bit"
+        }
+       ],
+       "rewrite": false
+      },
+      "calculator_ecs_RIRadio": {
+       "value": {
+        "paymentType": null
+       },
+       "product": [],
+       "rewrite": false
+      },
+      "calculator_evs_stepper": {
+       "value": {
+        "calculator_evs_stepper_main": {
+         "type": "dataInfo_43_",
+         "UNSET_Stepper_0": {
+          "measureId": 17,
+          "measureValue": 40,
+          "measureNameBeforeTrans": "",
+          "measurePluralNameBeforeTrans": "",
+          "transRate": "",
+          "transTarget": ""
+         }
+        },
+        "calculator_evs_stepper_|addible0|_0": {
+         "type": "dataInfo_43_",
+         "UNSET_Stepper_0": {
+          "measureId": 17,
+          "measureValue": 50,
+          "measureNameBeforeTrans": "",
+          "measurePluralNameBeforeTrans": "",
+          "transRate": "",
+          "transTarget": ""
+         }
+        },
+        "calculator_evs_stepper_|addible0|_1": {
+         "type": "dataInfo_43_",
+         "UNSET_Stepper_0": {
+          "measureId": 17,
+          "measureValue": 50,
+          "measureNameBeforeTrans": "",
+          "measurePluralNameBeforeTrans": "",
+          "transRate": "",
+          "transTarget": ""
+         }
+        }
+       },
+       "product": [
+        {
+         "resourceType": "hws.resource.type.volume",
+         "cloudServiceType": "hws.service.type.ebs",
+         "resourceSpecCode": "GPSSD",
+         "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+         "resourceSpecType": "GPSSD",
+         "periodList": 4,
+         "_skuInfo": [
+          "Disk Specifications: General Purpose SSD",
+          "Disk Size: nullBSSUNIT.unit.17"
+         ],
+         "volumeType": "General Purpose SSD",
+         "linearDisk": "nullBSSUNIT.unit.17",
+         "planList": [
+          {
+           "productId": "OFFI472256171180654593",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 1.8
+          },
+          {
+           "productId": "OFFI472256171180654592",
+           "billingMode": "MONTHLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 0.18
+          }
+         ],
+         "billingItem": "detail_68_",
+         "type": "dataInfo_43_",
+         "info": "dataInfo_26_",
+         "specifications": "dataInfo_27_",
+         "tableUnit": "detail_26_",
+         "resourceSize": 40,
+         "resouceSizeMeasureId": 17,
+         "resourceMeasureName": "",
+         "resourceMeasurePluralName": "",
+         "addToList_title": "calc_11_",
+         "addToList_product": "dataInfo_43_ | 40BSSUNIT.pluralUnit.17",
+         "_productType": "main"
+        },
+        {
+         "resourceType": "hws.resource.type.volume",
+         "cloudServiceType": "hws.service.type.ebs",
+         "resourceSpecCode": "GPSSD",
+         "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+         "resourceSpecType": "GPSSD",
+         "periodList": 4,
+         "_skuInfo": [
+          "Disk Specifications: General Purpose SSD",
+          "Disk Size: nullBSSUNIT.unit.17"
+         ],
+         "volumeType": "General Purpose SSD",
+         "linearDisk": "nullBSSUNIT.unit.17",
+         "planList": [
+          {
+           "productId": "OFFI472256171180654593",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 1.8
+          },
+          {
+           "productId": "OFFI472256171180654592",
+           "billingMode": "MONTHLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 0.18
+          }
+         ],
+         "billingItem": "detail_68_",
+         "type": "dataInfo_43_",
+         "info": "dataInfo_26_",
+         "specifications": "dataInfo_27_",
+         "tableUnit": "detail_26_",
+         "resourceSize": 50,
+         "resouceSizeMeasureId": 17,
+         "resourceMeasureName": "",
+         "resourceMeasurePluralName": "",
+         "addToList_title": "calc_12_",
+         "addToList_product": "dataInfo_43_ | 50BSSUNIT.pluralUnit.17",
+         "_productType": "addible"
+        },
+        {
+         "resourceType": "hws.resource.type.volume",
+         "cloudServiceType": "hws.service.type.ebs",
+         "resourceSpecCode": "GPSSD",
+         "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+         "resourceSpecType": "GPSSD",
+         "periodList": 4,
+         "_skuInfo": [
+          "Disk Specifications: General Purpose SSD",
+          "Disk Size: nullBSSUNIT.unit.17"
+         ],
+         "volumeType": "General Purpose SSD",
+         "linearDisk": "nullBSSUNIT.unit.17",
+         "planList": [
+          {
+           "productId": "OFFI472256171180654593",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 1.8
+          },
+          {
+           "productId": "OFFI472256171180654592",
+           "billingMode": "MONTHLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 0.18
+          }
+         ],
+         "billingItem": "detail_68_",
+         "type": "dataInfo_43_",
+         "info": "dataInfo_26_",
+         "specifications": "dataInfo_27_",
+         "tableUnit": "detail_26_",
+         "resourceSize": 50,
+         "resouceSizeMeasureId": 17,
+         "resourceMeasureName": "",
+         "resourceMeasurePluralName": "",
+         "addToList_title": "calc_12_",
+         "addToList_product": "dataInfo_43_ | 50BSSUNIT.pluralUnit.17",
+         "_productType": "addible"
+        }
+       ],
+       "rewrite": false
+      }
+     },
+     "rewrite": false,
+     "showTag": {
+      "calculator_ecs_radio": true,
+      "calculator_ecs_tip": true,
+      "calculator_ims_select": true,
+      "calculator_ecs_RIRadio": false,
+      "calculator_evs_stepper": true,
+      "calculator_evs_tip": false,
+      "calculator_eip_switch": true,
+      "calculator_eip_radio": true
+     }
+    },
+    "global_FEEINSTALLMODE": {
+     "feeInstallMode": null
+    },
+    "global_ONDEMANDTIME": {
+     "UNSET_Stepper_0": {
+      "measureId": 4,
+      "measureValue": 1,
+      "measureNameBeforeTrans": "",
+      "measurePluralNameBeforeTrans": "",
+      "transRate": "",
+      "transTarget": ""
+     }
+    },
+    "global_PERIODTIME": {
+     "UNSET_PeriodTime": {
+      "measureValue": 1,
+      "measureId": 20
+     }
+    },
+    "global_QUANTITY": {
+     "UNSET_Stepper_0": {
+      "measureId": 41,
+      "measureValue": 1,
+      "measureNameBeforeTrans": "calc_29_",
+      "measurePluralNameBeforeTrans": "calc_30_",
+      "transRate": "",
+      "transTarget": ""
+     }
+    }
+   },
+   "langPack": {},
+   "buyUrl": "https://console-intl.huaweicloud.com/ecm/?region=sa-brazil-1&locale=en-us&charging=1&flavor=c7n.large.2&imageId=5f67dd87-7685-4a71-ae63-1dca02fd724c&sysdisk=GPSSD:40&datadisk=GPSSD:50;GPSSD:50&iptype=5_bgp&ipcharging=bandwidth&bwsize=5&vmcount=1&period=1m#/ecs/createVm",
+   "cartData": {
+    "_cartId": "SYNTHETICCARTID0000000000000000001",
+    "_id": "SYNTHETICCARTID0000000000000000001",
+    "serviceName": "custom.ecs 1",
+    "description": "Elastic Cloud Server",
+    "_customTitleWithIcon": "<img class=\"func-table-cart-list-icon\" src=https://res-static.hc-cdn.cn/aem/program/prod/common/china/zh-cn/service-icon/ecs.svg /><span  class=\"cart-item-header-title-text v-auto-tip\">custom.ecs 1</span>",
+    "serviceCode": "ecs",
+    "regionName": "sa-brazil-1",
+    "location": "commonAZ",
+    "chargeModeName": "MONTHLY",
+    "billingTime": "1 BSSUNIT.unit.20",
+    "purchaseNum": "1 BSSUNIT.unit.20, 1 calc_29_",
+    "amount": 132.22,
+    "discountAmount": 0,
+    "installAmount": 0,
+    "monthlyAmount": 0,
+    "originalAmount": 132.22,
+    "priceInfo": "USD 132.22",
+    "_canEdit": true,
+    "_canBuy": true,
+    "_expandData": [
+     {
+      "addToList_title": "calc_2_",
+      "addToList_product": "dataInfo_32_ | dataInfo_3_ | c7n.large.2 | 2dataInfo_36_ | 4BSSUNIT.pluralUnit.102",
+      "subPurchaseInfo": "1 BSSUNIT.unit.20, *1",
+      "priceInfo": "USD 62.02",
+      "originalAmountInfo": "USD 62.02"
+     },
+     {
+      "addToList_title": "calc_4_",
+      "addToList_product": "Ubuntu | Ubuntu 22.04 server 64bit",
+      "subPurchaseInfo": "1 BSSUNIT.unit.20, *1",
+      "priceInfo": "USD 0",
+      "originalAmountInfo": "USD 0"
+     },
+     {
+      "addToList_title": "calc_11_",
+      "addToList_product": "dataInfo_43_ | 40BSSUNIT.pluralUnit.17",
+      "subPurchaseInfo": "1 BSSUNIT.unit.20, *1",
+      "priceInfo": "USD 7.2",
+      "originalAmountInfo": "USD 7.2"
+     },
+     {
+      "addToList_title": "calc_12_",
+      "addToList_product": "dataInfo_43_ | 50BSSUNIT.pluralUnit.17",
+      "subPurchaseInfo": "1 BSSUNIT.unit.20, *1",
+      "priceInfo": "USD 9",
+      "originalAmountInfo": "USD 9"
+     },
+     {
+      "addToList_title": "calc_12_",
+      "addToList_product": "dataInfo_43_ | 50BSSUNIT.pluralUnit.17",
+      "subPurchaseInfo": "1 BSSUNIT.unit.20, *1",
+      "priceInfo": "USD 9",
+      "originalAmountInfo": "USD 9"
+     },
+     {
+      "addToList_title": "calc_5_",
+      "addToList_product": "dataInfo_14_ | dataInfo_16_ | dataInfo_18_ | 5BSSUNIT.pluralUnit.15",
+      "subPurchaseInfo": "1 BSSUNIT.unit.20, *1",
+      "priceInfo": "USD 45",
+      "originalAmountInfo": "USD 45"
+     }
+    ],
+    "_spCartArch": "dataInfo_14_ | dataInfo_16_ | dataInfo_18_ | 5BSSUNIT.pluralUnit.15",
+    "originalAmountInfo": "USD 132.22"
+   },
+   "originData": {
+    "rewriteValue": {
+     "global_TITLE": {
+      "tag": "general.online.portal"
+     },
+     "global_DESCRIPTION": "Elastic Cloud Server",
+     "global_REGIONINFO": {
+      "region": "sa-brazil-1",
+      "locationType": "commonAZ",
+      "chargeMode": "PERIOD"
+     },
+     "template_RENDER": {
+      "calculator_ecs_radio": {
+       "arch": "dataInfo_32_",
+       "vmType": "dataInfo_3_",
+       "generation": "C7n",
+       "cpu": "2dataInfo_36_",
+       "mem": "4BSSUNIT.pluralUnit.102"
+      },
+      "calculator_eip_switch": {
+       "UNSET_Switch": "calc_14_"
+      },
+      "calculator_eip_radio": {
+       "eipSpec": "dataInfo_14_",
+       "shareType": "dataInfo_16_",
+       "eipType": "dataInfo_18_",
+       "UNSET_Stepper_1": {
+        "measureId": 15,
+        "measureValue": 5,
+        "measureNameBeforeTrans": "",
+        "measurePluralNameBeforeTrans": "",
+        "transRate": "",
+        "transTarget": ""
+       }
+      },
+      "calculator_ims_select": {
+       "__platform": "Ubuntu",
+       "name": "Ubuntu 22.04 server 64bit"
+      },
+      "calculator_evs_stepper": {
+       "calculator_evs_stepper_main": {
+        "type": "dataInfo_43_",
+        "UNSET_Stepper_0": {
+         "measureId": 17,
+         "measureValue": 40,
+         "measureNameBeforeTrans": "",
+         "measurePluralNameBeforeTrans": "",
+         "transRate": "",
+         "transTarget": ""
+        }
+       },
+       "calculator_evs_stepper_|addible0|_0": {
+        "type": "dataInfo_43_",
+        "UNSET_Stepper_0": {
+         "measureId": 17,
+         "measureValue": 50,
+         "measureNameBeforeTrans": "",
+         "measurePluralNameBeforeTrans": "",
+         "transRate": "",
+         "transTarget": ""
+        }
+       },
+       "calculator_evs_stepper_|addible0|_1": {
+        "type": "dataInfo_43_",
+        "UNSET_Stepper_0": {
+         "measureId": 17,
+         "measureValue": 50,
+         "measureNameBeforeTrans": "",
+         "measurePluralNameBeforeTrans": "",
+         "transRate": "",
+         "transTarget": ""
+        }
+       }
+      }
+     },
+     "global_PERIODTIME": {
+      "UNSET_PeriodTime": {
+       "measureValue": 1,
+       "measureId": 20
+      }
+     },
+     "global_QUANTITY": {
+      "UNSET_Stepper_0": {
+       "measureId": 41,
+       "measureValue": 1,
+       "measureNameBeforeTrans": "calc_29_",
+       "measurePluralNameBeforeTrans": "calc_30_",
+       "transRate": "",
+       "transTarget": ""
+      }
+     }
+    },
+    "selectedProduct": {
+     "region": "sa-brazil-1",
+     "locationType": "commonAZ",
+     "chargeMode": "PERIOD",
+     "tag": "general.online.portal",
+     "serviceCode": "ecs",
+     "timeTag": 1792254488274,
+     "chargeModeName": "MONTHLY",
+     "periodType": 2,
+     "periodNum": 1,
+     "subscriptionNum": 1,
+     "purchaseTime": {
+      "measureValue": 1,
+      "measureId": 20,
+      "measureNameBeforeTrans": "",
+      "measurePluralNameBeforeTrans": ""
+     },
+     "purchaseNum": {
+      "measureValue": 1,
+      "measureId": 41,
+      "measureNameBeforeTrans": "calc_29_",
+      "measurePluralNameBeforeTrans": "calc_30_"
+     },
+     "description": "Elastic Cloud Server",
+     "productAllInfos": [
+      {
+       "resourceType": "hws.resource.type.vm",
+       "cloudServiceType": "hws.service.type.ec2",
+       "resourceSpecCode": "c7n.large.2.linux",
+       "productSpecSysDesc": "Memory:4096MB;vCPUs:2CORE;CPU Architecture:x86;Type:General Computing-plus;System Disk:40GB;Series:C7n;Image:Linux;Spot Duartion:On Demand, Period, Dynamic Price Spot;Local Disk:No Local-Disk;Remark:normal;accelerator card:No Accelerator Card",
+       "resourceSpecType": "c7n",
+       "periodList": 0,
+       "_skuInfo": [
+        "Memory: 4096BSSUNIT.pluralUnit.21",
+        "vCPUs: 2BSSUNIT.pluralUnit.23",
+        "CPU Architecture: x86",
+        "Type: General Computing-plus",
+        "System Disk: 40BSSUNIT.pluralUnit.17",
+        "Series: C7n",
+        "Image: Linux",
+        "Spot Duartion: On Demand, Period, Dynamic Price Spot",
+        "Local Disk: No Local-Disk",
+        "Remark: normal",
+        "accelerator card: No Accelerator Card"
+       ],
+       "mem": "4BSSUNIT.pluralUnit.102",
+       "cpu": "2dataInfo_36_",
+       "instanceArch": "x86",
+       "performType": "General Computing-plus",
+       "disk": "40BSSUNIT.pluralUnit.17",
+       "series": "C7n",
+       "image": "Linux",
+       "spot_duartion": "On Demand, Period, Dynamic Price Spot",
+       "localDisk": "No Local-Disk",
+       "type": "normal",
+       "acceleratorCard": "No Accelerator Card",
+       "arch": "dataInfo_32_",
+       "generation": "C7n",
+       "spec": "c7n.large.2",
+       "physical": "dataInfo_44_",
+       "vmType": "dataInfo_3_",
+       "generationType": "dataInfo_3_ C7n dataInfo_44_",
+       "generationTypeMap": "dataInfo_3_",
+       "imageSpec": "linux",
+       "riResourceSepc": "c7n.large.2",
+       "addToList_title": "calc_2_",
+       "addToList_product": "dataInfo_32_ | dataInfo_3_ | c7n.large.2 | 2dataInfo_36_ | 4BSSUNIT.pluralUnit.102",
+       "bakPlanList": [
+        {
+         "productId": "OFFI959429067048849408",
+         "billingMode": "MONTHLY",
+         "siteCode": "HWC",
+         "planType": "PRICEPLAN",
+         "periodNum": 1,
+         "billingEvent": "event.type.onetime",
+         "measureUnitStep": null,
+         "measureUnit": null,
+         "amount": 62.02
+        },
+        {
+         "productId": "OFFI959429066776219651",
+         "billingMode": "YEARLY",
+         "siteCode": "HWC",
+         "planType": "PRICEPLAN",
+         "periodNum": 1,
+         "billingEvent": "event.type.onetime",
+         "measureUnitStep": null,
+         "measureUnit": null,
+         "amount": 620.2
+        }
+       ],
+       "productId": "OFFI959429067048849408",
+       "billingMode": "MONTHLY",
+       "siteCode": "HWC",
+       "planType": "PRICEPLAN",
+       "periodNum": 1,
+       "billingEvent": "event.type.onetime",
+       "measureUnitStep": null,
+       "measureUnit": null,
+       "amount": 62.02,
+       "productNum": 1,
+       "inquiryTag": "normal",
+       "selfProductNum": 1,
+       "selectIndex": 0,
+       "inquiryResult": {
+        "id": "1792254488274-0-OFFI959429067048849408",
+        "productId": "OFFI959429067048849408",
+        "amount": 62.02,
+        "officialWebsiteAmount": 62.02,
+        "officialWebsiteDiscountAmount": 0,
+        "officialCheapAmount": null,
+        "officialCheapDiscountAmount": null,
+        "discountAmount": 0,
+        "originalAmount": 62.02,
+        "perAmount": null,
+        "perDiscountAmount": null,
+        "perOriginalAmount": null,
+        "perPeriodType": null,
+        "measureId": 1,
+        "extendParams": null
+       }
+      },
+      {
+       "type": [
+        "c3",
+        "d2",
+        "d3",
+        "hc1",
+        "hc2",
+        "h3",
+        "t6",
+        "s2",
+        "s3",
+        "m2",
+        "m3",
+        "sn3",
+        "s6",
+        "cc3",
+        "t2",
+        "s7",
+        "c7n",
+        "s7n",
+        "m7n",
+        "x1",
+        "x0",
+        "m6",
+        "m7",
+        "d6",
+        "c6ne",
+        "d7",
+        "c7e",
+        "c7ne",
+        "c7t",
+        "m7ne",
+        "c3ne",
+        "c6",
+        "c6s",
+        "c7",
+        "c9",
+        "m9",
+        "m3ne",
+        "h3ne",
+        "d3ne"
+       ],
+       "min_ram": 1024,
+       "id": "5f67dd87-7685-4a71-ae63-1dca02fd724c",
+       "__os_type": "Linux",
+       "__platform": "Ubuntu",
+       "__os_bit": "64",
+       "name": "Ubuntu 22.04 server 64bit",
+       "__account_code": "",
+       "__productcode": "",
+       "addToList_title": "calc_4_",
+       "addToList_product": "Ubuntu | Ubuntu 22.04 server 64bit",
+       "productNum": 1,
+       "inquiryTag": "localImage",
+       "selfProductNum": 1,
+       "selectIndex": 1,
+       "inquiryResult": {
+        "amount": 0,
+        "originalAmount": 0,
+        "discountAmount": 0,
+        "productId": "noId",
+        "id": "1792254488274-1-noId"
+       }
+      },
+      {
+       "resourceType": "hws.resource.type.volume",
+       "cloudServiceType": "hws.service.type.ebs",
+       "resourceSpecCode": "GPSSD",
+       "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+       "resourceSpecType": "GPSSD",
+       "periodList": 4,
+       "_skuInfo": [
+        "Disk Specifications: General Purpose SSD",
+        "Disk Size: nullBSSUNIT.unit.17"
+       ],
+       "volumeType": "General Purpose SSD",
+       "linearDisk": "nullBSSUNIT.unit.17",
+       "billingItem": "detail_68_",
+       "type": "dataInfo_43_",
+       "info": "dataInfo_26_",
+       "specifications": "dataInfo_27_",
+       "tableUnit": "detail_26_",
+       "resourceSize": 40,
+       "resouceSizeMeasureId": 17,
+       "resourceMeasureName": "",
+       "resourceMeasurePluralName": "",
+       "addToList_title": "calc_11_",
+       "addToList_product": "dataInfo_43_ | 40BSSUNIT.pluralUnit.17",
+       "_productType": "main",
+       "bakPlanList": [
+        {
+         "productId": "OFFI472256171180654593",
+         "billingMode": "YEARLY",
+         "siteCode": "HWC",
+         "planType": "PRICEPLAN",
+         "periodNum": 1,
+         "billingEvent": "event.type.onetime",
+         "measureUnitStep": null,
+         "measureUnit": null,
+         "amount": 1.8
+        },
+        {
+         "productId": "OFFI472256171180654592",
+         "billingMode": "MONTHLY",
+         "siteCode": "HWC",
+         "planType": "PRICEPLAN",
+         "periodNum": 1,
+         "billingEvent": "event.type.onetime",
+         "measureUnitStep": null,
+         "measureUnit": null,
+         "amount": 0.18
+        }
+       ],
+       "productId": "OFFI472256171180654592",
+       "billingMode": "MONTHLY",
+       "siteCode": "HWC",
+       "planType": "PRICEPLAN",
+       "periodNum": 1,
+       "billingEvent": "event.type.onetime",
+       "measureUnitStep": null,
+       "measureUnit": null,
+       "amount": 0.18,
+       "productNum": 1,
+       "inquiryTag": "normal",
+       "selfProductNum": 1,
+       "selectIndex": 2,
+       "inquiryResult": {
+        "id": "1792254488274-2-OFFI472256171180654592",
+        "productId": "OFFI472256171180654592",
+        "amount": 7.2,
+        "officialWebsiteAmount": 7.2,
+        "officialWebsiteDiscountAmount": 0,
+        "officialCheapAmount": null,
+        "officialCheapDiscountAmount": null,
+        "discountAmount": 0,
+        "originalAmount": 7.2,
+        "perAmount": null,
+        "perDiscountAmount": null,
+        "perOriginalAmount": null,
+        "perPeriodType": null,
+        "measureId": 1,
+        "extendParams": null
+       }
+      },
+      {
+       "resourceType": "hws.resource.type.volume",
+       "cloudServiceType": "hws.service.type.ebs",
+       "resourceSpecCode": "GPSSD",
+       "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+       "resourceSpecType": "GPSSD",
+       "periodList": 4,
+       "_skuInfo": [
+        "Disk Specifications: General Purpose SSD",
+        "Disk Size: nullBSSUNIT.unit.17"
+       ],
+       "volumeType": "General Purpose SSD",
+       "linearDisk": "nullBSSUNIT.unit.17",
+       "billingItem": "detail_68_",
+       "type": "dataInfo_43_",
+       "info": "dataInfo_26_",
+       "specifications": "dataInfo_27_",
+       "tableUnit": "detail_26_",
+       "resourceSize": 50,
+       "resouceSizeMeasureId": 17,
+       "resourceMeasureName": "",
+       "resourceMeasurePluralName": "",
+       "addToList_title": "calc_12_",
+       "addToList_product": "dataInfo_43_ | 50BSSUNIT.pluralUnit.17",
+       "_productType": "addible",
+       "bakPlanList": [
+        {
+         "productId": "OFFI472256171180654593",
+         "billingMode": "YEARLY",
+         "siteCode": "HWC",
+         "planType": "PRICEPLAN",
+         "periodNum": 1,
+         "billingEvent": "event.type.onetime",
+         "measureUnitStep": null,
+         "measureUnit": null,
+         "amount": 1.8
+        },
+        {
+         "productId": "OFFI472256171180654592",
+         "billingMode": "MONTHLY",
+         "siteCode": "HWC",
+         "planType": "PRICEPLAN",
+         "periodNum": 1,
+         "billingEvent": "event.type.onetime",
+         "measureUnitStep": null,
+         "measureUnit": null,
+         "amount": 0.18
+        }
+       ],
+       "productId": "OFFI472256171180654592",
+       "billingMode": "MONTHLY",
+       "siteCode": "HWC",
+       "planType": "PRICEPLAN",
+       "periodNum": 1,
+       "billingEvent": "event.type.onetime",
+       "measureUnitStep": null,
+       "measureUnit": null,
+       "amount": 0.18,
+       "productNum": 1,
+       "inquiryTag": "normal",
+       "selfProductNum": 1,
+       "selectIndex": 3,
+       "inquiryResult": {
+        "id": "1792254488274-3-OFFI472256171180654592",
+        "productId": "OFFI472256171180654592",
+        "amount": 9,
+        "officialWebsiteAmount": 9,
+        "officialWebsiteDiscountAmount": 0,
+        "officialCheapAmount": null,
+        "officialCheapDiscountAmount": null,
+        "discountAmount": 0,
+        "originalAmount": 9,
+        "perAmount": null,
+        "perDiscountAmount": null,
+        "perOriginalAmount": null,
+        "perPeriodType": null,
+        "measureId": 1,
+        "extendParams": null
+       }
+      },
+      {
+       "resourceType": "hws.resource.type.volume",
+       "cloudServiceType": "hws.service.type.ebs",
+       "resourceSpecCode": "GPSSD",
+       "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+       "resourceSpecType": "GPSSD",
+       "periodList": 4,
+       "_skuInfo": [
+        "Disk Specifications: General Purpose SSD",
+        "Disk Size: nullBSSUNIT.unit.17"
+       ],
+       "volumeType": "General Purpose SSD",
+       "linearDisk": "nullBSSUNIT.unit.17",
+       "billingItem": "detail_68_",
+       "type": "dataInfo_43_",
+       "info": "dataInfo_26_",
+       "specifications": "dataInfo_27_",
+       "tableUnit": "detail_26_",
+       "resourceSize": 50,
+       "resouceSizeMeasureId": 17,
+       "resourceMeasureName": "",
+       "resourceMeasurePluralName": "",
+       "addToList_title": "calc_12_",
+       "addToList_product": "dataInfo_43_ | 50BSSUNIT.pluralUnit.17",
+       "_productType": "addible",
+       "bakPlanList": [
+        {
+         "productId": "OFFI472256171180654593",
+         "billingMode": "YEARLY",
+         "siteCode": "HWC",
+         "planType": "PRICEPLAN",
+         "periodNum": 1,
+         "billingEvent": "event.type.onetime",
+         "measureUnitStep": null,
+         "measureUnit": null,
+         "amount": 1.8
+        },
+        {
+         "productId": "OFFI472256171180654592",
+         "billingMode": "MONTHLY",
+         "siteCode": "HWC",
+         "planType": "PRICEPLAN",
+         "periodNum": 1,
+         "billingEvent": "event.type.onetime",
+         "measureUnitStep": null,
+         "measureUnit": null,
+         "amount": 0.18
+        }
+       ],
+       "productId": "OFFI472256171180654592",
+       "billingMode": "MONTHLY",
+       "siteCode": "HWC",
+       "planType": "PRICEPLAN",
+       "periodNum": 1,
+       "billingEvent": "event.type.onetime",
+       "measureUnitStep": null,
+       "measureUnit": null,
+       "amount": 0.18,
+       "productNum": 1,
+       "inquiryTag": "normal",
+       "selfProductNum": 1,
+       "selectIndex": 4,
+       "inquiryResult": {
+        "id": "1792254488274-4-OFFI472256171180654592",
+        "productId": "OFFI472256171180654592",
+        "amount": 9,
+        "officialWebsiteAmount": 9,
+        "officialWebsiteDiscountAmount": 0,
+        "officialCheapAmount": null,
+        "officialCheapDiscountAmount": null,
+        "discountAmount": 0,
+        "originalAmount": 9,
+        "perAmount": null,
+        "perDiscountAmount": null,
+        "perOriginalAmount": null,
+        "perPeriodType": null,
+        "measureId": 1,
+        "extendParams": null
+       }
+      },
+      {
+       "resourceType": "hws.resource.type.bandwidth",
+       "cloudServiceType": "hws.service.type.vpc",
+       "resourceSpecCode": "19_bgp",
+       "productSpecSysDesc": "Package Validity:unknown;type:19_bgp",
+       "resourceSpecType": "DEFAULT",
+       "periodList": 2,
+       "_skuInfo": [
+        "Package Validity: unknown",
+        "type: 19_bgp",
+        "Bandwidth: nullBSSUNIT.unit.15"
+       ],
+       "PackageValidity": "unknown",
+       "type": "19_bgp",
+       "linearBandwidth": "nullBSSUNIT.unit.15",
+       "eipSpec": "dataInfo_14_",
+       "shareType": "dataInfo_16_",
+       "eipType": "dataInfo_18_",
+       "name": "dataInfo_14_",
+       "resourceSize": 5,
+       "resouceSizeMeasureId": 15,
+       "resourceMeasureName": "",
+       "resourceMeasurePluralName": "",
+       "addToList_title": "calc_5_",
+       "addToList_product": "dataInfo_14_ | dataInfo_16_ | dataInfo_18_ | 5BSSUNIT.pluralUnit.15",
+       "bakPlanList": [
+        {
+         "productId": "OFFI954296642696609792",
+         "billingMode": "MONTHLY",
+         "siteCode": "HWC",
+         "planType": "PRICEPLAN",
+         "periodNum": 1,
+         "billingEvent": "event.type.onetime",
+         "measureUnitStep": null,
+         "measureUnit": null,
+         "amount": 9
+        },
+        {
+         "productId": "OFFI954296642692415488",
+         "billingMode": "YEARLY",
+         "siteCode": "HWC",
+         "planType": "PRICEPLAN",
+         "periodNum": 1,
+         "billingEvent": "event.type.onetime",
+         "measureUnitStep": null,
+         "measureUnit": null,
+         "amount": 90
+        },
+        {
+         "productId": "OFFI954296642692415488",
+         "billingMode": "YEARLY",
+         "siteCode": "HWC",
+         "planType": "PRICEPLAN",
+         "periodNum": 2,
+         "billingEvent": "event.type.onetime",
+         "measureUnitStep": null,
+         "measureUnit": null,
+         "amount": 180
+        },
+        {
+         "productId": "OFFI954296642692415488",
+         "billingMode": "YEARLY",
+         "siteCode": "HWC",
+         "planType": "PRICEPLAN",
+         "periodNum": 3,
+         "billingEvent": "event.type.onetime",
+         "measureUnitStep": null,
+         "measureUnit": null,
+         "amount": 270
+        }
+       ],
+       "productId": "OFFI954296642696609792",
+       "billingMode": "MONTHLY",
+       "siteCode": "HWC",
+       "planType": "PRICEPLAN",
+       "periodNum": 1,
+       "billingEvent": "event.type.onetime",
+       "measureUnitStep": null,
+       "measureUnit": null,
+       "amount": 9,
+       "productNum": 1,
+       "inquiryTag": "normal",
+       "selfProductNum": 1,
+       "selectIndex": 5,
+       "inquiryResult": {
+        "id": "1792254488274-5-OFFI954296642696609792",
+        "productId": "OFFI954296642696609792",
+        "amount": 45,
+        "officialWebsiteAmount": 45,
+        "officialWebsiteDiscountAmount": 0,
+        "officialCheapAmount": null,
+        "officialCheapDiscountAmount": null,
+        "discountAmount": 0,
+        "originalAmount": 45,
+        "perAmount": null,
+        "perDiscountAmount": null,
+        "perOriginalAmount": null,
+        "perPeriodType": null,
+        "measureId": 1,
+        "extendParams": null
+       }
+      }
+     ],
+     "amount": 132.22,
+     "discountAmount": 0,
+     "originalAmount": 132.22,
+     "_cartId": "SYNTHETICCARTID0000000000000000001",
+     "_customTitle": "custom.ecs 1"
+    },
+    "valueWatcher": {
+     "global_TITLE": {
+      "tag": "general.online.portal"
+     },
+     "global_DESCRIPTION": "Elastic Cloud Server",
+     "global_REGIONINFO": {
+      "region": "sa-brazil-1",
+      "locationType": "commonAZ",
+      "chargeMode": "PERIOD"
+     },
+     "template_RENDER": {
+      "value": {
+       "calculator_ecs_radio": {
+        "arch": "dataInfo_32_",
+        "vmType": "dataInfo_3_",
+        "generation": "C7n",
+        "cpu": "2dataInfo_36_",
+        "mem": "4BSSUNIT.pluralUnit.102"
+       },
+       "calculator_eip_switch": {
+        "UNSET_Switch": "calc_14_"
+       },
+       "calculator_eip_radio": {
+        "eipSpec": "dataInfo_14_",
+        "shareType": "dataInfo_16_",
+        "eipType": "dataInfo_18_",
+        "UNSET_Stepper_1": {
+         "measureId": 15,
+         "measureValue": 5,
+         "measureNameBeforeTrans": "",
+         "measurePluralNameBeforeTrans": "",
+         "transRate": "",
+         "transTarget": ""
+        }
+       },
+       "calculator_ims_select": {
+        "__platform": "Ubuntu",
+        "name": "Ubuntu 22.04 server 64bit"
+       },
+       "calculator_evs_stepper": {
+        "calculator_evs_stepper_main": {
+         "type": "dataInfo_43_",
+         "UNSET_Stepper_0": {
+          "measureId": 17,
+          "measureValue": 40,
+          "measureNameBeforeTrans": "",
+          "measurePluralNameBeforeTrans": "",
+          "transRate": "",
+          "transTarget": ""
+         }
+        },
+        "calculator_evs_stepper_|addible0|_0": {
+         "type": "dataInfo_43_",
+         "UNSET_Stepper_0": {
+          "measureId": 17,
+          "measureValue": 50,
+          "measureNameBeforeTrans": "",
+          "measurePluralNameBeforeTrans": "",
+          "transRate": "",
+          "transTarget": ""
+         }
+        },
+        "calculator_evs_stepper_|addible0|_1": {
+         "type": "dataInfo_43_",
+         "UNSET_Stepper_0": {
+          "measureId": 17,
+          "measureValue": 50,
+          "measureNameBeforeTrans": "",
+          "measurePluralNameBeforeTrans": "",
+          "transRate": "",
+          "transTarget": ""
+         }
+        }
+       }
+      },
+      "product": {
+       "calculator_ecs_radio": [
+        {
+         "resourceType": "hws.resource.type.vm",
+         "cloudServiceType": "hws.service.type.ec2",
+         "resourceSpecCode": "c7n.large.2.linux",
+         "productSpecSysDesc": "Memory:4096MB;vCPUs:2CORE;CPU Architecture:x86;Type:General Computing-plus;System Disk:40GB;Series:C7n;Image:Linux;Spot Duartion:On Demand, Period, Dynamic Price Spot;Local Disk:No Local-Disk;Remark:normal;accelerator card:No Accelerator Card",
+         "resourceSpecType": "c7n",
+         "periodList": 0,
+         "_skuInfo": [
+          "Memory: 4096BSSUNIT.pluralUnit.21",
+          "vCPUs: 2BSSUNIT.pluralUnit.23",
+          "CPU Architecture: x86",
+          "Type: General Computing-plus",
+          "System Disk: 40BSSUNIT.pluralUnit.17",
+          "Series: C7n",
+          "Image: Linux",
+          "Spot Duartion: On Demand, Period, Dynamic Price Spot",
+          "Local Disk: No Local-Disk",
+          "Remark: normal",
+          "accelerator card: No Accelerator Card"
+         ],
+         "mem": "4BSSUNIT.pluralUnit.102",
+         "cpu": "2dataInfo_36_",
+         "instanceArch": "x86",
+         "performType": "General Computing-plus",
+         "disk": "40BSSUNIT.pluralUnit.17",
+         "series": "C7n",
+         "image": "Linux",
+         "spot_duartion": "On Demand, Period, Dynamic Price Spot",
+         "localDisk": "No Local-Disk",
+         "type": "normal",
+         "acceleratorCard": "No Accelerator Card",
+         "planList": [
+          {
+           "productId": "OFFI959429067048849408",
+           "billingMode": "MONTHLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 62.02
+          },
+          {
+           "productId": "OFFI959429066776219651",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 620.2
+          }
+         ],
+         "arch": "dataInfo_32_",
+         "generation": "C7n",
+         "spec": "c7n.large.2",
+         "physical": "dataInfo_44_",
+         "vmType": "dataInfo_3_",
+         "generationType": "dataInfo_3_ C7n dataInfo_44_",
+         "generationTypeMap": "dataInfo_3_",
+         "imageSpec": "linux",
+         "riResourceSepc": "c7n.large.2",
+         "addToList_title": "calc_25_",
+         "addToList_product": "dataInfo_32_ | dataInfo_3_ | C7n | 2dataInfo_36_ | 4BSSUNIT.pluralUnit.102"
+        },
+        {
+         "resourceType": "hws.resource.type.vm",
+         "cloudServiceType": "hws.service.type.ec2",
+         "resourceSpecCode": "c7n.large.2.byol",
+         "productSpecSysDesc": "Memory:4096MB;vCPUs:2CORE;CPU Architecture:x86;Type:General Computing-plus;System Disk:40GB;Series:C7n;Image:Byol;Spot Duartion:On Demand, Period, Dynamic Price Spot;Local Disk:No Local-Disk;Remark:normal;accelerator card:No Accelerator Card",
+         "resourceSpecType": "c7n",
+         "periodList": 0,
+         "_skuInfo": [
+          "Memory: 4096BSSUNIT.pluralUnit.21",
+          "vCPUs: 2BSSUNIT.pluralUnit.23",
+          "CPU Architecture: x86",
+          "Type: General Computing-plus",
+          "System Disk: 40BSSUNIT.pluralUnit.17",
+          "Series: C7n",
+          "Image: Byol",
+          "Spot Duartion: On Demand, Period, Dynamic Price Spot",
+          "Local Disk: No Local-Disk",
+          "Remark: normal",
+          "accelerator card: No Accelerator Card"
+         ],
+         "mem": "4BSSUNIT.pluralUnit.102",
+         "cpu": "2dataInfo_36_",
+         "instanceArch": "x86",
+         "performType": "General Computing-plus",
+         "disk": "40BSSUNIT.pluralUnit.17",
+         "series": "C7n",
+         "image": "detail_77_",
+         "spot_duartion": "On Demand, Period, Dynamic Price Spot",
+         "localDisk": "No Local-Disk",
+         "type": "normal",
+         "acceleratorCard": "No Accelerator Card",
+         "planList": [
+          {
+           "productId": "OFFI959429066562310151",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 620.2
+          },
+          {
+           "productId": "OFFI959429065962524678",
+           "billingMode": "MONTHLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 62.02
+          }
+         ],
+         "arch": "dataInfo_32_",
+         "generation": "C7n",
+         "spec": "c7n.large.2",
+         "physical": "dataInfo_44_",
+         "vmType": "dataInfo_3_",
+         "generationType": "dataInfo_3_ C7n dataInfo_44_",
+         "generationTypeMap": "dataInfo_3_",
+         "imageSpec": "byol",
+         "riResourceSepc": "c7n.large.2",
+         "addToList_title": "calc_25_",
+         "addToList_product": "dataInfo_32_ | dataInfo_3_ | C7n | 2dataInfo_36_ | 4BSSUNIT.pluralUnit.102"
+        }
+       ],
+       "calculator_eip_radio": [
+        {
+         "resourceType": "hws.resource.type.bandwidth",
+         "cloudServiceType": "hws.service.type.vpc",
+         "resourceSpecCode": "19_bgp",
+         "productSpecSysDesc": "Package Validity:unknown;type:19_bgp",
+         "resourceSpecType": "DEFAULT",
+         "periodList": 2,
+         "_skuInfo": [
+          "Package Validity: unknown",
+          "type: 19_bgp",
+          "Bandwidth: nullBSSUNIT.unit.15"
+         ],
+         "PackageValidity": "unknown",
+         "type": "19_bgp",
+         "linearBandwidth": "nullBSSUNIT.unit.15",
+         "planList": [
+          {
+           "productId": "OFFI954296642696609792",
+           "billingMode": "MONTHLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 9
+          },
+          {
+           "productId": "OFFI954296642692415488",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 90
+          },
+          {
+           "productId": "OFFI954296642692415488",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 2,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 180
+          },
+          {
+           "productId": "OFFI954296642692415488",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 3,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 270
+          }
+         ],
+         "eipSpec": "dataInfo_14_",
+         "shareType": "dataInfo_16_",
+         "eipType": "dataInfo_18_",
+         "name": "dataInfo_14_",
+         "resourceSize": 5,
+         "resouceSizeMeasureId": 15,
+         "resourceMeasureName": "",
+         "resourceMeasurePluralName": "",
+         "addToList_title": "calc_6_",
+         "addToList_product": "dataInfo_14_ | dataInfo_16_ | dataInfo_18_ | 5BSSUNIT.pluralUnit.15"
+        }
+       ],
+       "calculator_ims_select": [
+        {
+         "type": [
+          "c3",
+          "d2",
+          "d3",
+          "hc1",
+          "hc2",
+          "h3",
+          "t6",
+          "s2",
+          "s3",
+          "m2",
+          "m3",
+          "sn3",
+          "s6",
+          "cc3",
+          "t2",
+          "s7",
+          "c7n",
+          "s7n",
+          "m7n",
+          "x1",
+          "x0",
+          "m6",
+          "m7",
+          "d6",
+          "c6ne",
+          "d7",
+          "c7e",
+          "c7ne",
+          "c7t",
+          "m7ne",
+          "c3ne",
+          "c6",
+          "c6s",
+          "c7",
+          "c9",
+          "m9",
+          "m3ne",
+          "h3ne",
+          "d3ne"
+         ],
+         "min_ram": 1024,
+         "id": "5f67dd87-7685-4a71-ae63-1dca02fd724c",
+         "__os_type": "Linux",
+         "__platform": "Ubuntu",
+         "__os_bit": "64",
+         "name": "Ubuntu 22.04 server 64bit",
+         "__account_code": "",
+         "__productcode": "",
+         "addToList_title": "calc_4_",
+         "addToList_product": "Ubuntu | Ubuntu 22.04 server 64bit"
+        }
+       ],
+       "calculator_evs_stepper": [
+        {
+         "resourceType": "hws.resource.type.volume",
+         "cloudServiceType": "hws.service.type.ebs",
+         "resourceSpecCode": "GPSSD",
+         "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+         "resourceSpecType": "GPSSD",
+         "periodList": 4,
+         "_skuInfo": [
+          "Disk Specifications: General Purpose SSD",
+          "Disk Size: nullBSSUNIT.unit.17"
+         ],
+         "volumeType": "General Purpose SSD",
+         "linearDisk": "nullBSSUNIT.unit.17",
+         "planList": [
+          {
+           "productId": "OFFI472256171180654593",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 1.8
+          },
+          {
+           "productId": "OFFI472256171180654592",
+           "billingMode": "MONTHLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 0.18
+          }
+         ],
+         "billingItem": "detail_68_",
+         "type": "dataInfo_43_",
+         "info": "dataInfo_26_",
+         "specifications": "dataInfo_27_",
+         "tableUnit": "detail_26_",
+         "resourceSize": 40,
+         "resouceSizeMeasureId": 17,
+         "resourceMeasureName": "",
+         "resourceMeasurePluralName": "",
+         "addToList_title": "calc_11_",
+         "addToList_product": "dataInfo_43_ | 40BSSUNIT.pluralUnit.17",
+         "_productType": "main"
+        },
+        {
+         "resourceType": "hws.resource.type.volume",
+         "cloudServiceType": "hws.service.type.ebs",
+         "resourceSpecCode": "GPSSD",
+         "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+         "resourceSpecType": "GPSSD",
+         "periodList": 4,
+         "_skuInfo": [
+          "Disk Specifications: General Purpose SSD",
+          "Disk Size: nullBSSUNIT.unit.17"
+         ],
+         "volumeType": "General Purpose SSD",
+         "linearDisk": "nullBSSUNIT.unit.17",
+         "planList": [
+          {
+           "productId": "OFFI472256171180654593",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 1.8
+          },
+          {
+           "productId": "OFFI472256171180654592",
+           "billingMode": "MONTHLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 0.18
+          }
+         ],
+         "billingItem": "detail_68_",
+         "type": "dataInfo_43_",
+         "info": "dataInfo_26_",
+         "specifications": "dataInfo_27_",
+         "tableUnit": "detail_26_",
+         "resourceSize": 50,
+         "resouceSizeMeasureId": 17,
+         "resourceMeasureName": "",
+         "resourceMeasurePluralName": "",
+         "addToList_title": "calc_12_",
+         "addToList_product": "dataInfo_43_ | 50BSSUNIT.pluralUnit.17",
+         "_productType": "addible"
+        },
+        {
+         "resourceType": "hws.resource.type.volume",
+         "cloudServiceType": "hws.service.type.ebs",
+         "resourceSpecCode": "GPSSD",
+         "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+         "resourceSpecType": "GPSSD",
+         "periodList": 4,
+         "_skuInfo": [
+          "Disk Specifications: General Purpose SSD",
+          "Disk Size: nullBSSUNIT.unit.17"
+         ],
+         "volumeType": "General Purpose SSD",
+         "linearDisk": "nullBSSUNIT.unit.17",
+         "planList": [
+          {
+           "productId": "OFFI472256171180654593",
+           "billingMode": "YEARLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 1.8
+          },
+          {
+           "productId": "OFFI472256171180654592",
+           "billingMode": "MONTHLY",
+           "siteCode": "HWC",
+           "planType": "PRICEPLAN",
+           "periodNum": 1,
+           "billingEvent": "event.type.onetime",
+           "measureUnitStep": null,
+           "measureUnit": null,
+           "amount": 0.18
+          }
+         ],
+         "billingItem": "detail_68_",
+         "type": "dataInfo_43_",
+         "info": "dataInfo_26_",
+         "specifications": "dataInfo_27_",
+         "tableUnit": "detail_26_",
+         "resourceSize": 50,
+         "resouceSizeMeasureId": 17,
+         "resourceMeasureName": "",
+         "resourceMeasurePluralName": "",
+         "addToList_title": "calc_12_",
+         "addToList_product": "dataInfo_43_ | 50BSSUNIT.pluralUnit.17",
+         "_productType": "addible"
+        }
+       ]
+      },
+      "valueWatcher": {
+       "calculator_ecs_radio": {
+        "value": {
+         "arch": "dataInfo_32_",
+         "vmType": "dataInfo_3_",
+         "generation": "C7n",
+         "cpu": "2dataInfo_36_",
+         "mem": "4BSSUNIT.pluralUnit.102"
+        },
+        "product": [
+         {
+          "resourceType": "hws.resource.type.vm",
+          "cloudServiceType": "hws.service.type.ec2",
+          "resourceSpecCode": "c7n.large.2.linux",
+          "productSpecSysDesc": "Memory:4096MB;vCPUs:2CORE;CPU Architecture:x86;Type:General Computing-plus;System Disk:40GB;Series:C7n;Image:Linux;Spot Duartion:On Demand, Period, Dynamic Price Spot;Local Disk:No Local-Disk;Remark:normal;accelerator card:No Accelerator Card",
+          "resourceSpecType": "c7n",
+          "periodList": 0,
+          "_skuInfo": [
+           "Memory: 4096BSSUNIT.pluralUnit.21",
+           "vCPUs: 2BSSUNIT.pluralUnit.23",
+           "CPU Architecture: x86",
+           "Type: General Computing-plus",
+           "System Disk: 40BSSUNIT.pluralUnit.17",
+           "Series: C7n",
+           "Image: Linux",
+           "Spot Duartion: On Demand, Period, Dynamic Price Spot",
+           "Local Disk: No Local-Disk",
+           "Remark: normal",
+           "accelerator card: No Accelerator Card"
+          ],
+          "mem": "4BSSUNIT.pluralUnit.102",
+          "cpu": "2dataInfo_36_",
+          "instanceArch": "x86",
+          "performType": "General Computing-plus",
+          "disk": "40BSSUNIT.pluralUnit.17",
+          "series": "C7n",
+          "image": "Linux",
+          "spot_duartion": "On Demand, Period, Dynamic Price Spot",
+          "localDisk": "No Local-Disk",
+          "type": "normal",
+          "acceleratorCard": "No Accelerator Card",
+          "planList": [
+           {
+            "productId": "OFFI959429067048849408",
+            "billingMode": "MONTHLY",
+            "siteCode": "HWC",
+            "planType": "PRICEPLAN",
+            "periodNum": 1,
+            "billingEvent": "event.type.onetime",
+            "measureUnitStep": null,
+            "measureUnit": null,
+            "amount": 62.02
+           },
+           {
+            "productId": "OFFI959429066776219651",
+            "billingMode": "YEARLY",
+            "siteCode": "HWC",
+            "planType": "PRICEPLAN",
+            "periodNum": 1,
+            "billingEvent": "event.type.onetime",
+            "measureUnitStep": null,
+            "measureUnit": null,
+            "amount": 620.2
+           }
+          ],
+          "arch": "dataInfo_32_",
+          "generation": "C7n",
+          "spec": "c7n.large.2",
+          "physical": "dataInfo_44_",
+          "vmType": "dataInfo_3_",
+          "generationType": "dataInfo_3_ C7n dataInfo_44_",
+          "generationTypeMap": "dataInfo_3_",
+          "imageSpec": "linux",
+          "riResourceSepc": "c7n.large.2",
+          "addToList_title": "calc_25_",
+          "addToList_product": "dataInfo_32_ | dataInfo_3_ | C7n | 2dataInfo_36_ | 4BSSUNIT.pluralUnit.102"
+         },
+         {
+          "resourceType": "hws.resource.type.vm",
+          "cloudServiceType": "hws.service.type.ec2",
+          "resourceSpecCode": "c7n.large.2.byol",
+          "productSpecSysDesc": "Memory:4096MB;vCPUs:2CORE;CPU Architecture:x86;Type:General Computing-plus;System Disk:40GB;Series:C7n;Image:Byol;Spot Duartion:On Demand, Period, Dynamic Price Spot;Local Disk:No Local-Disk;Remark:normal;accelerator card:No Accelerator Card",
+          "resourceSpecType": "c7n",
+          "periodList": 0,
+          "_skuInfo": [
+           "Memory: 4096BSSUNIT.pluralUnit.21",
+           "vCPUs: 2BSSUNIT.pluralUnit.23",
+           "CPU Architecture: x86",
+           "Type: General Computing-plus",
+           "System Disk: 40BSSUNIT.pluralUnit.17",
+           "Series: C7n",
+           "Image: Byol",
+           "Spot Duartion: On Demand, Period, Dynamic Price Spot",
+           "Local Disk: No Local-Disk",
+           "Remark: normal",
+           "accelerator card: No Accelerator Card"
+          ],
+          "mem": "4BSSUNIT.pluralUnit.102",
+          "cpu": "2dataInfo_36_",
+          "instanceArch": "x86",
+          "performType": "General Computing-plus",
+          "disk": "40BSSUNIT.pluralUnit.17",
+          "series": "C7n",
+          "image": "detail_77_",
+          "spot_duartion": "On Demand, Period, Dynamic Price Spot",
+          "localDisk": "No Local-Disk",
+          "type": "normal",
+          "acceleratorCard": "No Accelerator Card",
+          "planList": [
+           {
+            "productId": "OFFI959429066562310151",
+            "billingMode": "YEARLY",
+            "siteCode": "HWC",
+            "planType": "PRICEPLAN",
+            "periodNum": 1,
+            "billingEvent": "event.type.onetime",
+            "measureUnitStep": null,
+            "measureUnit": null,
+            "amount": 620.2
+           },
+           {
+            "productId": "OFFI959429065962524678",
+            "billingMode": "MONTHLY",
+            "siteCode": "HWC",
+            "planType": "PRICEPLAN",
+            "periodNum": 1,
+            "billingEvent": "event.type.onetime",
+            "measureUnitStep": null,
+            "measureUnit": null,
+            "amount": 62.02
+           }
+          ],
+          "arch": "dataInfo_32_",
+          "generation": "C7n",
+          "spec": "c7n.large.2",
+          "physical": "dataInfo_44_",
+          "vmType": "dataInfo_3_",
+          "generationType": "dataInfo_3_ C7n dataInfo_44_",
+          "generationTypeMap": "dataInfo_3_",
+          "imageSpec": "byol",
+          "riResourceSepc": "c7n.large.2",
+          "addToList_title": "calc_25_",
+          "addToList_product": "dataInfo_32_ | dataInfo_3_ | C7n | 2dataInfo_36_ | 4BSSUNIT.pluralUnit.102"
+         }
+        ],
+        "rewrite": false
+       },
+       "calculator_eip_switch": {
+        "value": {
+         "UNSET_Switch": "calc_14_"
+        },
+        "product": [],
+        "rewrite": false
+       },
+       "calculator_eip_radio": {
+        "value": {
+         "eipSpec": "dataInfo_14_",
+         "shareType": "dataInfo_16_",
+         "eipType": "dataInfo_18_",
+         "UNSET_Stepper_1": {
+          "measureId": 15,
+          "measureValue": 5,
+          "measureNameBeforeTrans": "",
+          "measurePluralNameBeforeTrans": "",
+          "transRate": "",
+          "transTarget": ""
+         }
+        },
+        "product": [
+         {
+          "resourceType": "hws.resource.type.bandwidth",
+          "cloudServiceType": "hws.service.type.vpc",
+          "resourceSpecCode": "19_bgp",
+          "productSpecSysDesc": "Package Validity:unknown;type:19_bgp",
+          "resourceSpecType": "DEFAULT",
+          "periodList": 2,
+          "_skuInfo": [
+           "Package Validity: unknown",
+           "type: 19_bgp",
+           "Bandwidth: nullBSSUNIT.unit.15"
+          ],
+          "PackageValidity": "unknown",
+          "type": "19_bgp",
+          "linearBandwidth": "nullBSSUNIT.unit.15",
+          "planList": [
+           {
+            "productId": "OFFI954296642696609792",
+            "billingMode": "MONTHLY",
+            "siteCode": "HWC",
+            "planType": "PRICEPLAN",
+            "periodNum": 1,
+            "billingEvent": "event.type.onetime",
+            "measureUnitStep": null,
+            "measureUnit": null,
+            "amount": 9
+           },
+           {
+            "productId": "OFFI954296642692415488",
+            "billingMode": "YEARLY",
+            "siteCode": "HWC",
+            "planType": "PRICEPLAN",
+            "periodNum": 1,
+            "billingEvent": "event.type.onetime",
+            "measureUnitStep": null,
+            "measureUnit": null,
+            "amount": 90
+           },
+           {
+            "productId": "OFFI954296642692415488",
+            "billingMode": "YEARLY",
+            "siteCode": "HWC",
+            "planType": "PRICEPLAN",
+            "periodNum": 2,
+            "billingEvent": "event.type.onetime",
+            "measureUnitStep": null,
+            "measureUnit": null,
+            "amount": 180
+           },
+           {
+            "productId": "OFFI954296642692415488",
+            "billingMode": "YEARLY",
+            "siteCode": "HWC",
+            "planType": "PRICEPLAN",
+            "periodNum": 3,
+            "billingEvent": "event.type.onetime",
+            "measureUnitStep": null,
+            "measureUnit": null,
+            "amount": 270
+           }
+          ],
+          "eipSpec": "dataInfo_14_",
+          "shareType": "dataInfo_16_",
+          "eipType": "dataInfo_18_",
+          "name": "dataInfo_14_",
+          "resourceSize": 5,
+          "resouceSizeMeasureId": 15,
+          "resourceMeasureName": "",
+          "resourceMeasurePluralName": "",
+          "addToList_title": "calc_6_",
+          "addToList_product": "dataInfo_14_ | dataInfo_16_ | dataInfo_18_ | 5BSSUNIT.pluralUnit.15"
+         }
+        ],
+        "rewrite": false
+       },
+       "calculator_ims_select": {
+        "value": {
+         "__platform": "Ubuntu",
+         "name": "Ubuntu 22.04 server 64bit"
+        },
+        "product": [
+         {
+          "type": [
+           "c3",
+           "d2",
+           "d3",
+           "hc1",
+           "hc2",
+           "h3",
+           "t6",
+           "s2",
+           "s3",
+           "m2",
+           "m3",
+           "sn3",
+           "s6",
+           "cc3",
+           "t2",
+           "s7",
+           "c7n",
+           "s7n",
+           "m7n",
+           "x1",
+           "x0",
+           "m6",
+           "m7",
+           "d6",
+           "c6ne",
+           "d7",
+           "c7e",
+           "c7ne",
+           "c7t",
+           "m7ne",
+           "c3ne",
+           "c6",
+           "c6s",
+           "c7",
+           "c9",
+           "m9",
+           "m3ne",
+           "h3ne",
+           "d3ne"
+          ],
+          "min_ram": 1024,
+          "id": "5f67dd87-7685-4a71-ae63-1dca02fd724c",
+          "__os_type": "Linux",
+          "__platform": "Ubuntu",
+          "__os_bit": "64",
+          "name": "Ubuntu 22.04 server 64bit",
+          "__account_code": "",
+          "__productcode": "",
+          "addToList_title": "calc_4_",
+          "addToList_product": "Ubuntu | Ubuntu 22.04 server 64bit"
+         }
+        ],
+        "rewrite": false
+       },
+       "calculator_ecs_RIRadio": {
+        "value": {
+         "paymentType": null
+        },
+        "product": [],
+        "rewrite": false
+       },
+       "calculator_evs_stepper": {
+        "value": {
+         "calculator_evs_stepper_main": {
+          "type": "dataInfo_43_",
+          "UNSET_Stepper_0": {
+           "measureId": 17,
+           "measureValue": 40,
+           "measureNameBeforeTrans": "",
+           "measurePluralNameBeforeTrans": "",
+           "transRate": "",
+           "transTarget": ""
+          }
+         },
+         "calculator_evs_stepper_|addible0|_0": {
+          "type": "dataInfo_43_",
+          "UNSET_Stepper_0": {
+           "measureId": 17,
+           "measureValue": 50,
+           "measureNameBeforeTrans": "",
+           "measurePluralNameBeforeTrans": "",
+           "transRate": "",
+           "transTarget": ""
+          }
+         },
+         "calculator_evs_stepper_|addible0|_1": {
+          "type": "dataInfo_43_",
+          "UNSET_Stepper_0": {
+           "measureId": 17,
+           "measureValue": 50,
+           "measureNameBeforeTrans": "",
+           "measurePluralNameBeforeTrans": "",
+           "transRate": "",
+           "transTarget": ""
+          }
+         }
+        },
+        "product": [
+         {
+          "resourceType": "hws.resource.type.volume",
+          "cloudServiceType": "hws.service.type.ebs",
+          "resourceSpecCode": "GPSSD",
+          "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+          "resourceSpecType": "GPSSD",
+          "periodList": 4,
+          "_skuInfo": [
+           "Disk Specifications: General Purpose SSD",
+           "Disk Size: nullBSSUNIT.unit.17"
+          ],
+          "volumeType": "General Purpose SSD",
+          "linearDisk": "nullBSSUNIT.unit.17",
+          "planList": [
+           {
+            "productId": "OFFI472256171180654593",
+            "billingMode": "YEARLY",
+            "siteCode": "HWC",
+            "planType": "PRICEPLAN",
+            "periodNum": 1,
+            "billingEvent": "event.type.onetime",
+            "measureUnitStep": null,
+            "measureUnit": null,
+            "amount": 1.8
+           },
+           {
+            "productId": "OFFI472256171180654592",
+            "billingMode": "MONTHLY",
+            "siteCode": "HWC",
+            "planType": "PRICEPLAN",
+            "periodNum": 1,
+            "billingEvent": "event.type.onetime",
+            "measureUnitStep": null,
+            "measureUnit": null,
+            "amount": 0.18
+           }
+          ],
+          "billingItem": "detail_68_",
+          "type": "dataInfo_43_",
+          "info": "dataInfo_26_",
+          "specifications": "dataInfo_27_",
+          "tableUnit": "detail_26_",
+          "resourceSize": 40,
+          "resouceSizeMeasureId": 17,
+          "resourceMeasureName": "",
+          "resourceMeasurePluralName": "",
+          "addToList_title": "calc_11_",
+          "addToList_product": "dataInfo_43_ | 40BSSUNIT.pluralUnit.17",
+          "_productType": "main"
+         },
+         {
+          "resourceType": "hws.resource.type.volume",
+          "cloudServiceType": "hws.service.type.ebs",
+          "resourceSpecCode": "GPSSD",
+          "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+          "resourceSpecType": "GPSSD",
+          "periodList": 4,
+          "_skuInfo": [
+           "Disk Specifications: General Purpose SSD",
+           "Disk Size: nullBSSUNIT.unit.17"
+          ],
+          "volumeType": "General Purpose SSD",
+          "linearDisk": "nullBSSUNIT.unit.17",
+          "planList": [
+           {
+            "productId": "OFFI472256171180654593",
+            "billingMode": "YEARLY",
+            "siteCode": "HWC",
+            "planType": "PRICEPLAN",
+            "periodNum": 1,
+            "billingEvent": "event.type.onetime",
+            "measureUnitStep": null,
+            "measureUnit": null,
+            "amount": 1.8
+           },
+           {
+            "productId": "OFFI472256171180654592",
+            "billingMode": "MONTHLY",
+            "siteCode": "HWC",
+            "planType": "PRICEPLAN",
+            "periodNum": 1,
+            "billingEvent": "event.type.onetime",
+            "measureUnitStep": null,
+            "measureUnit": null,
+            "amount": 0.18
+           }
+          ],
+          "billingItem": "detail_68_",
+          "type": "dataInfo_43_",
+          "info": "dataInfo_26_",
+          "specifications": "dataInfo_27_",
+          "tableUnit": "detail_26_",
+          "resourceSize": 50,
+          "resouceSizeMeasureId": 17,
+          "resourceMeasureName": "",
+          "resourceMeasurePluralName": "",
+          "addToList_title": "calc_12_",
+          "addToList_product": "dataInfo_43_ | 50BSSUNIT.pluralUnit.17",
+          "_productType": "addible"
+         },
+         {
+          "resourceType": "hws.resource.type.volume",
+          "cloudServiceType": "hws.service.type.ebs",
+          "resourceSpecCode": "GPSSD",
+          "productSpecSysDesc": "Disk Specifications:General Purpose SSD",
+          "resourceSpecType": "GPSSD",
+          "periodList": 4,
+          "_skuInfo": [
+           "Disk Specifications: General Purpose SSD",
+           "Disk Size: nullBSSUNIT.unit.17"
+          ],
+          "volumeType": "General Purpose SSD",
+          "linearDisk": "nullBSSUNIT.unit.17",
+          "planList": [
+           {
+            "productId": "OFFI472256171180654593",
+            "billingMode": "YEARLY",
+            "siteCode": "HWC",
+            "planType": "PRICEPLAN",
+            "periodNum": 1,
+            "billingEvent": "event.type.onetime",
+            "measureUnitStep": null,
+            "measureUnit": null,
+            "amount": 1.8
+           },
+           {
+            "productId": "OFFI472256171180654592",
+            "billingMode": "MONTHLY",
+            "siteCode": "HWC",
+            "planType": "PRICEPLAN",
+            "periodNum": 1,
+            "billingEvent": "event.type.onetime",
+            "measureUnitStep": null,
+            "measureUnit": null,
+            "amount": 0.18
+           }
+          ],
+          "billingItem": "detail_68_",
+          "type": "dataInfo_43_",
+          "info": "dataInfo_26_",
+          "specifications": "dataInfo_27_",
+          "tableUnit": "detail_26_",
+          "resourceSize": 50,
+          "resouceSizeMeasureId": 17,
+          "resourceMeasureName": "",
+          "resourceMeasurePluralName": "",
+          "addToList_title": "calc_12_",
+          "addToList_product": "dataInfo_43_ | 50BSSUNIT.pluralUnit.17",
+          "_productType": "addible"
+         }
+        ],
+        "rewrite": false
+       }
+      },
+      "rewrite": false,
+      "showTag": {
+       "calculator_ecs_radio": true,
+       "calculator_ecs_tip": true,
+       "calculator_ims_select": true,
+       "calculator_ecs_RIRadio": false,
+       "calculator_evs_stepper": true,
+       "calculator_evs_tip": false,
+       "calculator_eip_switch": true,
+       "calculator_eip_radio": true
+      }
+     },
+     "global_FEEINSTALLMODE": {
+      "feeInstallMode": null
+     },
+     "global_ONDEMANDTIME": {
+      "UNSET_Stepper_0": {
+       "measureId": 4,
+       "measureValue": 1,
+       "measureNameBeforeTrans": "",
+       "measurePluralNameBeforeTrans": "",
+       "transRate": "",
+       "transTarget": ""
+      }
+     },
+     "global_PERIODTIME": {
+      "UNSET_PeriodTime": {
+       "measureValue": 1,
+       "measureId": 20
+      }
+     },
+     "global_QUANTITY": {
+      "UNSET_Stepper_0": {
+       "measureId": 41,
+       "measureValue": 1,
+       "measureNameBeforeTrans": "calc_29_",
+       "measurePluralNameBeforeTrans": "calc_30_",
+       "transRate": "",
+       "transTarget": ""
+      }
+     }
+    },
+    "langPack": {},
+    "buyUrl": "https://console-intl.huaweicloud.com/ecm/?region=sa-brazil-1&locale=en-us&charging=1&flavor=c7n.large.2&imageId=5f67dd87-7685-4a71-ae63-1dca02fd724c&sysdisk=GPSSD:40&datadisk=GPSSD:50;GPSSD:50&iptype=5_bgp&ipcharging=bandwidth&bwsize=5&vmcount=1&period=1m#/ecs/createVm",
+    "_cartId": "SYNTHETICCARTID0000000000000000001"
+   }
+  }
+ }
+}

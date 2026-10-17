@@ -52,3 +52,42 @@ Evidence:
 
 A proof of concept on ECS in `sa-brazil-1` gates the migration. Its exit criterion is
 stored price == Edit price == rating engine for on-demand, monthly and RI.
+
+### Proof of concept result (2026-10-17): go
+
+Change `spa-encoder-poc`, frontend `CBC-PortalCalculator/11.4.201`. The harness
+(`uv run python -m tests.support.spa_poc`) encodes `c7n.large.2` ECS cards on the page in
+`sa-brazil-1` (Ubuntu, 40 GB system disk, two 50 GB data disks, 5 Mbit/s bandwidth). It saves
+them as one list, re-reads the list anonymously, and runs the [Edit check](../explanation/huawei/page-encoder.md#edit-check)
+on every card:
+
+| Billing mode | Stored | Edit | Rating | Result |
+|---|---|---|---|---|
+| On-demand, 730 h | 213.95 | 213.95 | 213.95 | go |
+| Monthly, 1 month | 132.22 | 132.22 | 132.22 | go |
+| RI, 1 year, no upfront | 2,205.58 | 2,205.58 | 2,205.58 | go |
+
+Three consecutive runs gave the same table. Encoding the three cards takes about 16 s (in
+parallel, each in its own browser context), and the Edit check takes about 20 s for the list.
+
+The check can fail. A negative control saved the Python builder's monthly card with its
+data-disk form entries removed. On Edit the page dropped both disks and re-priced 132.22 to
+114.22, and the check flagged it.
+
+Compared with the Python builder's cards for the same options, the page cards have the same
+`template_RENDER` and the same amounts in all three modes. They differ only in:
+
+* fields only the page writes: `planType`, the `officialWebsite*` and `officialCheap*` amounts
+  in `inquiryResult`;
+* RI `inquiryResult` extras only the builder writes: `installNum`, `installAmount` and the like;
+* the image entry, where the page's live catalog is newer than the builder's 24 h cache;
+* `buyUrl`, where the page joins data disks with `;` and the builder with `,`.
+
+Two findings shape the encoder and the publish gate:
+
+* While the form passes through intermediate states (RI chosen before the flavor, an Edit refill
+  in progress), the page rates states it can't price. Only a failed inquiry sent for the final
+  state may count.
+* After Edit, the page's own "No data matched" warning appears in about half the runs even for
+  faithful cards. The Edit check uses the page's comparison rule on the final form state
+  instead, and reports the warning without acting on it.
