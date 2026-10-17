@@ -229,7 +229,6 @@ def create_price_list(name: str, items: list[dict[str, Any]], dry_run: bool = Fa
     """
     from autocalc.services import build as build_card
     from autocalc.services.base import Builder
-    from autocalc.share import SHARE_URL, Session
 
     cards = []
     warnings: list[str] = []
@@ -246,9 +245,10 @@ def create_price_list(name: str, items: list[dict[str, Any]], dry_run: bool = Fa
               "warnings": warnings, "settlement": settlement, "currency": currency}
     if dry_run:
         return result
-    session = Session()
-    list_id = session.create(payload)
-    result.update({"id": list_id, "url": SHARE_URL.format(id=list_id, currency=currency.upper())})
+    from autocalc.gate import publish_checked
+
+    published = publish_checked(name, cards, settlement=settlement, currency=currency.upper(), calc=calc)
+    result.update({"id": published["id"], "url": published["url"], "checks": published["checks"]})
     return result
 
 

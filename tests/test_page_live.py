@@ -6,9 +6,9 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 
 from autocalc.client import Calculator
+from autocalc.gate import rerate
 from autocalc.page.ecs import encode_ecs
 from autocalc.page.store import cents
-from tests.support.page_rating import rerate
 
 pytestmark = pytest.mark.live
 REGION = "sa-brazil-1"

@@ -172,7 +172,8 @@ class Builder:
                  products: list[dict[str, Any]], description: str, rewrite: dict[str, Any],
                  title: str | None = None, buy_url: str | None = None,
                  include_time: bool = True, include_quantity: bool = True,
-                 extra_selected: dict[str, Any] | None = None, price_fn=None) -> dict[str, Any]:
+                 extra_selected: dict[str, Any] | None = None, price_fn=None,
+                 quantity_tokens: tuple[str, str] = ("calc_29_", "calc_30_")) -> dict[str, Any]:
         charge_mode, mode_name, period_type, time_measure = CHARGE[billing]
         time_value = hours if billing == "ondemand" else periods
         time_tag = int(time.time() * 1000)
@@ -197,7 +198,9 @@ class Builder:
             selected["purchaseTime"] = {"measureValue": time_value, "measureId": time_measure,
                                         "measureNameBeforeTrans": "", "measurePluralNameBeforeTrans": ""}
         if include_quantity:
-            selected["purchaseNum"] = {"measureValue": quantity, **QUANTITY_MEASURE}
+            selected["purchaseNum"] = {"measureValue": quantity, **QUANTITY_MEASURE,
+                                       "measureNameBeforeTrans": quantity_tokens[0],
+                                       "measurePluralNameBeforeTrans": quantity_tokens[1]}
         if extra_selected:
             selected.update(extra_selected)
         _totals(selected)
@@ -213,7 +216,7 @@ class Builder:
             else:
                 rewrite["global_PERIODTIME"] = {"UNSET_PeriodTime": {"measureValue": periods, "measureId": time_measure}}
         if include_quantity:
-            rewrite["global_QUANTITY"] = {"UNSET_Stepper_0": _stepper(41, quantity, "calc_29_", "calc_30_")}
+            rewrite["global_QUANTITY"] = {"UNSET_Stepper_0": _stepper(41, quantity, *quantity_tokens)}
         return {"buyUrl": buy_url or "", "rewriteValue": rewrite, "selectedProduct": selected}
 
     # ---- list-level -----------------------------------------------------

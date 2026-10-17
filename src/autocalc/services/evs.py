@@ -89,7 +89,7 @@ class EvsBuilder(Builder):
             render["calculator_evs_iops"] = {"UNSET_Stepper_0": _stepper(75, total_iops, "detail_36_", "detail_36_")}
             render["calculator_evs_throughput"] = {"UNSET_Stepper_0": _stepper(77, total_tp, "detail_35_", "detail_35_")}
         return self.assemble(region, billing, periods, hours, quantity, products, self.description,
-                            render, title=title, buy_url=self._buy_url(region, type, size_gb, quantity,
+                            render, title=title, quantity_tokens=("calc_5_", "calc_6_"), buy_url=self._buy_url(region, type, size_gb, quantity,
                                                                        billing, periods, iops, throughput))
 
     def _addon(self, region: str, spec: str, billing: Billing, periods: int,

@@ -25,4 +25,5 @@ class DlineBuilder(Builder):
         p = self.product(self.catalog(region, GROUP, port), billing, periods, hours)
         p.update(addToList_title="calc_1_", addToList_product="dataInfo_1_")
         return self.assemble(region, billing, periods, hours, quantity, [p], self.description,
-                             {"calculator_dline_radio": {"portType": "dataInfo_1_"}}, title=title)
+                             {"calculator_dline_radio": {"portType": "dataInfo_1_"}}, title=title,
+                             quantity_tokens=("calc_5_", "calc_6_"))
