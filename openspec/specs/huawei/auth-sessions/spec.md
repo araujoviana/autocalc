@@ -9,44 +9,31 @@ Let a user sign in to their Huawei Cloud account once and keep that session usab
 ### Requirement: One-time browser login
 Login SHALL open a headed browser with a persistent per-profile directory on the calculator page
 and wait, up to a timeout (default 5 minutes), for the user to sign in by hand. The tool SHALL
-never see or handle the password, which covers MFA, captcha and SSO.
+never see or handle the password, which covers MFA, captcha and SSO. On success, login SHALL
+save the session's cookie header to an owner-only file inside the browser profile directory, and
+SHALL NOT copy cookies anywhere else.
 
 #### Scenario: Successful login
 - **WHEN** the user runs `autocalc login` and signs in in the opened window
-- **THEN** the session is verified against `share/list`, stored, and the masked account is reported
+- **THEN** the session is verified against the calculator's saved-list endpoint, the masked
+  account is reported, the session is saved inside the profile directory, and nothing is
+  written outside it or to the keyring
 
-### Requirement: Session storage is protected
-The session SHALL be stored in the OS keyring when one is available, otherwise in
-`~/.config/autocalc/session.json` (or `session-<profile>.json`) with mode 0600. Cookie values
-SHALL never be logged or shown. Status and errors SHALL show cookie names only.
-
-#### Scenario: Host without Secret Service
-- **WHEN** no keyring backend is available (typical on WSL)
-- **THEN** the session is written to the JSON file with permissions 0600
-
-#### Scenario: Redaction
-- **WHEN** a cookie header appears in an error or in `auth status`
-- **THEN** only cookie names are shown, never values
-
-### Requirement: Writes use the stored session
-Write calls SHALL authenticate with the stored cookie jar. A `csrf` cookie, when present, SHALL
-also be sent as a `csrf` header.
-
-#### Scenario: CSRF header
-- **WHEN** the stored jar contains `csrf=<v>`
-- **THEN** write requests carry header `csrf: <v>`
+#### Scenario: Login window times out
+- **WHEN** the user does not finish signing in before the timeout
+- **THEN** `AUTH_LOGIN_FAILED` is raised with a hint to run `autocalc login` again
 
 ### Requirement: Silent refresh before failing
-When a write call returns `CBC.0101`, the system SHALL re-capture cookies headlessly from the
-persistent browser profile and retry once. Only if that fails SHALL it raise `AUTH_EXPIRED`
-with the hint to run `autocalc login`.
+When a write call reports an invalid session, the system SHALL re-read the session from the
+browser profile headlessly and retry the call once. Only if that fails SHALL it delete the saved
+session and raise `AUTH_EXPIRED` with the hint to run `autocalc login`.
 
 #### Scenario: Stale calculator session, valid SSO
-- **WHEN** `share/add` returns `CBC.0101` and the profile's SSO cookie is still valid
-- **THEN** the call succeeds after a silent refresh with no user action
+- **WHEN** saving a list reports an invalid session and the profile is still signed in
+- **THEN** the call succeeds after a silent re-read with no user action
 
 #### Scenario: Expired SSO
-- **WHEN** silent refresh cannot obtain a valid session
+- **WHEN** the re-read profile is no longer signed in
 - **THEN** `AUTH_EXPIRED` is raised with the hint `autocalc login`
 
 ### Requirement: Named profiles
@@ -57,10 +44,84 @@ Sessions and browser profiles SHALL be per named profile, selected by `--profile
 - **WHEN** the user logs in with `--profile partnerX`
 - **THEN** the default profile's session is untouched
 
-### Requirement: Session import fallback
-A user SHALL be able to import a session from a browser "Copy as cURL" (clipboard or file). A
-legacy repo `.session.curl` SHALL be imported once into the store and then deleted.
+### Requirement: Writes read the session from the profile
+Write calls SHALL take their session from the active profile's browser profile directory: the
+session saved there at login, or, when none is saved, the browser profile opened headlessly once
+and closed before the write is sent. A process SHALL read the session at most once for its first
+write and keep it in memory for later writes. A `csrf` cookie, when present, SHALL also be sent
+as a `csrf` header. Without a usable profile, a write SHALL fail with `AUTH_EXPIRED` and the hint
+`autocalc login`.
 
-#### Scenario: Legacy file
-- **WHEN** a `.session.curl` exists in the repo and no session is stored
-- **THEN** it is migrated into the store and the file is removed
+#### Scenario: Several writes in one process
+- **WHEN** one process saves a list and then lists the saved lists
+- **THEN** the session is read once, and both calls succeed
+
+#### Scenario: Saved session after login
+- **WHEN** the user has logged in and a later process writes
+- **THEN** the write uses the saved session without opening a browser
+
+#### Scenario: CSRF header
+- **WHEN** the profile's session contains `csrf=<v>`
+- **THEN** write requests carry header `csrf: <v>`
+
+#### Scenario: Never logged in
+- **WHEN** a write is attempted and the active profile has no browser profile directory
+- **THEN** `AUTH_EXPIRED` is raised with the hint `autocalc login`, without opening a browser
+
+### Requirement: Session secrets never leave the profile
+Cookie values SHALL NOT be written to any file outside the browser profile directory, nor to a
+keyring, log, error or tool result. The saved session file SHALL be readable by its owner only.
+Status output and errors SHALL show cookie names and counts only.
+
+#### Scenario: Redaction
+- **WHEN** session cookies appear in an error or in `auth status`
+- **THEN** only cookie names are shown, never values
+
+#### Scenario: No copies on disk
+- **WHEN** a user logs in, saves a list and runs `auth status`
+- **THEN** no file outside the browser profile directory and no keyring entry contains a
+  cookie value
+
+### Requirement: System browser first
+The browser used for login and for reading the profile SHALL be chosen in this order, on both
+Windows and Linux: the `AUTOCALC_BROWSER` override, then an installed Google Chrome, then an
+installed Microsoft Edge, then a Chromium found on `PATH`, then the browser bundled with the
+automation library. `auth status` and `doctor` SHALL report which one was chosen.
+
+#### Scenario: Windows with Edge only
+- **WHEN** the machine is Windows with Edge installed and no Chrome, and `AUTOCALC_BROWSER` is unset
+- **THEN** login opens Edge
+
+#### Scenario: Override
+- **WHEN** `AUTOCALC_BROWSER` names a browser executable
+- **THEN** that executable is used even if Chrome is installed
+
+#### Scenario: Automation library upgrade
+- **WHEN** the automation library is upgraded and its bundled browser is not installed, but
+  Chrome is
+- **THEN** login and writes still work
+
+### Requirement: Busy profile fails fast
+When the browser profile is already open in another process, opening it SHALL fail with
+`AUTH_PROFILE_BUSY` and a hint naming both fixes: close the other window or autocalc process,
+or use another profile with `--profile`.
+
+#### Scenario: Login window still open
+- **WHEN** an `autocalc login` window is open and another process needs to open the same
+  browser profile (no saved session, or a re-read after `CBC.0101`)
+- **THEN** it fails with `AUTH_PROFILE_BUSY` and the hint, not a raw browser error
+
+### Requirement: Legacy sessions are deleted
+Session copies written by earlier versions (the keyring entry and the `session.json` or
+`session-<profile>.json` file) SHALL be deleted once, the first time an auth-related command
+runs after upgrading, and again by `autocalc logout`. The one-time pass SHALL NOT run again
+after it has completed.
+
+#### Scenario: First run after upgrading
+- **WHEN** a keyring entry and a `session.json` from an earlier version exist and the user runs
+  any command that reads the session
+- **THEN** both are deleted, and later runs do not access the keyring again
+
+#### Scenario: Logout
+- **WHEN** the user runs `autocalc logout`
+- **THEN** the profile is signed out and any legacy session copy is deleted

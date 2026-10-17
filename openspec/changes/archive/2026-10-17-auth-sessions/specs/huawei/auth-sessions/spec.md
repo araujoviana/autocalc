@@ -3,13 +3,15 @@
 ### Requirement: One-time browser login
 Login SHALL open a headed browser with a persistent per-profile directory on the calculator page
 and wait, up to a timeout (default 5 minutes), for the user to sign in by hand. The tool SHALL
-never see or handle the password, which covers MFA, captcha and SSO. The login state SHALL stay
-in the browser profile only; login SHALL NOT copy cookies anywhere else.
+never see or handle the password, which covers MFA, captcha and SSO. On success, login SHALL
+save the session's cookie header to an owner-only file inside the browser profile directory, and
+SHALL NOT copy cookies anywhere else.
 
 #### Scenario: Successful login
 - **WHEN** the user runs `autocalc login` and signs in in the opened window
 - **THEN** the session is verified against the calculator's saved-list endpoint, the masked
-  account is reported, and no session file or keyring entry is written
+  account is reported, the session is saved inside the profile directory, and nothing is
+  written outside it or to the keyring
 
 #### Scenario: Login window times out
 - **WHEN** the user does not finish signing in before the timeout
@@ -17,8 +19,8 @@ in the browser profile only; login SHALL NOT copy cookies anywhere else.
 
 ### Requirement: Silent refresh before failing
 When a write call reports an invalid session, the system SHALL re-read the session from the
-browser profile headlessly and retry the call once. Only if that fails SHALL it raise
-`AUTH_EXPIRED` with the hint to run `autocalc login`.
+browser profile headlessly and retry the call once. Only if that fails SHALL it delete the saved
+session and raise `AUTH_EXPIRED` with the hint to run `autocalc login`.
 
 #### Scenario: Stale calculator session, valid SSO
 - **WHEN** saving a list reports an invalid session and the profile is still signed in
@@ -50,15 +52,20 @@ exist.
 ## ADDED Requirements
 
 ### Requirement: Writes read the session from the profile
-Write calls SHALL take their session from the active profile's browser profile. A process SHALL
-open the profile at most once for its first write, keep the session in memory for later writes,
-and close the browser before the write is sent. A `csrf` cookie, when present, SHALL also be sent
+Write calls SHALL take their session from the active profile's browser profile directory: the
+session saved there at login, or, when none is saved, the browser profile opened headlessly once
+and closed before the write is sent. A process SHALL read the session at most once for its first
+write and keep it in memory for later writes. A `csrf` cookie, when present, SHALL also be sent
 as a `csrf` header. Without a usable profile, a write SHALL fail with `AUTH_EXPIRED` and the hint
 `autocalc login`.
 
 #### Scenario: Several writes in one process
 - **WHEN** one process saves a list and then lists the saved lists
-- **THEN** the browser profile is opened once, and both calls succeed
+- **THEN** the session is read once, and both calls succeed
+
+#### Scenario: Saved session after login
+- **WHEN** the user has logged in and a later process writes
+- **THEN** the write uses the saved session without opening a browser
 
 #### Scenario: CSRF header
 - **WHEN** the profile's session contains `csrf=<v>`
@@ -69,8 +76,9 @@ as a `csrf` header. Without a usable profile, a write SHALL fail with `AUTH_EXPI
 - **THEN** `AUTH_EXPIRED` is raised with the hint `autocalc login`, without opening a browser
 
 ### Requirement: Session secrets never leave the profile
-Cookie values SHALL NOT be written to any file, keyring, log, error or tool result. Status
-output and errors SHALL show cookie names and counts only.
+Cookie values SHALL NOT be written to any file outside the browser profile directory, nor to a
+keyring, log, error or tool result. The saved session file SHALL be readable by its owner only.
+Status output and errors SHALL show cookie names and counts only.
 
 #### Scenario: Redaction
 - **WHEN** session cookies appear in an error or in `auth status`
@@ -106,9 +114,9 @@ When the browser profile is already open in another process, opening it SHALL fa
 or use another profile with `--profile`.
 
 #### Scenario: Login window still open
-- **WHEN** an `autocalc login` window is open and another process attempts a write on the same
-  profile
-- **THEN** the write fails with `AUTH_PROFILE_BUSY` and the hint, not a raw browser error
+- **WHEN** an `autocalc login` window is open and another process needs to open the same
+  browser profile (no saved session, or a re-read after `CBC.0101`)
+- **THEN** it fails with `AUTH_PROFILE_BUSY` and the hint, not a raw browser error
 
 ### Requirement: Legacy sessions are deleted
 Session copies written by earlier versions (the keyring entry and the `session.json` or
