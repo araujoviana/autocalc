@@ -24,9 +24,9 @@ Each item is either assigned to the change that will close it or left unschedule
 
 | Item | Goes to |
 |---|---|
-| Calculator-scoped token: check whether the CPQ flow (`cpqjwt`) can replace the account session for writes | `auth-sessions` |
 | Settlement "By monthly price" (`billingModeMonth`): verify it re-prices to the same amount on Edit | `publish-gate` |
 | Migrate the MCP server from `FastMCP` to `MCPServer` | `workflow-surface` |
+| Drop the `keyring` dependency once the legacy session cleanup has run | `distribution` |
 | Quotes that span several regions in one saved list | `quote-core` |
 | Availability-zone handling for services that price per AZ | `quote-core` |
 | Nightly frontend drift check (alert when the calculator version or a service config changes) | unscheduled, after `distribution` |

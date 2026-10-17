@@ -41,8 +41,9 @@ Saving a list needs your Huawei Cloud account:
 uv run autocalc login
 ```
 
-A browser window opens. Sign in by hand; autocalc never sees your password. Check the result
-with `uv run autocalc auth status`.
+A browser window opens (your installed Chrome or Edge when there is one). Sign in by hand;
+autocalc never sees your password. The session stays in that browser profile and nowhere else.
+Check the result with `uv run autocalc auth status`.
 
 ## 5. Create the share link from your agent
 

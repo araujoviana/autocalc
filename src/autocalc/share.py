@@ -8,10 +8,8 @@ chosen mode), the chosen plan's fields, selection fields and display-label token
 from __future__ import annotations
 
 import json
-import os
 import secrets
 import time
-from pathlib import Path
 from typing import Any
 
 from autocalc.client import CALC, Billing, Calculator, CalculatorError
@@ -254,51 +252,26 @@ def _image_name(img: dict[str, Any]) -> str:
 class Session:
     """Logged-in calculator session.
 
-    Source order: explicit cookie header, then ``AUTOCALC_SESSION`` cURL file,
-    then a legacy repo ``.session.curl``, then the stored session (keyring/file).
+    Cookies come from the browser profile (``auth.session_cookies``, read once per process);
+    ``cookie_header`` overrides that for tests. ``transport`` is an httpx transport for tests.
     """
 
-    def __init__(self, curl_file: str | Path | None = None, cookie_header: str | None = None):
-        headers: dict[str, str] = {}
-        if cookie_header:
-            headers["cookie"] = cookie_header
-        else:
-            src = None
-            if curl_file:
-                src = Path(curl_file).expanduser()
-            elif os.environ.get("AUTOCALC_SESSION"):
-                src = Path(os.environ["AUTOCALC_SESSION"]).expanduser()
-            elif DEFAULT_SESSION.exists():
-                src = DEFAULT_SESSION
-            if src is not None:
-                text = src.read_text()
-                import shlex
-                tokens = shlex.split(text.replace("\\\n", " "))
-                for i, t in enumerate(tokens):
-                    if t in ("-H", "--header") and i + 1 < len(tokens):
-                        k, _, v = tokens[i + 1].partition(":")
-                        headers[k.strip().lower()] = v.strip()
-                    elif t in ("-b", "--cookie") and i + 1 < len(tokens):
-                        headers["cookie"] = tokens[i + 1]
-            if "cookie" not in headers:
-                from autocalc.auth import SessionStore
-                stored = SessionStore().load()
-                if stored:
-                    headers["cookie"] = stored.cookie_header
-                else:
-                    raise AuthExpired("no calculator session found",
-                                      hint="Run `autocalc login` (once) or import a 'Copy as cURL'.")
-        if "csrf" not in headers:
-            for part in headers["cookie"].split(";"):
-                k, _, v = part.strip().partition("=")
-                if k == "csrf":
-                    headers["csrf"] = v
+    def __init__(self, cookie_header: str | None = None, *, transport: Any = None):
+        from autocalc import auth
+
+        self._transport = transport
+        self.http = self._client(cookie_header or auth.session_cookies())
+
+    def _client(self, cookie: str) -> Any:
         import httpx
-        keep = {k: v for k, v in headers.items() if k in ("cookie", "csrf", "user-agent")}
-        keep.setdefault("user-agent", "Mozilla/5.0")
-        keep.update({"origin": "https://www.huaweicloud.com", "referer": "https://www.huaweicloud.com/",
-                     "content-type": "application/json"})
-        self.http = httpx.Client(headers=keep, timeout=60)
+
+        headers = {"cookie": cookie, "user-agent": "Mozilla/5.0", "origin": "https://www.huaweicloud.com",
+                   "referer": "https://www.huaweicloud.com/", "content-type": "application/json"}
+        for part in cookie.split(";"):
+            k, _, v = part.strip().partition("=")
+            if k == "csrf":
+                headers["csrf"] = v
+        return httpx.Client(headers=headers, timeout=60, transport=self._transport)
 
     def _call(self, method: str, path: str, params: dict | None = None, body: Any = None,
               _retry: bool = True) -> dict[str, Any]:
@@ -309,7 +282,7 @@ class Session:
             raise CalculatorError(f"{path}: HTTP {r.status_code} {r.text[:300]}") from err
         code = str(data.get("retCode", "200"))
         if code == "CBC.0101" and _retry:
-            # session went stale -> try a silent refresh (A2) then retry once
+            # session went stale -> re-read the browser profile once, then retry
             self._renew()
             return self._call(method, path, params, body, _retry=False)
         if r.status_code != 200 or code != "200":
@@ -321,13 +294,8 @@ class Session:
 
     def _renew(self) -> None:
         from autocalc import auth
-        sess = auth.refresh()
-        import httpx
 
-        keep = {"cookie": sess.cookie_header, "user-agent": self.http.headers.get("user-agent", "Mozilla/5.0"),
-                "origin": "https://www.huaweicloud.com", "referer": "https://www.huaweicloud.com/",
-                "content-type": "application/json"}
-        self.http = httpx.Client(headers=keep, timeout=60)
+        self.http = self._client(auth.session_cookies(refresh=True))
 
     def lists(self) -> list[dict[str, Any]]:
         return self._call("GET", "share/list").get("lists", [])
@@ -351,13 +319,8 @@ def share_detail(calc: Calculator, list_id: str) -> dict[str, Any]:
     return data["data"]
 
 
-DEFAULT_SESSION = Path(__file__).resolve().parents[2] / ".session.curl"
-
-
-def publish(name: str, ecs_items: list[dict[str, Any]], session_file: str | Path | None = None,
-            calc: Calculator | None = None) -> dict[str, Any]:
+def publish(name: str, ecs_items: list[dict[str, Any]], calc: Calculator | None = None) -> dict[str, Any]:
     """Build ECS cards from plain dicts (ListBuilder.ecs kwargs), save them as a list and return its share link."""
-    import os
     b = ListBuilder(calc)
     items = []
     for spec in ecs_items:
@@ -370,7 +333,7 @@ def publish(name: str, ecs_items: list[dict[str, Any]], session_file: str | Path
             kw["data_disks"] = [(d["type"], int(d["size"])) if isinstance(d, dict) else (d[0], int(d[1])) for d in kw["data_disks"]]
         items.append(b.ecs(**kw))
     payload = b.share_payload(name, items)
-    session = Session(session_file or os.environ.get("AUTOCALC_SESSION") or DEFAULT_SESSION)
+    session = Session()
     list_id = session.create(payload)
     return {"id": list_id, "url": SHARE_URL.format(id=list_id), "name": name,
             "total_usd": payload["totalPrice"]["amount"],

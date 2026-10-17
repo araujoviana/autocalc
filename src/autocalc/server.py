@@ -299,9 +299,12 @@ def duplicate_price_list(url_or_id: str, new_name: str | None = None) -> Any:
 
 @mcp.tool()
 def auth_status() -> Any:
-    """Whether a calculator session is available (account mask, age, cookie count). Read-only tools never need it."""
+    """Whether the browser profile is signed in (account mask, browser, cookie names). Read-only tools never need it."""
     from autocalc import auth
-    return auth.status()
+    try:
+        return auth.status()
+    except CalculatorError as exc:
+        return exc.as_dict()
 
 
 @mcp.tool()
@@ -312,8 +315,8 @@ def auth_login() -> Any:
     """
     from autocalc import auth
     try:
-        sess = auth.login(timeout=300)
-        return {"logged_in": True, "account_mask": sess.account_mask}
+        res = auth.login(timeout=300)
+        return {"logged_in": True, "account_mask": res.account_mask, "browser": res.browser}
     except CalculatorError as exc:
         return exc.as_dict()
 
