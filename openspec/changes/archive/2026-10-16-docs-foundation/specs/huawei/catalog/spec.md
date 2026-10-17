@@ -1,12 +1,10 @@
-# catalog-access Specification
+# Spec Delta
 
 ## Purpose
 
-Read the Huawei Cloud price calculator's public catalog (services, regions, SKUs, list
-prices, labels and exchange rates) without credentials, quickly and resiliently, so every other
-capability has a reliable source of SKUs and display data.
+Read the Huawei Cloud price calculator's public catalog (services, regions, SKUs, list prices, labels and exchange rates) without credentials, quickly and resiliently, so every other Huawei capability has a reliable source of SKUs and display data.
 
-## Requirements
+## ADDED Requirements
 
 ### Requirement: Catalog reads need no credentials
 The system SHALL read the service menu, region list, per-region product info, label pack,

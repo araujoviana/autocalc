@@ -1,6 +1,6 @@
 """Authentication for the calculator's *write* endpoints (share/add, share/list...).
 
-Design goals (backlog Epic A):
+Design goals:
   * A1 - one-time browser login with a persistent profile; we never touch the password.
   * A2 - silent refresh from the persistent profile before falling back to AUTH_EXPIRED.
   * A4b - import a "Copy as cURL" session (clipboard or stdin).

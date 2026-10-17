@@ -1,4 +1,4 @@
-"""Typed error model for autocalc (backlog D3).
+"""Typed error model for autocalc.
 
 Every failure carries a human/agent-actionable ``hint`` so MCP callers can tell
 the user exactly what to do next (run ``autocalc login``, pick another region...).

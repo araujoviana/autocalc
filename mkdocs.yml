@@ -1,0 +1,53 @@
+site_name: autocalc
+site_description: Verified share links from cloud pricing calculators, for AI agents and the people who use them.
+docs_dir: docs
+strict: true
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle: {icon: material/brightness-7, name: Dark mode}
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle: {icon: material/brightness-4, name: Light mode}
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc: {permalink: true}
+  - pymdownx.superfences
+  - pymdownx.tabbed: {alternate_style: true}
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Tutorials:
+      - Your first quote: tutorials/first-quote.md
+  - How-to guides:
+      - Run the tests: how-to/run-tests.md
+      - Refresh the golden corpus: how-to/refresh-corpus.md
+      - Fetch the calculator bundle: how-to/fetch-bundle.md
+  - Reference:
+      - CLI: reference/cli.md
+      - Errors: reference/errors.md
+      - Huawei calculator backend: reference/huawei-backend.md
+  - Explanation:
+      - Architecture: explanation/architecture.md
+      - Huawei calculator:
+          - List price vs Edit price: explanation/huawei/edit-vs-list-price.md
+          - Display tokens: explanation/huawei/display-tokens.md
+          - Card rules: explanation/huawei/card-rules.md
+          - Billing modes: explanation/huawei/billing-modes.md
+          - Regions: explanation/huawei/regions.md
+          - Catalog drift: explanation/huawei/catalog-drift.md
+          - Sessions: explanation/huawei/sessions.md
+          - Concurrency: explanation/huawei/concurrency.md
+  - Decisions (ADRs): adr/index.md

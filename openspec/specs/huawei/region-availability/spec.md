@@ -1,9 +1,8 @@
-# region-availability Specification
+# huawei/region-availability Specification
 
 ## Purpose
 
-Accept the region names people actually use and stop a request that cannot be built in a region
-before it produces a broken card, with an error that names a workable alternative.
+Accept the Huawei region names people actually use and stop a request that cannot be built in a region before it produces a broken card, with an error that names a workable alternative.
 
 ## Requirements
 
