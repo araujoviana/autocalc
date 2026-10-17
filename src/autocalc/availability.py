@@ -1,4 +1,4 @@
-"""Per-region availability validation (backlog E2).
+"""Per-region availability validation.
 
 Answers three questions before any builder runs:
   * is the service sold in this region?

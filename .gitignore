@@ -9,3 +9,4 @@ docs/quotes.md
 .ruff_cache/
 # on-demand downloads (frontend bundle, scratch worktrees)
 .cache/
+site/
