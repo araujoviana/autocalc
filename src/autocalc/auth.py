@@ -1,10 +1,10 @@
 """Authentication for the calculator's *write* endpoints (share/add, share/list...).
 
-Design goals:
-  * A1 - one-time browser login with a persistent profile; we never touch the password.
-  * A2 - silent refresh from the persistent profile before falling back to AUTH_EXPIRED.
-  * A4b - import a "Copy as cURL" session (clipboard or stdin).
-  * A5 - store the session in the OS keyring, else a 0600 file; never log cookie values.
+The browser profile is the only credential (ADR-0011):
+  * ``login`` opens a headed system browser on a persistent profile; the user signs in by hand.
+  * Writes read the cookies from that profile, opened headless at most once per process and
+    cached in memory (``session_cookies``). Nothing is copied to a file or the keyring.
+  * A stale session (``CBC.0101``) re-reads the profile once before ``AUTH_EXPIRED``.
 
 Only ``share/*`` (save, list, update, delete, copy) and ``formExport`` need this.
 Catalog, rating and anonymous ``share/detail`` do not.
@@ -12,24 +12,29 @@ Catalog, rating and anonymous ``share/detail`` do not.
 
 from __future__ import annotations
 
-import json
+import ntpath
 import os
-import re
-import shlex
 import shutil
+import socket
+import sys
+import threading
 import time
-from dataclasses import asdict, dataclass, field
+from collections.abc import Callable, Generator, Mapping
+from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from autocalc.client import CALC, CalculatorError
-from autocalc.errors import AuthExpired, AuthLoginFailed
+from autocalc.client import CALC
+from autocalc.errors import AuthExpired, AuthLoginFailed, AuthProfileBusy
 
 CALCULATOR_URL = "https://www.huaweicloud.com/intl/en-us/pricing/calculator.html"
-COOKIE_DOMAINS = (".huaweicloud.com", "www.huaweicloud.com", "console-intl.huaweicloud.com", "portal-intl.huaweicloud.com")
-KEYRING_SERVICE = "autocalc"
-# cookies that alone are enough to authenticate the calculator write API (A3)
-CORE_COOKIES = ("cbc-sid", "HWS_INTL_ID", "SessionID", "portal_csrf", "account-intl_cftk")
+LOGIN_HINT = "Run `autocalc login` to sign in once in a browser window."
+_LAUNCH_ARGS = ["--no-first-run", "--no-default-browser-check", "--disable-dev-shm-usage"]
+# Chromium's single-instance lock: a symlink on Linux/macOS, a file on Windows.
+_LOCK_ARTIFACTS = ("SingletonLock", "lockfile")
+_LEGACY_MARKER = ".legacy-sessions-cleaned"
+_LEGACY_KEYRING_SERVICE = "autocalc"
 
 
 def config_dir() -> Path:
@@ -50,17 +55,103 @@ def profile_dir(name: str | None = None) -> Path:
     return p if name == "default" else p.with_name(f"browser-profile-{name}")
 
 
-def browser_executable() -> str | None:
-    """System Chromium-family browser to drive, so Playwright upgrades can't break login.
+# ---- browser discovery (D2) ---------------------------------------------------
 
-    ``AUTOCALC_BROWSER`` overrides the search; None falls back to Playwright's bundled build.
+
+@dataclass(frozen=True)
+class BrowserChoice:
+    """How to launch the browser: a Playwright ``channel``, an ``executable`` path, or neither (bundled)."""
+
+    name: str  # override | chrome | msedge | chromium | bundled
+    channel: str | None = None
+    executable: str | None = None
+
+    def launch_kwargs(self) -> dict[str, str]:
+        if self.channel:
+            return {"channel": self.channel}
+        if self.executable:
+            return {"executable_path": self.executable}
+        return {}
+
+    def describe(self) -> str:
+        where = self.executable or (f"channel {self.channel}" if self.channel else "playwright build")
+        return f"{self.name} ({where})"
+
+
+_WIN_APPS = {"chrome": ("Google", "Chrome", "Application", "chrome.exe"),
+             "msedge": ("Microsoft", "Edge", "Application", "msedge.exe")}
+_LINUX_APPS = {"chrome": (("google-chrome-stable", "google-chrome"), "/opt/google/chrome/chrome"),
+               "msedge": (("microsoft-edge-stable", "microsoft-edge"), "/opt/microsoft/msedge/msedge")}
+
+
+def find_browser(platform: str | None = None, environ: Mapping[str, str] | None = None,
+                 which: Callable[[str], str | None] = shutil.which,
+                 exists: Callable[[str], bool] = os.path.exists) -> BrowserChoice:
+    """Pick the browser without launching it: override, Chrome, Edge, Chromium on PATH, bundled.
+
+    Windows launches Chrome/Edge through Playwright channels (they live in the paths Playwright
+    knows). Linux launches the found executable, since a PATH entry need not be the channel path.
     """
-    if env := os.environ.get("AUTOCALC_BROWSER"):
-        return env
-    for name in ("chromium", "chromium-browser", "google-chrome-stable", "google-chrome", "microsoft-edge-stable"):
-        if path := shutil.which(name):
-            return path
-    return None
+    platform = platform or sys.platform
+    env = os.environ if environ is None else environ
+    if override := env.get("AUTOCALC_BROWSER"):
+        return BrowserChoice("override", executable=override)
+    if platform.startswith("win"):
+        roots = [r for r in (env.get("PROGRAMFILES"), env.get("PROGRAMFILES(X86)"), env.get("LOCALAPPDATA")) if r]
+        for name, parts in _WIN_APPS.items():
+            for root in roots:
+                path = ntpath.join(root, *parts)
+                if exists(path):
+                    return BrowserChoice(name, channel=name, executable=path)
+    else:
+        for name, (commands, fixed) in _LINUX_APPS.items():
+            path = next((p for c in commands if (p := which(c))), None) or (fixed if exists(fixed) else None)
+            if path:
+                return BrowserChoice(name, executable=path)
+    for command in ("chromium", "chromium-browser"):
+        if path := which(command):
+            return BrowserChoice("chromium", executable=path)
+    return BrowserChoice("bundled")
+
+
+# ---- the one Playwright touchpoint (D3) -----------------------------------------
+
+
+def _has_lock(udd: Path) -> bool:
+    return any(os.path.lexists(udd / name) for name in _LOCK_ARTIFACTS)
+
+
+def _launch_error(udd: Path, choice: BrowserChoice) -> AuthLoginFailed | AuthProfileBusy:
+    if _has_lock(udd):
+        return AuthProfileBusy(f"The browser profile {udd} is in use by another process.")
+    return AuthLoginFailed(
+        f"Could not start the browser {choice.describe()}.",
+        hint="Install Google Chrome or Microsoft Edge, or set AUTOCALC_BROWSER to a Chromium-based browser.",
+    )
+
+
+@contextmanager
+def _open_profile(prof: str, headless: bool = True, choice: BrowserChoice | None = None) -> Generator[Any]:
+    """Launch the persistent profile and always close it. Launch errors never leak raw text."""
+    from playwright.sync_api import sync_playwright
+
+    udd = profile_dir(prof)
+    udd.mkdir(parents=True, exist_ok=True)
+    choice = choice or find_browser()
+    with sync_playwright() as p:
+        try:
+            ctx = p.chromium.launch_persistent_context(
+                str(udd), headless=headless, args=_LAUNCH_ARGS,
+                viewport={"width": 1366, "height": 900}, **choice.launch_kwargs())
+        except Exception as exc:
+            raise _launch_error(udd, choice) from exc
+        try:
+            yield ctx
+        finally:
+            try:
+                ctx.close()
+            except Exception:
+                pass
 
 
 # ---- redaction --------------------------------------------------------------
@@ -72,142 +163,13 @@ def redact_cookie_header(header: str) -> str:
     return f"{len(names)} cookies ({', '.join(names[:6])}{'...' if len(names) > 6 else ''})"
 
 
-# ---- session model ----------------------------------------------------------
-
-
-def cookie_domains_for(host: str) -> bool:
-    h = host.lstrip(".")
-    return h.endswith("huaweicloud.com")
-
-
-@dataclass
-class Session:
-    cookie_header: str
-    account_mask: str | None = None
-    saved_at: float = field(default_factory=time.time)
-    source: str = "login"
-    profile: str = "default"
-
-    def age_hours(self) -> float:
-        return (time.time() - self.saved_at) / 3600
-
-    def as_dict(self) -> dict[str, Any]:
-        return asdict(self)
-
-
-class SessionStore:
-    """Persist sessions in the OS keyring, else a 0600 JSON file (A5)."""
-
-    def __init__(self, prof: str | None = None):
-        self.profile = prof or profile()
-        self.file = config_dir() / ("session.json" if self.profile == "default" else f"session-{self.profile}.json")
-
-    def _key(self) -> str:
-        return f"session:{self.profile}"
-
-    def _keyring(self):
-        try:
-            import keyring  # type: ignore
-            kr = keyring.get_keyring()
-            backend = kr.__class__.__name__.lower()
-            if "fail" in backend or "null" in backend:
-                return None
-            return keyring
-        except Exception:
-            return None
-
-    def load(self) -> Session | None:
-        kr = self._keyring()
-        if kr is not None:
-            try:
-                raw = kr.get_password(KEYRING_SERVICE, self._key())
-                if raw:
-                    return Session(**json.loads(raw))
-            except Exception:
-                pass
-        if self.file.exists():
-            try:
-                return Session(**json.loads(self.file.read_text()))
-            except Exception:
-                return None
-        return None
-
-    def save(self, session: Session) -> str:
-        session.profile = self.profile
-        blob = json.dumps(session.as_dict())
-        kr = self._keyring()
-        if kr is not None:
-            try:
-                kr.set_password(KEYRING_SERVICE, self._key(), blob)
-                return "keyring"
-            except Exception:
-                pass
-        self.file.parent.mkdir(parents=True, exist_ok=True)
-        self.file.write_text(blob)
-        try:
-            os.chmod(self.file, 0o600)
-        except OSError:
-            pass
-        return f"file {self.file}"
-
-    def clear(self) -> None:
-        kr = self._keyring()
-        if kr is not None:
-            try:
-                kr.delete_password(KEYRING_SERVICE, self._key())
-            except Exception:
-                pass
-        if self.file.exists():
-            self.file.unlink()
-
-
-# ---- cURL import (A4b) ------------------------------------------------------
-
-
-def parse_curl(text: str) -> str:
-    """Extract the Cookie header value from a 'Copy as cURL' string (bash/cmd/PS)."""
-    text = (text or "").strip()
-    if not text:
-        raise AuthLoginFailed("empty cURL text", hint="Pipe a 'Copy as cURL' command into `autocalc auth import`.")
-    # PowerShell/cmd quote the URL with double quotes; shlex handles posix fine.
-    tokens = shlex.split(text.replace("\\\n", " ").replace("^", ""))
-    cookie = None
-    for i, t in enumerate(tokens):
-        if t in ("-H", "--header") and i + 1 < len(tokens):
-            k, _, v = tokens[i + 1].partition(":")
-            if k.strip().lower() == "cookie":
-                cookie = v.strip()
-        elif t in ("-b", "--cookie") and i + 1 < len(tokens):
-            cookie = tokens[i + 1]
-    if not cookie:
-        # PowerShell: -Headers @{ "Cookie" = "..." }  or a bare Cookie: line
-        m = re.search(r'[\"\']?cookie[\"\']?\s*[=:]\s*[\"\']([^\"\']+)[\"\']', text, re.I)
-        if m:
-            cookie = m.group(1)
-    if not cookie:
-        raise AuthLoginFailed("no Cookie header found in the cURL", hint="Copy a `portalcalculatornodeservice` request as cURL.")
-    return cookie
-
-
-def import_from_clipboard() -> str:
-    """Read 'Copy as cURL' from the WSL clipboard via powershell.exe (A4b)."""
-    import subprocess
-    try:
-        out = subprocess.run(["powershell.exe", "-NoProfile", "-Command", "Get-Clipboard", "-Raw"],
-                             capture_output=True, text=True, timeout=20)
-    except (OSError, subprocess.SubprocessError) as exc:
-        raise AuthLoginFailed(f"clipboard unavailable: {exc}",
-                              hint="Run `autocalc auth import -` and paste the cURL, then Ctrl-D.") from exc
-    return out.stdout
-
-
-# ---- browser login (A1) / refresh (A2) --------------------------------------
+# ---- reading the profile ------------------------------------------------------
 
 
 def _cookie_header(cookies: Any) -> str:
     seen: dict[str, str] = {}
     for c in cookies:
-        if cookie_domains_for(c.get("domain", "")):
+        if c.get("domain", "").lstrip(".").endswith("huaweicloud.com"):
             seen[c["name"]] = c["value"]
     return "; ".join(f"{k}={v}" for k, v in seen.items())
 
@@ -216,15 +178,25 @@ def _probe_login(ctx: Any, timeout: float) -> bool:
     """Poll share/list; 200 means logged in, CBC.0101 means not yet."""
     deadline = time.time() + timeout
     url = f"{CALC}/share/list"
-    while time.time() < deadline:
+    while True:
         try:
             r = ctx.request.get(url, timeout=15000)
             if r.status == 200 and str(r.json().get("retCode")) == "200":
                 return True
         except Exception:
             pass
+        if time.time() >= deadline:
+            return False
         time.sleep(2)
-    return False
+
+
+def _visit(ctx: Any, timeout_ms: int) -> None:
+    """Load the calculator so the SSO renews its session cookies."""
+    try:
+        page = ctx.pages[0] if ctx.pages else ctx.new_page()
+        page.goto(CALCULATOR_URL, wait_until="domcontentloaded", timeout=timeout_ms)
+    except Exception:
+        pass
 
 
 def _mask(ctx: Any) -> str | None:
@@ -241,92 +213,175 @@ def _mask(ctx: Any) -> str | None:
     return None
 
 
-def login(prof: str | None = None, timeout: float = 300, headless: bool = False) -> Session:
-    """Open a headed browser to the calculator, wait for the user to sign in, save cookies."""
-    from playwright.sync_api import sync_playwright
+def _read_profile(prof: str, probe_timeout: float = 30) -> tuple[str, str | None] | None:
+    """Open the profile headless; return (cookie header, account mask), or None if signed out."""
+    with _open_profile(prof, headless=True) as ctx:
+        _visit(ctx, 45000)
+        if not _probe_login(ctx, probe_timeout):
+            return None
+        header = _cookie_header(ctx.cookies())
+        return (header, _mask(ctx)) if header else None
 
+
+# Per-process cookie cache (D1): the browser is closed, the profile stays unlocked.
+_cache: dict[str, str] = {}
+_cache_lock = threading.Lock()
+
+
+def session_cookies(prof: str | None = None, refresh: bool = False) -> str:
+    """Cookie header for write calls, read from the profile once per process."""
     prof = prof or profile()
-    udd = profile_dir(prof)
-    udd.mkdir(parents=True, exist_ok=True)
-    with sync_playwright() as p:
-        ctx = p.chromium.launch_persistent_context(
-            str(udd), headless=headless, executable_path=browser_executable(),
-            args=["--no-first-run", "--no-default-browser-check", "--disable-dev-shm-usage"],
-            viewport={"width": 1366, "height": 900},
-        )
-        try:
-            page = ctx.pages[0] if ctx.pages else ctx.new_page()
-            try:
-                page.goto(CALCULATOR_URL, wait_until="domcontentloaded", timeout=60000)
-            except Exception:
-                pass
-            if not _probe_login(ctx, timeout):
-                raise AuthLoginFailed(
-                    "Timed out waiting for login.",
-                    hint="Run `autocalc login` again and finish signing in within 5 minutes.",
-                )
-            cookies = ctx.cookies()
-            header = _cookie_header(cookies)
-            if not header:
-                raise AuthLoginFailed("logged in but no huaweicloud cookies were captured")
-            sess = Session(cookie_header=header, account_mask=_mask(ctx), source="login", profile=prof)
-        finally:
-            ctx.close()
-    store = SessionStore(prof)
-    store.save(sess)
-    return sess
+    _cleanup_legacy()
+    with _cache_lock:
+        if not refresh and prof in _cache:
+            return _cache[prof]
+        _cache.pop(prof, None)
+        if not profile_dir(prof).exists():
+            raise AuthExpired("Not logged in: there is no browser profile yet.", hint=LOGIN_HINT)
+        read = _read_profile(prof)
+        if read is None:
+            raise AuthExpired("The browser profile is no longer signed in.", hint=LOGIN_HINT)
+        _cache[prof] = read[0]
+        return read[0]
 
 
-def refresh(prof: str | None = None, timeout: float = 120) -> Session:
-    """Silently re-capture cookies from the persistent profile, headless (A2)."""
-    from playwright.sync_api import sync_playwright
+# ---- login / status / logout (D4, D6) -------------------------------------------
 
+
+@dataclass(frozen=True)
+class LoginResult:
+    account_mask: str | None
+    browser: str
+
+
+def login(prof: str | None = None, timeout: float = 300) -> LoginResult:
+    """Open a headed browser on the calculator and wait for the user to sign in. Stores nothing."""
     prof = prof or profile()
-    udd = profile_dir(prof)
-    if not udd.exists():
-        raise AuthExpired("No browser profile to refresh from.", hint="Run `autocalc login` first.")
-    with sync_playwright() as p:
-        ctx = p.chromium.launch_persistent_context(str(udd), headless=True, executable_path=browser_executable(),
-                                                   args=["--no-first-run", "--disable-dev-shm-usage"])
-        try:
-            page = ctx.pages[0] if ctx.pages else ctx.new_page()
-            try:
-                page.goto(CALCULATOR_URL, wait_until="domcontentloaded", timeout=45000)
-            except Exception:
-                pass
-            if not _probe_login(ctx, timeout):
-                raise AuthExpired("Silent refresh failed; the SSO session is gone.",
-                                  hint="Run `autocalc login` to sign in again.")
-            sess = Session(cookie_header=_cookie_header(ctx.cookies()), account_mask=_mask(ctx),
-                           source="refresh", profile=prof)
-        finally:
-            ctx.close()
-    SessionStore(prof).save(sess)
-    return sess
+    _cleanup_legacy()
+    choice = find_browser()
+    with _open_profile(prof, headless=False, choice=choice) as ctx:
+        _visit(ctx, 60000)
+        if not _probe_login(ctx, timeout):
+            raise AuthLoginFailed("Timed out waiting for login.",
+                                  hint="Run `autocalc login` again and finish signing in within 5 minutes.")
+        header = _cookie_header(ctx.cookies())
+        if not header:
+            raise AuthLoginFailed("Logged in, but the profile holds no huaweicloud cookies.", hint=LOGIN_HINT)
+        mask = _mask(ctx)
+    with _cache_lock:
+        _cache[prof] = header
+    return LoginResult(account_mask=mask, browser=choice.name)
 
 
-def migrate_session_curl(repo_session: Path) -> bool:
-    """Import a legacy repo ``.session.curl`` once, then delete it (A5)."""
-    if not repo_session.exists():
-        return False
+def status(prof: str | None = None) -> dict[str, Any]:
+    """Check the profile live (headless). Shows cookie names only, never values."""
+    prof = prof or profile()
+    _cleanup_legacy()
+    out: dict[str, Any] = {"logged_in": False, "profile": prof, "browser": find_browser().describe()}
+    if not profile_dir(prof).exists():
+        out["hint"] = LOGIN_HINT
+        return out
+    read = _read_profile(prof)
+    if read is None:
+        out["hint"] = LOGIN_HINT
+        return out
+    header, mask = read
+    with _cache_lock:
+        _cache[prof] = header
+    out.update(logged_in=True, account_mask=mask, cookies=redact_cookie_header(header))
+    return out
+
+
+def _profile_in_use(udd: Path) -> bool:
+    """True when a live process holds the profile (Linux/macOS lock symlink is ``host-pid``)."""
+    lock = udd / "SingletonLock"
     try:
-        header = parse_curl(repo_session.read_text())
-    except CalculatorError:
-        return False
-    SessionStore().save(Session(cookie_header=header, source="import"))
-    try:
-        repo_session.unlink()
+        target = os.readlink(lock)
     except OSError:
-        pass
+        return False
+    host, _, pid = target.rpartition("-")
+    if host != socket.gethostname() or not pid.isdigit():
+        return False
+    try:
+        os.kill(int(pid), 0)
+    except ProcessLookupError:
+        return False
+    except OSError:
+        return True
     return True
 
 
-def status() -> dict[str, Any]:
-    store = SessionStore()
-    sess = store.load()
-    if not sess:
-        return {"logged_in": False, "profile": store.profile,
-                "hint": "Run `autocalc login` to sign in once in a browser window."}
-    return {"logged_in": True, "profile": store.profile, "account_mask": sess.account_mask,
-            "age_hours": round(sess.age_hours(), 2), "source": sess.source,
-            "cookies": redact_cookie_header(sess.cookie_header)}
+def logout(prof: str | None = None) -> list[str]:
+    """Delete the profile directory (signs out for certain) and any legacy session copy."""
+    prof = prof or profile()
+    removed: list[str] = []
+    with _cache_lock:
+        _cache.pop(prof, None)
+    udd = profile_dir(prof)
+    if udd.exists():
+        if _profile_in_use(udd):
+            raise AuthProfileBusy(f"The browser profile {udd} is in use by another process.")
+        try:
+            shutil.rmtree(udd)
+        except OSError as exc:  # Windows refuses to delete files a browser holds open
+            raise AuthProfileBusy(f"The browser profile {udd} is in use by another process.") from exc
+        removed.append(str(udd))
+    count = _cleanup_legacy(force=True)
+    if count:
+        removed.append(f"{count} legacy session cop{'y' if count == 1 else 'ies'}")
+    return removed
+
+
+# ---- one-time cleanup of sessions stored by earlier versions (D5) -----------------
+
+_cleanup_done = False
+
+
+def _legacy_keyring() -> Any:
+    try:
+        import keyring  # type: ignore[import-untyped]
+        backend = keyring.get_keyring().__class__.__name__.lower()
+        if "fail" in backend or "null" in backend:
+            return None
+        return keyring
+    except Exception:
+        return None
+
+
+def _cleanup_legacy(force: bool = False) -> int:
+    """Delete legacy keyring entries and ``session*.json`` files once per machine; never raises."""
+    global _cleanup_done
+    marker = data_dir() / _LEGACY_MARKER
+    if not force and (_cleanup_done or marker.exists()):
+        _cleanup_done = True
+        return 0
+    removed = 0
+    names = {"default"}
+    try:
+        cfg = config_dir()
+        files = [cfg / "session.json", *cfg.glob("session-*.json")] if cfg.is_dir() else []
+        for f in files:
+            if f.stem != "session":
+                names.add(f.stem.removeprefix("session-"))
+            if f.exists():
+                f.unlink()
+                removed += 1
+        if data_dir().is_dir():
+            names.update(p.name.removeprefix("browser-profile-") for p in data_dir().glob("browser-profile-*"))
+    except OSError:
+        pass
+    kr = _legacy_keyring()
+    if kr is not None:
+        for name in sorted(names):
+            try:
+                kr.delete_password(_LEGACY_KEYRING_SERVICE, f"session:{name}")
+                removed += 1
+            except Exception:  # no such entry, locked keyring...
+                pass
+    try:
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.touch()
+    except OSError:
+        pass
+    _cleanup_done = True
+    return removed

@@ -100,6 +100,15 @@ class AuthLoginFailed(AuthRequired):
     code = "AUTH_LOGIN_FAILED"
 
 
+class AuthProfileBusy(AuthRequired):
+    code = "AUTH_PROFILE_BUSY"
+
+    def __init__(self, message: str = "The browser profile is in use by another process.", **kw: Any):
+        hint = kw.pop("hint", None) or (
+            "Close the other autocalc window or process using this profile, or pass --profile NAME.")
+        super().__init__(message, hint=hint, **kw)
+
+
 # ---- upstream / transport ---------------------------------------------------
 
 

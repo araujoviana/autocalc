@@ -5,8 +5,8 @@
   autocalc search SERVICE REGION [terms...] [--billing ondemand|monthly|yearly] [--vcpus N] [--mem GB]
   autocalc quote REGION SERVICE:SPEC[*QTY][@SIZE] ... [--billing ...] [--hours 730] [--periods 1] [--currency BRL]
   autocalc login [--profile NAME] [--timeout SECONDS]
-  autocalc logout
-  autocalc auth status | auth import [FILE|-]
+  autocalc logout [--profile NAME]
+  autocalc auth status [--profile NAME]
   autocalc lists
   autocalc doctor
   autocalc install-browser
@@ -77,10 +77,11 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("login")
     p.add_argument("--profile")
     p.add_argument("--timeout", type=float, default=300)
-    sub.add_parser("logout")
+    p = sub.add_parser("logout")
+    p.add_argument("--profile")
     p = sub.add_parser("auth")
-    p.add_argument("action", choices=["status", "import"])
-    p.add_argument("file", nargs="?")
+    p.add_argument("action", choices=["status"])
+    p.add_argument("--profile")
     sub.add_parser("lists")
     p = sub.add_parser("validate")
     p.add_argument("list_id")
@@ -92,27 +93,17 @@ def main(argv: list[str] | None = None) -> int:
         if a.cmd == "login":
             from autocalc import auth
             print("Opening a browser window. Sign in to Huawei Cloud; this window closes when done.")
-            sess = auth.login(a.profile, timeout=a.timeout)
-            where = auth.SessionStore(a.profile).save(sess)
-            who = sess.account_mask or "your account"
-            print(f"Logged in as {who} \u2713  (stored in {where})")
+            res = auth.login(a.profile, timeout=a.timeout)
+            print(f"Logged in as {res.account_mask or 'your account'} \u2713 (browser: {res.browser})")
             return 0
         if a.cmd == "logout":
             from autocalc import auth
-            auth.SessionStore().clear()
-            print("Session cleared.")
+            removed = auth.logout(a.profile)
+            print("Signed out. Deleted: " + ", ".join(removed) if removed else "Already signed out; nothing to delete.")
             return 0
         if a.cmd == "auth":
             from autocalc import auth
-            if a.action == "status":
-                print(json.dumps(auth.status(), indent=2))
-            else:
-                text = sys.stdin.read() if a.file in (None, "-") else open(a.file).read()
-                if a.file is None:
-                    text = auth.import_from_clipboard()
-                header = auth.parse_curl(text)
-                auth.SessionStore().save(auth.Session(cookie_header=header, source="import"))
-                print(f"Imported session: {auth.redact_cookie_header(header)}")
+            print(json.dumps(auth.status(a.profile), indent=2))
             return 0
         if a.cmd == "doctor":
             return _doctor()
@@ -191,21 +182,17 @@ def _doctor() -> int:
         print(f"[ok]   frontend version: {m.group(1) if m else 'unknown'}")
     except Exception as exc:  # noqa: BLE001
         print(f"[warn] frontend version: {exc}")
-    st = auth.status()
-    print(f"[{'ok' if st['logged_in'] else 'warn'}]   auth: " + (f"logged in ({st.get('account_mask') or 'account'})" if st["logged_in"] else st["hint"]))
+    browser = auth.find_browser()
+    print(f"[{'warn' if browser.name == 'bundled' else 'ok'}]   browser: {browser.describe()}"
+          + ("  -> install Chrome or Edge, or run `autocalc install-browser`" if browser.name == "bundled" else ""))
+    udd = auth.profile_dir()
+    print(f"[ok]   profile: {udd}" if udd.exists() else f"[warn] profile: none yet  -> {auth.LOGIN_HINT}")
     try:
         auth.data_dir().mkdir(parents=True, exist_ok=True)
         print(f"[ok]   cache/config: {Calculator().cache_dir}")
     except Exception as exc:  # noqa: BLE001
         ok = False
         print(f"[FAIL] cache dir: {exc}")
-    try:
-        from playwright.sync_api import sync_playwright
-        with sync_playwright() as p:
-            path = p.chromium.executable_path
-        print(f"[{'ok' if path else 'warn'}]   playwright chromium: {path or 'run autocalc install-browser'}")
-    except Exception as exc:  # noqa: BLE001
-        print(f"[warn] playwright: {exc}  -> run `autocalc install-browser`")
     return 0 if ok else 1
 
 

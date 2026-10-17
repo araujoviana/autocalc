@@ -15,12 +15,11 @@ that touch the account use the profile from `--profile` or `AUTOCALC_PROFILE` (d
 | `autocalc search SERVICE REGION [terms…]` | Search SKUs; `--billing ondemand\|monthly\|yearly`, `--vcpus N`, `--mem GB`, `--limit N`, `--refresh` (bypass the 24 h cache) | no |
 | `autocalc quote REGION SERVICE:SPEC[*QTY][@SIZE] …` | Price items with the live rating engine; `--billing`, `--hours` (on-demand, default 730), `--periods` (monthly/yearly), `--currency` | no |
 | `autocalc validate LIST_ID` | Re-read a saved list anonymously and report glitches | no |
-| `autocalc login [--profile NAME] [--timeout S]` | Open a browser window and wait for you to sign in | — |
-| `autocalc logout` | Forget the stored session | — |
-| `autocalc auth status` | Show whether you are logged in (cookie names only, never values) | — |
-| `autocalc auth import [FILE\|-]` | Import a session from a browser "Copy as cURL" | — |
+| `autocalc login [--profile NAME] [--timeout S]` | Open a browser window and wait for you to sign in; prints the account and the browser used | — |
+| `autocalc logout [--profile NAME]` | Sign out by deleting the browser profile, and delete any session copy left by an earlier version | — |
+| `autocalc auth status [--profile NAME]` | Open the profile headless and show whether it is signed in (cookie names only, never values) | — |
 | `autocalc lists` | List the saved lists in your account | yes |
-| `autocalc doctor` | Check endpoints, frontend version, auth, browser and cache | no |
+| `autocalc doctor` | Check endpoints, frontend version, the chosen browser, whether a profile exists, and the cache (does not open the profile) | no |
 | `autocalc install-browser` | Install Playwright's Chromium (only needed without a system browser) | no |
 
 ## Environment variables
@@ -29,7 +28,7 @@ that touch the account use the profile from `--profile` or `AUTOCALC_PROFILE` (d
 |---|---|
 | `AUTOCALC_PROFILE` | Named login profile (default `default`) |
 | `AUTOCALC_CACHE` | Catalog cache directory (default `~/.cache/autocalc`) |
-| `AUTOCALC_BROWSER` | Path of the Chromium-family browser to drive; overrides auto-detection |
+| `AUTOCALC_BROWSER` | Path of the Chromium-family browser to drive; overrides auto-detection (Chrome, then Edge, then Chromium, then Playwright's build) |
 
 ## MCP server
 

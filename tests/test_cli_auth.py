@@ -1,11 +1,10 @@
-"""CLI parsing and auth helpers unit tests (no network)."""
+"""CLI parsing unit tests (no network). Auth is covered in test_auth.py."""
 
 import argparse
 
 import pytest
 
-from autocalc.auth import parse_curl, redact_cookie_header
-from autocalc.cli import parse_item
+from autocalc.cli import main, parse_item
 
 
 def test_parse_item_forms():
@@ -18,17 +17,6 @@ def test_parse_item_bad():
         parse_item("nonsense")
 
 
-def test_parse_curl_bash():
-    text = "curl 'https://x/api/share/list' -H 'origin: https://www.huaweicloud.com' -b 'cbc-sid=abc; HWS_INTL_ID=def'"
-    assert parse_curl(text) == "cbc-sid=abc; HWS_INTL_ID=def"
-
-
-def test_redaction_hides_values():
-    red = redact_cookie_header("cbc-sid=SECRET; HWS_INTL_ID=SECRET2")
-    assert "SECRET" not in red and "2 cookies" in red
-
-
-def test_migrate_curl(tmp_path):
-    f = tmp_path / ".session.curl"
-    f.write_text("curl 'https://x' -b 'cbc-sid=z'")
-    assert parse_curl(f.read_text()) == "cbc-sid=z"
+def test_auth_import_is_gone():
+    with pytest.raises(SystemExit):
+        main(["auth", "import"])

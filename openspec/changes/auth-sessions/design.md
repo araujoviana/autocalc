@@ -63,8 +63,10 @@ launches anything:
 | chromium | `chromium` / `chromium-browser` on `PATH` | same |
 | bundled | Playwright's build | same |
 
-Chrome and Edge launch through Playwright `channel=` (Playwright knows their paths and flags).
-The override and Chromium use `executable_path=`. The function takes `platform`, `environ`,
+On Windows, Chrome and Edge launch through Playwright `channel=` (Playwright knows their paths
+and flags). On Linux they launch with `executable_path=`, because `channel="chrome"` only looks at
+`/opt/google/chrome/chrome` and a Chrome found on `PATH` may live elsewhere. The override and
+Chromium always use `executable_path=`. The function takes `platform`, `environ`,
 `which` and `exists` parameters with real defaults, so tests can cover both OSes on Linux CI.
 
 This reverses the current Linux order (Chromium before Chrome). On a machine with both, a
@@ -92,8 +94,10 @@ Mapping after a failed launch avoids that.
 - `session_cookies(prof=None, refresh=False) -> str`: the cookie header from the cache or the
   profile (D1). Without a profile directory it raises `AUTH_EXPIRED` without launching.
 - `logout(prof)`: deletes the profile directory and that profile's cache entry, then runs the
-  legacy cleanup (D5) unconditionally. If the directory can't be deleted because it is locked,
-  it raises `AUTH_PROFILE_BUSY`.
+  legacy cleanup (D5) unconditionally. If the profile is held by a live process it raises
+  `AUTH_PROFILE_BUSY` before deleting anything: on Linux the `SingletonLock` symlink names
+  `host-pid` and the pid is checked; on Windows a delete that fails on a held file maps to the
+  same error. A stale lock from a crash does not block logout.
 - `status(prof)`: `{logged_in, profile, browser, account_mask?, cookies?, hint?}`, where
   `cookies` is redacted (names and count). It opens the profile, so it can report busy.
 - `redact_cookie_header()`: kept.
