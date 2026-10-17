@@ -95,7 +95,8 @@ checked (service sold? mode offered? SKU present?) and failures are actionable, 
 
 ## Reverse-engineered API (as of 2026-10-13, frontend `CBC-PortalCalculator/11.4.201`)
 
-Source bundle: `https://portal.hc-cdn.com/CBC-PortalCalculator/<ver>/framework.js` (`URIMAP`).
+Source bundle: `https://portal.hc-cdn.com/CBC-PortalCalculator/<ver>/framework.js` (`URIMAP`). Fetch a local copy
+with `uv run python scripts/fetch_bundle.py`; it is never committed.
 Host for the intl site is `portal-intl.huaweicloud.com` (`portal.` for China, `portal.eu.` for EU).
 All the endpoints below answered without cookies.
 
@@ -172,7 +173,7 @@ link without logging in.
 
 Builders: `ecs, evs, cce, obs, rds, sfs, elb, nat, apig, dline, cbr, apm, waf, function, dew, lts, cci, rabbitmq, kafka`.
 
-Still to build (targets for the migration estate): `eip, vpn, sfs (NAS), nosql, dds, dis, aom, hss, ssa, er, dli, eg`. Of these `eip`/`vpn` reference bandwidth specs that the calculator replaced (drift), and the rest have no corpus card yet, so their `addToList_*` label tokens must be recovered from `framework.js` before a card renders correctly.
+Still to build (targets for the migration estate): `eip, vpn, sfs (NAS), nosql, dds, dis, aom, hss, ssa, er, dli, eg`. Of these `eip`/`vpn` reference bandwidth specs that the calculator replaced (drift), and the rest have no corpus card yet, so their `addToList_*` label tokens must be recovered from the bundle (`scripts/fetch_bundle.py`) before a card renders correctly.
 
 See `docs/CAVEATS.md` for the full list of pitfalls (Edit-vs-list price, per-service pricing models, region availability/price, the token rule) before adding a builder or a quote.
 
@@ -227,8 +228,18 @@ CLI commands: `openspec list` (open changes), `openspec list --specs`, `openspec
 
 ## Development
 
+These three commands mirror the CI gate (`.github/workflows/ci.yml`); run them before pushing:
+
 ```bash
-uv run pytest -q              # unit tests (no network)
-uv run pytest -q -m live      # live read-only checks
-uv run python tests/render.py # publish a list, open the share link headless, delete it
+uv sync --group dev           # install, including ruff and pytest
+uv run ruff check             # lint (rules live in pyproject.toml)
+uv run pytest -m "not live"   # offline tests: no network, session or corpus needed
+```
+
+Other checks, run by hand:
+
+```bash
+uv run pytest -m live                    # live read-only checks (network; golden tests need the corpus)
+uv run python -m tests.support.render    # publish a list, open the share link headless, delete it
+uv run python scripts/fetch_bundle.py    # download the calculator frontend bundle to .cache/bundle/
 ```

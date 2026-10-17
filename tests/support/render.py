@@ -7,7 +7,7 @@ DOM card count / price text is recorded as a diagnostic - the calculator SPA
 renders the shared list inside a modal that a click opens, so a strict DOM
 assertion is best-effort.
 
-Run:  .venv/bin/python tests/render.py
+Run:  uv run python -m tests.support.render
 """
 
 from __future__ import annotations

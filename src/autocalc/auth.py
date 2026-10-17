@@ -16,6 +16,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -47,6 +48,19 @@ def profile_dir(name: str | None = None) -> Path:
     name = name or profile()
     p = data_dir() / "browser-profile"
     return p if name == "default" else p.with_name(f"browser-profile-{name}")
+
+
+def browser_executable() -> str | None:
+    """System Chromium-family browser to drive, so Playwright upgrades can't break login.
+
+    ``AUTOCALC_BROWSER`` overrides the search; None falls back to Playwright's bundled build.
+    """
+    if env := os.environ.get("AUTOCALC_BROWSER"):
+        return env
+    for name in ("chromium", "chromium-browser", "google-chrome-stable", "google-chrome", "microsoft-edge-stable"):
+        if path := shutil.which(name):
+            return path
+    return None
 
 
 # ---- redaction --------------------------------------------------------------
@@ -236,7 +250,7 @@ def login(prof: str | None = None, timeout: float = 300, headless: bool = False)
     udd.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:
         ctx = p.chromium.launch_persistent_context(
-            str(udd), headless=headless,
+            str(udd), headless=headless, executable_path=browser_executable(),
             args=["--no-first-run", "--no-default-browser-check", "--disable-dev-shm-usage"],
             viewport={"width": 1366, "height": 900},
         )
@@ -272,7 +286,7 @@ def refresh(prof: str | None = None, timeout: float = 120) -> Session:
     if not udd.exists():
         raise AuthExpired("No browser profile to refresh from.", hint="Run `autocalc login` first.")
     with sync_playwright() as p:
-        ctx = p.chromium.launch_persistent_context(str(udd), headless=True,
+        ctx = p.chromium.launch_persistent_context(str(udd), headless=True, executable_path=browser_executable(),
                                                    args=["--no-first-run", "--disable-dev-shm-usage"])
         try:
             page = ctx.pages[0] if ctx.pages else ctx.new_page()
