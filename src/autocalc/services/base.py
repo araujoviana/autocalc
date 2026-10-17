@@ -1,4 +1,4 @@
-"""Builder framework (backlog B0).
+"""Builder framework.
 
 A *service profile* turns high-level options into one calculator card
 (``{"buyUrl", "rewriteValue", "selectedProduct"}``) that the website renders.

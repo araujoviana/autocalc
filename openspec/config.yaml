@@ -2,24 +2,25 @@ schema: spec-driven
 githubCopilot:
   cloudAgent: true
 
-# Project context (optional)
-# Add only constraints that should guide OpenSpec artifacts and workflows.
-# Include constraints an agent cannot infer by reading the code.
-# Keep general project documentation and discoverable codebase facts out.
-# Example:
-#   context: |
-#     Designs and tasks must cover Windows, macOS, and Linux
-#     Write all artifacts in Spanish
+# Project context: constraints an agent cannot infer from the code.
+context: |
+  autocalc produces verified share links for cloud pricing calculators (Huawei Cloud now, AWS next).
+  The share link is the deliverable; a stored price that differs from the website's Edit price is a fatal bug.
+  USD list prices only: no discounts, no other currencies.
+  No client data in the repo, ever: no customer names, quotes or saved-list contents in specs, docs, tests or commits.
+  Everything must work on Windows and Linux.
+  Decisions are recorded as MADR ADRs in docs/adr/; cite them instead of re-arguing.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+# Per-artifact rules.
+rules:
+  proposal:
+    - State what is out of scope.
+    - State the publish-gate impact (none, or which check changes and why).
+  specs:
+    - Requirements describe observable behavior; vendor observations (cookie names, measured rates, endpoint quirks) go to docs/explanation, not specs.
+    - A spec delta ships in the same change as the code that makes it true; record undecided or future targets as ADRs, not requirements.
+  tasks:
+    - Every task states how it is verified (command, test, or observable result).
 
 # Per-operation guidance (optional)
 # Add advisory guidance for how apply and archive work should be conducted.

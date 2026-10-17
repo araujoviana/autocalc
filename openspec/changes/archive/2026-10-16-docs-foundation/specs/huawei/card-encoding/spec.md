@@ -1,11 +1,10 @@
-# card-building Specification
+# Spec Delta
 
 ## Purpose
 
-Turn high-level service options into saved-list cards that the Huawei Cloud calculator website
-renders, and edits, exactly like cards a human builds in the UI, priced to the cent.
+Turn high-level service options into saved-list cards that the Huawei Cloud calculator website renders, and edits, exactly like cards a human builds in the UI, priced to the cent.
 
-## Requirements
+## ADDED Requirements
 
 ### Requirement: Card shape matches real saved lists
 Each card SHALL be `{buyUrl, rewriteValue, selectedProduct}`. Each product in
