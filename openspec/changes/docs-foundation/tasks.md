@@ -9,7 +9,7 @@
 
 - [x] 2.1 Add a `docs` dependency group with `mkdocs-material>=9.7,<10` to `pyproject.toml` and refresh `uv.lock`; verify `uv sync --locked --group docs` succeeds
 - [x] 2.2 Create `mkdocs.yml` (Material theme, nav for the four Diátaxis quadrants + ADRs, admonition, pymdownx superfences/tabbed, search) and `docs/index.md`; verify `uv run --group docs mkdocs build --strict` succeeds
-- [ ] 2.3 Add a "Docs" step to `.github/workflows/ci.yml` (`uv sync --locked --group dev --group docs`, then `mkdocs build --strict`); verify it is green on push
+- [x] 2.3 Add a "Docs" step to `.github/workflows/ci.yml` (`uv sync --locked --group dev --group docs`, then `mkdocs build --strict`); verify it is green on push
 - [x] 2.4 Add `site/` to `.gitignore`; verify `git status` is clean after a local build
 
 ## 3. Architecture Decision Records
