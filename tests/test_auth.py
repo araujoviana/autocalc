@@ -67,6 +67,7 @@ def isolated(tmp_path, monkeypatch):
     monkeypatch.setattr(auth, "_cache", {})
     monkeypatch.setattr(auth, "_cleanup_done", False)
     monkeypatch.setattr(auth, "time", FakeTime())
+    monkeypatch.setattr(auth, "_header_valid", lambda _h: False)  # never touch the network
     return kr
 
 
@@ -344,6 +345,53 @@ def test_session_cookies_threads_open_once(fake_profile):
         t.join()
     assert len(results) == 2 and len(set(results)) == 1
     assert len(fake_profile.opens) == 1
+
+
+def _new_process(monkeypatch):
+    monkeypatch.setattr(auth, "_cache", {})
+
+
+def test_saved_session_survives_a_new_process(fake_profile, monkeypatch):
+    auth.login(timeout=5)
+    path = auth._session_path("default")
+    assert path.parent == auth.profile_dir()
+    if not sys.platform.startswith("win"):
+        assert path.stat().st_mode & 0o777 == 0o600
+    _new_process(monkeypatch)
+    assert auth.session_cookies() == f"cbc-sid={SECRET}; csrf=tok"
+    assert fake_profile.opens == [("default", False)]  # the login only; no headless reopen
+
+
+def test_refresh_ignores_saved_session(fake_profile, monkeypatch):
+    auth.login(timeout=5)
+    _new_process(monkeypatch)
+    auth.session_cookies(refresh=True)
+    assert fake_profile.opens == [("default", False), ("default", True)]
+
+
+def test_signed_out_profile_forgets_saved_session(fake_profile, monkeypatch):
+    auth.login(timeout=5)
+    fake_profile.logged_in = False
+    with pytest.raises(CalculatorError) as ei:
+        auth.session_cookies(refresh=True)
+    assert ei.value.code == "AUTH_EXPIRED"
+    assert not auth._session_path("default").exists()
+
+
+def test_status_uses_saved_session_without_browser(fake_profile, monkeypatch):
+    auth.login(timeout=5)
+    monkeypatch.setattr(auth, "_header_valid", lambda h: SECRET in h)
+    st = auth.status()
+    assert st["logged_in"] is True and st["account_mask"] == "u***@example.com" and SECRET not in repr(st)
+    assert fake_profile.opens == [("default", False)]
+
+
+def test_status_falls_back_to_profile_when_saved_session_is_stale(fake_profile):
+    auth.login(timeout=5)
+    fake_profile.logged_in = False
+    st = auth.status()
+    assert st["logged_in"] is False
+    assert not auth._session_path("default").exists()
 
 
 # ---- 2.2 login / status / logout ----------------------------------------------

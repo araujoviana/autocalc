@@ -41,3 +41,11 @@ Users are a few technical colleagues, each on their own machine with their own l
 * Bad, because write calls must open the profile, which is slower than reading a file. Mitigated
   by keeping a session alive within a run.
 * The spec delta (`huawei/auth-sessions`) ships with the code in the `auth-sessions` change.
+
+### Amendment (2026-10-17)
+
+Huawei's sign-on cookie is session-only, and Chromium did not reliably keep it when the profile
+was reopened after login. So `autocalc login` also writes the cookie header to an owner-only file
+inside the profile directory, and writes read it from there. The profile directory is still the
+only credential store, `logout` still deletes it whole, and there is still no keyring copy.
+Details: `auth-sessions` design D1.

@@ -1,9 +1,12 @@
 """Authentication for the calculator's *write* endpoints (share/add, share/list...).
 
-The browser profile is the only credential (ADR-0011):
-  * ``login`` opens a headed system browser on a persistent profile; the user signs in by hand.
-  * Writes read the cookies from that profile, opened headless at most once per process and
-    cached in memory (``session_cookies``). Nothing is copied to a file or the keyring.
+The browser profile directory is the only credential store (ADR-0011):
+  * ``login`` opens a headed system browser on a persistent profile; the user signs in by hand,
+    and the huaweicloud cookie header is written to ``autocalc-session`` (0600) inside that
+    profile directory. Huawei's sign-on cookie is session-only, and Chromium does not reliably
+    keep it across a relaunch, so the browser's own cookie store alone cannot carry the sign-in.
+  * Writes use that file, cached in memory per process (``session_cookies``). Nothing is copied
+    outside the profile directory or to the keyring; ``logout`` deletes the whole directory.
   * A stale session (``CBC.0101``) re-reads the profile once before ``AUTH_EXPIRED``.
 
 Only ``share/*`` (save, list, update, delete, copy) and ``formExport`` need this.
@@ -35,6 +38,7 @@ _LAUNCH_ARGS = ["--no-first-run", "--no-default-browser-check", "--disable-dev-s
 # Chromium's single-instance lock: a symlink on Linux/macOS, a file on Windows.
 _LOCK_ARTIFACTS = ("SingletonLock", "lockfile")
 _LEGACY_MARKER = ".legacy-sessions-cleaned"
+_SESSION_FILE = "autocalc-session"
 _LEGACY_KEYRING_SERVICE = "autocalc"
 
 
@@ -251,13 +255,57 @@ def _read_profile(prof: str) -> tuple[str, str | None] | None:
         return (header, _mask(ctx)) if header else None
 
 
+def _session_path(prof: str) -> Path:
+    return profile_dir(prof) / _SESSION_FILE
+
+
+def _save_session(prof: str, header: str, mask: str | None) -> None:
+    """Write the cookie header inside the profile directory, readable by the owner only."""
+    path = _session_path(prof)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        json.dump({"cookie": header, "account_mask": mask}, f)
+
+
+def _load_session(prof: str) -> tuple[str, str | None] | None:
+    try:
+        data = json.loads(_session_path(prof).read_text(encoding="utf-8"))
+        return (data["cookie"], data.get("account_mask")) if data.get("cookie") else None
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return None
+
+
+def _forget_session(prof: str) -> None:
+    try:
+        _session_path(prof).unlink()
+    except OSError:
+        pass
+
+
+def _header_valid(header: str) -> bool:
+    """One share/list call with the saved header: no browser, a second or less."""
+    import httpx
+
+    headers = {"Cookie": header}
+    for part in header.split(";"):
+        k, _, v = part.strip().partition("=")
+        if k == "csrf":
+            headers["csrf"] = v
+    try:
+        r = httpx.get(f"{CALC}/share/list", headers=headers, timeout=15)
+        return r.status_code == 200 and str(r.json().get("retCode")) == "200"
+    except Exception:
+        return False
+
+
 # Per-process cookie cache (D1): the browser is closed, the profile stays unlocked.
 _cache: dict[str, str] = {}
 _cache_lock = threading.Lock()
 
 
 def session_cookies(prof: str | None = None, refresh: bool = False) -> str:
-    """Cookie header for write calls, read from the profile once per process."""
+    """Cookie header for write calls: the saved session, else the profile; once per process."""
     prof = prof or profile()
     _cleanup_legacy()
     with _cache_lock:
@@ -266,11 +314,15 @@ def session_cookies(prof: str | None = None, refresh: bool = False) -> str:
         _cache.pop(prof, None)
         if not profile_dir(prof).exists():
             raise AuthExpired("Not logged in: there is no browser profile yet.", hint=LOGIN_HINT)
-        read = _read_profile(prof)
-        if read is None:
-            raise AuthExpired("The browser profile is no longer signed in.", hint=LOGIN_HINT)
-        _cache[prof] = read[0]
-        return read[0]
+        saved = None if refresh else _load_session(prof)
+        if saved is None:
+            saved = _read_profile(prof)
+            if saved is None:
+                _forget_session(prof)
+                raise AuthExpired("The browser profile is no longer signed in.", hint=LOGIN_HINT)
+            _save_session(prof, *saved)
+        _cache[prof] = saved[0]
+        return saved[0]
 
 
 # ---- login / status / logout (D4, D6) -------------------------------------------
@@ -283,7 +335,7 @@ class LoginResult:
 
 
 def login(prof: str | None = None, timeout: float = 300) -> LoginResult:
-    """Open a headed browser on the calculator and wait for the user to sign in. Stores nothing."""
+    """Open a headed browser on the calculator, wait for the user to sign in, save the session."""
     prof = prof or profile()
     _cleanup_legacy()
     choice = find_browser()
@@ -296,23 +348,29 @@ def login(prof: str | None = None, timeout: float = 300) -> LoginResult:
         if not header:
             raise AuthLoginFailed("Logged in, but the profile holds no huaweicloud cookies.", hint=LOGIN_HINT)
         mask = _mask(ctx)
+    _save_session(prof, header, mask)
     with _cache_lock:
         _cache[prof] = header
     return LoginResult(account_mask=mask, browser=choice.name)
 
 
 def status(prof: str | None = None) -> dict[str, Any]:
-    """Check the profile live (headless). Shows cookie names only, never values."""
+    """Check the session live: the saved header first, else the profile (headless).
+    Shows cookie names only, never values."""
     prof = prof or profile()
     _cleanup_legacy()
     out: dict[str, Any] = {"logged_in": False, "profile": prof, "browser": find_browser().describe()}
     if not profile_dir(prof).exists():
         out["hint"] = LOGIN_HINT
         return out
-    read = _read_profile(prof)
-    if read is None:
-        out["hint"] = LOGIN_HINT
-        return out
+    read = _load_session(prof)
+    if read is None or not _header_valid(read[0]):
+        read = _read_profile(prof)
+        if read is None:
+            _forget_session(prof)
+            out["hint"] = LOGIN_HINT
+            return out
+        _save_session(prof, *read)
     header, mask = read
     with _cache_lock:
         _cache[prof] = header
