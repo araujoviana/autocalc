@@ -1,0 +1,76 @@
+"""draft → revise → publish, and the registry that feeds MCP and the CLI."""
+
+import json
+from decimal import Decimal
+
+import pytest
+
+from autocalc import cli, server, tools, workflow
+from autocalc.core import Candidate, DraftStore
+from autocalc.errors import GateFailed, ValidationError
+
+
+class FakeProvider:
+    name = "fake"
+
+    def candidates(self, req):
+        return [Candidate("c7n.large.2", req.region, req.billing, Decimal("10"), {"vcpus": 2, "memory_gb": 4}),
+                Candidate("c7n.xlarge.2", req.region, req.billing, Decimal("20"), {"vcpus": 4, "memory_gb": 8})]
+
+
+@pytest.fixture
+def store(tmp_path, monkeypatch):
+    monkeypatch.setenv("AUTOCALC_DATA", str(tmp_path))
+    monkeypatch.setattr(workflow, "HuaweiProvider", lambda calc: FakeProvider())
+    monkeypatch.setattr(tools, "_region", lambda v: v)
+    return DraftStore()
+
+
+def req(**kw):
+    return {"id": "r1", "service": "ecs", "region": "sa-brazil-1", "billing": "monthly", "needs": {"vcpus": 3}, **kw}
+
+
+def test_undecided_draft_cannot_publish_and_decided_one_reaches_the_gate(store, monkeypatch):
+    # needs 3 vCPU: only the 4 vCPU flavor covers it, which is not an exact match, so it stays pending
+    d = workflow.draft_quote("acme", [req(options={"image": "AlmaLinux"})])
+    assert d["pending"] == ["r1"] and d["requirements"][0]["candidates"][0]["spec"] == "c7n.xlarge.2"
+    with pytest.raises(ValidationError) as ei:
+        workflow.publish_quote(d["draft_id"], "n")
+    assert ei.value.details["allowed"] == ["r1"]
+
+    assert workflow.revise_quote(d["draft_id"], [{"requirement_id": "r1", "spec": "c7n.xlarge.2",
+                                                  "justification": "customer wants headroom"}])["pending"] == []
+    built = {}
+    monkeypatch.setattr(workflow, "build_card", lambda svc, calc=None, **kw: built.update(svc=svc, **kw) or {"c": 1})
+
+    def fake_publish(name, cards, **kw):
+        raise GateFailed("no", cards=[])
+
+    monkeypatch.setattr(workflow, "publish_checked", fake_publish)
+    with pytest.raises(GateFailed):
+        workflow.publish_quote(d["draft_id"], "n")
+    assert (built["svc"], built["flavor"], built["image"], built["quantity"]) == ("ecs", "c7n.xlarge.2", "AlmaLinux", 1)
+
+
+def test_unsupported_service_fails_before_any_build(store):
+    d = workflow.draft_quote("acme", [req(service="obs", needs={"vcpus": 1000})])
+    workflow_store = DraftStore()
+    from autocalc.core import decide
+    decide(workflow_store, d["draft_id"], "r1", "c7n.large.2", "test")
+    with pytest.raises(ValidationError, match="obs"):
+        workflow.publish_quote(d["draft_id"], "n")
+
+
+def test_mcp_and_cli_expose_the_same_registry(capsys):
+    mcp_names = {t.name for t in server.mcp._tool_manager.list_tools()}
+    assert mcp_names == set(tools.REGISTRY) and "create_price_list" not in mcp_names
+    sub = cli.argparse.ArgumentParser().add_subparsers()
+    cmds = cli._add_tool_commands(sub, {"quote"})
+    assert set(cmds) == {n.replace("_", "-") for n in tools.REGISTRY} - {"quote"}
+
+
+def test_cli_runs_a_tool_with_json_arguments(store, tmp_path, capsys):
+    f = tmp_path / "r.json"
+    f.write_text(json.dumps([req()]))
+    assert cli.main(["draft-quote", "--customer", "acme", "--requirements", f"@{f}"]) == 0
+    assert json.loads(capsys.readouterr().out)["pending"] == ["r1"]

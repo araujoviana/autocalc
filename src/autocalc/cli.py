@@ -15,9 +15,11 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 import re
 import sys
+import typing
 
 from autocalc.client import Calculator
 from autocalc.errors import CalculatorError
@@ -49,6 +51,40 @@ def _print_err(exc: CalculatorError) -> int:
     if exc.hint:
         print(f"  -> {exc.hint}", file=sys.stderr)
     return 2
+
+
+def _json_arg(value: str):
+    """A JSON value, or @path to read it from a file."""
+    try:
+        return json.loads(open(value[1:], encoding="utf-8").read() if value.startswith("@") else value)
+    except (OSError, ValueError) as exc:
+        raise argparse.ArgumentTypeError(f"not valid JSON (or readable @file): {exc}") from exc
+
+
+def _add_tool_commands(sub, taken: set[str]) -> dict[str, tuple]:
+    """One subcommand per registry tool; scalars become options, anything else takes JSON."""
+    from autocalc import workflow  # noqa: F401  (registers the workflow tools)
+    from autocalc.tools import REGISTRY
+
+    out = {}
+    for name, fn in REGISTRY.items():
+        cmd = name.replace("_", "-")
+        if cmd in taken:
+            continue
+        p = sub.add_parser(cmd, help=(fn.__doc__ or "").strip().split("\n")[0])
+        hints = typing.get_type_hints(fn)
+        for par in inspect.signature(fn).parameters.values():
+            t, req = hints.get(par.name, str), par.default is inspect.Parameter.empty
+            opt = "--" + par.name.replace("_", "-")
+            if t is bool:
+                p.add_argument(opt, dest=par.name, action="store_true")
+            elif t in (int, float, str):
+                p.add_argument(opt, dest=par.name, type=t, required=req, default=None if req else par.default)
+            else:
+                p.add_argument(opt, dest=par.name, type=_json_arg, required=req, metavar="JSON|@FILE",
+                               default=None if req else par.default)
+        out[cmd] = (fn, [q.name for q in inspect.signature(fn).parameters.values()])
+    return out
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -87,9 +123,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("list_id")
     sub.add_parser("doctor")
     sub.add_parser("install-browser")
+    tool_cmds = _add_tool_commands(sub, set(sub.choices))
     a = ap.parse_args(argv)
 
     try:
+        if a.cmd in tool_cmds:
+            fn, names = tool_cmds[a.cmd]
+            print(json.dumps(fn(**{n: getattr(a, n) for n in names}), indent=2, ensure_ascii=False, default=str))
+            return 0
         if a.cmd == "login":
             from autocalc import auth
             print("Opening a browser window. Sign in to Huawei Cloud; this window closes when done.")

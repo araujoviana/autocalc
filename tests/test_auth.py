@@ -532,7 +532,7 @@ def test_redaction_hides_values():
 
 
 def test_mcp_auth_tools(fake_profile):
-    from autocalc import server
+    from autocalc import tools as server
 
     out = server.auth_login()
     assert out["logged_in"] is True and out["account_mask"] == "u***@example.com" and "browser" in out
@@ -546,7 +546,7 @@ def test_mcp_auth_status_busy_is_structured(monkeypatch):
         raise auth.AuthProfileBusy()
         yield
 
-    from autocalc import server
+    from autocalc import tools as server
 
     auth.profile_dir().mkdir(parents=True)
     monkeypatch.setattr(auth, "_open_profile", busy)

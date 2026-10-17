@@ -107,22 +107,6 @@ def test_verify_marks_an_unratable_or_unchecked_card_failed(monkeypatch):
     assert chk.problems == ["could not be re-priced: no price", "the Edit check returned no result for this card"]
 
 
-def test_create_price_list_returns_a_link_only_through_the_gate(monkeypatch):
-    from autocalc import server, services
-
-    monkeypatch.setattr(services, "build", lambda svc, calc=None, **kw: card())
-    seen = {}
-
-    def fake_publish(name, cards, **kw):
-        seen["cards"] = cards
-        raise GateFailed("no", cards=[])
-
-    monkeypatch.setattr(gate, "publish_checked", fake_publish)
-    with pytest.raises(GateFailed):
-        server.create_price_list("n", [{"service": "ecs"}])
-    assert len(seen["cards"]) == 1
-
-
 def test_quantity_tokens_reach_both_the_form_state_and_the_purchase_quantity():
     from autocalc.services.base import Builder
 
