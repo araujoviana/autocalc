@@ -41,6 +41,7 @@ nav:
       - Huawei calculator backend: reference/huawei-backend.md
   - Explanation:
       - Architecture: explanation/architecture.md
+      - The quoting core: explanation/core.md
       - Huawei calculator:
           - List price vs Edit price: explanation/huawei/edit-vs-list-price.md
           - Display tokens: explanation/huawei/display-tokens.md
