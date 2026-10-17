@@ -217,7 +217,7 @@ create_price_list(
 
 ### D1. Frontend drift detection (P0, S)
 - Store the frontend version seen in each saved list (`CBC-PortalCalculator/11.4.201`). `autocalc doctor` and nightly CI fetch the page and warn when it changes, then rerun golden and render tests.
-- Contract test on endpoints: `URIMAP` paths are still in `framework.js`.
+- Contract test on endpoints: `URIMAP` paths are still in `framework.js` (fetch it with `uv run python scripts/fetch_bundle.py`).
 
 ### D2. Catalog caching (P0, S)
 - Today: 24 h disk cache per (service, region). Add `--refresh` and per-service size limits (ECS is 4 MB per region). Use the CDN mirror first, because it's faster and survives an API outage.
