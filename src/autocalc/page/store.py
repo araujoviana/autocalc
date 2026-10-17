@@ -44,7 +44,7 @@ const visible = (i) => !!(i.subTree && i.subTree.el && i.subTree.el.offsetParent
 function control(cfg) {
   const all = findAll((i) => {
     const vc = i.props && i.props.viewConfig, n = i.type.__name || '';
-    return vc && vc.id === cfg && i.props.idHeader && n.startsWith('base-') && n !== 'base-form-group';
+    return vc && vc.id === cfg && i.props.idHeader && (n.startsWith('base-') || n === 'common-input') && n !== 'base-form-group';
   });
   return all.find(visible) || null;
 }

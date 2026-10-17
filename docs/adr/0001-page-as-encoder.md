@@ -91,3 +91,26 @@ Two findings shape the encoder and the publish gate:
 * After Edit, the page's own "No data matched" warning appears in about half the runs even for
   faithful cards. The Edit check uses the page's comparison rule on the final form state
   instead, and reports the warning without acting on it.
+
+### Seven services (2026-10-17): go
+
+Change `spa-encoder`, frontend `CBC-PortalCalculator/11.4.201`. The page replays a Python
+builder's form state for ECS, EVS, CCE, ELB, OBS, RDS and SFS Turbo
+(`uv run python -m tests.support.spa_matrix`, `sa-brazil-1`). All 14 cards below are saved as one
+list, re-read, and checked on Edit:
+
+| Card | Stored | Edit | Rating | Result |
+|---|---|---|---|---|
+| ecs / monthly | 123.22 | 123.22 | 123.22 | go |
+| evs / on-demand, monthly, yearly | 18.03, 18.00, 180.00 | same | same | go |
+| cce / on-demand, yearly | 408.80, 912.00 | same | same | go |
+| elb / on-demand, yearly | 38.69, 203.00 | same | same | go |
+| obs / monthly, yearly (packages) | 6,819.84, 15,344.64 | same | same | go |
+| rds / on-demand, yearly | 157.39, 1,034.88 | same | same | go |
+| sfsturbo / on-demand, yearly | 255.62, 2,797.67 | same | same | go |
+
+Exception: OBS pay-per-use usage cards encode and price, but the page's Edit view refills their
+size stepper with 0 (the builder's card behaves the same), so the publish gate refuses them.
+The page also rejects values the builders used to emit (SFS Turbo capacity must be 3.6 TB or more,
+in steps of 1.2 TB), which now fails at encode time with the control named. Details in
+[page encoder](../explanation/huawei/page-encoder.md).
