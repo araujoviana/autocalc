@@ -25,7 +25,8 @@ Each item is either assigned to the change that will close it or left unschedule
 | Item | Goes to |
 |---|---|
 | Refresh the two golden tests that query the live catalog: `test_golden_ecs_ri` (the 'AlmaLinux 9.4 64bit' image is gone from `sa-brazil-1`) and `test_ecs_template_render` (21 of 779 corpus cards drift, limit is 2) | unscheduled |
-| Migrate the MCP server from `FastMCP` to `MCPServer` | `workflow-surface` |
+| Migrate the MCP server from `FastMCP` to `MCPServer` (not in `mcp` 1.x, which is pinned `<2`) | unscheduled, when the SDK ships it |
+| `publish_quote` for services beyond ECS and EVS | `spa-encoder` and the builder waves |
 | Drop the `keyring` dependency once the legacy session cleanup has run | `distribution` |
 | Quotes that span several regions in one saved list | `quote-core` |
 | Availability-zone handling for services that price per AZ | `quote-core` |

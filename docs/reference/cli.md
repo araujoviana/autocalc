@@ -1,8 +1,9 @@
 # CLI reference
 
-The current `autocalc` command set. It will be regenerated from the tool registry when the
-workflow surface ships ([ADR-0007](../adr/0007-workflow-surface-and-one-registry.md)). Every
-command accepts `-h`.
+The `autocalc` command set. The commands below are written by hand; every MCP tool is also a
+subcommand generated from the tool registry ([ADR-0007](../adr/0007-workflow-surface-and-one-registry.md)),
+named with hyphens (`draft-quote`, `list-my-price-lists`, …). A generated command is skipped when a
+hand-written one has the name, so `autocalc quote` is the hand-written one. Every command accepts `-h`.
 
 Regions accept an id (`sa-brazil-1`) or a friendly name (`"São Paulo"`, `Santiago`). Commands
 that touch the account use the profile from `--profile` or `AUTOCALC_PROFILE` (default
@@ -21,6 +22,21 @@ that touch the account use the profile from `--profile` or `AUTOCALC_PROFILE` (d
 | `autocalc lists` | List the saved lists in your account | yes |
 | `autocalc doctor` | Check endpoints, frontend version, the chosen browser, whether a profile exists, and the cache (does not open the profile) | no |
 | `autocalc install-browser` | Install Playwright's Chromium (only needed without a system browser) | no |
+
+## Quote workflow
+
+`draft-quote`, `revise-quote` and `publish-quote` are the only route to a share link. Scalar
+parameters are options (`--customer acme`); lists and objects take JSON, or `@file.json`, and the
+result prints as JSON.
+
+```sh
+autocalc draft-quote --customer acme --requirements @reqs.json   # ranked candidates, a draft id
+autocalc revise-quote --draft-id d-1a2b3c4d --decisions @choices.json
+autocalc publish-quote --draft-id d-1a2b3c4d --name "acme web tier"   # runs the publish gate
+```
+
+A requirement is `{"id","service","region","billing","quantity"?,"needs"?,"spec"?,"options"?}`.
+`publish-quote` builds ECS and EVS only for now; other services fail before anything is saved.
 
 ## Environment variables
 

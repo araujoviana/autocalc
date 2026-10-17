@@ -25,6 +25,7 @@ class Requirement:
     spec: str | None = None
     az: str | None = None
     group: str | None = None
+    options: dict[str, Any] = field(default_factory=dict)  # passed to the service builder
 
     def to_dict(self) -> dict[str, Any]:
         return dict(self.__dict__)

@@ -1,7 +1,7 @@
 """ECS cards must not carry an EIP unless the caller asks for one (docs/explanation/huawei/card-rules.md).
 
 A default 5 Mbit/s EIP silently added ~USD 3.69/month to every ECS card built through
-`create_price_list`, including RI cards (build(billing="ri") forwards its defaults).
+`publish_quote`, including RI cards (build(billing="ri") forwards its defaults).
 """
 
 from __future__ import annotations
