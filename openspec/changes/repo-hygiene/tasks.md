@@ -31,7 +31,7 @@
 
 ## 6. Integration check
 
-- [ ] 6.1 Push the branch and confirm the CI run is green on GitHub; then push a throwaway commit with an unused import to confirm the lint step fails, and revert it
+- [x] 6.1 Push the branch and confirm the CI run is green on GitHub; then push a throwaway commit with an unused import to confirm the lint step fails, and revert it
 - [x] 6.2 Run `openspec validate repo-hygiene --strict` and verify it passes
 
 ## Workflow follow-up
