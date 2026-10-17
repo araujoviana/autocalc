@@ -24,6 +24,7 @@ Each item is either assigned to the change that will close it or left unschedule
 
 | Item | Goes to |
 |---|---|
+| Refresh the two golden tests that query the live catalog: `test_golden_ecs_ri` (the 'AlmaLinux 9.4 64bit' image is gone from `sa-brazil-1`) and `test_ecs_template_render` (21 of 779 corpus cards drift, limit is 2) | `quote-core` |
 | Settlement "By monthly price" (`billingModeMonth`): verify it re-prices to the same amount on Edit | `publish-gate` |
 | Migrate the MCP server from `FastMCP` to `MCPServer` | `workflow-surface` |
 | Drop the `keyring` dependency once the legacy session cleanup has run | `distribution` |
