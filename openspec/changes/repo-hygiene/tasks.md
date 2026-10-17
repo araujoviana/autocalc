@@ -5,7 +5,7 @@
 - [x] 1.1 Add `ruff` to `[dependency-groups].dev` and a `[tool.ruff]` table to `pyproject.toml` per design D1/D2 (E/F/W/I/B/UP, line length 120, py311, E501 ignored, generated agent dirs and `docs/` excluded); verify `uv sync --group dev` succeeds and `uv run ruff check --show-settings src` reports the project `pyproject.toml` as its config source
 - [x] 1.2 Run `uv run ruff check --fix` (safe fixes only) over `src/` and `tests/`; verify the remaining findings are only the manual categories (E702, B904, B905, B007, F841, B017)
 - [x] 1.3 Fix the remaining findings by hand per design D6 (split semicolon lines, `raise ... from`, explicit `zip(strict=...)`, `_` loop vars, specific exception in the B017 test); verify `uv run ruff check` exits 0 and `uv run pytest -m "not live"` still passes all 23 tests
-- [ ] 1.4 Verify no behavior change from the lint fixes by running `uv run pytest -m live` on a machine with the corpus, and confirm the pass/fail set matches a run on the pre-change commit (known catalog-drift failures documented in CAVEATS are allowed)
+- [x] 1.4 Verify no behavior change from the lint fixes by running `uv run pytest -m live` on a machine with the corpus, and confirm the pass/fail set matches a run on the pre-change commit (known catalog-drift failures documented in CAVEATS are allowed)
 
 ## 2. Test helper package
 
