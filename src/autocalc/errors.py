@@ -130,6 +130,21 @@ class PageEncodeFailed(CalculatorError):
         super().__init__(message, hint=hint, details=details, **kw)
 
 
+# ---- publish gate -----------------------------------------------------------
+
+
+class GateFailed(CalculatorError):
+    """A saved list did not pass the publish gate (ADR-0003); no link is returned."""
+
+    code = "GATE_FAILED"
+
+    def __init__(self, message: str, *, cards: list[dict[str, Any]], list_id: str | None = None, **kw: Any):
+        details: dict[str, Any] = {"cards": cards}
+        if list_id:
+            details["list_id"] = list_id
+        super().__init__(message, details=details, **kw)
+
+
 # ---- upstream / transport ---------------------------------------------------
 
 

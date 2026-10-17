@@ -26,13 +26,13 @@ from typing import Any
 import httpx
 
 from autocalc.client import Calculator
+from autocalc.gate import rerate
 from autocalc.page.ecs import encode_ecs
 from autocalc.page.edit_check import EditResult, detail_cards, edit_check
 from autocalc.page.store import cents, frontend_version
 from autocalc.services.base import Builder
 from autocalc.services.ecs import EcsBuilder
 from autocalc.share import Session, share_detail
-from tests.support.page_rating import rerate
 
 REGION = "sa-brazil-1"
 OPTIONS = dict(flavor="c7n.large.2", image="Ubuntu", system_disk=("GPSSD", 40),

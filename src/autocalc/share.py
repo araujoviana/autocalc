@@ -332,12 +332,10 @@ def publish(name: str, ecs_items: list[dict[str, Any]], calc: Calculator | None 
         if kw.get("data_disks"):
             kw["data_disks"] = [(d["type"], int(d["size"])) if isinstance(d, dict) else (d[0], int(d[1])) for d in kw["data_disks"]]
         items.append(b.ecs(**kw))
-    payload = b.share_payload(name, items)
-    session = Session()
-    list_id = session.create(payload)
-    return {"id": list_id, "url": SHARE_URL.format(id=list_id), "name": name,
-            "total_usd": payload["totalPrice"]["amount"],
-            "items": [{"flavor": it["selectedProduct"]["productAllInfos"][0]["spec"],
-                       "billing": it["selectedProduct"]["chargeModeName"],
-                       "quantity": it["selectedProduct"]["purchaseNum"]["measureValue"],
-                       "amount_usd": it["selectedProduct"]["amount"]} for it in items]}
+    from autocalc.gate import publish_checked
+
+    out = publish_checked(name, items, calc=calc)
+    return {**out, "items": [{"flavor": it["selectedProduct"]["productAllInfos"][0]["spec"],
+                              "billing": it["selectedProduct"]["chargeModeName"],
+                              "quantity": it["selectedProduct"]["purchaseNum"]["measureValue"],
+                              "amount_usd": it["selectedProduct"]["amount"]} for it in items]}

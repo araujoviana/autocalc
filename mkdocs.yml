@@ -52,5 +52,6 @@ nav:
           - Sessions: explanation/huawei/sessions.md
           - Concurrency: explanation/huawei/concurrency.md
           - Page encoder: explanation/huawei/page-encoder.md
+          - Publish gate: explanation/huawei/publish-gate.md
   - Roadmap: roadmap.md
   - Decisions (ADRs): adr/index.md
