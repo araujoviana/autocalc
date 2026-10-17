@@ -4,17 +4,15 @@ Golden tests compare productAllInfos/amount but NOT rewriteValue, which is what 
 Edit view re-prices from. This script rebuilds each corpus card and diffs rewriteValue
 so template gaps (the "price changes on Edit" bug) surface per service.
 
-Run: cd ~/code/autocalc && .venv/bin/python tests/template_audit.py [per_service_limit]
+Run: uv run python -m tests.support.template_audit [per_service_limit]
 """
 
 from __future__ import annotations
 
 import importlib
 import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import golden  # noqa: E402
+from tests.support import golden
 
 SIMPLE = ["nat", "apig", "dline", "cbr", "apm", "waf", "function", "dew", "lts"]
 MODULES = {"evs": "evs_rebuild", "cce": "cce_rebuild", "obs": "obs_rebuild", "rds": "rds_rebuild",
@@ -45,11 +43,11 @@ def diff_paths(a, b, path="", out=None, limit=6):
 def rebuild_for(service, card):
     if service == "ecs":
         mod = "ecs_ri_rebuild" if card["selectedProduct"]["chargeModeName"] == "RI" else "ecs_rebuild"
-        return importlib.import_module(mod).rebuild
+        return importlib.import_module(f"tests.support.{mod}").rebuild
     if service in MODULES:
-        return importlib.import_module(MODULES[service]).rebuild
+        return importlib.import_module(f"tests.support.{MODULES[service]}").rebuild
     if service in SIMPLE:
-        return getattr(importlib.import_module("simple_rebuild"), service)
+        return getattr(importlib.import_module("tests.support.simple_rebuild"), service)
     return None
 
 

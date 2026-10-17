@@ -27,9 +27,9 @@ Two things an ECS card must carry, or the editor drops disks:
 Symptom seen in the wild: stored `10480.39`, Edit `9831.28` = VM `9182.16` + system disk
 `649.12` — the editor priced only the system disk and lost both 50 GB data disks.
 
-**The golden suite does not catch this:** `tests/golden.compare_cards` ignores `rewriteValue`
+**The golden suite does not catch this:** `tests/support/golden.compare_cards` ignores `rewriteValue`
 (and other volatile keys), so a card with a broken render template still "matches". Cover it
-with `tests/test_template_render.py` + `tests/template_audit.py`, and check new services by
+with `tests/test_template_render.py` + `uv run python -m tests.support.template_audit`, and check new services by
 hand.
 
 ## Token rule: never hard-code a display token from another region
@@ -46,8 +46,10 @@ GET /config?urlPath=<service>&language=en-us&sign=common
 ```
 
 That bundle is also where non-obvious pricing constants live (e.g. DMS conversion-rate maps).
-The build-your-own source of truth for the whole render model is
-`docs/evidence/bundle/framework.js`.
+The build-your-own source of truth for the whole render model is the frontend bundle: run
+`uv run python scripts/fetch_bundle.py` and search the file it prints (it is never committed).
+The 11.4.201 build that these notes were written against is in git history:
+`git show df99f46:docs/evidence/bundle/framework.js`.
 
 ## The list price and Edit price — service-specific traps
 
@@ -175,7 +177,7 @@ the engine version. Real saved lists use the token `dataInfo_107_`.
 `eip, vpn, sfs (NAS), cci, nosql, dds, rabbitMQ, kafka, dis, aom, hss, ssa, er, dli, eg` may
 have no real saved card yet. Their display labels come from two opaque tokens
 (`addToList_title`/`addToList_product`); **do not guess them** — recover them from
-`docs/evidence/bundle/framework.js` (or the service `/config` bundle), then verify by
+the bundle fetched by `uv run python scripts/fetch_bundle.py` (or the service `/config` bundle), then verify by
 publishing a card and reading it back.
 
 ## Catalog drift is expected in golden tests
