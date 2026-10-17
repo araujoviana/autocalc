@@ -19,7 +19,7 @@ CALCULATOR_URL = "https://www.huaweicloud.com/intl/en-us/pricing/calculator.html
 RATING_PATH = "/ratingservice/v2/inquiry/resource"
 ADD_TO_LIST = "#rshema_func_priceboard_addToList"
 
-Kind = Literal["radio", "select", "region", "stepper", "add"]
+Kind = Literal["radio", "select", "region", "stepper", "add", "auto"]
 
 
 @dataclass(frozen=True)
@@ -134,6 +134,10 @@ class Driver:
 
     def apply(self, step: Step) -> None:
         self._gen += 1
+        if step.kind == "auto":  # let the form say what the control is
+            step = self._resolve(step)
+            if step is None:
+                return
         if step.kind == "add":
             self._add(step)
         elif step.kind == "stepper":
@@ -141,6 +145,41 @@ class Driver:
         else:
             self._choose(step)
         self._touch()
+
+    def _form_value(self, step: Step) -> Any:
+        """What the form state holds for this control, or ``None`` if it isn't a template control."""
+        from autocalc.page.replay import form_values, global_values
+
+        form = store.js(self.page, "formState") or {}
+        values = {**global_values(form), **form_values((form.get("template_RENDER") or {}).get("value") or {})}
+        return values.get(step.component_id)
+
+    def _held(self, step: Step) -> bool:
+        """Does the form already hold this step's value (in a control the page keeps hidden)?"""
+        from autocalc.page.replay import same_value
+
+        return same_value(self._form_value(step), step.value)
+
+    def _resolve(self, step: Step) -> Step | None:
+        """Turn an ``auto`` step into the kind of the control the form shows for it.
+
+        A control the page hides (the ELB IP count while the load balancer is private) is fine
+        when the form already holds the wanted value; otherwise the step fails.
+        """
+        ctl = self.wait(lambda: store.js(self.page, "describe", step.component_id), timeout=self.timeout / 4)
+        if not ctl and self._held(step):
+            return None
+        ctl = ctl or self.wait(lambda: store.js(self.page, "describe", step.component_id))
+        if not ctl:
+            raise self._fail(f"The form has no control {step.component_id}.", field=step.component_id)
+        kind = {"base-radio-group": "radio", "base-select": "select", "base-stepper": "stepper", "base-radio-stepper": "stepper",
+                "common-input": "stepper"}.get(ctl["kind"])
+        if kind is None:
+            if self.wait(lambda: self._held(step)):  # the page fills it in; e.g. OBS's one, disabled, already ticked package type
+                return None
+            raise self._fail(f"{step.component_id} is a {ctl['kind']}, which the encoder cannot fill.",
+                             field=step.component_id)
+        return Step(step.component_id, kind, step.value)
 
     def _option(self, step: Step) -> tuple[dict[str, Any], dict[str, Any]]:
         """The control and the requested option, waiting for both to appear (choices narrow later ones)."""
@@ -176,7 +215,7 @@ class Driver:
                 result = self.wait(lambda: store.js(self.page, "pickDropdown", labels) == "ok" and "ok", timeout=5)
         if result != "ok":
             raise self._fail(f"Could not set {step.component_id} to {step.value!r} ({result}).", field=step.component_id)
-        if not self.wait(lambda: store.js(self.page, "readBack", step.component_id) in labels):
+        if not self.wait(lambda: str(store.js(self.page, "readBack", step.component_id)).strip() in labels):
             shown = store.js(self.page, "readBack", step.component_id)
             raise self._fail(f"{step.component_id} shows {shown!r} after choosing {step.value!r}.",
                              field=step.component_id)
@@ -188,22 +227,29 @@ class Driver:
         ctl = self.wait(probe)
         if not ctl:
             raise self._fail(f"The form has no control {step.component_id}.", field=step.component_id)
-        box = self.page.locator(f"[id='{ctl['id']}'] input")
+        box = self.page.locator(f"[id='{ctl['id']}'] input").first
+        if not box.is_visible() and self._held(step):  # e.g. the ELB IP count of a private load balancer
+            return
         try:
             box.fill(_number(step.value))
             box.press("Enter")
+            box.blur()  # a plain input (SFS capacity) only commits on blur
         except Exception as exc:
             raise self._fail(f"Could not type into {step.component_id}.", field=step.component_id) from exc
 
+        def shown_now():
+            kept = self._form_value(step)  # the form state is what the card is built from
+            return kept if kept is not None else store.js(self.page, "readBack", step.component_id)
+
         def same():
-            shown = store.js(self.page, "readBack", step.component_id)
+            shown = shown_now()
             try:
                 return float(str(shown).replace(",", "")) == float(step.value)
             except (TypeError, ValueError):
                 return False
 
         if not self.wait(same):
-            shown = store.js(self.page, "readBack", step.component_id)
+            shown = shown_now()
             raise self._fail(f"{step.component_id} shows {shown!r} after typing {step.value!r}.",
                              field=step.component_id)
 

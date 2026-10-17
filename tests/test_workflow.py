@@ -7,7 +7,7 @@ import pytest
 
 from autocalc import cli, server, tools, workflow
 from autocalc.core import Candidate, DraftStore
-from autocalc.errors import GateFailed, ValidationError
+from autocalc.errors import GateFailed, PageEncodeFailed, ValidationError
 
 
 class FakeProvider:
@@ -40,16 +40,34 @@ def test_undecided_draft_cannot_publish_and_decided_one_reaches_the_gate(store, 
 
     assert workflow.revise_quote(d["draft_id"], [{"requirement_id": "r1", "spec": "c7n.xlarge.2",
                                                   "justification": "customer wants headroom"}])["pending"] == []
-    built = {}
-    monkeypatch.setattr(workflow, "build_card", lambda svc, calc=None, **kw: built.update(svc=svc, **kw) or {"c": 1})
+    built, gate = {}, {}
+    monkeypatch.setattr(workflow, "build_card",
+                        lambda svc, calc=None, **kw: built.update(svc=svc, **kw) or {"rewriteValue": {"form": 1}})
+    monkeypatch.setattr(workflow, "encode_card", lambda svc, rv: {"page_card_for": svc, "form": rv})
 
     def fake_publish(name, cards, **kw):
+        gate["cards"] = cards
         raise GateFailed("no", cards=[])
 
     monkeypatch.setattr(workflow, "publish_checked", fake_publish)
     with pytest.raises(GateFailed):
         workflow.publish_quote(d["draft_id"], "n")
     assert (built["svc"], built["flavor"], built["image"], built["quantity"]) == ("ecs", "c7n.xlarge.2", "AlmaLinux", 1)
+    assert gate["cards"] == [{"page_card_for": "ecs", "form": {"form": 1}}]  # the page's card, not the builder's
+
+
+def test_a_card_the_page_cannot_encode_saves_nothing(store, monkeypatch):
+    d = workflow.draft_quote("acme", [req(needs={"vcpus": 2})])
+    assert d["pending"] == []
+    monkeypatch.setattr(workflow, "build_card", lambda svc, calc=None, **kw: {"rewriteValue": {}})
+
+    def cannot(svc, rv):
+        raise PageEncodeFailed("no", service=svc, field="calculator_ecs_radio_cpu")
+
+    monkeypatch.setattr(workflow, "encode_card", cannot)
+    monkeypatch.setattr(workflow, "publish_checked", lambda *a, **k: pytest.fail("reached the gate"))
+    with pytest.raises(PageEncodeFailed):
+        workflow.publish_quote(d["draft_id"], "n")
 
 
 def test_unsupported_service_fails_before_any_build(store):

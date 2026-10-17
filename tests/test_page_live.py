@@ -8,7 +8,10 @@ import pytest
 from autocalc.client import Calculator
 from autocalc.gate import rerate
 from autocalc.page.ecs import encode_ecs
+from autocalc.page.replay import encode_card
 from autocalc.page.store import cents
+from autocalc.services import build
+from tests.support.spa_matrix import MATRIX
 
 pytestmark = pytest.mark.live
 REGION = "sa-brazil-1"
@@ -34,3 +37,11 @@ def test_page_concurrent_encodes_are_isolated(calc):
     for flavor, card in zip(flavors, cards, strict=True):
         vms = [p for p in card["selectedProduct"]["productAllInfos"] if p.get("resourceType") == "hws.resource.type.vm"]
         assert [p["resourceSpecCode"] for p in vms] == [f"{flavor}.linux"]
+
+
+@pytest.mark.parametrize("service,billing,options", MATRIX, ids=[f"{s}-{b}" for s, b, _ in MATRIX])
+def test_replayed_card_matches_the_rating_engine(calc, service, billing, options):
+    card = build(service, calc, region=REGION, billing=billing, **options)
+    page = encode_card(service, card["rewriteValue"])
+    assert page["selectedProduct"]["chargeModeName"] == billing.upper()
+    assert cents(page["selectedProduct"]["amount"]) == rerate(page, calc)

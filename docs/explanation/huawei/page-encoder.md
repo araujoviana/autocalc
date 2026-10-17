@@ -77,6 +77,42 @@ The page doesn't preselect an image: until the flavor family has images, the ima
 empty and `template_RENDER` holds `null` for it. The recipe always sets every priced field
 explicitly. Form state survives a billing-mode switch.
 
+### Replaying a builder's form state
+
+`autocalc.page.replay` fills the form for any service from a Python builder's card. The
+builder's `rewriteValue` says which value each control should hold, so the encoder needs no
+per-service recipe: `card_steps` flattens it to `(control id, value)` steps and the form itself
+says what each control is (`auto`). A key nested under its parent that starts with the parent's
+id is already a full control id (`calculator_evs_stepper_main`). A `UNSET_Stepper_n` leaf is the
+control `…_Stepper_n`. A row key `…_|addible0|_<n>` is preceded by one click on the add button.
+
+| Control (`__name`) | Filled as |
+|---|---|
+| `base-radio-group` | radio |
+| `base-select` | select |
+| `base-stepper`, `base-radio-stepper` | stepper (the radio part of a `base-radio-stepper` is not used) |
+| `common-input` | stepper, then blur: a plain input only commits when it loses focus |
+
+What the page did differently from the builders, seen on the seven services in `sa-brazil-1`:
+
+- **Hidden controls.** The ELB public IP count is hidden for a private load balancer, a
+  service may have no quantity stepper, and OBS shows its one package type disabled and already
+  ticked. The step is skipped only if the form already holds the wanted value.
+- **Rules of the form itself.** SFS Turbo capacity (TB) must be at least 3.6 and a multiple of
+  1.2, and only a value the input's own rule accepts is committed. A rejected value leaves the old
+  one in the form state while the input box shows the typed text, so steppers are read back from
+  the form state, not the box. A text input keeps `'6'` where a builder wrote `6.0`, so values are
+  compared as numbers when both parse.
+- **Other ids.** In on-demand billing the SFS Turbo form uses `calculator_sfsDemand_radio` and
+  `calculator_sfsDemand_36input` where saved cards use the `Type`/`Period` ids.
+  `replay.ALIASES` maps them.
+- **OBS pay-per-use.** The page encodes a usage card (storage size, traffic, requests) and
+  prices it, but its Edit view refills the size stepper (`calculator_multiAZ_radio`) with 0. This
+  happens for the builder's card as well, so the Edit check fails and the publish gate refuses
+  such a card. OBS packages (monthly, yearly) are Edit-faithful.
+- **Cosmetic differences.** The page writes `transRate`/`transTarget` and some label tokens
+  differently from the builders. Only control → value is compared, after capture.
+
 ## How a card is captured
 
 1. Remove the overlays that block clicks: the first-visit guide (`.guide-dialog`, `.v-modal`)

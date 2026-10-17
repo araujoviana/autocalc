@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Literal
 
 from autocalc import tools
@@ -10,11 +11,12 @@ from autocalc.core import draft_quote as _draft
 from autocalc.core.ranking import rank
 from autocalc.errors import ValidationError
 from autocalc.gate import publish_checked
+from autocalc.page.replay import encode_card
 from autocalc.providers.huawei import HuaweiProvider
 from autocalc.services import build as build_card
 
 # the builder argument that takes the chosen spec; services missing here are not publishable yet
-_SPEC_ARG = {"ecs": "flavor", "evs": "type"}
+_SPEC_ARG = {"ecs": "flavor", "evs": "type", "rds": "flavor", "sfsturbo": "tier"}
 SHOWN = 5
 
 
@@ -73,7 +75,11 @@ def publish_quote(draft_id: str, name: str, settlement: Literal["total", "monthl
     if unsupported:
         raise ValidationError(f"publish_quote cannot build {unsupported} yet.", field="service", allowed=sorted(_SPEC_ARG))
     spec = {d.requirement_id: d.spec for d in draft.decisions}
-    cards = [build_card(r.service, calc=tools.calc, region=r.region, billing=r.billing, quantity=r.quantity,
+    built = [build_card(r.service, calc=tools.calc, region=r.region, billing=r.billing, quantity=r.quantity,
                         **{_SPEC_ARG[r.service]: spec[r.id]}, **r.options) for r in draft.requirements]
+    # The builders say what to fill in; the page builds the card that is saved (ADR-0001).
+    with ThreadPoolExecutor(max_workers=3) as pool:  # each encode has its own browser context (ADR-0010)
+        cards = list(pool.map(lambda pair: encode_card(pair[0].service, pair[1]["rewriteValue"]),
+                              zip(draft.requirements, built, strict=True)))
     out = publish_checked(name, cards, settlement=settlement, currency=currency.upper(), calc=tools.calc)
     return {"draft_id": draft_id, "id": out["id"], "url": out["url"], "checks": out["checks"]}

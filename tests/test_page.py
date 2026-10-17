@@ -201,6 +201,9 @@ class FakeLocator:
     def press(self, key):
         self.page.pressed.append((self.selector, key))
 
+    def blur(self):
+        pass
+
 
 class FakePage:
     """Answers the page library by function name; ``wait_for_timeout`` advances the fake clock."""

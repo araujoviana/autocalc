@@ -36,7 +36,7 @@ autocalc publish-quote --draft-id d-1a2b3c4d --name "acme web tier"   # runs the
 ```
 
 A requirement is `{"id","service","region","billing","quantity"?,"needs"?,"spec"?,"options"?}`.
-`publish-quote` builds ECS and EVS only for now; other services fail before anything is saved.
+`publish-quote` builds ECS, EVS, RDS and SFS Turbo cards on the calculator page (a browser is needed); other services fail before anything is saved.
 
 ## Environment variables
 
