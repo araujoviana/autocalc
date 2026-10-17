@@ -42,7 +42,7 @@ The session grants access to the Huawei Cloud **account**, not just the calculat
 
 The browser profile directory is the only place the session lives
 ([ADR-0011](../../adr/0011-auth-browser-profile-is-the-credential.md)). Nothing is copied
-outside it or to the keyring.
+outside it.
 
 - **Login.** `autocalc login` opens a visible browser on a persistent profile directory
   (`~/.local/share/autocalc/browser-profile`, or `browser-profile-<name>` for `--profile`).
@@ -75,10 +75,11 @@ error. Close the other window, or use another profile with `--profile`.
 
 ### Sessions from earlier versions
 
-Earlier versions copied the cookies into the OS keyring (service `autocalc`) or a
-`session*.json` file in `~/.config/autocalc`, and could import a "Copy as cURL". The first
-auth command after upgrading deletes those copies once, and `autocalc logout` deletes them
-again. The `keyring` dependency remains only for this cleanup.
+Earlier versions copied the cookies into a `session*.json` file in `~/.config/autocalc` (or the
+OS keyring, service `autocalc`), and could import a "Copy as cURL". The first auth command after
+upgrading deletes the files once, and `autocalc logout` deletes them again. The `keyring`
+dependency is gone, so entries an old version left in the keyring stay there; delete the
+`autocalc` entries in your OS keychain by hand if you want them gone.
 
 ## Calculator-scoped token (`cpqjwt`, checked 2026-10-17)
 

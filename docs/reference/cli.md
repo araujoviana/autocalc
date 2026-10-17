@@ -21,6 +21,7 @@ that touch the account use the profile from `--profile` or `AUTOCALC_PROFILE` (d
 | `autocalc auth status [--profile NAME]` | Open the profile headless and show whether it is signed in (cookie names only, never values) | — |
 | `autocalc lists` | List the saved lists in your account | yes |
 | `autocalc doctor` | Check endpoints, frontend version, the chosen browser, whether a profile exists, and the cache (does not open the profile) | no |
+| `autocalc update [--to vX.Y.Z]` | Reinstall from the newest release tag, or the one named; prints `old -> new`. Never runs on its own | no |
 | `autocalc install-browser` | Install Playwright's Chromium (only needed without a system browser) | no |
 
 ## Quote workflow

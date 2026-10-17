@@ -130,6 +130,15 @@ class PageEncodeFailed(CalculatorError):
         super().__init__(message, hint=hint, details=details, **kw)
 
 
+# ---- distribution -----------------------------------------------------------
+
+
+class UpdateFailed(CalculatorError):
+    """`autocalc update` could not find a release tag or could not reinstall the tool."""
+
+    code = "UPDATE_FAILED"
+
+
 # ---- publish gate -----------------------------------------------------------
 
 

@@ -1,5 +1,5 @@
 """Offline tests for auth: browser discovery, the profile touchpoint, the cookie cache,
-login/status/logout and the legacy cleanup. No browser is launched and no real keyring is used."""
+login/status/logout and the legacy cleanup. No browser is launched."""
 
 from __future__ import annotations
 
@@ -22,26 +22,6 @@ COOKIES = [{"name": "cbc-sid", "value": SECRET, "domain": ".huaweicloud.com"},
            {"name": "other", "value": "x", "domain": ".example.com"}]
 
 
-class FakeKeyring:
-    """Stands in for the ``keyring`` module; records every call."""
-
-    def __init__(self, entries=None, fail=False):
-        self.entries = dict(entries or {})
-        self.calls: list[tuple] = []
-        self.fail = fail
-
-    def get_keyring(self):
-        return type("FakeBackend", (), {})()
-
-    def delete_password(self, service, key):
-        self.calls.append(("delete", service, key))
-        if self.fail:
-            raise RuntimeError("keyring locked")
-        if (service, key) not in self.entries:
-            raise KeyError(key)
-        del self.entries[(service, key)]
-
-
 class FakeTime:
     """Clock that jumps 10 s per read, so probe loops end without waiting."""
 
@@ -62,13 +42,10 @@ def isolated(tmp_path, monkeypatch):
     monkeypatch.setenv("AUTOCALC_DATA", str(tmp_path / "data"))
     monkeypatch.delenv("AUTOCALC_PROFILE", raising=False)
     monkeypatch.delenv("AUTOCALC_BROWSER", raising=False)
-    kr = FakeKeyring()
-    monkeypatch.setitem(sys.modules, "keyring", kr)
     monkeypatch.setattr(auth, "_cache", {})
     monkeypatch.setattr(auth, "_cleanup_done", False)
     monkeypatch.setattr(auth, "time", FakeTime())
     monkeypatch.setattr(auth, "_header_valid", lambda _h: False)  # never touch the network
-    return kr
 
 
 class FakeResponse:
@@ -468,57 +445,38 @@ def test_logout_stale_lock_is_not_busy():
 # ---- 2.3 legacy cleanup --------------------------------------------------------
 
 
-def _legacy_setup(kr):
+def _legacy_setup():
     cfg = auth.config_dir()
     cfg.mkdir(parents=True)
     (cfg / "session.json").write_text(f'{{"cookie_header": "cbc-sid={SECRET}"}}')
     (cfg / "session-x.json").write_text("{}")
-    kr.entries = {("autocalc", "session:default"): "blob", ("autocalc", "session:x"): "blob"}
 
 
-def test_cleanup_deletes_legacy_copies_once(isolated):
-    kr = isolated
-    _legacy_setup(kr)
-    assert auth._cleanup_legacy() == 4
+def test_cleanup_deletes_legacy_copies_once():
+    _legacy_setup()
+    assert auth._cleanup_legacy() == 2
     assert not list(auth.config_dir().glob("session*.json"))
-    assert kr.entries == {}
     assert (auth.data_dir() / auth._LEGACY_MARKER).exists()
 
-    # A new process (flag reset) sees the marker and touches neither the keyring nor the files.
+    # A new process (flag reset) sees the marker and leaves the files alone.
     auth._cleanup_done = False
-    kr.calls.clear()
     (auth.config_dir() / "session.json").write_text("{}")
     assert auth._cleanup_legacy() == 0
-    assert kr.calls == []
     assert (auth.config_dir() / "session.json").exists()
 
 
-def test_cleanup_runs_from_session_cookies(isolated, fake_profile):
-    _legacy_setup(isolated)
+def test_cleanup_runs_from_session_cookies(fake_profile):
+    _legacy_setup()
     auth.profile_dir().mkdir(parents=True)
     auth.session_cookies()
-    assert isolated.entries == {} and not (auth.config_dir() / "session.json").exists()
+    assert not (auth.config_dir() / "session.json").exists()
 
 
-def test_cleanup_covers_named_profiles(isolated):
-    auth.data_dir().mkdir(parents=True)
-    (auth.data_dir() / "browser-profile-work").mkdir()
-    isolated.entries = {("autocalc", "session:work"): "blob"}
+def test_logout_cleans_even_after_marker():
     auth._cleanup_legacy()
-    assert isolated.entries == {}
-
-
-def test_cleanup_survives_broken_keyring(monkeypatch):
-    monkeypatch.setitem(sys.modules, "keyring", FakeKeyring(fail=True))
-    assert auth._cleanup_legacy() == 0
-    assert (auth.data_dir() / auth._LEGACY_MARKER).exists()
-
-
-def test_logout_cleans_even_after_marker(isolated):
-    auth._cleanup_legacy()
-    _legacy_setup(isolated)
+    _legacy_setup()
     removed = auth.logout()
-    assert isolated.entries == {} and not (auth.config_dir() / "session.json").exists()
+    assert not (auth.config_dir() / "session.json").exists()
     assert any("legacy" in r for r in removed)
 
 

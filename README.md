@@ -13,15 +13,18 @@ second provider.
 ## Quick start
 
 ```bash
-uv sync                                  # 1. install
-uv run autocalc login                    # 2. sign in once (a browser opens)
-claude mcp add hwc-calculator -- uv --directory "$PWD" run autocalc-mcp   # 3. wire up the MCP server
+gh api repos/araujoviana/autocalc/contents/install.sh -H "Accept: application/vnd.github.raw" | sh   # 1. install (Windows: install.ps1 | iex)
+autocalc login                           # 2. sign in once (a browser opens)
 ```
 
+The installer adds the MCP server to Claude Code when `claude` is on the path (otherwise:
+`claude mcp add hwc-calculator -- autocalc-mcp`). `autocalc update` moves to the newest release.
+Working on autocalc itself: `uv sync`, then prefix commands with `uv run`.
+
 ```bash
-uv run autocalc search ecs "Sao Paulo" linux --vcpus 4 --mem 8
-uv run autocalc quote Santiago 'ecs:c7n.large.2.linux*3' 'ecs:SSD*3@100' --billing monthly
-uv run autocalc doctor                   # health check: endpoints, auth, browser, cache
+autocalc search ecs "Sao Paulo" linux --vcpus 4 --mem 8
+autocalc quote Santiago 'ecs:c7n.large.2.linux*3' 'ecs:SSD*3@100' --billing monthly
+autocalc doctor                   # health check: endpoints, auth, browser, cache
 ```
 
 ## Documentation
@@ -56,4 +59,4 @@ build) as described in [run the tests](docs/how-to/run-tests.md).
 
 The login session grants access to your Huawei Cloud **account**, not just the calculator.
 It lives only in autocalc's browser profile directory (owner-only): it is never copied outside
-it or to the keyring, and cookie values are never logged. The browser profile and the golden corpus are gitignored. Never commit client data. See [sessions](docs/explanation/huawei/sessions.md).
+it, and cookie values are never logged. The browser profile and the golden corpus are gitignored. Never commit client data. See [sessions](docs/explanation/huawei/sessions.md).
