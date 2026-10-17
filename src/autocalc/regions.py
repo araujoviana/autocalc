@@ -1,4 +1,4 @@
-"""Region resolver (backlog E1).
+"""Region resolver.
 
 Accepts a region id, a display name ("LA-Sao Paulo1"), or a city/country alias
 ("Santiago", "Brazil", "São Paulo"). Accent-insensitive; ambiguity is an error

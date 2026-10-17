@@ -17,11 +17,14 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Install (locked, with dev group)
-        run: uv sync --locked --group dev
+      - name: Install (locked, dev + docs groups)
+        run: uv sync --locked --group dev --group docs
 
       - name: Lint
         run: uv run ruff check
 
       - name: Offline tests
         run: uv run pytest -m "not live"
+
+      - name: Docs
+        run: uv run --group docs mkdocs build --strict
