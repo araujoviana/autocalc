@@ -1,9 +1,8 @@
-# card-building Specification
+# huawei/card-encoding Specification
 
 ## Purpose
 
-Turn high-level service options into saved-list cards that the Huawei Cloud calculator website
-renders, and edits, exactly like cards a human builds in the UI, priced to the cent.
+Turn high-level service options into saved-list cards that the Huawei Cloud calculator website renders, and edits, exactly like cards a human builds in the UI, priced to the cent.
 
 ## Requirements
 

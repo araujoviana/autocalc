@@ -1,10 +1,8 @@
-# catalog-access Specification
+# huawei/catalog Specification
 
 ## Purpose
 
-Read the Huawei Cloud price calculator's public catalog (services, regions, SKUs, list
-prices, labels and exchange rates) without credentials, quickly and resiliently, so every other
-capability has a reliable source of SKUs and display data.
+Read the Huawei Cloud price calculator's public catalog (services, regions, SKUs, list prices, labels and exchange rates) without credentials, quickly and resiliently, so every other Huawei capability has a reliable source of SKUs and display data.
 
 ## Requirements
 
