@@ -34,10 +34,23 @@
 ## Decisions
 
 ### D1. Cache the cookies, not the browser
-The first write in a process opens the profile headless, checks it against `share/list`, reads
-the huaweicloud cookies into a module-level cache keyed by profile, and closes the browser. Later
-`Session()` objects in the same process use the cache. `CBC.0101` clears that profile's cache
-entry and re-reads once (`refresh=True`).
+`login` writes the huaweicloud cookie header to `autocalc-session` (mode 0600) inside the
+profile directory. The first write in a process takes it from that file into a module-level
+cache keyed by profile; with no file it opens the profile headless, checks it against
+`share/list`, reads the cookies and writes the file. Later `Session()` objects in the same
+process use the cache. `CBC.0101` clears that profile's cache entry and re-reads the profile once
+(`refresh=True`); if the profile is signed out too, the file is deleted and the call returns
+`AUTH_EXPIRED`.
+
+Why a file inside the profile, and not Chromium's cookie store alone (found during the live
+check, 2026-10-17): Huawei's sign-on cookie `HWS_INTL_ID` is a session cookie (no expiry, on
+`portal-intl.huaweicloud.com`). After `autocalc login` closed the window, the reopened profile no
+longer had it, in repeated live runs, even with Chromium's "continue where you left off"
+preference set (which does keep a dummy session cookie across a relaunch offline). Playwright's
+close is not a clean browser shutdown (`exit_type: Crashed`), so the last cookie writes are not
+reliably on disk. The earlier keyring copy proved that Huawei accepts the header from any client.
+The file sits in the same directory, with the same owner-only access, as the browser's own cookie
+database, and `logout` deletes both. So the profile directory stays the only credential store.
 
 Alternatives considered:
 - Keep the persistent context open for the life of the process. That holds the profile lock for
@@ -83,12 +96,9 @@ Busy-profile mapping happens here. On a launch error, if the profile's lock arti
 other launch error becomes `AUTH_LOGIN_FAILED`, naming the chosen browser and the override
 variable. The raw Playwright message stays on `__cause__`, never in the user-facing text.
 
-Before each launch it sets the profile's "continue where you left off" preference
-(`session.restore_on_startup = 1` in `Default/Preferences`). Huawei's sign-on cookie
-`HWS_INTL_ID` is a session cookie (observed 2026-10-17, on `portal-intl.huaweicloud.com`, no
-expiry). Chromium writes session cookies to disk but deletes them at the next startup unless that
-preference is set, so without it the profile is signed out every time it reopens. The sign-in then
-lasts as long as Huawei's server-side session, the same as the keyring copy it replaces.
+Before each launch it also sets the profile's "continue where you left off" preference
+(`session.restore_on_startup = 1` in `Default/Preferences`), the only mode in which Chromium keeps
+session cookies across a relaunch. It is a best effort for the `CBC.0101` re-read (D1).
 
 The headless read checks `share/list` once, and once more after loading the calculator page. It
 never polls: nobody is signing in, so a signed-out profile fails at once instead of after 30 s.
@@ -100,7 +110,8 @@ Mapping after a failed launch avoids that.
 ### D4. Public surface of `auth.py` after the change
 - `find_browser()`, `profile()`, `profile_dir()`, `config_dir()`, `data_dir()`: unchanged
   meaning, except discovery per D2.
-- `login(prof, timeout)` → `LoginResult(account_mask, browser)`. Nothing is stored.
+- `login(prof, timeout)` → `LoginResult(account_mask, browser)`. Writes the session file
+  inside the profile directory (D1), nothing elsewhere.
 - `session_cookies(prof=None, refresh=False) -> str`: the cookie header from the cache or the
   profile (D1). Without a profile directory it raises `AUTH_EXPIRED` without launching.
 - `logout(prof)`: deletes the profile directory and that profile's cache entry, then runs the
@@ -109,7 +120,8 @@ Mapping after a failed launch avoids that.
   `host-pid` and the pid is checked; on Windows a delete that fails on a held file maps to the
   same error. A stale lock from a crash does not block logout.
 - `status(prof)`: `{logged_in, profile, browser, account_mask?, cookies?, hint?}`, where
-  `cookies` is redacted (names and count). It opens the profile, so it can report busy.
+  `cookies` is redacted (names and count). It checks the saved session with one `share/list`
+  call; only when that fails does it open the profile, so then it can report busy.
 - `redact_cookie_header()`: kept.
 
 Removed: `Session` (the dataclass), `SessionStore`, `parse_curl`, `import_from_clipboard`,

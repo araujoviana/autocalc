@@ -24,11 +24,12 @@ rather than depending on the minimal set.
 ## The sign-on cookie lives for the browser session (observed 2026-10-17)
 
 `HWS_INTL_ID` is set on `portal-intl.huaweicloud.com` with no expiry, so it is a session cookie.
-Chromium keeps session cookies across a restart only when the profile is set to "continue where
-you left off". autocalc sets that preference before it opens the profile. Without it, the profile
-would be signed out each time it reopened, even though the login window had worked. The
-long-lived `HW_id*` cookies on `auth.huaweicloud.com` only mark the device for the sign-in page,
-which still asks for the password.
+In live runs it was gone when the profile reopened after `autocalc login`, even with Chromium's
+"continue where you left off" preference set: Playwright does not shut the browser down cleanly,
+so the last cookie writes may never reach disk. That is why autocalc saves the cookie header
+itself at login (below), instead of relying on the browser's cookie store. The long-lived
+`HW_id*` cookies on `auth.huaweicloud.com` only mark the device for the sign-in page, which still
+asks for the password.
 
 ## Treat the session like a password
 
@@ -39,19 +40,21 @@ The session grants access to the Huawei Cloud **account**, not just the calculat
 
 ## The browser profile is the credential
 
-The browser profile is the only place the session lives
-([ADR-0011](../../adr/0011-auth-browser-profile-is-the-credential.md)). Nothing is copied to a
-file or the keyring.
+The browser profile directory is the only place the session lives
+([ADR-0011](../../adr/0011-auth-browser-profile-is-the-credential.md)). Nothing is copied
+outside it or to the keyring.
 
 - **Login.** `autocalc login` opens a visible browser on a persistent profile directory
   (`~/.local/share/autocalc/browser-profile`, or `browser-profile-<name>` for `--profile`).
-  You sign in by hand, which covers MFA, captcha and SSO.
-- **Writes.** The first write in a process opens the profile headless, reads the
-  huaweicloud cookies into memory and closes the browser. Later writes in the same process
-  reuse them. The browser is not kept open, so the profile is never locked for longer than
-  that read, even while an MCP server runs.
+  You sign in by hand, which covers MFA, captcha and SSO. On success autocalc writes the
+  huaweicloud cookie header to `autocalc-session` inside that directory, readable by you only.
+- **Writes.** The first write in a process reads that file into memory. Later writes in the
+  same process reuse it. No browser opens, so the profile is never locked, even while an MCP
+  server runs. Without the file, autocalc opens the profile headless once to read the cookies.
+- **Status.** `autocalc auth status` checks the saved session with one `share/list` call, and
+  opens the profile only when that fails.
 - **Refresh.** When a write returns `CBC.0101`, autocalc re-reads the profile once and
-  retries. Loading the calculator page in the profile lets the single-sign-on cookie renew the
+  retries; if that fails as well, it deletes the saved file. Loading the calculator page in the profile lets the single-sign-on cookie renew the
   calculator session. Only if that fails does the call return `AUTH_EXPIRED`.
 - **Logout.** `autocalc logout` deletes the profile directory. That signs out for certain
   without driving Huawei's sign-out page.
