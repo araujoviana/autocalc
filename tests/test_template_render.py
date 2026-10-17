@@ -13,8 +13,9 @@ from __future__ import annotations
 
 import importlib
 
-import golden
 import pytest
+
+from tests.support import golden
 
 pytestmark = pytest.mark.live
 
@@ -34,9 +35,9 @@ def _norm(obj):
 
 def _rebuild(service: str):
     if service in CASES:
-        return importlib.import_module(CASES[service]).rebuild
+        return importlib.import_module(f"tests.support.{CASES[service]}").rebuild
     if service in SIMPLE:
-        return getattr(importlib.import_module("simple_rebuild"), service)
+        return getattr(importlib.import_module("tests.support.simple_rebuild"), service)
     raise KeyError(service)
 
 
@@ -59,7 +60,7 @@ def test_ecs_template_render():
     for _, _, c in cards:
         mod = "ecs_ri_rebuild" if c["selectedProduct"]["chargeModeName"] == "RI" else "ecs_rebuild"
         try:
-            r = importlib.import_module(mod).rebuild(c)
+            r = importlib.import_module(f"tests.support.{mod}").rebuild(c)
         except Exception:
             continue  # spec not in today's catalog (documented drift)
         attempted += 1

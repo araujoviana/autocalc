@@ -9,30 +9,30 @@
 
 ## 2. Test helper package
 
-- [ ] 2.1 Create `tests/__init__.py` and `tests/support/__init__.py`, then `git mv` the 12 helper modules (`*_rebuild.py`, `golden.py`, `render.py`, `template_audit.py`) into `tests/support/`; verify `git status` shows them as renames
-- [ ] 2.2 Rewrite helper imports to the package (`from tests.support import golden`, `importlib.import_module(f"tests.support.{name}")`) in the test modules and inside the helpers themselves; set `pythonpath = .` in `pytest.ini` and delete the `sys.path` loop from `tests/conftest.py`; verify `grep -n sys.path tests/conftest.py` is empty and `uv run pytest -m "not live"` passes
-- [ ] 2.3 Verify live collection still resolves: `uv run pytest -m live --collect-only -q` lists the same 29 tests as before the move, and `uv run python -m tests.support.template_audit --help` (or its no-arg run) starts without ImportError
-- [ ] 2.4 Update docs that reference old helper paths (`README.md` `tests/render.py` command, `docs/CAVEATS.md` `tests/golden.compare_cards` and `tests/template_audit.py`); verify `grep -rn "tests/render.py\|tests/golden\|tests/template_audit" README.md docs/` returns nothing
+- [x] 2.1 Create `tests/__init__.py` and `tests/support/__init__.py`, then `git mv` the 12 helper modules (`*_rebuild.py`, `golden.py`, `render.py`, `template_audit.py`) into `tests/support/`; verify `git status` shows them as renames
+- [x] 2.2 Rewrite helper imports to the package (`from tests.support import golden`, `importlib.import_module(f"tests.support.{name}")`) in the test modules and inside the helpers themselves; set `pythonpath = .` in `pytest.ini` and delete the `sys.path` loop from `tests/conftest.py`; verify `grep -n sys.path tests/conftest.py` is empty and `uv run pytest -m "not live"` passes
+- [x] 2.3 Verify live collection still resolves: `uv run pytest -m live --collect-only -q` lists the same 29 tests as before the move, and `uv run python -m tests.support.template_audit --help` (or its no-arg run) starts without ImportError
+- [x] 2.4 Update docs that reference old helper paths (`README.md` `tests/render.py` command, `docs/CAVEATS.md` `tests/golden.compare_cards` and `tests/template_audit.py`); verify `grep -rn "tests/render.py\|tests/golden\|tests/template_audit" README.md docs/` returns nothing
 
 ## 3. Offline suite independence
 
-- [ ] 3.1 Move `tests/fixtures/corpus` aside temporarily and run `uv run pytest -m "not live"` with no stored session (`AUTOCALC_DATA` pointed at an empty temp dir); verify all offline tests pass and none skip, adding the `live` marker or fixing import-time corpus reads wherever they fail; restore the corpus afterwards
+- [x] 3.1 Move `tests/fixtures/corpus` aside temporarily and run `uv run pytest -m "not live"` with no stored session (`AUTOCALC_DATA` pointed at an empty temp dir); verify all offline tests pass and none skip, adding the `live` marker or fixing import-time corpus reads wherever they fail; restore the corpus afterwards
 
 ## 4. Remove the vendored bundle
 
-- [ ] 4.1 Add `scripts/fetch_bundle.py` per design D5 (scrape version from `calculator.html`, optional `--version`, write `.cache/bundle/framework-<ver>.js`, non-zero exit with a clear message on failure) and add `.cache/` to `.gitignore`; verify `uv run python scripts/fetch_bundle.py` prints a path to a file containing `URIMAP`, and `git status` shows nothing new
-- [ ] 4.2 `git rm docs/evidence/bundle/framework.js` (and the now-empty `docs/evidence/`); verify `git ls-files docs/evidence` is empty
-- [ ] 4.3 Update `docs/CAVEATS.md`, `README.md` and `docs/BACKLOG.md` (D1 contract test) to point at the fetch script instead of the committed file, and add the one-line history recovery note (`git show 5644802:docs/evidence/bundle/framework.js`) to CAVEATS; verify `grep -rn "docs/evidence" README.md docs/ src/` returns nothing
+- [x] 4.1 Add `scripts/fetch_bundle.py` per design D5 (scrape version from `calculator.html`, optional `--version`, write `.cache/bundle/framework-<ver>.js`, non-zero exit with a clear message on failure) and add `.cache/` to `.gitignore`; verify `uv run python scripts/fetch_bundle.py` prints a path to a file containing `URIMAP`, and `git status` shows nothing new
+- [x] 4.2 `git rm docs/evidence/bundle/framework.js` (and the now-empty `docs/evidence/`); verify `git ls-files docs/evidence` is empty
+- [x] 4.3 Update `docs/CAVEATS.md`, `README.md` and `docs/BACKLOG.md` (D1 contract test) to point at the fetch script instead of the committed file, and add the one-line history recovery note (`git show 5644802:docs/evidence/bundle/framework.js`) to CAVEATS; verify `grep -rn "docs/evidence" README.md docs/ src/` returns nothing
 
 ## 5. CI workflow
 
-- [ ] 5.1 Add `.github/workflows/ci.yml` per design D3 (push + pull_request, `contents: read`, checkout → setup-uv with cache → `uv sync --locked --group dev` → `uv run ruff check` → `uv run pytest -m "not live"`, no secrets); verify the workflow file parses (`gh workflow view` after push, or `actionlint` locally if available)
-- [ ] 5.2 Add a short "Development" section to `README.md` listing the three local commands that mirror CI (`uv sync --group dev`, `uv run ruff check`, `uv run pytest -m "not live"`) and the bundle fetch script; verify each command runs as written from a clean shell
+- [x] 5.1 Add `.github/workflows/ci.yml` per design D3 (push + pull_request, `contents: read`, checkout → setup-uv with cache → `uv sync --locked --group dev` → `uv run ruff check` → `uv run pytest -m "not live"`, no secrets); verify the workflow file parses (`gh workflow view` after push, or `actionlint` locally if available)
+- [x] 5.2 Add a short "Development" section to `README.md` listing the three local commands that mirror CI (`uv sync --group dev`, `uv run ruff check`, `uv run pytest -m "not live"`) and the bundle fetch script; verify each command runs as written from a clean shell
 
 ## 6. Integration check
 
 - [ ] 6.1 Push the branch and confirm the CI run is green on GitHub; then push a throwaway commit with an unused import to confirm the lint step fails, and revert it
-- [ ] 6.2 Run `openspec validate repo-hygiene --strict` and verify it passes
+- [x] 6.2 Run `openspec validate repo-hygiene --strict` and verify it passes
 
 ## Workflow follow-up
 

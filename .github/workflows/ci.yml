@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install (locked, with dev group)
+        run: uv sync --locked --group dev
+
+      - name: Lint
+        run: uv run ruff check
+
+      - name: Offline tests
+        run: uv run pytest -m "not live"

@@ -17,7 +17,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-CORPUS = Path(__file__).resolve().parent / "fixtures" / "corpus"
+CORPUS = Path(__file__).resolve().parent.parent / "fixtures" / "corpus"
 IGNORE_KEYS = {"timeTag", "_cartId"}
 IGNORE_INQUIRY = {"id"}
 

@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import importlib
 
-import golden
 import pytest
+
+from tests.support import golden
 
 pytestmark = pytest.mark.live
 
@@ -30,14 +31,14 @@ CASES = {
 @pytest.mark.parametrize("service,spec", CASES.items())
 def test_golden(service, spec):
     mod, floor = spec
-    rebuild = importlib.import_module(mod).rebuild
+    rebuild = importlib.import_module(f"tests.support.{mod}").rebuild
     res = golden.run_golden(service, rebuild)
     assert res["errors"] == 0, f"{service}: {res['errors']} build errors, e.g. {res['fails'][:2]}"
     assert res["rate"] >= floor, f"{service}: {res['ok']}/{res['total']} below {floor}. fails={res['fails'][:3]}"
 
 
 def test_golden_ecs_non_ri():
-    from ecs_rebuild import rebuild
+    from tests.support.ecs_rebuild import rebuild
     cards = [c for c in golden.all_cards("ecs") if c[2]["selectedProduct"]["chargeModeName"] != "RI"]
     ok = 0
     for _, _, card in cards:
@@ -54,7 +55,7 @@ def test_golden_ecs_non_ri():
 
 
 def test_golden_ecs_ri():
-    from ecs_ri_rebuild import rebuild
+    from tests.support.ecs_ri_rebuild import rebuild
     cards = [c for c in golden.all_cards("ecs") if c[2]["selectedProduct"]["chargeModeName"] == "RI"]
     ok = sum(1 for _, _, card in cards if golden.compare_cards(rebuild(card), card)["ok"])
     # residual misses are catalog price drift (RI plan prices changed since the list was saved)
