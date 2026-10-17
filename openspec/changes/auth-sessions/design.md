@@ -83,6 +83,16 @@ Busy-profile mapping happens here. On a launch error, if the profile's lock arti
 other launch error becomes `AUTH_LOGIN_FAILED`, naming the chosen browser and the override
 variable. The raw Playwright message stays on `__cause__`, never in the user-facing text.
 
+Before each launch it sets the profile's "continue where you left off" preference
+(`session.restore_on_startup = 1` in `Default/Preferences`). Huawei's sign-on cookie
+`HWS_INTL_ID` is a session cookie (observed 2026-10-17, on `portal-intl.huaweicloud.com`, no
+expiry). Chromium writes session cookies to disk but deletes them at the next startup unless that
+preference is set, so without it the profile is signed out every time it reopens. The sign-in then
+lasts as long as Huawei's server-side session, the same as the keyring copy it replaces.
+
+The headless read checks `share/list` once, and once more after loading the calculator page. It
+never polls: nobody is signing in, so a signed-out profile fails at once instead of after 30 s.
+
 Alternative: check the lock before launching. A crash leaves a stale `SingletonLock` behind,
 which Chromium clears on its own launch, so a pre-check would report busy for a free profile.
 Mapping after a failed launch avoids that.

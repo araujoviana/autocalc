@@ -21,6 +21,15 @@ Bisecting the cookie jar against `share/list` and `share/add` showed:
 This is an observation about Huawei's backend, not a promise. autocalc sends the full jar
 rather than depending on the minimal set.
 
+## The sign-on cookie lives for the browser session (observed 2026-10-17)
+
+`HWS_INTL_ID` is set on `portal-intl.huaweicloud.com` with no expiry, so it is a session cookie.
+Chromium keeps session cookies across a restart only when the profile is set to "continue where
+you left off". autocalc sets that preference before it opens the profile. Without it, the profile
+would be signed out each time it reopened, even though the login window had worked. The
+long-lived `HW_id*` cookies on `auth.huaweicloud.com` only mark the device for the sign-in page,
+which still asks for the password.
+
 ## Treat the session like a password
 
 The session grants access to the Huawei Cloud **account**, not just the calculator.

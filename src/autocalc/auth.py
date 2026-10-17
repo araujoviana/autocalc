@@ -12,6 +12,7 @@ Catalog, rating and anonymous ``share/detail`` do not.
 
 from __future__ import annotations
 
+import json
 import ntpath
 import os
 import shutil
@@ -130,6 +131,28 @@ def _launch_error(udd: Path, choice: BrowserChoice) -> AuthLoginFailed | AuthPro
     )
 
 
+def _keep_session_cookies(udd: Path) -> None:
+    """Set "continue where you left off", the only mode in which Chromium keeps session cookies
+    across a restart. Huawei's sign-on cookie ``HWS_INTL_ID`` is a session cookie (observed
+    2026-10-17), so without this the profile is signed out every time it reopens."""
+    prefs = udd / "Default" / "Preferences"
+    try:
+        data = json.loads(prefs.read_text(encoding="utf-8")) if prefs.exists() else {}
+    except (OSError, ValueError):
+        data = {}
+    if not isinstance(data, dict):
+        data = {}
+    session = data.setdefault("session", {})
+    if not isinstance(session, dict) or session.get("restore_on_startup") == 1:
+        return
+    session["restore_on_startup"] = 1
+    try:
+        prefs.parent.mkdir(parents=True, exist_ok=True)
+        prefs.write_text(json.dumps(data), encoding="utf-8")
+    except OSError:
+        pass
+
+
 @contextmanager
 def _open_profile(prof: str, headless: bool = True, choice: BrowserChoice | None = None) -> Generator[Any]:
     """Launch the persistent profile and always close it. Launch errors never leak raw text."""
@@ -137,6 +160,7 @@ def _open_profile(prof: str, headless: bool = True, choice: BrowserChoice | None
 
     udd = profile_dir(prof)
     udd.mkdir(parents=True, exist_ok=True)
+    _keep_session_cookies(udd)
     choice = choice or find_browser()
     with sync_playwright() as p:
         try:
@@ -213,12 +237,16 @@ def _mask(ctx: Any) -> str | None:
     return None
 
 
-def _read_profile(prof: str, probe_timeout: float = 30) -> tuple[str, str | None] | None:
-    """Open the profile headless; return (cookie header, account mask), or None if signed out."""
+def _read_profile(prof: str) -> tuple[str, str | None] | None:
+    """Open the profile headless; return (cookie header, account mask), or None if signed out.
+
+    Nobody is signing in here, so there is nothing to poll for: one check, and one more after
+    loading the calculator page (which lets the sign-on renew the calculator session)."""
     with _open_profile(prof, headless=True) as ctx:
-        _visit(ctx, 45000)
-        if not _probe_login(ctx, probe_timeout):
-            return None
+        if not _probe_login(ctx, 0):
+            _visit(ctx, 30000)
+            if not _probe_login(ctx, 0):
+                return None
         header = _cookie_header(ctx.cookies())
         return (header, _mask(ctx)) if header else None
 

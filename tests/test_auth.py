@@ -3,6 +3,7 @@ login/status/logout and the legacy cleanup. No browser is launched and no real k
 
 from __future__ import annotations
 
+import json
 import os
 import socket
 import sys
@@ -245,6 +246,56 @@ def test_open_profile_launch_kwargs_and_close(monkeypatch):
     assert ctx.closed
     assert seen["channel"] == "chrome" and seen["headless"] is True
     assert seen["udd"].endswith("browser-profile-work")
+    prefs = json.loads((auth.profile_dir("work") / "Default" / "Preferences").read_text())
+    assert prefs["session"]["restore_on_startup"] == 1
+
+
+def test_keep_session_cookies_preserves_other_prefs(tmp_path):
+    prefs = tmp_path / "Default" / "Preferences"
+    prefs.parent.mkdir()
+    prefs.write_text(json.dumps({"session": {"restore_on_startup": 5, "x": 1}, "other": True}))
+    auth._keep_session_cookies(tmp_path)
+    assert json.loads(prefs.read_text()) == {"session": {"restore_on_startup": 1, "x": 1}, "other": True}
+
+
+def test_keep_session_cookies_replaces_corrupt_prefs(tmp_path):
+    prefs = tmp_path / "Default" / "Preferences"
+    prefs.parent.mkdir()
+    prefs.write_text("{not json")
+    auth._keep_session_cookies(tmp_path)
+    assert json.loads(prefs.read_text()) == {"session": {"restore_on_startup": 1}}
+
+
+class CountingContext(FakeContext):
+    def __init__(self, logged_in_after_visit):
+        super().__init__(logged_in=False)
+        self.probes = 0
+        self.visits = 0
+        self.after_visit = logged_in_after_visit
+
+    def get(self, url, timeout=None):
+        if url.endswith("share/list"):
+            self.probes += 1
+        return super().get(url, timeout)
+
+    def new_page(self):
+        self.visits += 1
+        self.logged_in = self.after_visit
+        return super().new_page()
+
+
+@pytest.mark.parametrize("after_visit", [True, False])
+def test_read_profile_checks_without_polling(monkeypatch, after_visit):
+    ctx = CountingContext(after_visit)
+
+    @contextmanager
+    def fake_open(prof, headless=True, choice=None):
+        yield ctx
+
+    monkeypatch.setattr(auth, "_open_profile", fake_open)
+    read = auth._read_profile("default")
+    assert (read is not None) is after_visit
+    assert (ctx.probes, ctx.visits) == (2, 1)
 
 
 # ---- 2.1 session_cookies -------------------------------------------------------
