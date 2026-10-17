@@ -17,6 +17,7 @@ not a cosmetic one ([ADR-0002](adr/0002-share-link-is-the-deliverable.md)).
 | look up a command, an error code or an endpoint | [Reference](reference/cli.md) |
 | understand why the calculator is hard to drive | [Explanation](explanation/architecture.md) |
 | know why a decision was made | [Decisions (ADRs)](adr/index.md) |
+| see what comes next and what is still open | [Roadmap](roadmap.md) |
 
 ## Where the truth lives
 
