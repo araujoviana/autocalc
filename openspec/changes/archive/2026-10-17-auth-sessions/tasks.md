@@ -30,8 +30,8 @@
 ## 6. Verification
 
 - [x] 6.1 Run `uv run ruff check`, `uv run pytest -m "not live"`, `uv run --group docs mkdocs build --strict` and `openspec validate auth-sessions --strict`; all pass
-- [ ] 6.2 Live check on Linux, run by the user because login is interactive: `autocalc logout`, then `autocalc login` (browser reported), `autocalc auth status` (logged in, cookie names only), `autocalc lists` (one profile open), then run `autocalc lists` while a login window is open (`AUTH_PROFILE_BUSY`). Record the outcomes in this task line
-- [ ] 6.3 Confirm no cookie value exists outside the profile after 6.2: `grep -rl` for a cookie value taken from the profile (done locally, value not printed) over `~/.config/autocalc` and `~/.local/share/autocalc` excluding the profile dir → no hits, and `keyring get autocalc session:default` → empty
+- [x] 6.2 Live check on Linux, run by the user because login is interactive: `autocalc logout`, then `autocalc login` (browser reported), `autocalc auth status` (logged in, cookie names only), `autocalc lists` (one profile open), then run `autocalc lists` while a login window is open (`AUTH_PROFILE_BUSY`). Record the outcomes in this task line. **Outcomes (2026-10-17):** logout and login OK (browser: chromium); the first runs found the profile signed out on reopen (session-only `HWS_INTL_ID`), fixed by the saved session file (design D1); after that, `auth status` logged in, cookie names only, 0.9 s, no browser opened; `lists` works (user, fast, no browser). The busy-while-login check no longer applies to `lists`, which reads the saved file and never opens the profile; busy mapping stays covered by offline tests
+- [x] 6.3 Confirm no cookie value exists outside the profile after 6.2: `grep -rl` for a cookie value taken from the profile (done locally, value not printed) over `~/.config/autocalc` and `~/.local/share/autocalc` excluding the profile dir → no hits, and `keyring get autocalc session:default` → empty. **Outcome:** `HWS_INTL_ID` value found in 0 of 19,138 files outside the profile dir (config, data, repo); `autocalc-session` is 0600 inside the profile; keyring entry empty
 
 ## Workflow follow-up
 
