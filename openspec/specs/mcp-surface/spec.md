@@ -8,15 +8,16 @@ Cloud quote and share link through MCP tools that describe themselves and are ha
 ## Requirements
 
 ### Requirement: Tool inventory
-The MCP server `hwc-calculator` SHALL expose discovery tools (`list_services`, `list_regions`,
-`describe_service`, `supported_services`, `search_skus`), pricing tools (`quote`,
-`convert_currency`, `compare_modes`, `compare_regions`), list tools (`create_price_list`,
-`read_price_list`, `list_my_price_lists`, `rename_price_list`, `duplicate_price_list`,
-`delete_price_list`) and auth tools (`auth_status`, `auth_login`).
+The MCP server `hwc-calculator` SHALL expose the workflow tools (`draft_quote`, `revise_quote`,
+`publish_quote`), discovery tools (`list_services`, `list_regions`, `describe_service`,
+`supported_services`, `search_skus`), pricing tools (`quote`, `convert_currency`, `compare_modes`,
+`compare_regions`), list tools (`read_price_list`, `list_my_price_lists`, `rename_price_list`,
+`duplicate_price_list`, `delete_price_list`) and auth tools (`auth_status`, `auth_login`).
 
 #### Scenario: Tool listing
 - **WHEN** an MCP client lists tools
-- **THEN** all seventeen tools above are present with descriptions that state units and defaults
+- **THEN** all tools above are present with descriptions that state units and defaults, and
+  `create_price_list` is absent
 
 ### Requirement: Read tools never need auth
 Discovery, pricing and `read_price_list` SHALL work with no session. Only the tools that write to
@@ -32,7 +33,7 @@ SHALL be able to call `auth_login`, which opens the browser and blocks up to 5 m
 retry without further prompting.
 
 #### Scenario: Logged out create
-- **WHEN** `create_price_list` is called with no session
+- **WHEN** `publish_quote` is called with no session
 - **THEN** the result is `AUTH_EXPIRED` with a hint to call `auth_login` or run `autocalc login`
 
 ### Requirement: Errors are structured
@@ -43,15 +44,6 @@ on the code instead of parsing prose.
 #### Scenario: Unknown flavor
 - **WHEN** `create_price_list` gets an ECS flavor not sold in the region
 - **THEN** the result has `error: "SPEC_NOT_FOUND"` and a hint naming the closest flavors
-
-### Requirement: Dry run before publish
-`create_price_list` SHALL build and price every card with `dry_run=true` without saving, and
-return the name, total, per-card summary (service, title, mode, amount), warnings, settlement
-and currency. With `dry_run=false` it SHALL also return the list id and share URL.
-
-#### Scenario: Preview then publish
-- **WHEN** the agent calls `create_price_list` with dry_run true, then false with the same items
-- **THEN** both return the same totals, and only the second returns `id` and `url`
 
 ### Requirement: Capability matrix is live
 `supported_services` SHALL return, from the builder registry itself, each buildable service with
@@ -66,8 +58,8 @@ availability and catalog groups.
 Every tool that takes a region, including the items of `create_price_list`, SHALL accept the
 friendly names defined in the region-availability capability.
 
-#### Scenario: Create in Santiago
-- **WHEN** `create_price_list` gets an item with region "Santiago"
+#### Scenario: Draft in Santiago
+- **WHEN** `draft_quote` gets a requirement with region "Santiago"
 - **THEN** the card is built for `la-south-2`
 
 ### Requirement: Reading any shared list
@@ -80,9 +72,10 @@ quantity, size and amount), so an agent can inspect or rebuild lists other peopl
 - **THEN** it gets the normalized summary without logging in
 
 ### Requirement: Quote workflow prompt
-The server SHALL offer a `quote_workflow` prompt: collect requirements, discover options per
-region, dry-run and show totals, publish only after the user agrees, then reply with the link
-and a table. It SHALL state the units (GB, Mbit/s, 730 h = one month).
+The server SHALL offer a `quote_workflow` prompt: collect requirements, `draft_quote`, ask the
+user to settle every requirement that was not auto-confirmed, `revise_quote`, show the totals,
+call `publish_quote` only after the user agrees, then reply with the link and a table. It SHALL
+state the units (GB, Mbit/s, 730 h = one month).
 
 #### Scenario: Prompt retrieval
 - **WHEN** the client requests the `quote_workflow` prompt
@@ -95,3 +88,27 @@ SHALL tell the agent to confirm with the user first.
 #### Scenario: Delete
 - **WHEN** the agent calls `delete_price_list` with a share URL
 - **THEN** exactly that list is deleted and its id is returned
+
+### Requirement: One registry feeds MCP and the CLI
+Every tool SHALL be defined once in the tool registry. The MCP server SHALL expose each registry
+tool, and the CLI SHALL expose a subcommand per tool whose arguments come from the tool's
+signature and which prints the tool's result as JSON.
+
+#### Scenario: Same tool both ways
+- **WHEN** a tool is added to the registry
+- **THEN** it appears in the MCP tool list and as a CLI subcommand without further code
+
+### Requirement: Draft, revise, publish
+The server SHALL offer `draft_quote(customer, requirements)`, which returns a draft id, for each
+requirement the ranked candidates and which ones were auto-confirmed (exact matches only);
+`revise_quote(draft_id, decisions)`, which records each decision with its justification; and
+`publish_quote(draft_id, name)`, which builds the cards from the decisions and publishes them
+through the publish gate.
+
+#### Scenario: Undecided requirement
+- **WHEN** `publish_quote` is called for a draft that still has a requirement without a decision
+- **THEN** it fails with a structured error naming the pending requirement ids and nothing is saved
+
+#### Scenario: Full path
+- **WHEN** every requirement is decided and `publish_quote` is called
+- **THEN** the result has the list id, URL and per-card checks from the gate
