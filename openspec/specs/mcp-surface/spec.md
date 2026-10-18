@@ -114,12 +114,11 @@ through the publish gate.
 - **THEN** the result has the list id, URL and per-card checks from the gate
 
 ### Requirement: Published cards are encoded by the page
-`publish_quote` SHALL publish the cards the calculator page builds for the decided options,
-not the Python builders' cards. It SHALL accept every service on the verified list, whether it
-is built by a Python builder or a form recipe, taking the chosen spec from the option the
-builder names for it (services priced by usage, and recipe services, take none), and SHALL refuse any other service before anything is saved, naming the verified
-services. If the page cannot encode a card, it SHALL fail with `PAGE_ENCODE_FAILED` and save
-nothing.
+`publish_quote` SHALL publish the cards the calculator page builds, not the Python builders'
+cards, for every service on the verified list (builder or form recipe). The chosen spec is
+taken from the option the service names for it; services priced by usage, and recipe services,
+take none. Any other service SHALL be refused before anything is saved, naming the verified
+services. A card the page cannot encode SHALL fail with `PAGE_ENCODE_FAILED` and save nothing.
 
 #### Scenario: Verified service
 - **WHEN** a draft with a verified service is published
