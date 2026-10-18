@@ -60,6 +60,12 @@ class Builder:
 
     service: str = ""
     description: str = ""
+    # The build option that takes the ranked spec; None when the options alone say what to buy.
+    spec_arg: str | None = None
+
+    def spec_option(self, spec: str) -> Any:
+        """Catalog spec code -> the value ``spec_arg`` expects."""
+        return spec
 
     def __init__(self, calc: Calculator | None = None):
         self.calc = calc or Calculator()

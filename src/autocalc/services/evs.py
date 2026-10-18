@@ -39,6 +39,7 @@ def _factory(calc=None) -> EvsBuilder:
 
 class EvsBuilder(Builder):
     service = "evs"
+    spec_arg = "type"
     description = "Elastic Volume Service"
     modes = ("ondemand", "monthly", "yearly")
 

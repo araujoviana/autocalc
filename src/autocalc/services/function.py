@@ -43,7 +43,7 @@ class FunctionBuilder(Builder):
 
     def build(self, region: str, requests: float = 1_000_000, gb_seconds: float = 400_000,
               billing: Billing = "ondemand", quantity: int = 1, hours: float = 730,
-              memory_mb: float = 128, compute_units: float = 100, request_units: float = 100,
+              memory_mb: float = 128, compute_units: float | None = None, request_units: float | None = None,
               title: str | None = None) -> dict[str, Any]:
         req = self.product(self._item(region, "request"), billing, 1, hours)
         req.update(addToList_title="calc_2_", addToList_product=requests / 1_000_000,
@@ -51,6 +51,11 @@ class FunctionBuilder(Builder):
         cmp = self.product(self._item(region, "compute"), billing, 1, hours)
         cmp.update(addToList_title="calc_5_", addToList_product=gb_seconds,
                    usageFactor="compute", usageValue=gb_seconds, usageMeasureId=39)
+        # The page takes requests in ten-thousands and the average duration in ms.
+        if request_units is None:
+            request_units = requests / 10_000
+        if compute_units is None:
+            compute_units = round(gb_seconds / (requests * memory_mb / 1024) * 1000) if requests and memory_mb else 100
         return self.assemble(region, billing, 1, hours, quantity, [req, cmp], self.description,
                              {"calculator_fgs_compute": str(int(compute_units)),
                               "calculator_fgs_memory": {"UNSET_Stepper_0": _stepper(11, memory_mb)},

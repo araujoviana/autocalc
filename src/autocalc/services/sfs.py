@@ -19,6 +19,7 @@ def _factory(calc=None) -> SfsTurboBuilder:
 
 class SfsTurboBuilder(Builder):
     service = "sfsturbo"
+    spec_arg = "tier"
     description = "Scalable File Service Turbo"
     modes = ("ondemand", "monthly", "yearly")
 

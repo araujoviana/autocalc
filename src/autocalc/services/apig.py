@@ -17,8 +17,9 @@ def _factory(calc=None) -> ApigBuilder:
 
 class ApigBuilder(Builder):
     service = "apig"
+    spec_arg = "edition"
     description = "API Gateway"
-    modes = ("ondemand", "monthly", "yearly")
+    modes = ("ondemand",)
 
     def build(self, region: str, edition: str = "BASIC", billing: Billing = "ondemand", quantity: int = 1,
               periods: int = 1, hours: float = 730, title: str | None = None) -> dict[str, Any]:

@@ -12,6 +12,7 @@ Run:  uv run python -m tests.support.spa_matrix
 
 from __future__ import annotations
 
+import os
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -51,6 +52,28 @@ MATRIX: list[tuple[str, str, dict[str, Any]]] = [
     ("sfsturbo", "ondemand", dict(size_gb=3686)),
     ("sfsturbo", "yearly", dict(size_gb=3686)),
 ]
+# builder-wave-1: the thirteen services whose builders existed before the page encoder
+WAVE1: list[tuple[str, str, dict[str, Any]]] = [
+    ("apig", "ondemand", {}),
+    ("apm", "ondemand", {}),
+    *[("cbr", b, {}) for b in ("ondemand", "monthly", "yearly")],
+    ("cci", "ondemand", {}),
+    ("dew", "ondemand", {}),
+    *[("dline", b, {}) for b in ("monthly", "yearly")],
+    # usage above the free tier: the page will not add a zero-price card
+    ("function", "ondemand", dict(requests=20_000_000, gb_seconds=10_000_000, memory_mb=512)),
+    *[("kafka", b, {}) for b in ("ondemand", "monthly", "yearly")],
+    ("lts", "ondemand", dict(flow_gb=10, index_gb=10)),
+    ("nat", "ondemand", {}),
+    *[("nosql", b, {}) for b in ("ondemand", "monthly", "yearly")],
+    *[("rabbitmq", b, {}) for b in ("ondemand", "monthly", "yearly")],
+    ("waf", "ondemand", {}),
+]
+MATRIX += WAVE1
+# SPA_ONLY=nat,waf runs just those services
+_ONLY = set(filter(None, os.environ.get("SPA_ONLY", "").split(",")))
+if _ONLY:
+    MATRIX = [m for m in MATRIX if m[0] in _ONLY]
 LIST_PREFIX = "autocalc-poc-"
 CALCULATOR_PAGE = "https://www.huaweicloud.com/intl/en-us/pricing/calculator.html"
 

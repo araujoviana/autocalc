@@ -24,6 +24,7 @@ def _num(field: str | None) -> str:
 
 class RdsBuilder(Builder):
     service = "rds"
+    spec_arg = "flavor"
     description = "Relational Database Service"
     modes = ("ondemand", "monthly", "yearly")
 

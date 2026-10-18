@@ -37,7 +37,9 @@ class LtsBuilder(Builder):
               storage_mb: float = 0, transfer_basic_gb: float = 0, transfer_senior_gb: float = 0,
               billing: Billing = "ondemand", quantity: int = 1, hours: float = 730,
               knobs: dict[str, float] | None = None, title: str | None = None) -> dict[str, Any]:
-        k: dict[str, float] = {"flow": 1, "index_rate": 100, "storage": 90, "hot": 30, "basic": 2, "senior": 2}
+        # form values; zero arguments keep the page's own defaults (flow 1 GB, retention 30 days, transfer 10 GB)
+        k: dict[str, float] = {"flow": flow_gb or 1, "index_rate": round(index_gb / flow_gb * 100) if flow_gb and index_gb else 100,
+                               "storage": 30, "basic": transfer_basic_gb or 10, "senior": transfer_senior_gb or 10}
         k.update(knobs or {})
         products = [
             self._line(region, "lts_lts.logflow", "lts.log.flow", "traffic", "detail_7_",
@@ -56,9 +58,8 @@ class LtsBuilder(Builder):
         return self.assemble(region, billing, 1, hours, quantity, products, self.description,
                              {"calculator_ltsLogFlow_stepper": {"UNSET_Stepper_0": _stepper(10, k["flow"], "detail_24_", "detail_24_")},
                               "calculator_ltsLogIndexRate_stepper": {"UNSET_Stepper_0": _stepper(17, k["index_rate"], "calc_20_", "calc_20_")},
-                              "calculator_ltsStorage_stepper": {"UNSET_Stepper_0": _stepper(17, k["storage"], "detail_26_", "detail_26_")},
-                              "calculator_ltsHotStorage_stepper": {"UNSET_Stepper_0": _stepper(17, k["hot"], "detail_26_", "detail_26_")},
-                              "calculator_lts_cold_switch": {"UNSET_Switch": "calc_3_"},
+                              "calculator_ltsStorage_normal_stepper": {"UNSET_Stepper_0": _stepper(17, k["storage"], "detail_26_", "detail_26_")},
+                              "calculator_lts_cold_switch": {"UNSET_Switch": "calc_4_"},
                               "calculator_lts_transfer_basic_stepper": {"UNSET_Stepper_0": _stepper(10, k["basic"], "detail_24_", "detail_24_")},
                               "calculator_lts_transfer_senior_stepper": {"UNSET_Stepper_0": _stepper(10, k["senior"], "detail_24_", "detail_24_")}},
                              title=title, include_time=False, include_quantity=False)

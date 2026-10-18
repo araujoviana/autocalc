@@ -12,7 +12,7 @@ import pytest
 from autocalc import auth
 from autocalc.errors import CalculatorError, PageEncodeFailed, ValidationError
 from autocalc.page import browser, store
-from autocalc.page.driver import Driver, Step
+from autocalc.page.driver import ADD_TO_LIST, Driver, Step
 from autocalc.page.ecs import EcsTokens, ecs_steps
 from autocalc.page.edit_check import CARD_BUTTON, WARNING_DIALOG, check_card
 
@@ -194,6 +194,9 @@ class FakeLocator:
 
     def is_visible(self):
         return bool(self.page.fns.get("_visible", {}).get(self.selector))
+
+    def is_disabled(self):
+        return bool(self.page.fns.get("_disabled", {}).get(self.selector))
 
     def fill(self, text):
         self.page.typed[self.selector] = text
@@ -402,6 +405,15 @@ def test_capture_cart_never_grows(cart_snapshot):
     clock = FakeClock()
     page = _capture_page(clock, cart_snapshot, grows=False)
     with pytest.raises(PageEncodeFailed) as ei:
+        _driver(page, clock).capture()
+    assert ei.value.details["step"] == "add_to_list"
+
+
+def test_capture_add_to_list_disabled_says_why(cart_snapshot):
+    clock = FakeClock()
+    page = _capture_page(clock, cart_snapshot)
+    page.fns["_disabled"] = {ADD_TO_LIST: True}
+    with pytest.raises(PageEncodeFailed, match="Add to List is disabled") as ei:
         _driver(page, clock).capture()
     assert ei.value.details["step"] == "add_to_list"
 
