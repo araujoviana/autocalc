@@ -28,6 +28,7 @@ from autocalc.page.replay import encode_card
 from autocalc.page.store import cents, frontend_version
 from autocalc.services import build
 from autocalc.services.base import Builder
+from autocalc.services.forms import RECIPES
 from autocalc.share import Session, share_detail
 
 REGION = "sa-brazil-1"
@@ -70,6 +71,11 @@ WAVE1: list[tuple[str, str, dict[str, Any]]] = [
     ("waf", "ondemand", {}),
 ]
 MATRIX += WAVE1
+# form recipes (services/forms.py): the page's defaults, in every billing mode
+WAVE2 = [(svc, b, {}) for svc, r in RECIPES.items() for b in r.modes]
+NONZERO = {("sfs", "ondemand"): dict(capacity_gb=100)}  # a default that prices at zero proves nothing
+WAVE2 = [(s, b, NONZERO.get((s, b), o)) for s, b, o in WAVE2]
+MATRIX += WAVE2
 # SPA_ONLY=nat,waf runs just those services
 _ONLY = set(filter(None, os.environ.get("SPA_ONLY", "").split(",")))
 if _ONLY:

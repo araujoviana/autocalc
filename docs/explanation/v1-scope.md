@@ -15,19 +15,19 @@ Checked live on 2026-10-17: the catalog lists 97 services;
 
 | Status | Services |
 |---|---|
-| verified | 20 |
-| wave 2 | 13 |
+| verified | 33 |
+| wave 2 | 0 |
 | wave 3 | 20 |
 | later | 40 |
 | not counted | 4 |
 
-Verified plus waves 2 and 3 give 53 services, enough for the target without the AI, analytics, media or
+Verified plus wave 3 give 53 services, enough for the target without the AI, analytics, media or
 developer-services forms, which are the oddest. Waves are an order of work, not a promise: a
 service moves to *later* if its form cannot be replayed or its Edit view cannot reproduce the
 stored price.
 
-Wave 1 (the builders that already existed) is done: see the result in
-[ADR-0001](../adr/0001-page-as-encoder.md). Waves 2 and 3 group by form shape (databases and storage, then networking, security and middleware).
+Waves 1 (the builders that already existed) and 2 (databases and storage, driven by form recipes) are done: see the results in
+[ADR-0001](../adr/0001-page-as-encoder.md). Wave 3 is networking, security and middleware.
 
 ## Every service
 
@@ -67,17 +67,17 @@ Wave 1 (the builders that already existed) is done: see the result in
 | Containers | `ucs` | Ubiquitous Cloud Native Service | wave 3 |
 | Content Delivery & Edge Computing | `cdn` | Content Delivery Network | later |
 | Content Delivery & Edge Computing | `wsa` | Whole Site Acceleration | later |
-| Databases | `ddm` | Distributed Database Middleware | wave 2 |
-| Databases | `dds` | Document Database Service | wave 2 |
-| Databases | `drs` | Data Replication Service | wave 2 |
-| Databases | `gaussdb` | GaussDB | wave 2 |
-| Databases | `hrds` | Flexus RDS | wave 2 |
-| Databases | `memcached` | DCS (for Memcached) | wave 2 |
+| Databases | `ddm` | Distributed Database Middleware | verified |
+| Databases | `dds` | Document Database Service | verified |
+| Databases | `drs` | Data Replication Service | verified |
+| Databases | `gaussdb` | GaussDB | verified |
+| Databases | `hrds` | Flexus RDS | verified |
+| Databases | `memcached` | DCS (for Memcached) | verified |
 | Databases | `nosql` | GeminiDB | verified |
 | Databases | `rds` | Relational Database Service | verified |
-| Databases | `rdsformariadb` | RDS for MariaDB | wave 2 |
-| Databases | `redis` | DCS (for Redis) | wave 2 |
-| Databases | `taurusdb` | TaurusDB | wave 2 |
+| Databases | `rdsformariadb` | RDS for MariaDB | verified |
+| Databases | `redis` | DCS (for Redis) | verified |
+| Databases | `taurusdb` | TaurusDB | verified |
 | Developer Services | `astrozero` | Huawei Cloud Astro Zero | later |
 | Developer Services | `devcloud` | CodeArts | later |
 | Developer Services | `servicestage` | ServiceStage | later |
@@ -122,11 +122,11 @@ Wave 1 (the builders that already existed) is done: see the result in
 | Security & Compliance | `ssa` | SecMaster | wave 3 |
 | Security & Compliance | `waf` | Web Application Firewall | verified |
 | Storage | `cbr` | Cloud Backup and Recovery | verified |
-| Storage | `des` | Data Express Service | wave 2 |
-| Storage | `dss` | Dedicated Distributed Storage Service | wave 2 |
+| Storage | `des` | Data Express Service | verified |
+| Storage | `dss` | Dedicated Distributed Storage Service | verified |
 | Storage | `evs` | Elastic Volume Service | verified |
 | Storage | `obs` | Object Storage Service | verified |
-| Storage | `sdrs` | Business Recovery Service | wave 2 |
-| Storage | `sfs` | Scalable File Service | wave 2 |
+| Storage | `sdrs` | Business Recovery Service | verified |
+| Storage | `sfs` | Scalable File Service | verified |
 | Storage | `sfsturbo` | Scalable File Service Turbo | verified |
 | Support | `supportplans` | Support Plans | not counted: a support contract, not a resource |
