@@ -147,6 +147,34 @@ What the wave changed:
   case-insensitively and the page is opened under the calculator's own name.
 * `apig` sells on-demand only and `dline` monthly and yearly only; their `modes` now say so.
 
+### Thirteen databases and storage services (2026-10-17): go
+
+Change `builder-wave-2`. These services have no Python builder: a form recipe
+(`autocalc.services.forms`) names the page's controls and the page builds the card.
+`autocalc page-controls <service>` lists what a page offers. 27 cards, each with stored, Edit
+and rating amounts equal, in the billing modes the page actually sells:
+
+| Service | Modes checked | Stored |
+|---|---|---|
+| ddm | on-demand, monthly, yearly | 0.76, 363.60, 3,636.00 |
+| dds | on-demand, monthly, yearly | 1.12, 539.42, 5,394.24 |
+| des | on-demand | 200.00 |
+| drs | on-demand, monthly, yearly | 0.14, 67.20, 672.00 |
+| dss | yearly | 40,163.87 |
+| gaussdb | on-demand, monthly, yearly | 0.76, 370.75, 3,707.52 |
+| hrds | monthly, yearly | 115.00, 1,150.04 |
+| memcached | on-demand | 90.52 |
+| rdsformariadb | on-demand, monthly, yearly | 0.43, 213.58, 2,135.88 |
+| redis | monthly, yearly | 0.89, 10.60 |
+| sdrs | on-demand | 23.36 |
+| sfs | on-demand (100 GB) | 12.90 |
+| taurusdb | on-demand, monthly, yearly | 0.91, 435.66, 4,356.60 |
+
+Findings: redis on-demand prices at 0.00 in `sa-brazil-1` (other specs fail the inquiry), so it is
+not offered; SFS's on-demand form has its own capacity control instead of the size radio.
+Recipes use the page's defaults for options the caller leaves out; ranked catalog specs are not
+mapped onto recipe options, so these services publish from `options` only.
+
 Every verified service is recorded with the frontend version it was verified on
 (`autocalc.services.VERIFIED`). `autocalc doctor` and `publish_quote` warn when the live
 frontend differs, so a changed page is never silent.

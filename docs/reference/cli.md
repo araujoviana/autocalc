@@ -37,7 +37,7 @@ autocalc publish-quote --draft-id d-1a2b3c4d --name "acme web tier"   # runs the
 ```
 
 A requirement is `{"id","service","region","billing","quantity"?,"needs"?,"spec"?,"options"?}`.
-`publish-quote` builds the cards on the calculator page (a browser is needed) for the 20 verified services: ECS, EVS, CCE, ELB, OBS, RDS, SFS Turbo, API Gateway, APM, CBR, CCI, DEW, Direct Connect, FunctionGraph, Kafka, LTS, NAT, GeminiDB, RabbitMQ and WAF. Other services fail before anything is saved. The result carries `warnings` when the live calculator frontend differs from the one a service was verified on.
+`publish-quote` builds the cards on the calculator page (a browser is needed) for the 33 verified services: ECS, EVS, CCE, ELB, OBS, RDS, SFS Turbo, API Gateway, APM, CBR, CCI, DEW, Direct Connect, FunctionGraph, Kafka, LTS, NAT, GeminiDB, RabbitMQ and WAF, plus the databases and storage services of wave 2 (GaussDB, RDS for MariaDB, TaurusDB, Flexus RDS, DCS for Redis and Memcached, DDS, DDM, DRS, SFS, DSS, SDRS, DES) for the billing modes each sells. Other services fail before anything is saved. The result carries `warnings` when the live calculator frontend differs from the one a service was verified on.
 
 ## Environment variables
 

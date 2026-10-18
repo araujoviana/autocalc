@@ -26,3 +26,9 @@ def test_nat_maps_the_catalog_spec_to_its_size():
 def test_every_verified_service_has_a_builder_and_a_version():
     assert set(VERIFIED) <= set(REGISTRY)
     assert all(v[:1].isdigit() for v in VERIFIED.values())
+
+
+def test_every_recipe_service_is_verified_with_its_modes():
+    from autocalc.services.forms import RECIPES
+    assert set(RECIPES) <= set(VERIFIED)
+    assert get_builder("hrds", calc=object()).modes == ("monthly", "yearly")

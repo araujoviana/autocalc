@@ -94,11 +94,11 @@ def test_a_card_the_page_cannot_encode_saves_nothing(store, monkeypatch):
 
 
 def test_unsupported_service_fails_before_any_build(store):
-    d = workflow.draft_quote("acme", [req(service="dds", needs={"vcpus": 1000})])
+    d = workflow.draft_quote("acme", [req(service="er", needs={"vcpus": 1000})])
     workflow_store = DraftStore()
     from autocalc.core import decide
     decide(workflow_store, d["draft_id"], "r1", "c7n.large.2", "test")
-    with pytest.raises(ValidationError, match="dds"):
+    with pytest.raises(ValidationError, match="er"):
         workflow.publish_quote(d["draft_id"], "n")
 
 

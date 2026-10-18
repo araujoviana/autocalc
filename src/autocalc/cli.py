@@ -11,6 +11,7 @@
   autocalc doctor
   autocalc install-browser
   autocalc update [--to vX.Y.Z]
+  autocalc page-controls SERVICE
 """
 
 from __future__ import annotations
@@ -128,6 +129,8 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("install-browser")
     p = sub.add_parser("update")
     p.add_argument("--to", help="a release tag, vX.Y.Z (default: the newest)")
+    p = sub.add_parser("page-controls", help="list the controls of a service's calculator page")
+    p.add_argument("service")
     tool_cmds = _add_tool_commands(sub, set(sub.choices))
     a = ap.parse_args(argv)
 
@@ -159,6 +162,10 @@ def main(argv: list[str] | None = None) -> int:
         if a.cmd == "update":
             from autocalc import update
             print(update.update(a.to))
+            return 0
+        if a.cmd == "page-controls":
+            from autocalc.page.controls import page_controls
+            print(json.dumps(page_controls(a.service), indent=2))
             return 0
         if a.cmd == "lists":
             from autocalc.share import Session
