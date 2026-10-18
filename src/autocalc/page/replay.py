@@ -80,6 +80,10 @@ ALIASES = {("sfsturbo", "ONDEMAND"): {"calculator_sfsType_radio": "calculator_sf
                                       "calculator_sfsPeriod_36input": "calculator_sfsDemand_36input"}}
 
 
+# builder key -> the calculator's own service key, where they differ in case
+PAGE_SERVICE = {"rabbitmq": "rabbitMQ"}
+
+
 def for_page(service: str, rewrite_value: dict[str, Any]) -> dict[str, Any]:
     """The form state with the control ids this billing mode's form uses."""
     rename = ALIASES.get((service, rewrite_value["global_REGIONINFO"].get("chargeMode")), {})
@@ -94,7 +98,7 @@ def encode_card(service: str, rewrite_value: dict[str, Any]) -> dict[str, Any]:
     from autocalc.page.driver import Driver
 
     with page_context(service) as ctx:
-        driver = Driver(ctx.new_page(), service)
+        driver = Driver(ctx.new_page(), PAGE_SERVICE.get(service, service))
         driver.open()
         driver.run(card_steps(rewrite_value))
         card = driver.capture()

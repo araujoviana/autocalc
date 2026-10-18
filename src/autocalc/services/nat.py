@@ -17,6 +17,10 @@ def _factory(calc=None) -> NatBuilder:
 
 class NatBuilder(Builder):
     service = "nat"
+    spec_arg = "size"
+
+    def spec_option(self, spec: str) -> str:
+        return spec.removeprefix("natgateway_")
     description = "NAT Gateway"
     modes = ("ondemand",)
 

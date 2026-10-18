@@ -286,6 +286,9 @@ class Driver:
         self.settle()
         store.js(self.page, "removeOverlays", store.OVERLAYS)
         before = store.js(self.page, "cartKeys")
+        if self.page.locator(ADD_TO_LIST).is_disabled():
+            raise self._fail("The page will not add this card: Add to List is disabled (an incomplete form, "
+                             "or a price of zero such as usage inside a free tier).", step="add_to_list")
         try:
             self.page.click(ADD_TO_LIST)
         except Exception as exc:

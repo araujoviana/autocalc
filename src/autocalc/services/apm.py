@@ -18,6 +18,7 @@ def _factory(calc=None) -> ApmBuilder:
 
 class ApmBuilder(Builder):
     service = "apm"
+    spec_arg = "spec"
     description = "Application Performance Management"
     modes = ("ondemand",)
 

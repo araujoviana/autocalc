@@ -25,6 +25,7 @@ def _factory(calc=None) -> EcsBuilder:
 
 class EcsBuilder(Builder):
     service = "ecs"
+    spec_arg = "flavor"
     description = "Elastic Cloud Server"
     modes = ("monthly", "yearly", "ondemand", "ri")
 

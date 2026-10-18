@@ -13,7 +13,8 @@ live in `openspec/changes/archive/`.
 | 5 | `workflow-surface` | `draft_quote` → `revise_quote` → `publish_quote`, CLI and MCP from one registry ([ADR-0007](adr/0007-workflow-surface-and-one-registry.md)) |
 | 6 | `spa-encoder` | Page-as-encoder for the seven existing services |
 | 7 | `distribution` | `uv tool` install from git tags, `install.sh` / `install.ps1` ([ADR-0013](adr/0013-distribution-uv-tool-from-git-tags.md)) |
-| 8+ | builder waves | v1: at least half of the Huawei calculator's services |
+| 8 | `builder-wave-1` | The 13 existing builders verified on the page; 20 of 93 quotable services ([v1 scope](explanation/v1-scope.md)) |
+| 9+ | builder waves 2 and 3 | v1: at least 47 of the 93 quotable services verified |
 
 AWS is v2.
 
@@ -26,7 +27,7 @@ Each item is either assigned to the change that will close it or left unschedule
 |---|---|
 | Refresh the two golden tests that query the live catalog: `test_golden_ecs_ri` (the 'AlmaLinux 9.4 64bit' image is gone from `sa-brazil-1`) and `test_ecs_template_render` (21 of 779 corpus cards drift, limit is 2) | unscheduled |
 | Migrate the MCP server from `FastMCP` to `MCPServer` (not in `mcp` 1.x, which is pinned `<2`) | unscheduled, when the SDK ships it |
-| `publish_quote` for CCE, ELB, OBS and the services beyond the seven (their builders take no ranked-candidate spec) | the builder waves |
+| `publish_quote` for services beyond the 20 verified ones (waves 2 and 3: databases, storage, networking, security) | the builder waves |
 | Quotes that span several regions in one saved list | `quote-core` |
 | Availability-zone handling for services that price per AZ | `quote-core` |
 | The once-a-day update notice in tool results ([ADR-0013](adr/0013-distribution-uv-tool-from-git-tags.md)) | unscheduled |

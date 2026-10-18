@@ -18,6 +18,7 @@ def _factory(calc=None) -> CbrBuilder:
 
 class CbrBuilder(Builder):
     service = "cbr"
+    spec_arg = "vault_spec"
     description = "Cloud Backup and Recovery"
     modes = ("ondemand", "monthly", "yearly")
 

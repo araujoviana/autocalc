@@ -5,7 +5,7 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Literal
 
-from autocalc import tools
+from autocalc import frontend, tools
 from autocalc.core import DraftStore, Requirement, decide
 from autocalc.core import draft_quote as _draft
 from autocalc.core.ranking import rank
@@ -13,10 +13,8 @@ from autocalc.errors import ValidationError
 from autocalc.gate import publish_checked
 from autocalc.page.replay import encode_card
 from autocalc.providers.huawei import HuaweiProvider
-from autocalc.services import build as build_card
+from autocalc.services import VERIFIED, get_builder
 
-# the builder argument that takes the chosen spec; services missing here are not publishable yet
-_SPEC_ARG = {"ecs": "flavor", "evs": "type", "rds": "flavor", "sfsturbo": "tier"}
 SHOWN = 5
 
 
@@ -71,15 +69,20 @@ def publish_quote(draft_id: str, name: str, settlement: Literal["total", "monthl
     if draft.pending():
         raise ValidationError(f"Draft {draft_id} still has undecided requirements.", field="requirement_id",
                               allowed=draft.pending(), hint="Call revise_quote for each of them.")
-    unsupported = sorted({r.service for r in draft.requirements} - set(_SPEC_ARG))
+    unsupported = sorted({r.service.lower() for r in draft.requirements} - set(VERIFIED))
     if unsupported:
-        raise ValidationError(f"publish_quote cannot build {unsupported} yet.", field="service", allowed=sorted(_SPEC_ARG))
+        raise ValidationError(f"publish_quote cannot build {unsupported} yet.", field="service", allowed=sorted(VERIFIED))
     spec = {d.requirement_id: d.spec for d in draft.decisions}
-    built = [build_card(r.service, calc=tools.calc, region=r.region, billing=r.billing, quantity=r.quantity,
-                        **{_SPEC_ARG[r.service]: spec[r.id]}, **r.options) for r in draft.requirements]
+    built = []
+    for r in draft.requirements:
+        builder = get_builder(r.service, tools.calc)
+        chosen = {builder.spec_arg: builder.spec_option(spec[r.id])} if builder.spec_arg else {}
+        built.append(builder.build(region=r.region, billing=r.billing, quantity=r.quantity, **chosen, **r.options))
     # The builders say what to fill in; the page builds the card that is saved (ADR-0001).
     with ThreadPoolExecutor(max_workers=3) as pool:  # each encode has its own browser context (ADR-0010)
-        cards = list(pool.map(lambda pair: encode_card(pair[0].service, pair[1]["rewriteValue"]),
+        cards = list(pool.map(lambda pair: encode_card(pair[0].service.lower(), pair[1]["rewriteValue"]),
                               zip(draft.requirements, built, strict=True)))
     out = publish_checked(name, cards, settlement=settlement, currency=currency.upper(), calc=tools.calc)
-    return {"draft_id": draft_id, "id": out["id"], "url": out["url"], "checks": out["checks"]}
+    notes = frontend.warnings([r.service.lower() for r in draft.requirements], frontend.live_version())
+    return {"draft_id": draft_id, "id": out["id"], "url": out["url"], "checks": out["checks"],
+            **({"warnings": notes} if notes else {})}

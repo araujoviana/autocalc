@@ -22,9 +22,11 @@ import re
 import sys
 import typing
 
+from autocalc import frontend
 from autocalc.client import Calculator
 from autocalc.errors import CalculatorError
 from autocalc.regions import RegionResolver
+from autocalc.services import VERIFIED
 
 _ITEM = re.compile(r"^(?P<service>[^:]+):(?P<spec>[^*@]+?)(?:\*(?P<qty>\d+))?(?:@(?P<size>[\d.]+))?$")
 
@@ -225,9 +227,10 @@ def _doctor() -> int:
             print(f"[FAIL] {name}: {exc}  -> check network / proxy")
     try:
         Calculator()
-        html = httpx.get("https://www.huaweicloud.com/intl/en-us/pricing/calculator.html", timeout=20).text
-        m = re.search(r"CBC-PortalCalculator/([0-9.]+)", html)
-        print(f"[ok]   frontend version: {m.group(1) if m else 'unknown'}")
+        live = frontend.live_version()
+        print(f"[ok]   frontend version: {live or 'unknown'}")
+        for note in frontend.warnings(sorted(VERIFIED), live):
+            print(f"[warn] {note}")
     except Exception as exc:  # noqa: BLE001
         print(f"[warn] frontend version: {exc}")
     browser = auth.find_browser()

@@ -26,6 +26,20 @@ def store(tmp_path, monkeypatch):
     return DraftStore()
 
 
+class FakeBuilder:
+    spec_arg = "flavor"
+
+    def __init__(self, svc, seen):
+        self.svc, self.seen = svc, seen
+
+    def spec_option(self, spec):
+        return spec
+
+    def build(self, **kw):
+        self.seen.update(svc=self.svc, **kw)
+        return {"rewriteValue": {"form": 1}}
+
+
 def req(**kw):
     return {"id": "r1", "service": "ecs", "region": "sa-brazil-1", "billing": "monthly", "needs": {"vcpus": 3}, **kw}
 
@@ -41,8 +55,7 @@ def test_undecided_draft_cannot_publish_and_decided_one_reaches_the_gate(store, 
     assert workflow.revise_quote(d["draft_id"], [{"requirement_id": "r1", "spec": "c7n.xlarge.2",
                                                   "justification": "customer wants headroom"}])["pending"] == []
     built, gate = {}, {}
-    monkeypatch.setattr(workflow, "build_card",
-                        lambda svc, calc=None, **kw: built.update(svc=svc, **kw) or {"rewriteValue": {"form": 1}})
+    monkeypatch.setattr(workflow, "get_builder", lambda svc, calc=None: FakeBuilder(svc, built))
     monkeypatch.setattr(workflow, "encode_card", lambda svc, rv: {"page_card_for": svc, "form": rv})
 
     def fake_publish(name, cards, **kw):
@@ -56,10 +69,20 @@ def test_undecided_draft_cannot_publish_and_decided_one_reaches_the_gate(store, 
     assert gate["cards"] == [{"page_card_for": "ecs", "form": {"form": 1}}]  # the page's card, not the builder's
 
 
+def test_published_result_warns_when_the_frontend_changed(store, monkeypatch):
+    d = workflow.draft_quote("acme", [req(needs={"vcpus": 2})])
+    monkeypatch.setattr(workflow, "get_builder", lambda svc, calc=None: FakeBuilder(svc, {}))
+    monkeypatch.setattr(workflow, "encode_card", lambda svc, rv: {})
+    monkeypatch.setattr(workflow, "publish_checked", lambda *a, **k: {"id": "L1", "url": "u", "checks": []})
+    monkeypatch.setattr(workflow.frontend, "live_version", lambda: "99.0.0")
+    out = workflow.publish_quote(d["draft_id"], "n")
+    assert out["id"] == "L1" and "99.0.0" in out["warnings"][0]
+
+
 def test_a_card_the_page_cannot_encode_saves_nothing(store, monkeypatch):
     d = workflow.draft_quote("acme", [req(needs={"vcpus": 2})])
     assert d["pending"] == []
-    monkeypatch.setattr(workflow, "build_card", lambda svc, calc=None, **kw: {"rewriteValue": {}})
+    monkeypatch.setattr(workflow, "get_builder", lambda svc, calc=None: FakeBuilder(svc, {}))
 
     def cannot(svc, rv):
         raise PageEncodeFailed("no", service=svc, field="calculator_ecs_radio_cpu")
@@ -71,11 +94,11 @@ def test_a_card_the_page_cannot_encode_saves_nothing(store, monkeypatch):
 
 
 def test_unsupported_service_fails_before_any_build(store):
-    d = workflow.draft_quote("acme", [req(service="obs", needs={"vcpus": 1000})])
+    d = workflow.draft_quote("acme", [req(service="dds", needs={"vcpus": 1000})])
     workflow_store = DraftStore()
     from autocalc.core import decide
     decide(workflow_store, d["draft_id"], "r1", "c7n.large.2", "test")
-    with pytest.raises(ValidationError, match="obs"):
+    with pytest.raises(ValidationError, match="dds"):
         workflow.publish_quote(d["draft_id"], "n")
 
 

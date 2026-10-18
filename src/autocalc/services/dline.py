@@ -17,8 +17,9 @@ def _factory(calc=None) -> DlineBuilder:
 
 class DlineBuilder(Builder):
     service = "dline"
+    spec_arg = "port"
     description = "Cloud Connect / Direct Connect As A Service"
-    modes = ("ondemand", "monthly", "yearly")
+    modes = ("monthly", "yearly")
 
     def build(self, region: str, port: str = "1ge", billing: Billing = "monthly", quantity: int = 1,
               periods: int = 1, hours: float = 730, title: str | None = None) -> dict[str, Any]:

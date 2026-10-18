@@ -13,6 +13,14 @@ _MODULES = ("ecs", "evs", "cce", "obs", "rds", "sfs", "elb",
             "nat", "apig", "dline", "cbr", "apm", "waf", "function", "dew", "lts", "cci", "rabbitmq", "kafka", "nosql")
 
 
+# Services whose page-encoded cards passed the live matrix (stored = Edit = rating), and the
+# calculator frontend version they were verified on. publish_quote accepts only these.
+VERIFIED = dict.fromkeys(
+    ("ecs", "evs", "cce", "elb", "obs", "rds", "sfsturbo",  # spa-encoder
+     "apig", "apm", "cbr", "cci", "dew", "dline", "function", "kafka", "lts", "nat", "nosql", "rabbitmq", "waf"),  # builder-wave-1
+    "11.4.201")
+
+
 def load_all() -> None:
     for m in _MODULES:
         try:
@@ -23,7 +31,7 @@ def load_all() -> None:
 
 def get_builder(service: str, calc: Calculator | None = None) -> Builder:
     load_all()
-    factory = REGISTRY.get(service)
+    factory = REGISTRY.get(service.lower())
     if factory is None:
         from autocalc.errors import ValidationError
         raise ValidationError(f"No builder for service {service!r}.", field="service",
