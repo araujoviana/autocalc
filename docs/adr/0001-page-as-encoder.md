@@ -175,6 +175,32 @@ not offered; SFS's on-demand form has its own capacity control instead of the si
 Recipes use the page's defaults for options the caller leaves out; ranked catalog specs are not
 mapped onto recipe options, so these services publish from `options` only.
 
+### Twelve networking, security and middleware services (2026-10-22): go, with eight left out
+
+Change `builder-wave-3`, same recipes and harness. Stored, Edit and rating amounts equal in the
+modes the page sells (`sa-brazil-1`, frontend 11.4.201):
+
+| Service | Modes checked | Stored |
+|---|---|---|
+| cfw | on-demand, monthly, yearly | 0.42, 455.00, 4,550.00 |
+| dbss | monthly, yearly | 750.00, 7,500.00 |
+| dsc | monthly, yearly | 1,000.00, 10,000.00 |
+| eip | on-demand, monthly, yearly | 0.03, 9.00, 90.00 |
+| er | on-demand (100 GB, 2 attachments, 730 h) | 89.60 |
+| esw | on-demand, monthly, yearly | 2.50, 1,200.00, 12,000.00 |
+| hecs | on-demand, monthly, yearly | 0.18, 64.08, 627.70 |
+| hss | on-demand, monthly, yearly | 0.01, 1.50, 15.00 |
+| reliability | on-demand, monthly, yearly | 0.38, 191.60, 1,919.00 |
+| ssa | on-demand (edition dataInfo_1_) | 9.38 |
+| vpcep | on-demand | 0.01 |
+| vpn | on-demand, monthly, yearly | 0.69, 427.00, 4,270.00 |
+
+Findings: `ga`, `cc`, `aad`, `edgesec` and `ucs` have pages with no region control, which the
+encoder requires; `cbh` monthly and yearly come back with unpriced products; `hcss` Edit
+re-prices to 11.40 (monthly) and 120.97 (yearly) where stored is 3.50 and 42.00; `ccm` sells
+one-time purchases only; `dsc` on-demand Edit does not restore the period. These moved to
+*later* in the [v1 scope](../explanation/v1-scope.md).
+
 Every verified service is recorded with the frontend version it was verified on
 (`autocalc.services.VERIFIED`). `autocalc doctor` and `publish_quote` warn when the live
 frontend differs, so a changed page is never silent.

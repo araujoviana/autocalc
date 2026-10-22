@@ -15,19 +15,26 @@ Checked live on 2026-10-17: the catalog lists 97 services;
 
 | Status | Services |
 |---|---|
-| verified | 33 |
+| verified | 45 |
 | wave 2 | 0 |
-| wave 3 | 20 |
-| later | 40 |
+| wave 3 | 0 |
+| later | 48 |
 | not counted | 4 |
 
-Verified plus wave 3 give 53 services, enough for the target without the AI, analytics, media or
-developer-services forms, which are the oddest. Waves are an order of work, not a promise: a
+Verified plus the AI, analytics, media and developer-services forms, which are the oddest, stay
+short of the target: 45 are verified after wave 3, so **2 more** are needed (a wave 4 from the
+*later* rows, e.g. the ones that failed below). Waves are an order of work, not a promise: a
 service moves to *later* if its form cannot be replayed or its Edit view cannot reproduce the
 stored price.
 
+Wave 3 left eight services in *later*: `ga`, `cc`, `aad`, `edgesec`, `ucs` (their pages have no
+region control, which the encoder requires), `cbh` (monthly and yearly cards come back with
+unpriced products in `sa-brazil-1`), `hcss` (Edit re-prices to 11.40 monthly where stored is
+3.50) and `ccm` (one-time purchase only, no recurring mode). `ssa` is verified on-demand only,
+and `dsc` monthly and yearly only (its on-demand Edit does not restore the period).
+
 Waves 1 (the builders that already existed) and 2 (databases and storage, driven by form recipes) are done: see the results in
-[ADR-0001](../adr/0001-page-as-encoder.md). Wave 3 is networking, security and middleware.
+[ADR-0001](../adr/0001-page-as-encoder.md). Wave 3 (networking, security, middleware) is done too.
 
 ## Every service
 
@@ -60,11 +67,11 @@ Waves 1 (the builders that already existed) and 2 (databases and storage, driven
 | Compute | `deh` | Dedicated Host | later |
 | Compute | `ecs` | Elastic Cloud Server | verified |
 | Compute | `function` | FunctionGraph | verified |
-| Compute | `hcss` | Flexus L Instance | wave 3 |
-| Compute | `hecs` | Flexus X Instance | wave 3 |
+| Compute | `hcss` | Flexus L Instance | later |
+| Compute | `hecs` | Flexus X Instance | verified |
 | Containers | `cce` | Cloud Container Engine | verified |
 | Containers | `cci` | Cloud Container Instance | verified |
-| Containers | `ucs` | Ubiquitous Cloud Native Service | wave 3 |
+| Containers | `ucs` | Ubiquitous Cloud Native Service | later |
 | Content Delivery & Edge Computing | `cdn` | Content Delivery Network | later |
 | Content Delivery & Edge Computing | `wsa` | Whole Site Acceleration | later |
 | Databases | `ddm` | Distributed Database Middleware | verified |
@@ -97,29 +104,29 @@ Waves 1 (the builders that already existed) and 2 (databases and storage, driven
 | Middleware | `kafka` | DMS (for Kafka) | verified |
 | Middleware | `mas` | Multi-Site High Availability Service | later |
 | Middleware | `rabbitMQ` | DMS (for RabbitMQ) | verified |
-| Middleware | `reliability` | DMS (for RocketMQ) | wave 3 |
+| Middleware | `reliability` | DMS (for RocketMQ) | verified |
 | Migration | `cdm` | Cloud Data Migration | later |
-| Networking | `cc` | Cloud Connect | wave 3 |
+| Networking | `cc` | Cloud Connect | later |
 | Networking | `dline` | Direct Connect As A Service | verified |
-| Networking | `eip` | Elastic IP | wave 3 |
+| Networking | `eip` | Elastic IP | verified |
 | Networking | `elb` | Elastic Load Balance | verified |
-| Networking | `er` | Enterprise Router | wave 3 |
-| Networking | `esw` | Enterprise Switch | wave 3 |
-| Networking | `ga` | Global Accelerator | wave 3 |
+| Networking | `er` | Enterprise Router | verified |
+| Networking | `esw` | Enterprise Switch | verified |
+| Networking | `ga` | Global Accelerator | later |
 | Networking | `nat` | NAT Gateway | verified |
-| Networking | `vpcep` | VPC Endpoint | wave 3 |
-| Networking | `vpn` | Virtual Private Network | wave 3 |
+| Networking | `vpcep` | VPC Endpoint | verified |
+| Networking | `vpn` | Virtual Private Network | verified |
 | Professional Services | `hcoms` | HUAWEI CLOUD O&M Service | not counted: a professional service, not a resource |
-| Security & Compliance | `aad` | Anti-DDoS Service | wave 3 |
-| Security & Compliance | `cbh` | Cloud Bastion Host | wave 3 |
-| Security & Compliance | `ccm` | Cloud Certificate & Manager | wave 3 |
-| Security & Compliance | `cfw` | Cloud Firewall | wave 3 |
-| Security & Compliance | `dbss` | Database Security Service | wave 3 |
+| Security & Compliance | `aad` | Anti-DDoS Service | later |
+| Security & Compliance | `cbh` | Cloud Bastion Host | later |
+| Security & Compliance | `ccm` | Cloud Certificate & Manager | later |
+| Security & Compliance | `cfw` | Cloud Firewall | verified |
+| Security & Compliance | `dbss` | Database Security Service | verified |
 | Security & Compliance | `dew` | Data Encryption Workshop | verified |
-| Security & Compliance | `dsc` | Data Security Center | wave 3 |
-| Security & Compliance | `edgesec` | Edge Security | wave 3 |
-| Security & Compliance | `hss` | Host Security Service | wave 3 |
-| Security & Compliance | `ssa` | SecMaster | wave 3 |
+| Security & Compliance | `dsc` | Data Security Center | verified |
+| Security & Compliance | `edgesec` | Edge Security | later |
+| Security & Compliance | `hss` | Host Security Service | verified |
+| Security & Compliance | `ssa` | SecMaster | verified |
 | Security & Compliance | `waf` | Web Application Firewall | verified |
 | Storage | `cbr` | Cloud Backup and Recovery | verified |
 | Storage | `des` | Data Express Service | verified |

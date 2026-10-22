@@ -73,6 +73,23 @@ RECIPES: dict[str, Recipe] = {
         quantity=True, modes=('ondemand',)),
 }
 
+# builder-wave-3: networking, security, middleware and Flexus; first pass runs on the page's defaults
+_PM, _OD = ("monthly", "yearly"), ("ondemand",)
+RECIPES.update({
+    "er": Recipe("Enterprise Router", {"downflow_gb": "calculator_downflow_stepper_Stepper_0", "attachment_hours": "calculator_attachment_time_stepper_Stepper_0", "attachments": "calculator_attachment_stepper_Stepper_0"}, modes=_OD),
+    "esw": Recipe("Enterprise Switch", {}, modes=_PM + _OD),
+    "vpcep": Recipe("VPC Endpoint", {}, modes=_OD),
+    "eip": Recipe("Elastic IP", {}, modes=_PM + _OD),
+    "vpn": Recipe("Virtual Private Network", {}, modes=_PM + _OD),
+    "cfw": Recipe("Cloud Firewall", {}, modes=_PM + _OD),
+    "hss": Recipe("Host Security Service", {}, quantity=True, modes=_PM + _OD),
+    "dbss": Recipe("Database Security Service", {}, quantity=True, modes=_PM),
+    "dsc": Recipe("Data Security Center", {}, quantity=True, modes=_PM),
+    "ssa": Recipe("Situation Awareness", {"edition": "calculator_ssa_edition_version1"}, modes=_OD),
+    "reliability": Recipe("Reliability (Distributed Message Service)", {}, quantity=True, modes=_PM + _OD),
+    "hecs": Recipe("Flexus X Instance", {}, quantity=True, modes=_PM + _OD),
+})
+
 
 class FormBuilder(Builder):
     """Returns the form state for a recipe; the page turns it into the card."""

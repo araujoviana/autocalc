@@ -73,7 +73,10 @@ WAVE1: list[tuple[str, str, dict[str, Any]]] = [
 MATRIX += WAVE1
 # form recipes (services/forms.py): the page's defaults, in every billing mode
 WAVE2 = [(svc, b, {}) for svc, r in RECIPES.items() for b in r.modes]
-NONZERO = {("sfs", "ondemand"): dict(capacity_gb=100)}  # a default that prices at zero proves nothing
+NONZERO = {("er", "ondemand"): dict(downflow_gb=100, attachment_hours=730, attachments=2),
+           ("cbh", "monthly"): dict(edition="dataInfo_1_"), ("cbh", "yearly"): dict(edition="dataInfo_1_"),
+           ("ssa", "monthly"): dict(edition="dataInfo_1_"), ("ssa", "yearly"): dict(edition="dataInfo_1_"),
+           ("sfs", "ondemand"): dict(capacity_gb=100)}  # a default that prices at zero proves nothing
 WAVE2 = [(s, b, NONZERO.get((s, b), o)) for s, b, o in WAVE2]
 MATRIX += WAVE2
 # SPA_ONLY=nat,waf runs just those services
