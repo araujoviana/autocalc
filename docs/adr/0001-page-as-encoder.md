@@ -175,7 +175,7 @@ not offered; SFS's on-demand form has its own capacity control instead of the si
 Recipes use the page's defaults for options the caller leaves out; ranked catalog specs are not
 mapped onto recipe options, so these services publish from `options` only.
 
-### Twelve networking, security and middleware services (2026-10-22): go, with eight left out
+### Seventeen networking, security and middleware services (2026-10-22): go, with eight left out
 
 Change `builder-wave-3`, same recipes and harness. Stored, Edit and rating amounts equal in the
 modes the page sells (`sa-brazil-1`, frontend 11.4.201):
@@ -194,11 +194,16 @@ modes the page sells (`sa-brazil-1`, frontend 11.4.201):
 | ssa | on-demand (edition dataInfo_1_) | 9.38 |
 | vpcep | on-demand | 0.01 |
 | vpn | on-demand, monthly, yearly | 0.69, 427.00, 4,270.00 |
+| aad | monthly, yearly | 6,006.35, 66,069.23 |
+| cc | monthly, yearly | 63.76, 637.60 |
+| edgesec | monthly | 660.00 |
+| ga | on-demand | 1.45 |
+| ucs | on-demand, monthly, yearly | 0.01, 50.00, 500.00 |
 
-Findings: `ga`, `cc`, `aad`, `edgesec` and `ucs` have pages with no region control, which the
-encoder requires; `cbh` monthly and yearly come back with unpriced products; `hcss` Edit
+Findings: `ga`, `cc`, `aad`, `edgesec` and `ucs` have pages with no region control; the encoder
+skips the region step for a recipe marked `regionless`. `cbh` monthly and yearly come back with unpriced products; `hcss` Edit
 re-prices to 11.40 (monthly) and 120.97 (yearly) where stored is 3.50 and 42.00; `ccm` sells
-one-time purchases only; `dsc` on-demand Edit does not restore the period. These moved to
+one-time purchases only; `dsc` on-demand Edit does not restore the period; on-demand cards of `cc`, `aad` and `edgesec` price at zero or at the monthly amount, so they are not offered. These moved to
 *later* in the [v1 scope](../explanation/v1-scope.md).
 
 Every verified service is recorded with the frontend version it was verified on

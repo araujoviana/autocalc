@@ -23,6 +23,7 @@ class Recipe:
     controls: dict[str, str]
     hours: bool = False  # the on-demand form asks for hours per month
     quantity: bool = False  # the form has the global quantity stepper
+    regionless: bool = False  # a global service: the page has no region control
     modes: tuple[str, ...] = ("monthly", "yearly", "ondemand")
 
 
@@ -85,6 +86,11 @@ RECIPES.update({
     "hss": Recipe("Host Security Service", {}, quantity=True, modes=_PM + _OD),
     "dbss": Recipe("Database Security Service", {}, quantity=True, modes=_PM),
     "dsc": Recipe("Data Security Center", {}, quantity=True, modes=_PM),
+    "ga": Recipe("Global Accelerator", {}, regionless=True, modes=_OD),
+    "cc": Recipe("Cloud Connect", {}, quantity=True, regionless=True, modes=_PM),
+    "aad": Recipe("Anti-DDoS Advanced", {}, quantity=True, regionless=True, modes=_PM),
+    "edgesec": Recipe("Edge Security", {}, regionless=True, modes=("monthly",)),
+    "ucs": Recipe("Ubiquitous Cloud Native Service", {}, regionless=True, modes=_PM + _OD),
     "ssa": Recipe("Situation Awareness", {"edition": "calculator_ssa_edition_version1"}, modes=_OD),
     "reliability": Recipe("Reliability (Distributed Message Service)", {}, quantity=True, modes=_PM + _OD),
     "hecs": Recipe("Flexus X Instance", {}, quantity=True, modes=_PM + _OD),
@@ -105,7 +111,8 @@ class FormBuilder(Builder):
             raise ValidationError(f"{self.service} has no option {unknown[0]!r}.", field=unknown[0],
                                   allowed=sorted(self.recipe.controls))
         mode, _name, _period, measure = CHARGE[billing]
-        form: dict[str, Any] = {"global_REGIONINFO": {"region": region, "locationType": "commonAZ", "chargeMode": mode},
+        form: dict[str, Any] = {"global_REGIONINFO": {**({} if self.recipe.regionless else {"region": region}),
+                                                      "locationType": "commonAZ", "chargeMode": mode},
                                 "template_RENDER": {self.recipe.controls[k]: options[k]
                                                     for k in self.recipe.controls if k in options}}
         if billing == "ondemand":
