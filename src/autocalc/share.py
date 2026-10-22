@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from autocalc.client import CALC, Billing, Calculator, CalculatorError
-from autocalc.errors import AuthExpired
+from autocalc.errors import AuthExpired, PayloadTooLarge
 
 SHARE_URL = "https://www.huaweicloud.com/intl/en-us/pricing/calculator.html?shareListId={id}&currentCurrency=USD"
 CONSOLE = "https://console-intl.huaweicloud.com/ecm/"
@@ -303,6 +303,9 @@ class Session:
     def _call(self, method: str, path: str, params: dict | None = None, body: Any = None,
               _retry: bool = True) -> dict[str, Any]:
         r = self.http.request(method, f"{CALC}/{path}", params=params, json=body)
+        if r.status_code == 413:
+            cards = body.get("cartListData") if isinstance(body, dict) else None
+            raise PayloadTooLarge(len(cards) if isinstance(cards, list) else None)
         try:
             data = r.json()
         except ValueError as err:
