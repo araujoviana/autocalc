@@ -111,6 +111,16 @@ class UnexpectedResponse(CalculatorError):
     code = "UNEXPECTED_RESPONSE"
 
 
+class PayloadTooLarge(CalculatorError):
+    code = "PAYLOAD_TOO_LARGE"
+
+    def __init__(self, cards: int | None = None, **kw: Any):
+        what = f"a list of {cards} cards" if cards else "this list"
+        super().__init__(f"The calculator refused {what}: request too large (HTTP 413).",
+                         hint="Split the list into several smaller lists and create them one by one.",
+                         details={"cards": cards} if cards else None, **kw)
+
+
 # ---- Huawei business exception ids -> typed errors --------------------------
 
 # CBC.0101 user invalid / not logged in, CBC.0102 bad share key, CBC.6001 missing param,

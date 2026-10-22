@@ -24,6 +24,10 @@ REQUIRED_SKU = ("resourceSpecCode", "resourceType", "productNum", "inquiryTag", 
 # image/companion lines (RI cards) are pinned to the card but are not SKU-priced
 REQUIRED_COMPANION = ("inquiryTag", "productNum", "selectIndex", "addToList_product")
 PLACEHOLDERS = ("nan", "undefined", "infinity", "-inf")
+# ECS public-IP form state: the calculator stores these label tokens (see
+# docs/explanation/huawei/edit-vs-list-price.md). Edit fills any gap with "assign an EIP".
+EIP_ASSIGN = "calc_14_"
+EIP_NONE = "calc_15_"
 
 
 def _walk(obj: Any, path: str = ""):
@@ -47,6 +51,23 @@ def _nonfinite(value: Any) -> bool:
 
 def scan_nonfinite(obj: Any) -> list[str]:
     return [f"{p}: {v!r} is not a finite value" for p, v in _walk(obj) if _nonfinite(v)]
+
+
+def check_ecs_public_ip(sp: dict[str, Any], rewrite: dict[str, Any], tag: str) -> list[str]:
+    """Edit rebuilds the public-IP choice from the form state alone, so it must agree with the products."""
+    form = (rewrite.get("template_RENDER") or {})
+    switch = (form.get("calculator_eip_switch") or {}).get("UNSET_Switch")
+    has_radio = isinstance(form.get("calculator_eip_radio"), dict)
+    has_bandwidth = any(str(p.get("resourceType", "")).endswith("bandwidth") for p in sp.get("productAllInfos") or [])
+    if not has_bandwidth and switch != EIP_NONE:
+        return [f"[{tag}] no bandwidth product but the form state does not say 'no public IP' "
+                f"(switch={switch!r}); Edit will add the default EIP"]
+    if has_bandwidth and switch == EIP_NONE:
+        return [f"[{tag}] bandwidth product present but the form state says 'no public IP'"]
+    if has_bandwidth and not has_radio:
+        return [f"[{tag}] bandwidth product present but the EIP bandwidth form state is missing; "
+                f"Edit will use the default bandwidth"]
+    return []
 
 
 def validate_list(data: dict[str, Any]) -> dict[str, Any]:
@@ -96,6 +117,8 @@ def validate_list(data: dict[str, Any]) -> dict[str, Any]:
             issues.append(f"[{tag}] card amount {got} != sum(products) {round(s, 6)}")
         if idxs and idxs != list(range(len(prods))):
             issues.append(f"[{tag}] selectIndex not 0..n-1: {idxs}")
+        if sp.get("serviceCode") == "ecs":
+            issues.extend(check_ecs_public_ip(sp, it.get("rewriteValue") or {}, tag))
         if sp.get("chargeModeName") == "RI":
             for k in RI_SELECTED:
                 if k not in sp:
