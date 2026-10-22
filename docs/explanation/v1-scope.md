@@ -15,23 +15,23 @@ Checked live on 2026-10-17: the catalog lists 97 services;
 
 | Status | Services |
 |---|---|
-| verified | 45 |
+| verified | 50 |
 | wave 2 | 0 |
 | wave 3 | 0 |
-| later | 48 |
+| later | 43 |
 | not counted | 4 |
 
-Verified plus the AI, analytics, media and developer-services forms, which are the oddest, stay
-short of the target: 45 are verified after wave 3, so **2 more** are needed (a wave 4 from the
-*later* rows, e.g. the ones that failed below). Waves are an order of work, not a promise: a
-service moves to *later* if its form cannot be replayed or its Edit view cannot reproduce the
-stored price.
+v1 is reached: 50 services are verified, above the target of 47. Waves are an order of work,
+not a promise: a service moves to *later* if its form cannot be replayed or its Edit view cannot
+reproduce the stored price.
 
-Wave 3 left eight services in *later*: `ga`, `cc`, `aad`, `edgesec`, `ucs` (their pages have no
-region control, which the encoder requires), `cbh` (monthly and yearly cards come back with
-unpriced products in `sa-brazil-1`), `hcss` (Edit re-prices to 11.40 monthly where stored is
-3.50) and `ccm` (one-time purchase only, no recurring mode). `ssa` is verified on-demand only,
-and `dsc` monthly and yearly only (its on-demand Edit does not restore the period).
+Wave 3 left three services in *later*: `cbh` (monthly and yearly cards come back with unpriced
+products in `sa-brazil-1`), `hcss` (Edit re-prices to 11.40 monthly where stored is 3.50) and
+`ccm` (one-time purchase only, no recurring mode). `ga`, `cc`, `aad`, `edgesec` and `ucs` have
+global pages with no region control; once the encoder skipped the region step they passed.
+Per-service notes: `ssa` is verified on-demand only; `dsc`, `cc` and `aad` monthly and yearly only
+(their on-demand cards price at zero or at the monthly amount); `edgesec` monthly only (its
+page offers no yearly period; on-demand repeats the monthly amount).
 
 Waves 1 (the builders that already existed) and 2 (databases and storage, driven by form recipes) are done: see the results in
 [ADR-0001](../adr/0001-page-as-encoder.md). Wave 3 (networking, security, middleware) is done too.
@@ -71,7 +71,7 @@ Waves 1 (the builders that already existed) and 2 (databases and storage, driven
 | Compute | `hecs` | Flexus X Instance | verified |
 | Containers | `cce` | Cloud Container Engine | verified |
 | Containers | `cci` | Cloud Container Instance | verified |
-| Containers | `ucs` | Ubiquitous Cloud Native Service | later |
+| Containers | `ucs` | Ubiquitous Cloud Native Service | verified |
 | Content Delivery & Edge Computing | `cdn` | Content Delivery Network | later |
 | Content Delivery & Edge Computing | `wsa` | Whole Site Acceleration | later |
 | Databases | `ddm` | Distributed Database Middleware | verified |
@@ -106,25 +106,25 @@ Waves 1 (the builders that already existed) and 2 (databases and storage, driven
 | Middleware | `rabbitMQ` | DMS (for RabbitMQ) | verified |
 | Middleware | `reliability` | DMS (for RocketMQ) | verified |
 | Migration | `cdm` | Cloud Data Migration | later |
-| Networking | `cc` | Cloud Connect | later |
+| Networking | `cc` | Cloud Connect | verified |
 | Networking | `dline` | Direct Connect As A Service | verified |
 | Networking | `eip` | Elastic IP | verified |
 | Networking | `elb` | Elastic Load Balance | verified |
 | Networking | `er` | Enterprise Router | verified |
 | Networking | `esw` | Enterprise Switch | verified |
-| Networking | `ga` | Global Accelerator | later |
+| Networking | `ga` | Global Accelerator | verified |
 | Networking | `nat` | NAT Gateway | verified |
 | Networking | `vpcep` | VPC Endpoint | verified |
 | Networking | `vpn` | Virtual Private Network | verified |
 | Professional Services | `hcoms` | HUAWEI CLOUD O&M Service | not counted: a professional service, not a resource |
-| Security & Compliance | `aad` | Anti-DDoS Service | later |
+| Security & Compliance | `aad` | Anti-DDoS Service | verified |
 | Security & Compliance | `cbh` | Cloud Bastion Host | later |
 | Security & Compliance | `ccm` | Cloud Certificate & Manager | later |
 | Security & Compliance | `cfw` | Cloud Firewall | verified |
 | Security & Compliance | `dbss` | Database Security Service | verified |
 | Security & Compliance | `dew` | Data Encryption Workshop | verified |
 | Security & Compliance | `dsc` | Data Security Center | verified |
-| Security & Compliance | `edgesec` | Edge Security | later |
+| Security & Compliance | `edgesec` | Edge Security | verified |
 | Security & Compliance | `hss` | Host Security Service | verified |
 | Security & Compliance | `ssa` | SecMaster | verified |
 | Security & Compliance | `waf` | Web Application Firewall | verified |

@@ -15,8 +15,7 @@ live in `openspec/changes/archive/`.
 | 7 | `distribution` | `uv tool` install from git tags, `install.sh` / `install.ps1` ([ADR-0013](adr/0013-distribution-uv-tool-from-git-tags.md)) |
 | 8 | `builder-wave-1` | The 13 existing builders verified on the page; 20 of 93 quotable services ([v1 scope](explanation/v1-scope.md)) |
 | 9 | `builder-wave-2` | Databases and storage via form recipes; 33 of 93 quotable services |
-| 10 | `builder-wave-3` | Networking, security and middleware via form recipes; 45 of 93 quotable services |
-| 11+ | builder wave 4 | v1: at least 47 of the 93 quotable services verified (2 more) |
+| 10 | `builder-wave-3` | Networking, security and middleware via form recipes; 50 of 93 quotable services; v1 (47) reached |
 
 AWS is v2.
 
@@ -29,7 +28,7 @@ Each item is either assigned to the change that will close it or left unschedule
 |---|---|
 | Refresh the two golden tests that query the live catalog: `test_golden_ecs_ri` (the 'AlmaLinux 9.4 64bit' image is gone from `sa-brazil-1`) and `test_ecs_template_render` (21 of 779 corpus cards drift, limit is 2) | unscheduled |
 | Migrate the MCP server from `FastMCP` to `MCPServer` (not in `mcp` 1.x, which is pinned `<2`) | unscheduled, when the SDK ships it |
-| `publish_quote` for services beyond the 45 verified ones | wave 4 |
+| `publish_quote` for services beyond the 50 verified ones | unscheduled |
 | Quotes that span several regions in one saved list | `quote-core` |
 | Availability-zone handling for services that price per AZ | `quote-core` |
 | The once-a-day update notice in tool results ([ADR-0013](adr/0013-distribution-uv-tool-from-git-tags.md)) | unscheduled |

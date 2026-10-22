@@ -59,7 +59,7 @@ def global_values(form_state: dict[str, Any]) -> dict[str, Any]:
 def card_steps(rewrite_value: dict[str, Any]) -> list[Step]:
     """The steps that fill the form with a ``rewriteValue``'s state, globals first."""
     region = rewrite_value["global_REGIONINFO"]
-    steps = [Step("global_REGIONINFO_region", "region", region["region"])]
+    steps = [Step("global_REGIONINFO_region", "region", region["region"])] if region.get("region") else []  # global pages have none
     if region.get("chargeMode"):
         steps.append(Step("global_REGIONINFO_chargeMode", "radio", region["chargeMode"]))
     if period := rewrite_value.get("global_PERIODTIME", {}).get("UNSET_PeriodTime"):

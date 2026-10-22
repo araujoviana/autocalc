@@ -23,7 +23,8 @@ VERIFIED.update(dict.fromkeys(
     ("gaussdb", "rdsformariadb", "taurusdb", "hrds", "redis", "memcached", "dds", "ddm", "drs", "sfs", "dss", "sdrs", "des"),
     "11.4.201"))  # builder-wave-2
 VERIFIED.update(dict.fromkeys(
-    ("er", "esw", "vpcep", "eip", "vpn", "cfw", "hss", "dbss", "dsc", "ssa", "reliability", "hecs"),
+    ("er", "esw", "vpcep", "eip", "vpn", "cfw", "hss", "dbss", "dsc", "ssa", "reliability", "hecs",
+     "ga", "cc", "aad", "edgesec", "ucs"),  # global pages, no region control
     "11.4.201"))  # builder-wave-3
 
 

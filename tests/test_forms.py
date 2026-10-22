@@ -29,3 +29,12 @@ def test_unknown_option_is_refused_before_the_page_opens():
 
 def test_every_recipe_names_a_control_per_option():
     assert all(all(c.startswith("calculator_") for c in r.controls.values()) for r in RECIPES.values())
+
+
+def test_regionless_recipe_has_no_region_step():
+    from autocalc.page.replay import card_steps
+    rv = get_builder("ucs").build("sa-brazil-1")["rewriteValue"]
+    assert "region" not in rv["global_REGIONINFO"]
+    assert all(s.component_id != "global_REGIONINFO_region" for s in card_steps(rv))
+    rv = get_builder("dds").build("sa-brazil-1")["rewriteValue"]
+    assert card_steps(rv)[0].component_id == "global_REGIONINFO_region"
