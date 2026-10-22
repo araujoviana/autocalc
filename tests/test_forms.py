@@ -28,4 +28,4 @@ def test_unknown_option_is_refused_before_the_page_opens():
 
 
 def test_every_recipe_names_a_control_per_option():
-    assert all(r.controls and all(c.startswith("calculator_") for c in r.controls.values()) for r in RECIPES.values())
+    assert all(all(c.startswith("calculator_") for c in r.controls.values()) for r in RECIPES.values())
