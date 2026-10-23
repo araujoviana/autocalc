@@ -137,7 +137,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if a.cmd in tool_cmds:
             fn, names = tool_cmds[a.cmd]
-            print(json.dumps(fn(**{n: getattr(a, n) for n in names}), indent=2, ensure_ascii=False, default=str))
+            from autocalc.update import with_notice
+            print(json.dumps(with_notice(fn(**{n: getattr(a, n) for n in names})), indent=2, ensure_ascii=False, default=str))
             return 0
         if a.cmd == "login":
             from autocalc import auth

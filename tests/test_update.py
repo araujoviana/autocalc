@@ -54,3 +54,25 @@ def test_no_tag_and_failures_are_named(monkeypatch):
     with pytest.raises(UpdateFailed, match="v0.2.0") as exc:
         update.update()
     assert exc.value.code == "UPDATE_FAILED"
+
+
+def test_notice_looks_up_once_a_day_and_never_updates(monkeypatch, tmp_path):
+    monkeypatch.setenv("AUTOCALC_CONFIG", str(tmp_path))
+    monkeypatch.delenv("AUTOCALC_NO_UPDATE_CHECK")
+    monkeypatch.setattr(update, "version", lambda _n: "0.1.0")
+    calls = run_with(monkeypatch, "v0.2.0")
+    assert "0.2.0 is available" in update.notice()
+    assert update.notice() is None  # same day: no second lookup
+    assert [c[0] for c in calls] == ["git"]
+    assert update.with_notice([1]) == [1]
+
+
+def test_notice_is_silent_when_current_or_offline(monkeypatch, tmp_path):
+    monkeypatch.setenv("AUTOCALC_CONFIG", str(tmp_path))
+    monkeypatch.delenv("AUTOCALC_NO_UPDATE_CHECK")
+    monkeypatch.setattr(update, "version", lambda _n: "0.2.0")
+    run_with(monkeypatch, "v0.2.0")
+    assert update.notice() is None
+    (tmp_path / "update-check.json").unlink()
+    run_with(monkeypatch, "", git_rc=1)
+    assert update.notice() is None
