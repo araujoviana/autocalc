@@ -14,6 +14,7 @@ from mcp.server.fastmcp import FastMCP
 from autocalc import workflow  # noqa: F401  (registers the workflow tools)
 from autocalc.errors import CalculatorError
 from autocalc.tools import REGISTRY
+from autocalc.update import with_notice
 
 mcp = FastMCP("hwc-calculator")
 
@@ -23,7 +24,7 @@ def _tool_errors(fn):
     @functools.wraps(fn)
     def wrapper(*a, **k):
         try:
-            return fn(*a, **k)
+            return with_notice(fn(*a, **k))
         except CalculatorError as exc:
             return exc.as_dict()
     return wrapper

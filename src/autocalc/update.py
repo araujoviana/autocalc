@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import subprocess
+import time
 from importlib.metadata import version
 
+from autocalc.auth import config_dir
 from autocalc.errors import UpdateFailed
 
 REPO = "https://github.com/araujoviana/autocalc.git"
@@ -46,3 +49,36 @@ def update(to: str | None = None) -> str:
     if done.returncode:
         raise UpdateFailed(f"uv could not install {tag}.", hint=done.stderr.strip()[-300:] or None)
     return f"autocalc {old} -> {tag.removeprefix('v')}"
+
+
+def _key(tag: str) -> tuple[int, ...]:
+    return tuple(map(int, re.findall(r"\d+", tag)[:3]))
+
+
+def notice() -> str | None:
+    """A one-line update notice, at most one tag lookup a day; never raises, never updates (ADR-0013)."""
+    if os.environ.get("AUTOCALC_NO_UPDATE_CHECK"):
+        return None
+    stamp = config_dir() / "update-check.json"
+    try:
+        seen = json.loads(stamp.read_text())
+        if time.time() - seen["at"] < 86400:
+            return None
+    except (OSError, ValueError, KeyError):
+        pass
+    try:
+        tag = latest_tag(_repo())
+        stamp.parent.mkdir(parents=True, exist_ok=True)
+        stamp.write_text(json.dumps({"at": time.time(), "tag": tag}))
+        have = version("autocalc")
+    except Exception:  # offline, no tag or an unwritable config dir must not break a tool call
+        return None
+    return f"autocalc {tag.removeprefix('v')} is available (you have {have}); run `autocalc update`." \
+        if _key(tag) > _key(have) else None
+
+
+def with_notice(result):
+    """Add the notice to a dict result; other result shapes are left alone."""
+    if isinstance(result, dict) and (note := notice()):
+        return {**result, "update_notice": note}
+    return result

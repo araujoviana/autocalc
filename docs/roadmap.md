@@ -32,7 +32,6 @@ Each item is either assigned to the change that will close it or left unschedule
 | Map ranked catalog specs onto each recipe service's page values (until then `publish_quote` warns that the spec was not applied) | unscheduled |
 | Quotes that span several regions in one saved list | `quote-core` |
 | Availability-zone handling for services that price per AZ | `quote-core` |
-| The once-a-day update notice in tool results ([ADR-0013](adr/0013-distribution-uv-tool-from-git-tags.md)) | unscheduled |
 | Browser setup by the installer (`autocalc doctor` says when `install-browser` is needed) | unscheduled |
 | Nightly frontend drift check (alert when the calculator version or a service config changes) | unscheduled, after `distribution` |
 | Nightly live and render test jobs on CI (they need a stored session) | unscheduled, after `distribution` |
