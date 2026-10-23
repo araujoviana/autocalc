@@ -131,3 +131,19 @@ def test_recipe_service_warns_that_the_chosen_spec_is_not_applied(store, monkeyp
     monkeypatch.setattr(workflow.frontend, "live_version", lambda: None)
     out = workflow.publish_quote(d["draft_id"], "n")
     assert any("c7n.large.2" in w and "not applied" in w for w in out["warnings"])
+
+
+def test_mcp_tools_run_off_the_event_loop():
+    import asyncio
+
+    from autocalc import server
+
+    def blocking():
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return {"loop": False}  # Playwright's sync API needs exactly this
+        return {"loop": True}
+
+    wrapped = server._tool_errors(blocking)
+    assert asyncio.run(wrapped()) == {"loop": False}

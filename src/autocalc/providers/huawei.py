@@ -26,7 +26,15 @@ class HuaweiProvider:
                                   allowed=list(BILLING))
         self.availability.check_mode(req.service, req.region, req.billing)
         out = []
+        # an ECS flavor is sold once per OS (.linux, .win, .byol); the image the quote asks for picks one
+        os_suffix = (".win" if str(req.options.get("image", "")).lower().startswith("windows") else ".linux") \
+            if req.service == "ecs" else None
         for sku in self.calc.skus(req.service, req.region):
+            if sku.off_page:
+                continue
+            if os_suffix and sku.group == "ec2_vm" and sku.spec.endswith((".linux", ".win", ".byol")) \
+                    and not sku.spec.endswith(os_suffix):
+                continue
             plan = sku.prices.get(req.billing)
             if plan is None or (req.group and sku.group != req.group):
                 continue

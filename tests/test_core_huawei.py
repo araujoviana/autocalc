@@ -53,3 +53,25 @@ def test_ri_is_rejected_before_any_catalog_call():
         provider().candidates(req(billing="ri"))
     assert ei.value.details["field"] == "billing" and ei.value.details["allowed"] == ["ondemand", "monthly", "yearly"]
     assert FakeCalc.calls == 0
+
+
+def test_ecs_flavors_are_offered_for_the_os_of_the_requested_image():
+    class OsCalc(FakeCalc):
+        def skus(self, service, region):
+            d = "vCPUs: 4 | Memory: 16384 MB"
+            return [Sku(service, "ec2_vm", "t", "r", f"c7n.xlarge.4.{os}", d, {"monthly": {"amount": 1}})
+                    for os in ("byol", "linux", "win")]
+
+    p = HuaweiProvider(OsCalc(), FakeAvail())
+    assert [x.spec for x in p.candidates(req())] == ["c7n.xlarge.4.linux"]
+    assert [x.spec for x in p.candidates(req(options={"image": "Windows Server 2022"}))] == ["c7n.xlarge.4.win"]
+
+
+def test_flavors_the_page_does_not_list_are_not_offered():
+    class Hidden(FakeCalc):
+        def skus(self, service, region):
+            d = "vCPUs: 4 | Memory: 16384 MB"
+            return [Sku(service, "ec2_vm", "t", "r", "t7.xlarge.2.linux", d, {"monthly": {"amount": 1}}, off_page=True),
+                    Sku(service, "ec2_vm", "t", "r", "t6.xlarge.2.linux", d, {"monthly": {"amount": 2}})]
+
+    assert [x.spec for x in HuaweiProvider(Hidden(), FakeAvail()).candidates(req())] == ["t6.xlarge.2.linux"]
