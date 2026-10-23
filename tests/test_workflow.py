@@ -115,3 +115,19 @@ def test_cli_runs_a_tool_with_json_arguments(store, tmp_path, capsys):
     f.write_text(json.dumps([req()]))
     assert cli.main(["draft-quote", "--customer", "acme", "--requirements", f"@{f}"]) == 0
     assert json.loads(capsys.readouterr().out)["pending"] == ["r1"]
+
+
+def test_recipe_service_warns_that_the_chosen_spec_is_not_applied(store, monkeypatch):
+    d = workflow.draft_quote("acme", [req(service="er", needs={"vcpus": 1000})])
+    from autocalc.core import decide
+    decide(DraftStore(), d["draft_id"], "r1", "c7n.large.2", "test")
+
+    class Recipe(FakeBuilder):
+        spec_arg = None
+
+    monkeypatch.setattr(workflow, "get_builder", lambda svc, calc=None: Recipe(svc, {}))
+    monkeypatch.setattr(workflow, "encode_card", lambda svc, rv: {})
+    monkeypatch.setattr(workflow, "publish_checked", lambda *a, **k: {"id": "L1", "url": "u", "checks": []})
+    monkeypatch.setattr(workflow.frontend, "live_version", lambda: None)
+    out = workflow.publish_quote(d["draft_id"], "n")
+    assert any("c7n.large.2" in w and "not applied" in w for w in out["warnings"])
