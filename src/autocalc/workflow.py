@@ -14,6 +14,7 @@ from autocalc.gate import publish_checked
 from autocalc.page.replay import encode_card
 from autocalc.providers.huawei import HuaweiProvider
 from autocalc.services import VERIFIED, get_builder
+from autocalc.services.forms import RECIPES
 
 SHOWN = 5
 
@@ -84,5 +85,7 @@ def publish_quote(draft_id: str, name: str, settlement: Literal["total", "monthl
                               zip(draft.requirements, built, strict=True)))
     out = publish_checked(name, cards, settlement=settlement, currency=currency.upper(), calc=tools.calc)
     notes = frontend.warnings([r.service.lower() for r in draft.requirements], frontend.live_version())
+    notes += [f"{r.service}: the chosen spec {spec[r.id]!r} is not applied; the card uses the options and the page's defaults."
+              for r in draft.requirements if r.service.lower() in RECIPES and not get_builder(r.service, tools.calc).spec_arg]
     return {"draft_id": draft_id, "id": out["id"], "url": out["url"], "checks": out["checks"],
             **({"warnings": notes} if notes else {})}
