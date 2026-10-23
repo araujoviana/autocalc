@@ -7,6 +7,7 @@ Write tools (publish/update/delete a saved list) use the one-time browser sessio
 
 from __future__ import annotations
 
+import asyncio
 import functools
 
 from mcp.server.fastmcp import FastMCP
@@ -22,9 +23,9 @@ mcp = FastMCP("hwc-calculator")
 def _tool_errors(fn):
     """Wrap a tool so CalculatorError becomes a structured {"error","hint"} payload."""
     @functools.wraps(fn)
-    def wrapper(*a, **k):
-        try:
-            return with_notice(fn(*a, **k))
+    async def wrapper(*a, **k):
+        try:  # a worker thread: the tools block, and Playwright's sync API refuses to run inside the event loop
+            return await asyncio.to_thread(lambda: with_notice(fn(*a, **k)))
         except CalculatorError as exc:
             return exc.as_dict()
     return wrapper

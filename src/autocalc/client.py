@@ -53,6 +53,7 @@ class Sku:
     spec: str
     description: str
     prices: dict[str, dict[str, Any]] = field(default_factory=dict)
+    off_page: bool = False  # priced in the catalog, but the calculator page does not list it (ECS flavors without a family)
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -173,6 +174,7 @@ class Calculator:
                     spec=it.get("resourceSpecCode", ""),
                     description=resolve(it.get("productSpecSysDesc", "")),
                     prices=prices,
+                    off_page=group == "ec2_vm" and service == "ecs" and not it.get("vmType"),
                 ))
         return out
 
