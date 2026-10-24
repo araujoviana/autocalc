@@ -52,7 +52,7 @@ def supported_services() -> list[dict[str, Any]]:
     for svc, factory in sorted(REGISTRY.items()):
         b = factory(None)
         out.append({"service": svc, "modes": list(getattr(b, "modes", ("monthly", "yearly", "ondemand"))),
-                    "description": getattr(b, "description", "")})
+                    "description": getattr(b, "description", ""), "options": b.options()})
     return out
 
 

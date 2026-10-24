@@ -25,7 +25,7 @@ ENCODE_WORKERS = max(1, int(os.environ.get("AUTOCALC_ENCODE_WORKERS", "6")))  # 
 @tools.tool
 def draft_quote(customer: str, requirements: list[dict[str, Any]]) -> dict[str, Any]:
     """Start a quote. Each requirement: {"id","service","region","billing":"ondemand|monthly|yearly",
-    "quantity"?,"needs"?:{"vcpus":4,"memory_gb":16},"spec"?, "options"?:{service builder options such as image, system_disk, size_gb}}.
+    "quantity"?,"needs"?:{"vcpus":4,"memory_gb":16},"spec"?, "options"?:{the service's options, listed by supported_services}}.
 
     Exact matches are confirmed automatically; for the others show the candidates to the user and
     call revise_quote. Nothing is saved on the website. Sizes in GB, bandwidth in Mbit/s.
@@ -35,6 +35,10 @@ def draft_quote(customer: str, requirements: list[dict[str, Any]]) -> dict[str, 
     for r in requirements:
         r = {**r, "region": tools._region(r["region"])} if r.get("region") else r
         reqs.append(Requirement.from_dict(r))
+    for r in reqs:
+        if r.options and (unknown := sorted(set(r.options) - set(allowed := get_builder(r.service, tools.calc).options()))):
+            raise ValidationError(f"{r.service} has no option {unknown[0]!r}.", field=unknown[0], allowed=allowed,
+                                  hint="supported_services lists each service's options.")
     provider = HuaweiProvider(calc)
     draft = _draft(provider, customer, reqs, DraftStore())
     return _view(draft, provider)

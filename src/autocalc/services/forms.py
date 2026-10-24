@@ -105,6 +105,9 @@ class FormBuilder(Builder):
         self.service, self.recipe, self.description = service, recipe, recipe.description
         self.modes = recipe.modes
 
+    def options(self) -> list[str]:
+        return sorted(self.recipe.controls)
+
     def build(self, region: str, billing: Billing = "monthly", periods: int = 1, quantity: int = 1,
               hours: float = 730, **options: Any) -> dict[str, Any]:
         if unknown := sorted(set(options) - set(self.recipe.controls)):

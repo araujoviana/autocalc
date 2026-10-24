@@ -70,6 +70,13 @@ class Builder:
     def __init__(self, calc: Calculator | None = None):
         self.calc = calc or Calculator()
 
+    _NOT_OPTIONS = {"self", "region", "billing", "quantity", "periods", "hours"}
+
+    def options(self) -> list[str]:
+        """The option names a requirement may carry: ``build()``'s keywords minus the ones a requirement has itself."""
+        import inspect
+        return [p for p in inspect.signature(self.build).parameters if p not in self._NOT_OPTIONS | {self.spec_arg}]
+
     def build(self, *args: Any, **opts: Any) -> dict[str, Any]:
         """Return one card {"buyUrl","rewriteValue","selectedProduct"}. Overridden per service."""
         raise NotImplementedError
