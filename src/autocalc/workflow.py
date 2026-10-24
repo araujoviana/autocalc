@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Literal
 
@@ -17,6 +18,7 @@ from autocalc.services import VERIFIED, get_builder
 from autocalc.services.forms import RECIPES
 
 SHOWN = 5
+ENCODE_WORKERS = max(1, int(os.environ.get("AUTOCALC_ENCODE_WORKERS", "6")))  # browser contexts at once (ADR-0010)
 
 
 @tools.tool
@@ -80,7 +82,7 @@ def publish_quote(draft_id: str, name: str, settlement: Literal["total", "monthl
         chosen = {builder.spec_arg: builder.spec_option(spec[r.id])} if builder.spec_arg else {}
         built.append(builder.build(region=r.region, billing=r.billing, quantity=r.quantity, **chosen, **r.options))
     # The builders say what to fill in; the page builds the card that is saved (ADR-0001).
-    with ThreadPoolExecutor(max_workers=3) as pool:  # each encode has its own browser context (ADR-0010)
+    with ThreadPoolExecutor(max_workers=ENCODE_WORKERS) as pool:  # each encode has its own browser context (ADR-0010)
         cards = list(pool.map(lambda pair: encode_card(pair[0].service.lower(), pair[1]["rewriteValue"]),
                               zip(draft.requirements, built, strict=True)))
     out = publish_checked(name, cards, settlement=settlement, currency=currency.upper(), calc=tools.calc)

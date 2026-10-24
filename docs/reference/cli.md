@@ -46,6 +46,7 @@ A requirement is `{"id","service","region","billing","quantity"?,"needs"?,"spec"
 | `AUTOCALC_PROFILE` | Named login profile (default `default`) |
 | `AUTOCALC_CACHE` | Catalog cache directory (default `~/.cache/autocalc`) |
 | `AUTOCALC_BROWSER` | Path of the Chromium-family browser to drive; overrides auto-detection (Chrome, then Edge, then Chromium, then Playwright's build) |
+| `AUTOCALC_ENCODE_WORKERS` | Browser contexts `publish_quote` encodes cards with at once (default `6`; each is an isolated anonymous context) |
 
 ## MCP server
 

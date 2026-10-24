@@ -77,7 +77,7 @@ def _encode(monkeypatch, *cards):
     """encode_card with a page that returns ``cards`` in turn; returns the card and how many were captured."""
     served = iter(cards)
     @contextmanager
-    def ctx(_service):
+    def ctx(_service, **_kw):
         yield SimpleNamespace(new_page=lambda: None)
 
     class FakeDriver:
@@ -135,3 +135,43 @@ def test_encode_card_fails_when_the_page_card_lacks_a_requested_value(monkeypatc
     with pytest.raises(PageEncodeFailed) as ei:
         _encode(monkeypatch, {"rewriteValue": {"template_RENDER": got}})
     assert ei.value.details["step"] == "form" and ei.value.details["field"] == "calculator_ecs_radio_arch"
+
+
+def test_lean_context_skips_images_fonts_and_media_but_not_the_rest(monkeypatch):
+    from autocalc.page import browser
+
+    routed = []
+
+    class Ctx:
+        def route(self, pattern, handler):
+            routed.append(handler)
+
+        def close(self):
+            pass
+
+    class Browser:
+        new_context = lambda self, **k: Ctx()  # noqa: E731
+        close = lambda self: None  # noqa: E731
+
+    class PW:
+        chromium = SimpleNamespace(launch=lambda **k: Browser())
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    monkeypatch.setattr(browser, "find_browser", lambda: SimpleNamespace(launch_kwargs=lambda: {}))
+    monkeypatch.delenv("AUTOCALC_PAGE_HEADED", raising=False)
+    with browser.page_context("x", playwright=lambda: PW()):
+        pass
+    assert routed == []  # not lean: no routing
+    with browser.page_context("x", lean=True, playwright=lambda: PW()):
+        pass
+    verdicts = []
+    req = lambda kind: SimpleNamespace(request=SimpleNamespace(resource_type=kind), abort=lambda: verdicts.append((kind, "abort")),  # noqa: E731
+                                       **{"continue_": lambda: verdicts.append((kind, "continue"))})
+    for kind in ("image", "font", "media", "script", "xhr"):
+        routed[0](req(kind))
+    assert verdicts == [("image", "abort"), ("font", "abort"), ("media", "abort"), ("script", "continue"), ("xhr", "continue")]
