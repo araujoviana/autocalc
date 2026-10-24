@@ -34,7 +34,7 @@ class Step:
 
 class Driver:
     def __init__(self, page: Any, service: str, *, timeout: float = 20.0, quiet: float = 1.5,
-                 poll_ms: int = 250, clock: Callable[[], float] = time.monotonic):
+                 poll_ms: int = 100, clock: Callable[[], float] = time.monotonic):
         self.page, self.service = page, service
         self.timeout, self.quiet, self.poll_ms, self.clock = timeout, quiet, poll_ms, clock
         self.frontend_version: str | None = None

@@ -107,7 +107,7 @@ def encode_card(service: str, rewrite_value: dict[str, Any], *, timeout: float |
     from autocalc.page.driver import Driver
 
     for _ in range(TRIES):
-        with page_context(service) as ctx:
+        with page_context(service, lean=True) as ctx:
             driver = Driver(ctx.new_page(), PAGE_SERVICE.get(service, service), **({} if timeout is None else {"timeout": timeout}))
             driver.open()
             driver.run(card_steps(rewrite_value))
