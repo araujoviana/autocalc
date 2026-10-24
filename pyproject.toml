@@ -1,6 +1,6 @@
 [project]
 name = "autocalc"
-version = "0.1.2"
+version = "0.1.3"
 description = "Headless Huawei Cloud pricing calculator (CLI + MCP server) using the calculator's public backend"
 requires-python = ">=3.11"
 dependencies = [
