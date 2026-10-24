@@ -88,3 +88,10 @@ def test_inquiry_gives_up_on_a_persistent_429(monkeypatch):
 
     with pytest.raises(UpstreamError):
         _answers(monkeypatch, [429, 429, 429]).inquiry({})
+
+
+def test_primary_regions_come_first_in_priority_order():
+    from autocalc.regions import primary_first
+
+    assert primary_first(["ap-southeast-1", "ap-southeast-3", "cn-north-4", "la-south-2", "sa-brazil-1"]) == [
+        "sa-brazil-1", "la-south-2", "ap-southeast-3", "ap-southeast-1", "cn-north-4"]
