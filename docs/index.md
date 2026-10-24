@@ -4,6 +4,8 @@ autocalc lets an AI agent, or a person at a terminal, turn "price this for custo
 **verified share link** on a cloud provider's own pricing calculator. Huawei Cloud is supported
 today, and AWS is planned as the second provider.
 
+> **Experimental.** autocalc drives the public calculator page and breaks when Huawei changes it. Check every link before you send it.
+
 The link is the deliverable. It opens without login, shows list prices in USD, and has to
 re-price to the same amount when someone clicks **Edit**. A link that doesn't is a fatal bug,
 not a cosmetic one ([ADR-0002](adr/0002-share-link-is-the-deliverable.md)).
