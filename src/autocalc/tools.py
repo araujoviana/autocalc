@@ -46,14 +46,12 @@ def list_services(query: str = "") -> list[dict[str, Any]]:
 
 
 @tool
-def list_regions(service: str = "", region: str = "") -> Any:
+def list_regions(service: str = "") -> Any:
     """Region ids -> display names. With `service`, only regions where it is sold.
 
-    `region` accepts a friendly name (e.g. 'Santiago') and resolves it.
+    Other tools take friendly names ('Santiago') directly, so there is nothing to resolve here.
     """
     regions = calc.regions()
-    if region:
-        return {"resolved": _region(region), "display": regions.get(_region(region), region)}
     if service:
         allowed = next((s["regions"] for s in calc.services() if s["service"] == service), [])
         regions = {r: regions.get(r, r) for r in allowed}
@@ -274,15 +272,33 @@ def auth_status() -> Any:
         return exc.as_dict()
 
 
-@tool
-def auth_login() -> Any:
-    """Open a browser window so the user can sign in once. Blocks until done or a 5-minute timeout.
+_login: dict[str, Any] = {}  # the one sign-in running in this process: thread, result
 
-    Use when a write tool returns AUTH_EXPIRED. Read-only tools (catalog, quote, read_price_list) never need this.
-    """
+
+def _run_login() -> None:
     from autocalc import auth
     try:
         res = auth.login(timeout=300)
-        return {"logged_in": True, "account_mask": res.account_mask, "browser": res.browser}
+        _login["result"] = {"logged_in": True, "account_mask": res.account_mask, "browser": res.browser}
     except CalculatorError as exc:
-        return exc.as_dict()
+        _login["result"] = exc.as_dict()
+
+
+@tool
+def auth_login(wait_seconds: float = 45) -> Any:
+    """Open a browser window so the user can sign in once.
+
+    Waits up to `wait_seconds`. If the user is still signing in, returns `waiting: true` and the
+    sign-in carries on for up to 5 minutes: tell the user to finish, then call auth_status.
+    Use when a write tool returns AUTH_EXPIRED. Read-only tools (catalog, quote, read_price_list) never need this.
+    """
+    import threading
+    thread = _login.get("thread")
+    if thread is None or not thread.is_alive():
+        _login.clear()
+        _login["thread"] = thread = threading.Thread(target=_run_login, name="autocalc-login")
+        thread.start()
+    thread.join(wait_seconds)
+    if thread.is_alive():
+        return {"logged_in": False, "waiting": True, "hint": "Finish signing in in the browser window, then call auth_status."}
+    return _login["result"]

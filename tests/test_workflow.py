@@ -165,3 +165,43 @@ def test_publish_checks_the_session_before_encoding_anything(store, monkeypatch)
     monkeypatch.setattr(FakeSession, "signed_in", False)
     with pytest.raises(AuthExpired):
         workflow.publish_quote(d["draft_id"], "n")
+
+
+def test_draft_rejects_an_option_the_service_does_not_take(store):
+    with pytest.raises(ValidationError) as ei:
+        workflow.draft_quote("acme", [{"id": "r1", "service": "ecs", "region": "sa-brazil-1", "billing": "monthly",
+                                       "needs": {"vcpus": 2}, "options": {"sytem_disk": ("GPSSD", 40)}}])
+    assert ei.value.details["field"] == "sytem_disk" and "system_disk" in ei.value.details["allowed"]
+
+
+def test_supported_services_lists_options():
+    from autocalc.services import supported_services
+    rows = {r["service"]: r for r in supported_services()}
+    assert "system_disk" in rows["ecs"]["options"] and "hours" not in rows["ecs"]["options"]
+    assert rows["ecs"]["options"] and all(isinstance(r["options"], list) for r in rows.values())
+
+
+def test_auth_login_returns_waiting_then_the_result_through_the_same_sign_in(monkeypatch):
+    import threading
+    from types import SimpleNamespace
+
+    from autocalc import auth
+    done, opened = threading.Event(), []
+
+    def slow_login(timeout):
+        opened.append(timeout)
+        done.wait(5)
+        return SimpleNamespace(account_mask="a***", browser="chromium")
+
+    monkeypatch.setattr(auth, "login", slow_login)
+    tools._login.clear()
+    assert tools.auth_login(wait_seconds=0.05)["waiting"] is True
+    assert tools.auth_login(wait_seconds=0.05)["waiting"] is True  # joins, no second browser
+    done.set()
+    assert tools.auth_login(wait_seconds=2) == {"logged_in": True, "account_mask": "a***", "browser": "chromium"}
+    assert len(opened) == 1
+
+
+def test_list_regions_only_lists():
+    import inspect
+    assert list(inspect.signature(tools.list_regions).parameters) == ["service"]
