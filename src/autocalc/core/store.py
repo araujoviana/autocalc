@@ -44,6 +44,22 @@ class DraftStore:
                                   hint="List drafts to see the ids that exist.")
         return Draft.from_dict(json.loads(path.read_text(encoding="utf-8")))
 
+    @property
+    def _index(self) -> Path:
+        return self.dir / "published.json"
+
+    def link(self, list_id: str, draft_id: str) -> None:
+        """Remember which draft produced a saved list."""
+        index = json.loads(self._index.read_text(encoding="utf-8")) if self._index.exists() else {}
+        self.dir.mkdir(parents=True, exist_ok=True)
+        tmp = self._index.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps({**index, list_id: draft_id}, indent=2), encoding="utf-8")
+        os.replace(tmp, self._index)
+
+    def draft_for(self, list_id: str) -> str | None:
+        index = json.loads(self._index.read_text(encoding="utf-8")) if self._index.exists() else {}
+        return index.get(list_id)
+
     def list(self) -> list[dict[str, Any]]:
         files = sorted(self.dir.glob("d-*.json"), key=lambda p: p.stat().st_mtime, reverse=True) if self.dir.exists() else []
         out = []
