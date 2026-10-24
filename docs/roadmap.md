@@ -35,7 +35,6 @@ Each item is either assigned to the change that will close it or left unschedule
 | Browser setup by the installer (`autocalc doctor` says when `install-browser` is needed) | unscheduled |
 | Nightly frontend drift check (alert when the calculator version or a service config changes) | unscheduled, after `distribution` |
 | Nightly live and render test jobs on CI (they need a stored session) | unscheduled, after `distribution` |
-| Bounded-parallel rating in the spec, plus 429 backoff in `Calculator.inquiry` (the spec still says sequential) | `rating-bounded-concurrency` |
 | Region sweep (`tests.support.region_sweep`, 2026-10-23): in `eu-west-101` 34 of the 100 verified combinations fail because the builders' default SKUs are not sold there (`CBC.6006` / `SPEC_NOT_FOUND`); `hecs` is not offered there; `obs` needs a checkbox-group control the encoder cannot fill | unscheduled |
 | The calculator's EU and China sites | unscheduled, after v1 |
 

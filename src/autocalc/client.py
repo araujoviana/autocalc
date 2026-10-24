@@ -229,11 +229,11 @@ class Calculator:
                 data = r.json()
             except ValueError as err:
                 last = UpstreamError(f"inquiry returned HTTP {r.status_code} (non-JSON)")
-                if attempt < retries and r.status_code >= 500:
+                if attempt < retries and (r.status_code == 429 or r.status_code >= 500):
                     time.sleep(0.5 * (attempt + 1))
                     continue
                 raise last from err
-            if r.status_code >= 500 and attempt < retries:
+            if (r.status_code == 429 or r.status_code >= 500) and attempt < retries:
                 last = UpstreamError(f"inquiry HTTP {r.status_code}")
                 time.sleep(0.5 * (attempt + 1))
                 continue

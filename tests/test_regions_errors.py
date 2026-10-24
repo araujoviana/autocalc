@@ -59,3 +59,32 @@ def test_error_as_dict_has_hint():
     e = SpecNotFound("nope", hint="pick another")
     d = e.as_dict()
     assert d["error"] == "SPEC_NOT_FOUND" and d["hint"] == "pick another"
+
+
+def _answers(monkeypatch, statuses):
+    """A Calculator whose rating endpoint answers ``statuses`` in turn (200 carries a price)."""
+    import httpx
+
+    from autocalc.client import Calculator
+
+    seen = iter(statuses)
+
+    def handler(request):
+        code = next(seen)
+        return httpx.Response(code, json={"ok": 1} if code == 200 else {"message": "slow down"})
+
+    calc = Calculator()
+    calc.http = httpx.Client(transport=httpx.MockTransport(handler))
+    monkeypatch.setattr("autocalc.client.time.sleep", lambda s: None)
+    return calc
+
+
+def test_inquiry_retries_a_429(monkeypatch):
+    assert _answers(monkeypatch, [429, 200]).inquiry({}) == {"ok": 1}
+
+
+def test_inquiry_gives_up_on_a_persistent_429(monkeypatch):
+    from autocalc.errors import UpstreamError
+
+    with pytest.raises(UpstreamError):
+        _answers(monkeypatch, [429, 429, 429]).inquiry({})

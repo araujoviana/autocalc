@@ -32,6 +32,3 @@ The manual region sweep (`tests/support/region_sweep.py`) follows this: it fills
 settles for about 1.5 s after every step, so the sweep is waiting rather than computing, and
 more workers help until the calculator starts timing out page loads. Those timeouts are retried
 (three tries, a 30 s limit per load); a form mismatch is not.
-
-The current spec still requires sequential use. Bounded parallel rating arrives with the change
-that implements it.
