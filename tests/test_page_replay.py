@@ -118,6 +118,11 @@ def test_encode_card_names_the_charge_mode_when_that_differs(monkeypatch):
     assert ei.value.details["step"] == "chargeMode"
 
 
+def test_same_value_ignores_the_order_of_a_checkbox_group():
+    assert replay.same_value(["dataInfo_9_", "dataInfo_11_"], ["dataInfo_11_", "dataInfo_9_"])
+    assert not replay.same_value(["dataInfo_9_"], ["dataInfo_9_", "dataInfo_11_"])
+
+
 def test_priced_elsewhere_ignores_a_region_that_was_not_asked():
     regionless = {"global_REGIONINFO": {"chargeMode": "PERIOD"}}
     assert replay.priced_elsewhere(regionless, _card(region="anywhere")) is None
