@@ -7,7 +7,7 @@ import pytest
 
 from autocalc import cli, server, tools, workflow
 from autocalc.core import Candidate, DraftStore
-from autocalc.errors import GateFailed, PageEncodeFailed, ValidationError
+from autocalc.errors import AuthExpired, GateFailed, PageEncodeFailed, ValidationError
 
 
 class FakeProvider:
@@ -18,11 +18,21 @@ class FakeProvider:
                 Candidate("c7n.xlarge.2", req.region, req.billing, Decimal("20"), {"vcpus": 4, "memory_gb": 8})]
 
 
+class FakeSession:
+    signed_in = True
+
+    def lists(self):
+        if not FakeSession.signed_in:
+            raise AuthExpired("Not logged in.")
+        return []
+
+
 @pytest.fixture
 def store(tmp_path, monkeypatch):
     monkeypatch.setenv("AUTOCALC_DATA", str(tmp_path))
     monkeypatch.setattr(workflow, "HuaweiProvider", lambda calc: FakeProvider())
     monkeypatch.setattr(tools, "_region", lambda v: v)
+    monkeypatch.setattr(workflow, "Session", FakeSession)
     return DraftStore()
 
 
@@ -147,3 +157,11 @@ def test_mcp_tools_run_off_the_event_loop():
 
     wrapped = server._tool_errors(blocking)
     assert asyncio.run(wrapped()) == {"loop": False}
+
+
+def test_publish_checks_the_session_before_encoding_anything(store, monkeypatch):
+    d = workflow.draft_quote("acme", [req(needs={"vcpus": 4})])
+    monkeypatch.setattr(workflow, "encode_card", lambda *a, **k: pytest.fail("encoded before the login check"))
+    monkeypatch.setattr(FakeSession, "signed_in", False)
+    with pytest.raises(AuthExpired):
+        workflow.publish_quote(d["draft_id"], "n")
