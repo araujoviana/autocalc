@@ -39,3 +39,10 @@ TypeScript literals save only about 9% and give up JSON's unambiguous parsing.
 
 * Good, because results are about 4× smaller for the biggest tools.
 * Bad, because curated columns hide fields. Detail tools return the full object on request.
+
+## Update 2026-10-24
+
+Tabular text and per-tool token budgets were not built. `search_skus`, the largest result, was
+instead flattened to one row per SKU with a number per billing mode, which halved it (about
+4,200 to 2,100 tokens for 30 ECS rows) and kept JSON. Collections elsewhere stay JSON. The
+tabular format and budgets remain an option if another tool grows.
