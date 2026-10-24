@@ -73,7 +73,9 @@ def test_unknown_control_kind_fails_with_its_name():
     assert "base-slider" in ei.value.message
 
 
-def _encode(monkeypatch, card):
+def _encode(monkeypatch, *cards):
+    """encode_card with a page that returns ``cards`` in turn; returns the card and how many were captured."""
+    served = iter(cards)
     @contextmanager
     def ctx(_service):
         yield SimpleNamespace(new_page=lambda: None)
@@ -85,17 +87,46 @@ def _encode(monkeypatch, card):
             pass
 
         open = run = lambda self, *a: None
-        capture = lambda self: card  # noqa: E731
+        capture = lambda self: next(served)  # noqa: E731
 
     monkeypatch.setattr("autocalc.page.browser.page_context", ctx)
     monkeypatch.setattr("autocalc.page.driver.Driver", FakeDriver)
     return replay.encode_card("sfsturbo", STATE)
 
 
+PRICED = {"region": "sa-brazil-1", "chargeMode": "PERIOD"}  # what STATE asks for
+
+
+def _card(**product):
+    return {"rewriteValue": {"template_RENDER": STATE["template_RENDER"]}, "selectedProduct": {**PRICED, **product}}
+
+
+def test_encode_card_tries_again_when_the_page_priced_another_region(monkeypatch):
+    bad, good = _card(region="ap-southeast-1"), _card()
+    assert _encode(monkeypatch, bad, good) is good
+
+
+def test_encode_card_fails_naming_the_region_after_three_wrong_tries(monkeypatch):
+    with pytest.raises(PageEncodeFailed) as ei:
+        _encode(monkeypatch, *[_card(region="ap-southeast-1")] * 3)
+    assert ei.value.details["step"] == "region" and "ap-southeast-1" in ei.value.message
+
+
+def test_encode_card_names_the_charge_mode_when_that_differs(monkeypatch):
+    with pytest.raises(PageEncodeFailed) as ei:
+        _encode(monkeypatch, *[_card(chargeMode="ONDEMAND")] * 3)
+    assert ei.value.details["step"] == "chargeMode"
+
+
+def test_priced_elsewhere_ignores_a_region_that_was_not_asked():
+    regionless = {"global_REGIONINFO": {"chargeMode": "PERIOD"}}
+    assert replay.priced_elsewhere(regionless, _card(region="anywhere")) is None
+
+
 def test_encode_card_accepts_a_text_input_value_that_means_the_same(monkeypatch):
     got = {"calculator_ecs_radio": {"arch": "dataInfo_1_"}, "calculator_sfsPeriod_36input": "3.6",
            "calculator_evs_stepper": STATE["template_RENDER"]["calculator_evs_stepper"]}
-    card = {"rewriteValue": {"template_RENDER": got}}
+    card = {"rewriteValue": {"template_RENDER": got}, "selectedProduct": PRICED}
     assert _encode(monkeypatch, card) is card
 
 
