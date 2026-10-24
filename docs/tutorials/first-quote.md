@@ -74,5 +74,10 @@ autocalc lists                 # your saved lists
 autocalc validate <shareListId> # re-read the list and look for glitches
 ```
 
+## 7. Put the links in a spreadsheet
+
+Ask the agent: *"Export these lists to quotes.xlsx: prod is <link>, dev is <link>."* You get one
+sheet with the environment, the list name, the total in USD and the link, plus a total row.
+
 Next: read [List price vs Edit price](../explanation/huawei/edit-vs-list-price.md) to see why a
 link has to be checked, not just created.

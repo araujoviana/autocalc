@@ -16,6 +16,7 @@ that touch the account use the profile from `--profile` or `AUTOCALC_PROFILE` (d
 | `autocalc search SERVICE REGION [terms…]` | Search SKUs; `--billing ondemand\|monthly\|yearly`, `--vcpus N`, `--mem GB`, `--limit N`, `--refresh` (bypass the 24 h cache) | no |
 | `autocalc quote REGION SERVICE:SPEC[*QTY][@SIZE] …` | Price items with the live rating engine; `--billing`, `--hours` (on-demand, default 730), `--periods` (monthly/yearly), `--currency` | no |
 | `autocalc validate LIST_ID` | Re-read a saved list anonymously and report glitches | no |
+| `autocalc export-quotes-xlsx --rows '[{"env":"prod","list":"<url or id>"}]' [--path quotes.xlsx]` | Write a spreadsheet: Environment, Calculator, Total (USD), Link, then a Total row. Reads the lists anonymously; also an MCP tool | no |
 | `autocalc login [--profile NAME] [--timeout S]` | Open a browser window and wait for you to sign in; prints the account and the browser used | — |
 | `autocalc logout [--profile NAME]` | Sign out by deleting the browser profile, and delete any session copy left by an earlier version | — |
 | `autocalc auth status [--profile NAME]` | Open the profile headless and show whether it is signed in (cookie names only, never values) | — |
