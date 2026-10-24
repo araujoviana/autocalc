@@ -91,7 +91,7 @@ def for_page(service: str, rewrite_value: dict[str, Any]) -> dict[str, Any]:
     return {**rewrite_value, "template_RENDER": render}
 
 
-TRIES = 3  # the page sometimes prices a card in another region; most attempts are right
+TRIES = 3  # safety net: the driver now waits for the region catalog, which was the cause of cards priced in another region
 
 
 def priced_elsewhere(rewrite_value: dict[str, Any], card: dict[str, Any]) -> str | None:
