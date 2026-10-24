@@ -93,6 +93,7 @@ def publish_quote(draft_id: str, name: str, settlement: Literal["total", "monthl
         cards = list(pool.map(lambda pair: encode_card(pair[0].service.lower(), pair[1]["rewriteValue"]),
                               zip(draft.requirements, built, strict=True)))
     out = publish_checked(name, cards, settlement=settlement, currency=currency.upper(), session=session, calc=tools.calc)
+    DraftStore().link(out["id"], draft_id)
     notes = frontend.warnings([r.service.lower() for r in draft.requirements], frontend.live_version())
     notes += [f"{r.service}: the chosen spec {spec[r.id]!r} is not applied; the card uses the options and the page's defaults."
               for r in draft.requirements if r.service.lower() in RECIPES and not get_builder(r.service, tools.calc).spec_arg]

@@ -219,31 +219,69 @@ def read_price_list(url_or_id: str) -> Any:
 
 @tool
 def export_quotes_xlsx(rows: list[dict[str, str]], path: str = "quotes.xlsx") -> Any:
-    """Write a spreadsheet of price lists: Environment, Calculator (list name), Total (USD), Link, then a Total row.
+    """Write a workbook of price lists, one row per environment, on four sheets:
+    Quotes (environment, list name, total USD, link), Decisions (what was chosen and why),
+    Resources (every priced resource) and Totals (instances, vCPUs, RAM, storage).
 
-    rows: [{"env": "prod", "list": share url or id}], kept in this order. Reads the lists anonymously.
+    rows: [{"env": "prod", "list": share url or id, "draft_id"?: id}], kept in this order. A list saved by
+    publish_quote finds its decisions by itself; "draft_id" is for any other. Reads the lists anonymously.
     `path` must end in .xlsx and is overwritten. Nothing is written if any list cannot be read.
     """
     from pathlib import Path
 
-    from autocalc import xlsx
-    from autocalc.share import SHARE_URL
+    from autocalc import summary, xlsx
+    from autocalc.core import DraftStore
+    from autocalc.share import SHARE_URL, share_detail
     if not path.lower().endswith(".xlsx"):
         raise ValidationError("path must end in .xlsx.", field="path")
     if not rows:
         raise ValidationError("rows is empty.", field="rows")
-    table = []
+    store, quotes, decisions, resources, totals = DraftStore(), [], [], [], []
     for r in rows:
+        env = r.get("env")
         try:
-            d = read_price_list(r["list"])
+            lid = _list_id(r["list"])
+            detail = share_detail(calc, lid)
+            draft_id = r.get("draft_id") or store.draft_for(lid)
+            draft = store.load(draft_id) if draft_id else None
         except (CalculatorError, KeyError) as exc:
-            raise ValidationError(f"Cannot read the list for {r.get('env')!r}: {getattr(exc, 'message', exc)}", field="list") from exc
-        table.append([r["env"], d["name"] or "", float(d["total"] or 0), xlsx.Link(SHARE_URL.format(id=d["id"], currency="USD"))])
-    last = len(table) + 1
-    total = round(sum(t[2] for t in table), 2)
-    xlsx.write_table(Path(path), ["Environment", "Calculator", "Total (USD)", "Link"], table, [16, 40, 14, 60],
-                     ["Total", None, xlsx.Sum(2, last, total), None])
-    return {"path": str(Path(path).resolve()), "rows": len(table), "total_usd": total}
+            raise ValidationError(f"Cannot read the list or draft for {env!r}: {getattr(exc, 'message', exc)}", field="list") from exc
+        lines = summary.resources(detail)
+        quotes.append([env, detail.get("name") or "", xlsx.Money(summary.total(detail)), xlsx.Link(SHARE_URL.format(id=lid, currency="USD"))])
+        if draft:
+            by_req = {d.requirement_id: d for d in draft.decisions}
+            for q in draft.requirements:
+                d = by_req.get(q.id)
+                decisions.append([env, q.id, q.service, q.region, q.billing, q.quantity, d.spec if d else "(undecided)",
+                                  d.by if d else "", d.justification if d else ""])
+        else:
+            decisions.append([env, "(no draft is recorded for this list)", None, None, None, None, None, None, None])
+        for x in lines:
+            resources.append([env, detail.get("name") or "", x["service"], x["region"], x["billing"], x["resource"], x["spec"],
+                              x["quantity"], x["storage_gb"] or x["backup_gb"], round(x["vcpus"], 2), round(x["ram_gb"], 2),
+                              xlsx.Money(x["price"])])
+        t = summary.totals(lines)
+        totals.append([env, t["instances"], round(t["vcpus"], 2), round(t["ram_gb"], 2), t["storage_gb"], t["backup_gb"],
+                       xlsx.Money(summary.total(detail))])
+    n = len(rows) + 1
+    grand = round(sum(q[2].value for q in quotes), 2)
+    cols = list(zip(*totals, strict=True))
+    sums = [xlsx.Sum(2, n, sum(c)) for c in cols[1:6]] + [xlsx.Sum(2, n, grand, money=True)]
+    xlsx.write_workbook(Path(path), [
+        xlsx.Sheet("Quotes", ["Environment", "Calculator", "Total (USD)", "Link"], quotes, [16, 40, 14, 60],
+                   ["Total", None, xlsx.Sum(2, n, grand, money=True), None]),
+        xlsx.Sheet("Decisions", ["Environment", "Requirement", "Service", "Region", "Billing", "Quantity", "Chosen spec",
+                                 "Decided by", "Justification"], decisions, [16, 16, 12, 16, 12, 10, 28, 12, 70]),
+        xlsx.Sheet("Resources", ["Environment", "Calculator", "Service", "Region", "Billing", "Resource", "Spec", "Quantity",
+                                 "Storage (GB)", "vCPUs", "RAM (GB)", "Price (USD)"], resources,
+                   [16, 30, 12, 16, 12, 16, 30, 10, 14, 10, 10, 14]),
+        xlsx.Sheet("Totals", ["Environment", "Instances", "vCPUs", "RAM (GB)", "Storage (GB)", "Backup (GB)", "Total (USD)"],
+                   totals, [16, 12, 10, 10, 14, 14, 14], ["Total", *sums],
+                   ["Instances, vCPUs and RAM count virtual machines and database instances.",
+                    "Storage counts disks, database volumes, message-queue storage and SFS Turbo; Backup counts backup vaults.",
+                    "Not counted: bandwidth, containers and usage-billed services (OBS, functions, logs)."]),
+    ])
+    return {"path": str(Path(path).resolve()), "rows": len(rows), "total_usd": grand}
 
 
 @tool

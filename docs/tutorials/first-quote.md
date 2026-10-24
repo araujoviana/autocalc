@@ -74,10 +74,17 @@ autocalc lists                 # your saved lists
 autocalc validate <shareListId> # re-read the list and look for glitches
 ```
 
-## 7. Put the links in a spreadsheet
+## 7. Put the quotes in a workbook
 
-Ask the agent: *"Export these lists to quotes.xlsx: prod is <link>, dev is <link>."* You get one
-sheet with the environment, the list name, the total in USD and the link, plus a total row.
+Ask the agent: *"Export these lists to quotes.xlsx: prod is <link>, dev is <link>."* The workbook has
+four sheets:
+
+- **Quotes**: environment, list name, total in USD and the link, plus a total row.
+- **Decisions**: each requirement, the spec that was chosen, who chose it and why. Lists saved by
+  `publish_quote` find their decisions by themselves.
+- **Resources**: every priced resource of every list.
+- **Totals**: instances, vCPUs, RAM and storage per environment. Bandwidth, containers and usage-billed
+  services are not counted, and the sheet says so.
 
 Next: read [List price vs Edit price](../explanation/huawei/edit-vs-list-price.md) to see why a
 link has to be checked, not just created.
