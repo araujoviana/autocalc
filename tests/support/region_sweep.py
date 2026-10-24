@@ -35,13 +35,19 @@ WORKERS = max(1, int(os.environ.get("SWEEP_WORKERS", "6")))
 RATING = threading.BoundedSemaphore(4)  # ADR-0010: rating reads, at most 4 in flight
 
 
+# Failures seen only under parallel load (each passes alone): the load, the price, a disabled Add to List,
+# and the period control briefly offering only one of its options.
+RETRY_STEPS = ("open", "price", "add_to_list")
+RETRY_FIELDS = ("global_PERIODTIME_UNSET_PeriodTime",)
+
+
 def encode(service: str, rewrite_value: dict, tries: int = 3) -> dict:
     """encode_card, retrying the load/settle timeouts that parallel contexts cause (not form mismatches)."""
     for n in range(tries):
         try:
             return encode_card(service, rewrite_value, timeout=10)  # a stuck load fails in 30 s, not 60
         except PageEncodeFailed as exc:
-            if n == tries - 1 or exc.details.get("step") not in ("open", "price"):
+            if n == tries - 1 or not (exc.details.get("step") in RETRY_STEPS or exc.details.get("field") in RETRY_FIELDS):
                 raise
             time.sleep(2 * 2**n)
 
