@@ -16,6 +16,7 @@ from autocalc.page.replay import encode_card
 from autocalc.providers.huawei import HuaweiProvider
 from autocalc.services import VERIFIED, get_builder
 from autocalc.services.forms import RECIPES
+from autocalc.share import Session
 
 SHOWN = 5
 ENCODE_WORKERS = max(1, int(os.environ.get("AUTOCALC_ENCODE_WORKERS", "6")))  # browser contexts at once (ADR-0010)
@@ -75,6 +76,8 @@ def publish_quote(draft_id: str, name: str, settlement: Literal["total", "monthl
     unsupported = sorted({r.service.lower() for r in draft.requirements} - set(VERIFIED))
     if unsupported:
         raise ValidationError(f"publish_quote cannot build {unsupported} yet.", field="service", allowed=sorted(VERIFIED))
+    session = Session()
+    session.lists()  # fail now, not after minutes of encoding, when the profile is not signed in
     spec = {d.requirement_id: d.spec for d in draft.decisions}
     built = []
     for r in draft.requirements:
@@ -85,7 +88,7 @@ def publish_quote(draft_id: str, name: str, settlement: Literal["total", "monthl
     with ThreadPoolExecutor(max_workers=ENCODE_WORKERS) as pool:  # each encode has its own browser context (ADR-0010)
         cards = list(pool.map(lambda pair: encode_card(pair[0].service.lower(), pair[1]["rewriteValue"]),
                               zip(draft.requirements, built, strict=True)))
-    out = publish_checked(name, cards, settlement=settlement, currency=currency.upper(), calc=tools.calc)
+    out = publish_checked(name, cards, settlement=settlement, currency=currency.upper(), session=session, calc=tools.calc)
     notes = frontend.warnings([r.service.lower() for r in draft.requirements], frontend.live_version())
     notes += [f"{r.service}: the chosen spec {spec[r.id]!r} is not applied; the card uses the options and the page's defaults."
               for r in draft.requirements if r.service.lower() in RECIPES and not get_builder(r.service, tools.calc).spec_arg]
