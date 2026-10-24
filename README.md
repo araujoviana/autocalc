@@ -52,3 +52,7 @@ through OpenSpec (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`).
 The login session grants access to your Huawei Cloud **account**, not just the calculator.
 It lives only in autocalc's browser profile directory (owner-only): it is never copied outside
 it, and cookie values are never logged. The browser profile and the golden corpus are gitignored. Never commit client data. See [sessions](docs/explanation/huawei/sessions.md).
+
+## License
+
+[Apache License 2.0](LICENSE).
