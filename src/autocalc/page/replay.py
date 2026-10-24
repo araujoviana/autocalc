@@ -91,20 +91,34 @@ def for_page(service: str, rewrite_value: dict[str, Any]) -> dict[str, Any]:
     return {**rewrite_value, "template_RENDER": render}
 
 
+TRIES = 3  # the page sometimes prices a card in another region; most attempts are right
+
+
+def priced_elsewhere(rewrite_value: dict[str, Any], card: dict[str, Any]) -> str | None:
+    """The first of region / chargeMode where the card's priced product differs from the request (no region asked: none)."""
+    asked, product = rewrite_value["global_REGIONINFO"], card["selectedProduct"]
+    return next((f for f in ("region", "chargeMode") if asked.get(f) and product.get(f) != asked[f]), None)
+
+
 def encode_card(service: str, rewrite_value: dict[str, Any], *, timeout: float | None = None) -> dict[str, Any]:
     """The card the page builds for this form state, anonymously, in a fresh browser context."""
     rewrite_value = for_page(service, rewrite_value)
     from autocalc.page.browser import page_context
     from autocalc.page.driver import Driver
 
-    with page_context(service) as ctx:
-        driver = Driver(ctx.new_page(), PAGE_SERVICE.get(service, service), **({} if timeout is None else {"timeout": timeout}))
-        driver.open()
-        driver.run(card_steps(rewrite_value))
-        card = driver.capture()
-    asked = form_values(rewrite_value["template_RENDER"])
-    got = form_values(card["rewriteValue"]["template_RENDER"])
-    if (lost := {k: (v, got.get(k)) for k, v in asked.items() if not same_value(got.get(k), v)}):
-        raise PageEncodeFailed("The page's card does not hold the requested form state.", service=service,
-                               step="form", field=sorted(lost)[0], frontend_version=driver.frontend_version)
-    return card
+    for _ in range(TRIES):
+        with page_context(service) as ctx:
+            driver = Driver(ctx.new_page(), PAGE_SERVICE.get(service, service), **({} if timeout is None else {"timeout": timeout}))
+            driver.open()
+            driver.run(card_steps(rewrite_value))
+            card = driver.capture()
+        asked = form_values(rewrite_value["template_RENDER"])
+        got = form_values(card["rewriteValue"]["template_RENDER"])
+        if (lost := {k: (v, got.get(k)) for k, v in asked.items() if not same_value(got.get(k), v)}):
+            raise PageEncodeFailed("The page's card does not hold the requested form state.", service=service,
+                                   step="form", field=sorted(lost)[0], frontend_version=driver.frontend_version)
+        if (field := priced_elsewhere(rewrite_value, card)) is None:
+            return card
+    raise PageEncodeFailed(f"The page priced the card with {field} {card['selectedProduct'].get(field)!r}, "
+                           f"not the requested {rewrite_value['global_REGIONINFO'][field]!r}.", service=service,
+                           step=field, field=f"global_REGIONINFO_{field}", frontend_version=driver.frontend_version)
