@@ -12,7 +12,7 @@ from collections.abc import Callable
 from typing import Any, Literal
 
 from autocalc.client import Calculator
-from autocalc.errors import CalculatorError
+from autocalc.errors import CalculatorError, ValidationError
 from autocalc.regions import RegionResolver
 
 calc = Calculator()
@@ -215,6 +215,35 @@ def read_price_list(url_or_id: str) -> Any:
                       "amount": sp.get("amount"), "products": rows})
     return {"id": _list_id(url_or_id), "name": d.get("name"), "items": items,
             "total": (d.get("totalPrice") or {}).get("amount") if isinstance(d.get("totalPrice"), dict) else d.get("totalPrice")}
+
+
+@tool
+def export_quotes_xlsx(rows: list[dict[str, str]], path: str = "quotes.xlsx") -> Any:
+    """Write a spreadsheet of price lists: Environment, Calculator (list name), Total (USD), Link, then a Total row.
+
+    rows: [{"env": "prod", "list": share url or id}], kept in this order. Reads the lists anonymously.
+    `path` must end in .xlsx and is overwritten. Nothing is written if any list cannot be read.
+    """
+    from pathlib import Path
+
+    from autocalc import xlsx
+    from autocalc.share import SHARE_URL
+    if not path.lower().endswith(".xlsx"):
+        raise ValidationError("path must end in .xlsx.", field="path")
+    if not rows:
+        raise ValidationError("rows is empty.", field="rows")
+    table = []
+    for r in rows:
+        try:
+            d = read_price_list(r["list"])
+        except (CalculatorError, KeyError) as exc:
+            raise ValidationError(f"Cannot read the list for {r.get('env')!r}: {getattr(exc, 'message', exc)}", field="list") from exc
+        table.append([r["env"], d["name"] or "", float(d["total"] or 0), xlsx.Link(SHARE_URL.format(id=d["id"], currency="USD"))])
+    last = len(table) + 1
+    total = round(sum(t[2] for t in table), 2)
+    xlsx.write_table(Path(path), ["Environment", "Calculator", "Total (USD)", "Link"], table, [16, 40, 14, 60],
+                     ["Total", None, xlsx.Sum(2, last, total), None])
+    return {"path": str(Path(path).resolve()), "rows": len(table), "total_usd": total}
 
 
 @tool

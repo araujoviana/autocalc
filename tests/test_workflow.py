@@ -205,3 +205,27 @@ def test_auth_login_returns_waiting_then_the_result_through_the_same_sign_in(mon
 def test_list_regions_only_lists():
     import inspect
     assert list(inspect.signature(tools.list_regions).parameters) == ["service"]
+
+
+def test_export_quotes_xlsx_writes_the_fixed_layout(monkeypatch, tmp_path):
+    import zipfile
+    lists = {"aaa": {"id": "aaa", "name": "Acme prod", "total": 120.5}, "bbb": {"id": "bbb", "name": "Acme dev", "total": 30}}
+    monkeypatch.setattr(tools, "read_price_list", lambda ref: lists[ref])
+    out = tmp_path / "q.xlsx"
+    res = tools.export_quotes_xlsx([{"env": "prod", "list": "aaa"}, {"env": "dev & test", "list": "bbb"}], str(out))
+    assert res["rows"] == 2 and res["total_usd"] == 150.5
+    sheet = zipfile.ZipFile(out).read("xl/worksheets/sheet1.xml").decode()
+    assert sheet.index("Environment") < sheet.index("Acme prod") < sheet.index("Acme dev") < sheet.index("SUM(C2:C3)")
+    assert "dev &amp; test" in sheet and "shareListId=aaa" in sheet
+
+
+def test_export_quotes_xlsx_writes_nothing_when_a_list_is_gone(monkeypatch, tmp_path):
+    def gone(ref):
+        raise tools.CalculatorError("no such list")
+    monkeypatch.setattr(tools, "read_price_list", gone)
+    out = tmp_path / "q.xlsx"
+    with pytest.raises(ValidationError) as ei:
+        tools.export_quotes_xlsx([{"env": "prod", "list": "zzz"}], str(out))
+    assert "prod" in ei.value.message and not out.exists()
+    with pytest.raises(ValidationError):
+        tools.export_quotes_xlsx([{"env": "x", "list": "y"}], str(tmp_path / "q.csv"))
