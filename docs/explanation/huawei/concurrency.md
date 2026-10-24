@@ -27,5 +27,11 @@ Concurrency is decided by what state an operation touches
   parallel only in isolated browser contexts.
 - **Account writes** (save, rename, delete) always run one at a time.
 
+The manual region sweep (`tests/support/region_sweep.py`) follows this: it fills pages in
+`SWEEP_WORKERS` isolated contexts (default 6) and holds rating calls to 4 in flight. The page
+settles for about 1.5 s after every step, so the sweep is waiting rather than computing, and
+more workers help until the calculator starts timing out page loads. Those timeouts are retried
+(three tries, a 30 s limit per load); a form mismatch is not.
+
 The current spec still requires sequential use. Bounded parallel rating arrives with the change
 that implements it.
