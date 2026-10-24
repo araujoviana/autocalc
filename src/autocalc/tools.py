@@ -60,15 +60,26 @@ def list_regions(service: str = "", region: str = "") -> Any:
     return regions
 
 
+# the same on every row of a result, so they only cost tokens
+_NOISE = ("Remark:", "Spot Duartion:", "Spot Duration:")
+
+
+def flat_sku(sku: dict[str, Any]) -> dict[str, Any]:
+    """A search row for the agent: spec, a trimmed description and one USD amount per billing mode."""
+    parts = [p for p in sku["description"].split(";") if not p.startswith(_NOISE)]
+    return {"spec": sku["spec"], "description": ";".join(parts),
+            **{mode: price["amount"] for mode, price in sku["prices"].items()}}
+
+
 @tool
 def search_skus(service: str, region: str, query: str = "", billing: Literal["ondemand", "monthly", "yearly"] | None = None,
                 min_vcpus: float | None = None, min_memory_gb: float | None = None, limit: int = 30) -> Any:
     """Search the official price list of a service in a region. Sorted cheapest first.
 
     `region` accepts a friendly name ('Sao Paulo'). `query` terms must all appear in
-    spec/description. Returns spec codes with list prices per billing mode (USD).
+    spec/description. Returns spec codes with the list price per billing mode (USD; ondemand per hour, monthly per month, yearly per year).
     """
-    return calc.search(service, _region(region), query, billing, min_vcpus, min_memory_gb, limit)
+    return [flat_sku(h) for h in calc.search(service, _region(region), query, billing, min_vcpus, min_memory_gb, limit)]
 
 
 @tool
@@ -163,16 +174,16 @@ def compare_modes(items: list[dict[str, Any]], modes: list[str] | None = None, r
 
 
 @tool
-def compare_regions(items: list[dict[str, Any]], regions: list[str], mode: Literal["ondemand", "monthly", "yearly"] = "monthly") -> Any:
+def compare_regions(items: list[dict[str, Any]], regions: list[str], billing: Literal["ondemand", "monthly", "yearly"] = "monthly") -> Any:
     """Price the same bill of materials in several regions. Friendly names accepted."""
     rows = []
     for r in regions:
         try:
-            q = calc.quote(_region(r), items, mode)
+            q = calc.quote(_region(r), items, billing)
             rows.append({"region": q["region"], "total_usd": q["total"], "currency": q["currency"]})
         except CalculatorError as exc:
             rows.append({"region": r, "error": exc.code, "message": exc.message, "hint": exc.hint})
-    return {"mode": mode, "regions": rows}
+    return {"billing": billing, "regions": rows}
 
 
 # ---- saved lists ------------------------------------------------------------
