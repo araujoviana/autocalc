@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import ntpath
 import os
+import re
 import shutil
 import socket
 import sys
@@ -30,7 +31,7 @@ from pathlib import Path
 from typing import Any
 
 from autocalc.client import CALC
-from autocalc.errors import AuthExpired, AuthLoginFailed, AuthProfileBusy
+from autocalc.errors import AuthExpired, AuthLoginFailed, AuthProfileBusy, ValidationError
 
 CALCULATOR_URL = "https://www.huaweicloud.com/intl/en-us/pricing/calculator.html"
 LOGIN_HINT = "Run `autocalc login` to sign in once in a browser window."
@@ -55,6 +56,9 @@ def profile() -> str:
 
 def profile_dir(name: str | None = None) -> Path:
     name = name or profile()
+    if not re.fullmatch(r"[\w.-]+", name):
+        raise ValidationError(f"Profile name {name!r} is not a plain name.", field="profile",
+                              hint="AUTOCALC_PROFILE and --profile take a name like `work`, not a path.")
     p = data_dir() / "browser-profile"
     return p if name == "default" else p.with_name(f"browser-profile-{name}")
 

@@ -510,3 +510,16 @@ def test_mcp_auth_status_busy_is_structured(monkeypatch):
     monkeypatch.setattr(auth, "_open_profile", busy)
     out = server.auth_status()
     assert out["error"] == "AUTH_PROFILE_BUSY" and "--profile" in out["hint"]
+
+
+def test_a_profile_given_as_a_path_is_refused_with_a_hint(monkeypatch):
+    import pytest
+
+    from autocalc import auth
+    from autocalc.errors import ValidationError
+    monkeypatch.setenv("AUTOCALC_PROFILE", "/tmp/some/dir")
+    with pytest.raises(ValidationError) as ei:
+        auth.profile_dir()
+    assert "not a path" in ei.value.hint
+    monkeypatch.setenv("AUTOCALC_PROFILE", "work")
+    assert auth.profile_dir().name == "browser-profile-work"

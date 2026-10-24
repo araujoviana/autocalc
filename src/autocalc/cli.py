@@ -22,6 +22,7 @@ import json
 import re
 import sys
 import typing
+from importlib import metadata
 
 from autocalc import frontend
 from autocalc.client import Calculator
@@ -97,6 +98,7 @@ def _add_tool_commands(sub, taken: set[str]) -> dict[str, tuple]:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="autocalc", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--version", action="version", version=f"autocalc {metadata.version('autocalc')}")
     sub = ap.add_subparsers(dest="cmd", required=True, metavar="command", title="commands")
     p = sub.add_parser("services", help="find a service by name or category")
     p.add_argument("query", nargs="?", default="")
