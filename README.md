@@ -18,6 +18,8 @@ Use it from the terminal (CLI) or from an AI agent (MCP server).
 
 ## Quick start
 
+The repository is private, so install needs access to it: `gh auth login`, then `gh auth setup-git` so git can fetch it.
+
 ```bash
 gh api repos/araujoviana/autocalc/contents/install.sh -H "Accept: application/vnd.github.raw" | sh   # 1. install (Windows: install.ps1 | iex)
 autocalc login                           # 2. sign in once (a browser opens)

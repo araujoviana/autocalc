@@ -7,7 +7,7 @@ today's CLI and MCP server, on Linux or Windows.
 
 The installer needs `git`. It installs [uv](https://docs.astral.sh/uv/) if you don't have it,
 then autocalc from the newest release tag, and registers the MCP server when the `claude` CLI
-is present. The repository is private, so fetch the script with `gh`:
+is present. The repository is private: run `gh auth login` and `gh auth setup-git` first (the second lets git fetch it), then fetch the script with `gh`:
 
 ```bash
 gh api repos/araujoviana/autocalc/contents/install.sh -H "Accept: application/vnd.github.raw" | sh
