@@ -92,6 +92,8 @@ def publish_quote(draft_id: str, name: str, settlement: Literal["total", "monthl
     with ThreadPoolExecutor(max_workers=ENCODE_WORKERS) as pool:  # each encode has its own browser context (ADR-0010)
         cards = list(pool.map(lambda pair: encode_card(pair[0].service.lower(), pair[1]["rewriteValue"]),
                               zip(draft.requirements, built, strict=True)))
+    for r, card in zip(draft.requirements, cards, strict=True):
+        card["selectedProduct"]["_customTitle"] = r.id  # the customer sees the requirement's name, not "custom.ecs 1"
     out = publish_checked(name, cards, settlement=settlement, currency=currency.upper(), session=session, calc=tools.calc)
     DraftStore().link(out["id"], draft_id)
     notes = frontend.warnings([r.service.lower() for r in draft.requirements], frontend.live_version())
