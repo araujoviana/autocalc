@@ -91,14 +91,14 @@ def for_page(service: str, rewrite_value: dict[str, Any]) -> dict[str, Any]:
     return {**rewrite_value, "template_RENDER": render}
 
 
-def encode_card(service: str, rewrite_value: dict[str, Any]) -> dict[str, Any]:
+def encode_card(service: str, rewrite_value: dict[str, Any], *, timeout: float | None = None) -> dict[str, Any]:
     """The card the page builds for this form state, anonymously, in a fresh browser context."""
     rewrite_value = for_page(service, rewrite_value)
     from autocalc.page.browser import page_context
     from autocalc.page.driver import Driver
 
     with page_context(service) as ctx:
-        driver = Driver(ctx.new_page(), PAGE_SERVICE.get(service, service))
+        driver = Driver(ctx.new_page(), PAGE_SERVICE.get(service, service), **({} if timeout is None else {"timeout": timeout}))
         driver.open()
         driver.run(card_steps(rewrite_value))
         card = driver.capture()
