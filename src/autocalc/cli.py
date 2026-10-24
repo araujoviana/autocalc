@@ -43,7 +43,7 @@ def parse_item(s: str) -> dict:
 
 
 def _friendly_region(calc: Calculator, value: str) -> str:
-    """Accept an id or a city/country alias and return the canonical region id (E1)."""
+    """Accept an id or a city/country alias and return the canonical region id."""
     if not value:
         return value
     resolver = RegionResolver.from_menu(calc.menu())
@@ -93,12 +93,12 @@ def _add_tool_commands(sub, taken: set[str]) -> dict[str, tuple]:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="autocalc", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    sub = ap.add_subparsers(dest="cmd", required=True)
-    p = sub.add_parser("services")
+    sub = ap.add_subparsers(dest="cmd", required=True, metavar="command", title="commands")
+    p = sub.add_parser("services", help="find a service by name or category")
     p.add_argument("query", nargs="?", default="")
-    p = sub.add_parser("regions")
+    p = sub.add_parser("regions", help="list regions, or where one service is sold")
     p.add_argument("service", nargs="?", default="")
-    p = sub.add_parser("search")
+    p = sub.add_parser("search", help="search a service's price list in one region")
     p.add_argument("service")
     p.add_argument("region")
     p.add_argument("terms", nargs="*")
@@ -107,27 +107,27 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--mem", type=float)
     p.add_argument("--limit", type=int, default=20)
     p.add_argument("--refresh", action="store_true")
-    p = sub.add_parser("quote")
+    p = sub.add_parser("quote", help="price a bill of materials")
     p.add_argument("region")
     p.add_argument("items", nargs="+", type=parse_item)
     p.add_argument("--billing", choices=["ondemand", "monthly", "yearly"], default="ondemand")
     p.add_argument("--hours", type=float, default=730)
     p.add_argument("--periods", type=int, default=1)
     p.add_argument("--currency")
-    p = sub.add_parser("login")
+    p = sub.add_parser("login", help="sign in once in a browser window")
     p.add_argument("--profile")
     p.add_argument("--timeout", type=float, default=300)
-    p = sub.add_parser("logout")
+    p = sub.add_parser("logout", help="sign out (deletes the browser profile)")
     p.add_argument("--profile")
-    p = sub.add_parser("auth")
+    p = sub.add_parser("auth", help="show whether you are signed in")
     p.add_argument("action", choices=["status"])
     p.add_argument("--profile")
-    sub.add_parser("lists")
-    p = sub.add_parser("validate")
+    sub.add_parser("lists", help="your saved price lists")
+    p = sub.add_parser("validate", help="re-read a saved list and look for glitches")
     p.add_argument("list_id")
-    sub.add_parser("doctor")
-    sub.add_parser("install-browser")
-    p = sub.add_parser("update")
+    sub.add_parser("doctor", help="check endpoints, sign-in, browser and cache")
+    sub.add_parser("install-browser", help="download a browser if none is installed")
+    p = sub.add_parser("update", help="move to the newest release")
     p.add_argument("--to", help="a release tag, vX.Y.Z (default: the newest)")
     p = sub.add_parser("page-controls", help="list the controls of a service's calculator page")
     p.add_argument("service")

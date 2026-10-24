@@ -40,7 +40,7 @@ for _fn in REGISTRY.values():
 
 @mcp.prompt()
 def quote_workflow() -> str:
-    """Standard workflow for turning a request into a shareable Huawei Cloud quote (C5)."""
+    """Standard workflow for turning a request into a shareable Huawei Cloud quote."""
     return (
         "1. Collect requirements: services, region (friendly names ok), billing mode(s), quantities and sizes.\n"
         "2. Call draft_quote(customer, requirements); exact matches are confirmed automatically.\n"
