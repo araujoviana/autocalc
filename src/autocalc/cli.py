@@ -65,6 +65,10 @@ def _json_arg(value: str):
         raise argparse.ArgumentTypeError(f"not valid JSON (or readable @file): {exc}") from exc
 
 
+# JSON twins of services / regions / search: still work, but --help lists the friendlier command
+JSON_TWINS = {"list-services", "list-regions", "search-skus"}
+
+
 def _add_tool_commands(sub, taken: set[str]) -> dict[str, tuple]:
     """One subcommand per registry tool; scalars become options, anything else takes JSON."""
     from autocalc import workflow  # noqa: F401  (registers the workflow tools)
@@ -132,6 +136,7 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("page-controls", help="list the controls of a service's calculator page")
     p.add_argument("service")
     tool_cmds = _add_tool_commands(sub, set(sub.choices))
+    sub._choices_actions = [c for c in sub._choices_actions if c.dest not in JSON_TWINS]  # argparse has no public way to hide one
     a = ap.parse_args(argv)
 
     try:

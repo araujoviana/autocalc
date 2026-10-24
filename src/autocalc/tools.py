@@ -210,7 +210,7 @@ def read_price_list(url_or_id: str) -> Any:
 
 @tool
 def list_my_price_lists() -> Any:
-    """List the saved price lists on the user's calculator account (name, id, url, total)."""
+    """List the saved price lists on the user's calculator account (name, id, url, total). Needs a login."""
     from autocalc.share import SHARE_URL, Session
     return [{"name": x.get("name"), "id": x.get("key"), "url": SHARE_URL.format(id=x.get("key"), currency="USD"),
              "total": x.get("totalPrice"), "updated": x.get("updateTime")} for x in Session().lists()]
@@ -218,7 +218,7 @@ def list_my_price_lists() -> Any:
 
 @tool
 def delete_price_list(url_or_id: str) -> Any:
-    """Delete a saved price list by url or id (the agent asks you to confirm first)."""
+    """Delete a saved price list by url or id. Needs a login. Confirm with the user before calling; this cannot be undone."""
     from autocalc.share import Session
     Session().delete(_list_id(url_or_id))
     return {"deleted": _list_id(url_or_id)}
@@ -226,7 +226,7 @@ def delete_price_list(url_or_id: str) -> Any:
 
 @tool
 def rename_price_list(url_or_id: str, new_name: str) -> Any:
-    """Rename a saved price list."""
+    """Rename a saved price list. Needs a login."""
     from autocalc.share import Session, share_detail
     lid = _list_id(url_or_id)
     detail = share_detail(calc, lid)
@@ -237,7 +237,7 @@ def rename_price_list(url_or_id: str, new_name: str) -> Any:
 
 @tool
 def duplicate_price_list(url_or_id: str, new_name: str | None = None) -> Any:
-    """Copy a saved price list (optionally with a new name)."""
+    """Copy a saved price list (optionally with a new name). Needs a login."""
     from autocalc.share import SHARE_URL, Session
     s = Session()
     lid = _list_id(url_or_id)
