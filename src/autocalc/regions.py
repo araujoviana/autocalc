@@ -13,6 +13,16 @@ from typing import Any
 
 from autocalc.errors import RegionAmbiguous, RegionNotFound
 
+# The regions autocalc is built for, in priority order: São Paulo, Santiago, Singapore.
+PRIMARY_REGIONS = ("sa-brazil-1", "la-south-2", "ap-southeast-3")
+
+
+def primary_first(regions: list[str]) -> list[str]:
+    """``regions`` with the primary ones first, in priority order, then the rest alphabetically."""
+    rank = {r: i for i, r in enumerate(PRIMARY_REGIONS)}
+    return sorted(regions, key=lambda r: (rank.get(r, len(rank)), r))
+
+
 # Curated aliases -> region id. Covers the LATAM/global regions the team quotes.
 _ALIASES: dict[str, str] = {
     "santiago": "la-south-2", "chile": "la-south-2", "la-south-2": "la-south-2",

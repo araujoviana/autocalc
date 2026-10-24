@@ -5,7 +5,7 @@ does it have priced candidates); tier 2 has the calculator page build the card a
 stored amount with the rating engine's price for the same products. The Edit check is left out,
 so a pass means "encodes and prices", not "verified"; sample Edit with spa_matrix.
 
-Run:  SWEEP_REGIONS=eu-west-101,ap-southeast-1 uv run python -u -m tests.support.region_sweep
+Run:  SWEEP_REGIONS=sa-brazil-1,la-south-2 uv run python -u -m tests.support.region_sweep
       SWEEP_ONLY=esw,eip ...      limits the services;  SWEEP_TIER1=1 skips the page
       SWEEP_WORKERS=8 ...         browser contexts in parallel (default 6; page-load timeouts are retried)
 """
@@ -24,10 +24,11 @@ from autocalc.errors import CalculatorError, PageEncodeFailed
 from autocalc.gate import rerate
 from autocalc.page.replay import encode_card
 from autocalc.page.store import cents
+from autocalc.regions import PRIMARY_REGIONS
 from autocalc.services import build
 from tests.support.spa_matrix import MATRIX
 
-DEFAULT = "eu-west-101,ap-southeast-1,la-south-2"
+DEFAULT = ",".join(PRIMARY_REGIONS)
 REGIONS = [r for r in os.environ.get("SWEEP_REGIONS", DEFAULT).split(",") if r]
 ONLY = set(filter(None, os.environ.get("SWEEP_ONLY", "").split(",")))
 WORKERS = max(1, int(os.environ.get("SWEEP_WORKERS", "6")))

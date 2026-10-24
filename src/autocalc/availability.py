@@ -14,7 +14,7 @@ from typing import Any
 
 from autocalc.client import Calculator
 from autocalc.errors import ModeNotOffered, ServiceNotSold, SpecNotFound
-from autocalc.regions import RegionResolver
+from autocalc.regions import RegionResolver, primary_first
 
 _MODE_ALIASES = {
     "ondemand": "ONDEMAND", "ppu": "ONDEMAND", "pay-per-use": "ONDEMAND",
@@ -55,7 +55,7 @@ class Availability:
             others = [r for r in self.regions_for(service)]
             hint = None
             if others:
-                hint = f"{service} is sold in: {', '.join(sorted(others)[:8])}"
+                hint = f"{service} is sold in: {', '.join(primary_first(others)[:8])}"
             raise ServiceNotSold(
                 f"{service} is not sold in {region} ({resolver.display(region)}).",
                 hint=hint, details={"service": service, "region": region, "available_regions": others},
