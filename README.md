@@ -4,6 +4,13 @@ Turns "price this for customer Y" into a share link on the
 [Huawei Cloud pricing calculator](https://www.huaweicloud.com/intl/en-us/pricing/calculator.html).
 Use it from the terminal (CLI) or from an AI agent (MCP server).
 
+> **Experimental. Expect it to break.**
+> autocalc is not a Huawei product and uses no official API. It drives the public pricing calculator
+> the way a person would, and relies on that page's internals. When Huawei changes the page, publishing
+> can fail or, worse, stop matching what the website shows, without any warning in advance.
+> Before you send a link to anyone, open it and check the total yourself. Run `autocalc doctor` before
+> relying on it, and do not use it for binding quotes. Prices are USD list prices, not an offer.
+
 - Catalog and price queries need no login and no AK/SK. Prices are USD list prices from Huawei's
   own rating engine.
 - Saving a list and getting a share link needs a one-time browser sign-in. autocalc never sees
