@@ -49,7 +49,7 @@ def list_services(query: str = "") -> list[dict[str, Any]]:
 def list_regions(service: str = "", region: str = "") -> Any:
     """Region ids -> display names. With `service`, only regions where it is sold.
 
-    `region` accepts a friendly name (e.g. 'Santiago') and resolves it (E1).
+    `region` accepts a friendly name (e.g. 'Santiago') and resolves it.
     """
     regions = calc.regions()
     if region:
@@ -75,7 +75,7 @@ def search_skus(service: str, region: str, query: str = "", billing: Literal["on
 def describe_service(service: str, region: str = "sa-brazil-1") -> Any:
     """What a service supports in a region: modes, groups and a sample of specs.
 
-    Use before building a list, so the agent knows the valid options for that region (C2).
+    Use before building a list, so the agent knows the valid options for that region.
     """
     from autocalc.availability import Availability
     from autocalc.services import supported_services
@@ -130,7 +130,7 @@ def convert_currency(amount_usd: float, currency: str) -> Any:
 @tool
 def compare_modes(items: list[dict[str, Any]], modes: list[str] | None = None, region: str = "sa-brazil-1",
                   currency: str = "USD") -> Any:
-    """Compare the same bill of materials across billing modes (C4).
+    """Compare the same bill of materials across billing modes.
 
     `items` are quote items ([{service, spec, quantity, size, usage_*}]).
     Returns the cost per mode and the saving vs on-demand. Modes: ondemand, monthly, yearly.
@@ -164,7 +164,7 @@ def compare_modes(items: list[dict[str, Any]], modes: list[str] | None = None, r
 
 @tool
 def compare_regions(items: list[dict[str, Any]], regions: list[str], mode: Literal["ondemand", "monthly", "yearly"] = "monthly") -> Any:
-    """Price the same bill of materials in several regions (E3). Friendly names accepted."""
+    """Price the same bill of materials in several regions. Friendly names accepted."""
     rows = []
     for r in regions:
         try:
@@ -190,7 +190,7 @@ def _list_id(value: str) -> str:
 def read_price_list(url_or_id: str) -> Any:
     """Read any shared price list by url or id (anonymous; works for links others send).
 
-    Returns a normalized summary: one row per item (service, spec, mode, quantity, price) (C3).
+    Returns a normalized summary: one row per item (service, spec, mode, quantity, price).
     """
     from autocalc.share import share_detail
     d = share_detail(calc, _list_id(url_or_id))
@@ -218,7 +218,7 @@ def list_my_price_lists() -> Any:
 
 @tool
 def delete_price_list(url_or_id: str) -> Any:
-    """Delete a saved price list by url or id (asks the user to confirm through the agent)."""
+    """Delete a saved price list by url or id (the agent asks you to confirm first)."""
     from autocalc.share import Session
     Session().delete(_list_id(url_or_id))
     return {"deleted": _list_id(url_or_id)}
@@ -265,7 +265,7 @@ def auth_status() -> Any:
 
 @tool
 def auth_login() -> Any:
-    """Open a browser window so the user can sign in once (A1). Blocks until done or a 5-minute timeout.
+    """Open a browser window so the user can sign in once. Blocks until done or a 5-minute timeout.
 
     Use when a write tool returns AUTH_EXPIRED. Read-only tools (catalog, quote, read_price_list) never need this.
     """
