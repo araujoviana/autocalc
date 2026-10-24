@@ -73,7 +73,8 @@ def publish_quote(draft_id: str, name: str, settlement: Literal["total", "monthl
 
     Needs a login (auth_login). Confirm the totals with the user first. A failed check deletes the list.
     """
-    draft = DraftStore().load(draft_id)
+    store = DraftStore()
+    draft = store.load(draft_id)
     if draft.pending():
         raise ValidationError(f"Draft {draft_id} still has undecided requirements.", field="requirement_id",
                               allowed=draft.pending(), hint="Call revise_quote for each of them.")
@@ -95,7 +96,7 @@ def publish_quote(draft_id: str, name: str, settlement: Literal["total", "monthl
     for r, card in zip(draft.requirements, cards, strict=True):
         card["selectedProduct"]["_customTitle"] = r.id  # the customer sees the requirement's name, not "custom.ecs 1"
     out = publish_checked(name, cards, settlement=settlement, currency=currency.upper(), session=session, calc=tools.calc)
-    DraftStore().link(out["id"], draft_id)
+    store.link(out["id"], draft_id)
     notes = frontend.warnings([r.service.lower() for r in draft.requirements], frontend.live_version())
     notes += [f"{r.service}: the chosen spec {spec[r.id]!r} is not applied; the card uses the options and the page's defaults."
               for r in draft.requirements if r.service.lower() in RECIPES and not get_builder(r.service, tools.calc).spec_arg]

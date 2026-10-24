@@ -14,6 +14,7 @@ Card shape (learned from real saved lists via anonymous ``share/detail``):
 
 from __future__ import annotations
 
+import inspect
 import json
 import secrets
 import time
@@ -74,7 +75,6 @@ class Builder:
 
     def options(self) -> list[str]:
         """The option names a requirement may carry: ``build()``'s keywords minus the ones a requirement has itself."""
-        import inspect
         return [p for p in inspect.signature(self.build).parameters if p not in self._NOT_OPTIONS | {self.spec_arg}]
 
     def build(self, *args: Any, **opts: Any) -> dict[str, Any]:
