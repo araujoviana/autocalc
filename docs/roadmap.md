@@ -35,7 +35,7 @@ Each item is either assigned to the change that will close it or left unschedule
 | Browser setup by the installer (`autocalc doctor` says when `install-browser` is needed) | unscheduled |
 | Nightly frontend drift check (alert when the calculator version or a service config changes) | unscheduled, after `distribution` |
 | Nightly live and render test jobs on CI (they need a stored session) | unscheduled, after `distribution` |
-| Region sweep (`tests.support.region_sweep`, 2026-10-23): in `eu-west-101` 34 of the 100 verified combinations fail because the builders' default SKUs are not sold there (`CBC.6006` / `SPEC_NOT_FOUND`); `hecs` is not offered there; In the primary regions (São Paulo, Santiago, Singapore) all 300 combinations pass | unscheduled |
+| Region sweep (`tests.support.region_sweep`, 2026-10-23): in `eu-west-101` 34 of the 100 verified combinations fail because the builders' default SKUs are not sold there (`CBC.6006` / `SPEC_NOT_FOUND`); `hecs` is not offered there. In the primary regions (São Paulo, Santiago, Singapore) all 300 combinations pass | unscheduled |
 | The calculator's EU and China sites | unscheduled, after v1 |
 
 When an item is done, remove its row in the same commit as the change that closes it.
