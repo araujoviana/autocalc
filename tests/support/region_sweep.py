@@ -7,18 +7,20 @@ so a pass means "encodes and prices", not "verified"; sample Edit with spa_matri
 
 Run:  SWEEP_REGIONS=eu-west-101,ap-southeast-1 uv run python -u -m tests.support.region_sweep
       SWEEP_ONLY=esw,eip ...      limits the services;  SWEEP_TIER1=1 skips the page
+      SWEEP_WORKERS=8 ...         browser contexts in parallel (default 6; page-load timeouts are retried)
 """
 
 from __future__ import annotations
 
 import os
 import sys
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 
 from autocalc.availability import Availability
 from autocalc.client import Calculator
-from autocalc.errors import CalculatorError
+from autocalc.errors import CalculatorError, PageEncodeFailed
 from autocalc.gate import rerate
 from autocalc.page.replay import encode_card
 from autocalc.page.store import cents
@@ -28,6 +30,19 @@ from tests.support.spa_matrix import MATRIX
 DEFAULT = "eu-west-101,ap-southeast-1,la-south-2"
 REGIONS = [r for r in os.environ.get("SWEEP_REGIONS", DEFAULT).split(",") if r]
 ONLY = set(filter(None, os.environ.get("SWEEP_ONLY", "").split(",")))
+WORKERS = max(1, int(os.environ.get("SWEEP_WORKERS", "6")))
+RATING = threading.BoundedSemaphore(4)  # ADR-0010: rating reads, at most 4 in flight
+
+
+def encode(service: str, rewrite_value: dict, tries: int = 3) -> dict:
+    """encode_card, retrying the load/settle timeouts that parallel contexts cause (not form mismatches)."""
+    for n in range(tries):
+        try:
+            return encode_card(service, rewrite_value, timeout=10)  # a stuck load fails in 30 s, not 60
+        except PageEncodeFailed as exc:
+            if n == tries - 1 or exc.details.get("step") not in ("open", "price"):
+                raise
+            time.sleep(2 * 2**n)
 
 
 def tier1(calc: Calculator, avail: Availability, service: str, region: str, billing: str) -> str | None:
@@ -41,9 +56,11 @@ def tier1(calc: Calculator, avail: Availability, service: str, region: str, bill
 
 def tier2(calc: Calculator, service: str, region: str, billing: str, options: dict) -> str:
     try:
-        card = build(service, calc, region=region, billing=billing, **options)
-        page = encode_card(service, card["rewriteValue"])
-        stored, rated = cents(page["selectedProduct"]["amount"]), rerate(page, calc)
+        with RATING:
+            card = build(service, calc, region=region, billing=billing, **options)
+        page = encode(service, card["rewriteValue"])
+        with RATING:
+            stored, rated = cents(page["selectedProduct"]["amount"]), rerate(page, calc)
     except CalculatorError as exc:
         return f"FAIL {exc.code}: {str(exc).splitlines()[0][:110]}"
     except Exception as exc:  # a builder that does not know this region's catalog (e.g. a flavor not sold there)
@@ -62,7 +79,7 @@ def main() -> int:
         why = tier1(calc, avail, s, r, b)
         (rows.append((s, r, b, why)) if why else todo.append((s, r, b, o)))
     if not os.environ.get("SWEEP_TIER1"):
-        with ThreadPoolExecutor(max_workers=3) as pool:  # isolated browser contexts (ADR-0010)
+        with ThreadPoolExecutor(max_workers=WORKERS) as pool:  # isolated browser contexts (ADR-0010)
             rows += [(s, r, b, res) for (s, r, b, _), res in
                      zip(todo, pool.map(lambda j: tier2(calc, j[0], j[1], j[2], j[3]), todo), strict=True)]
     else:
