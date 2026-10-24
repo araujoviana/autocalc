@@ -95,3 +95,23 @@ def test_primary_regions_come_first_in_priority_order():
 
     assert primary_first(["ap-southeast-1", "ap-southeast-3", "cn-north-4", "la-south-2", "sa-brazil-1"]) == [
         "sa-brazil-1", "la-south-2", "ap-southeast-3", "ap-southeast-1", "cn-north-4"]
+
+
+def test_untyped_plans_are_priced_when_the_region_sends_no_priceplan(monkeypatch):
+    """la-south-2 and ap-southeast-3 send plans without a planType; the catalog still has list prices."""
+    from autocalc.client import Calculator
+
+    def plan(mode, amount, **kw):
+        return {"billingMode": mode, "amount": amount, "billingEvent": "event.type.onetime" if mode != "ONDEMAND" else "event.type.vmduration",
+                "measureUnit": 4, "measureUnitStep": 1, **kw}
+
+    typed = {"resourceSpecCode": "a.large", "planList": [plan("MONTHLY", 10, planType="PRICEPLAN"), plan("MONTHLY", 99)]}
+    untyped = {"resourceSpecCode": "b.large", "planList": [
+        plan("MONTHLY", 20, periodNum=1), plan("YEARLY", 200, periodNum=1), plan("YEARLY", 340, periodNum=2),
+        plan("ONDEMAND", 0.03), plan("RI", 5, planId="x")]}
+    calc = Calculator.__new__(Calculator)
+    monkeypatch.setattr(calc, "product_info", lambda s, r: {"product": {"ec2_vm": [typed, untyped]}}, raising=False)
+    monkeypatch.setattr(calc, "_resolver", lambda s: (lambda d: d, {}), raising=False)
+    by_spec = {k.spec: k.prices for k in calc.skus("ecs", "la-south-2")}
+    assert by_spec["a.large"]["monthly"]["amount"] == 10  # a typed plan still wins
+    assert {m: p["amount"] for m, p in by_spec["b.large"].items()} == {"monthly": 20, "yearly": 200, "ondemand": 0.03}

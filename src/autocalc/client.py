@@ -155,9 +155,12 @@ class Calculator:
         for group, items in (info.get("product") or {}).items():
             for it in items:
                 prices = {}
-                for p in it.get("planList") or []:
-                    if "amount" not in p or p.get("planType") != "PRICEPLAN":
-                        continue
+                plans = [p for p in it.get("planList") or [] if "amount" in p]
+                # Typed PRICEPLAN plans win. La-south-2 and ap-southeast-3 send none: there the plain
+                # one-year/on-demand/monthly plans carry no type, and RI plans (a planId) stay out.
+                plain = [p for p in plans if p.get("planType") is None and not p.get("planId")
+                         and p.get("billingMode") in ("ONDEMAND", "MONTHLY", "YEARLY") and (p.get("periodNum") or 1) == 1]
+                for p in [q for q in plans if q.get("planType") == "PRICEPLAN"] + plain:
                     entry: dict[str, Any] = {"amount": p["amount"], "currency": "USD"}
                     if p.get("billingEvent", "").endswith("onetime"):
                         entry["per"] = f"{p.get('periodNum') or 1} {'month' if p['billingMode'] == 'MONTHLY' else 'year'}"
