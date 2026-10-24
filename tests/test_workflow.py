@@ -66,7 +66,7 @@ def test_undecided_draft_cannot_publish_and_decided_one_reaches_the_gate(store, 
                                                   "justification": "customer wants headroom"}])["pending"] == []
     built, gate = {}, {}
     monkeypatch.setattr(workflow, "get_builder", lambda svc, calc=None: FakeBuilder(svc, built))
-    monkeypatch.setattr(workflow, "encode_card", lambda svc, rv: {"page_card_for": svc, "form": rv})
+    monkeypatch.setattr(workflow, "encode_card", lambda svc, rv: {"page_card_for": svc, "form": rv, "selectedProduct": {}})
 
     def fake_publish(name, cards, **kw):
         gate["cards"] = cards
@@ -76,13 +76,14 @@ def test_undecided_draft_cannot_publish_and_decided_one_reaches_the_gate(store, 
     with pytest.raises(GateFailed):
         workflow.publish_quote(d["draft_id"], "n")
     assert (built["svc"], built["flavor"], built["image"], built["quantity"]) == ("ecs", "c7n.xlarge.2", "AlmaLinux", 1)
-    assert gate["cards"] == [{"page_card_for": "ecs", "form": {"form": 1}}]  # the page's card, not the builder's
+    # the page's card, not the builder's, titled with the requirement's name
+    assert gate["cards"] == [{"page_card_for": "ecs", "form": {"form": 1}, "selectedProduct": {"_customTitle": "r1"}}]
 
 
 def test_published_result_warns_when_the_frontend_changed(store, monkeypatch):
     d = workflow.draft_quote("acme", [req(needs={"vcpus": 2})])
     monkeypatch.setattr(workflow, "get_builder", lambda svc, calc=None: FakeBuilder(svc, {}))
-    monkeypatch.setattr(workflow, "encode_card", lambda svc, rv: {})
+    monkeypatch.setattr(workflow, "encode_card", lambda svc, rv: {"selectedProduct": {}})
     monkeypatch.setattr(workflow, "publish_checked", lambda *a, **k: {"id": "L1", "url": "u", "checks": []})
     monkeypatch.setattr(workflow.frontend, "live_version", lambda: "99.0.0")
     out = workflow.publish_quote(d["draft_id"], "n")
@@ -136,7 +137,7 @@ def test_recipe_service_warns_that_the_chosen_spec_is_not_applied(store, monkeyp
         spec_arg = None
 
     monkeypatch.setattr(workflow, "get_builder", lambda svc, calc=None: Recipe(svc, {}))
-    monkeypatch.setattr(workflow, "encode_card", lambda svc, rv: {})
+    monkeypatch.setattr(workflow, "encode_card", lambda svc, rv: {"selectedProduct": {}})
     monkeypatch.setattr(workflow, "publish_checked", lambda *a, **k: {"id": "L1", "url": "u", "checks": []})
     monkeypatch.setattr(workflow.frontend, "live_version", lambda: None)
     out = workflow.publish_quote(d["draft_id"], "n")
