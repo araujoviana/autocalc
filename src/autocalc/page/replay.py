@@ -36,7 +36,10 @@ def _leaves(prefix: str, value: Any, steps: list[Step], added: set[str]) -> None
 
 
 def same_value(a: Any, b: Any) -> bool:
-    """Equal as the form means it: a text input keeps ``'6'`` where the builder wrote ``6.0``."""
+    """Equal as the form means it: a text input keeps ``'6'`` where the builder wrote ``6.0``,
+    and a checkbox group holds the same boxes in whatever order the page ticked them."""
+    if isinstance(a, list) and isinstance(b, list):
+        return sorted(map(str, a)) == sorted(map(str, b))
     try:
         return float(a) == float(b)
     except (TypeError, ValueError):
