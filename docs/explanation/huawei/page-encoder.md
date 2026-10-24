@@ -118,8 +118,12 @@ What the page did differently from the builders, seen on the seven services in `
 1. Remove the overlays that block clicks: the first-visit guide (`.guide-dialog`, `.v-modal`)
    and the cookie banner (`.privacy-popup`).
 2. Apply the recipe's steps in order and read each one back.
-3. Wait until the price is settled: no rating request
-   (`…/ratingservice/v2/inquiry/resource`) in flight, and none answered in the last 1.5 s.
+3. Wait until the price is settled: the region's catalog
+   (`…/portalcalculatornodeservice/v4/api/productInfo?region=…`) has finished loading, no rating
+   request (`…/ratingservice/v2/inquiry/resource`) is in flight, and none was answered in the last
+   1.5 s. The page first loads the default region's catalog (`ap-southeast-1`) and fetches the
+   chosen region's after the region step; clicking Add to List before that one is read builds
+   the card from the default region's products, with the right region still in the form state.
    A card takes 2–4 s. A failed inquiry shows up as an error status or an `exceptionId` in the
    rating response. While the form passes through intermediate states (RI chosen before the
    flavor, or an Edit refill in progress), the page rates states it can't price, and those

@@ -428,6 +428,23 @@ def test_capture_price_never_settles(cart_snapshot):
     assert ei.value.details["step"] == "price"
 
 
+def test_capture_waits_for_the_region_catalog_to_finish_loading(cart_snapshot):
+    clock = FakeClock()
+    page = _capture_page(clock, cart_snapshot)
+    d = _driver(page, clock)
+    catalog = SimpleNamespace(url="https://x/portalcalculatornodeservice/v4/api/productInfo?region=la-south-2")
+    page.emit("request", catalog)  # answered or not, the page has not read it until it finishes
+    page.emit("response", FakeResponse(catalog, body={}))
+    with pytest.raises(PageEncodeFailed) as ei:
+        d.capture()
+    assert ei.value.details["step"] == "price"
+    page2 = _capture_page(clock, cart_snapshot)
+    d2 = _driver(page2, clock)
+    page2.emit("request", catalog)
+    page2.emit("requestfinished", catalog)
+    assert d2.capture()["selectedProduct"]["amount"] == 132.22
+
+
 # ---- 4.1 ECS recipe ------------------------------------------------------------
 
 TOKENS = EcsTokens({"arch": "dataInfo_32_", "vmType": "dataInfo_3_", "generation": "C7n", "cpu": "2dataInfo_36_",

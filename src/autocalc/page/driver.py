@@ -17,6 +17,8 @@ from autocalc.page import store
 
 CALCULATOR_URL = "https://www.huaweicloud.com/intl/en-us/pricing/calculator.html#/{service}"
 RATING_PATH = "/ratingservice/v2/inquiry/resource"
+# The catalog of the chosen region: until it arrives the page builds a card from the previous region's.
+CATALOG_PATH = "/portalcalculatornodeservice/v4/api/productInfo"
 ADD_TO_LIST = "#rshema_func_priceboard_addToList"
 
 Kind = Literal["radio", "select", "region", "stepper", "add", "auto"]
@@ -39,6 +41,7 @@ class Driver:
         self.timeout, self.quiet, self.poll_ms, self.clock = timeout, quiet, poll_ms, clock
         self.frontend_version: str | None = None
         self._inflight = 0
+        self._catalogs: set[int] = set()  # region catalogs still loading
         self._last_activity = clock()
         # Rating requests are tagged with the step that was current when they were sent: the form
         # passes through states the page cannot price (e.g. RI before the flavor is chosen), and
@@ -49,6 +52,8 @@ class Driver:
         self._failed_gens: set[int] = set()
         page.on("request", self._on_request)
         page.on("response", self._on_response)
+        page.on("requestfailed", self._on_failed)
+        page.on("requestfinished", self._on_catalog_done)
 
     # ---- network watch ----------------------------------------------------------
 
@@ -56,10 +61,24 @@ class Driver:
         url = request.url
         # The page also reports failures with an ``inquiryfailed`` request, but that is sent after
         # the failed response and so cannot be tied to the form state; the response itself is.
+        if CATALOG_PATH in url:
+            self._catalogs.add(id(request))
         if RATING_PATH in url:
             self._inflight += 1
             self._last_activity = self.clock()
             self._sent[id(request)] = (request, self._gen)
+
+    def _on_catalog_done(self, request: Any) -> None:
+        # Fully loaded, not merely answered: the page re-prices once it has read the catalog.
+        if id(request) in self._catalogs:
+            self._catalogs.discard(id(request))
+            self._last_activity = self.clock()
+
+    def _on_failed(self, request: Any) -> None:
+        self._on_catalog_done(request)
+        if request.url and RATING_PATH in request.url:
+            self._inflight = max(0, self._inflight - 1)
+            self._sent.pop(id(request), None)
 
     def _on_response(self, response: Any) -> None:
         if RATING_PATH in response.url:
@@ -272,10 +291,10 @@ class Driver:
     # ---- capture ----------------------------------------------------------------
 
     def settle(self) -> None:
-        """Wait until no rating request is in flight and none has finished for ``quiet`` seconds."""
+        """Wait until no catalog or rating request is in flight and no rating has finished for ``quiet`` seconds."""
         def quiet():
             self._check_inquiries()
-            return self._inflight == 0 and self.clock() - self._last_activity >= self.quiet
+            return self._inflight == 0 and not self._catalogs and self.clock() - self._last_activity >= self.quiet
 
         if not self.wait(quiet):
             raise self._fail("The price did not settle in time.", step="price")
