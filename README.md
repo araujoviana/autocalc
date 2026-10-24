@@ -19,8 +19,10 @@ Use it from the terminal (CLI) or from an AI agent (MCP server).
 ## Quick start
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/araujoviana/autocalc/main/install.sh | sh   # 1. install (Windows: see the tutorial)
-autocalc login                           # 2. sign in once (a browser opens)
+# 1. install (Windows: see the tutorial)
+curl -fsSL https://raw.githubusercontent.com/araujoviana/autocalc/main/install.sh | sh
+# 2. sign in (a browser opens)
+autocalc login                           
 ```
 
 The installer adds the MCP server to Claude Code when `claude` is on the path (otherwise:
