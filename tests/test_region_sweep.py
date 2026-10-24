@@ -46,3 +46,10 @@ def test_gives_up_after_three_tries(monkeypatch):
     with pytest.raises(PageEncodeFailed):
         region_sweep.encode("ecs", {})
     assert len(calls) == 3
+
+
+def test_a_disabled_add_to_list_and_a_missing_period_option_are_retried(monkeypatch):
+    period = PageEncodeFailed("not offered", service="ecs", field="global_PERIODTIME_UNSET_PeriodTime")
+    calls = _encode_calls(monkeypatch, [_fail("add_to_list"), period, {"ok": 1}])
+    assert region_sweep.encode("ecs", {}) == {"ok": 1}
+    assert len(calls) == 3
