@@ -8,7 +8,8 @@ Thanks for looking. autocalc is a small, experimental project, so keep changes f
   something, open a pull request, or reach out to the maintainer, rather than filing an issue.
 - **Behavior is specified in [`openspec/specs/`](openspec/specs/)**, and changes go through OpenSpec
   (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`). A change that alters behavior should carry its
-  spec delta. Design decisions are recorded in [`docs/adr/`](docs/adr/index.md).
+  spec delta. The per-tool command files are not committed: run `openspec update` to generate them
+  for your own tool. Design decisions are recorded in [`docs/adr/`](docs/adr/index.md).
 - **Windows and Linux both have to work** ([ADR-0012](docs/adr/0012-windows-and-linux.md)). Avoid
   hard-coded paths and POSIX-only shell calls.
 
