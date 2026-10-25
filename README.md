@@ -45,7 +45,7 @@ Start at [`docs/index.md`](docs/index.md) (or `uv run --group docs mkdocs serve`
 
 `uv sync --group dev --group docs`, then see [run the tests](docs/how-to/run-tests.md) for the
 checks CI runs. Behavior is specified in [`openspec/specs/`](openspec/specs/), and changes go
-through OpenSpec (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`).
+through OpenSpec (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`). See [CONTRIBUTING](CONTRIBUTING.md).
 
 ## Security
 
