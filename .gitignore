@@ -18,3 +18,7 @@ site/
 .github/agents/
 .github/prompts/
 .github/skills/
+# Local dependencies, session backups and generated indexes
+node_modules/
+.session.curl*
+.codegraph/
