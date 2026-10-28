@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+"""Reject common secret files and recognizable credentials in staged blobs."""
+import re
+import subprocess
+import sys
+
+
+def git(*args):
+    return subprocess.check_output(["git", *args])
+
+
+paths = git("diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z").split(b"\0")
+blocked = re.compile(r"(^|/)(\.env(?:\..*)?|\.session\.curl.*|\.aws/.*|.*\.(?:pem|key|p12|pfx|keystore)|(?:credentials|id_rsa|id_ed25519))(?:$|/)", re.I)
+patterns = [
+    ("private key", re.compile(rb"-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----")),
+    ("AWS access key", re.compile(rb"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b")),
+    ("GitHub token", re.compile(rb"\b(?:gh[pousr]_[A-Za-z0-9_]{36,}|github_pat_[A-Za-z0-9_]{20,})\b")),
+    ("authorization header", re.compile(rb"(?i)authorization\s*:\s*(?:bearer|basic)\s+[A-Za-z0-9._~+/=-]{16,}")),
+]
+failures = []
+for raw in filter(None, paths):
+    path = raw.decode("utf-8", "surrogateescape")
+    if blocked.search(path) or path.startswith("tests/fixtures/corpus/") or path == "docs/quotes.md" or path.startswith(".codegraph/"):
+        failures.append((path, "sensitive or local file"))
+        continue
+    blob = git("show", ":" + path)
+    for label, pattern in patterns:
+        if pattern.search(blob):
+            failures.append((path, label))
+            break
+if failures:
+    print("Commit blocked: possible sensitive data in staged files:", file=sys.stderr)
+    for path, label in failures:
+        print(f"  {path}: {label}", file=sys.stderr)
+    print("Unstage or remove sensitive content before committing.", file=sys.stderr)
+    sys.exit(1)
