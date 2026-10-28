@@ -33,7 +33,8 @@ class SfsTurboBuilder(Builder):
                  addToList_title="calc_18_",
                  addToList_product=f"{p.get('fileType')} | {p.get('sellingStatus')} | {p.get('sfsTypeList')} | "
                                    f"{tb:g}BSSUNIT.unit.{TB}")
+        capacity_control = "calculator_sfsPeriod_36input" if spec == "sfs.turbo.20MBps" else "calculator_sfsPeriod_12input"
         render = {"calculator_sfsType_radio": {"fileType": p.get("fileType"), "sellingStatus": p.get("sellingStatus"),
                                                "sfsType": p.get("sfsType")},
-                  "calculator_sfsPeriod_36input": tb}
+                  capacity_control: tb}
         return self.assemble(region, billing, periods, hours, quantity, [p], self.description, render, title=title)

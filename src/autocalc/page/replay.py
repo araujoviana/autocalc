@@ -80,7 +80,8 @@ def card_steps(rewrite_value: dict[str, Any]) -> list[Step]:
 # Where the page's on-demand form uses other control ids than the saved cards of the same service
 # (observed on SFS Turbo: the "Demand" controls replace the "Period" ones in on-demand billing).
 ALIASES = {("sfsturbo", "ONDEMAND"): {"calculator_sfsType_radio": "calculator_sfsDemand_radio",
-                                      "calculator_sfsPeriod_36input": "calculator_sfsDemand_36input"}}
+                                      "calculator_sfsPeriod_36input": "calculator_sfsDemand_36input",
+                                      "calculator_sfsPeriod_12input": "calculator_sfsDemand_12input"}}
 
 
 # builder key -> the calculator's own service key, where they differ in case
