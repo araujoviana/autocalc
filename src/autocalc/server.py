@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import functools
+import threading
 
 from mcp.server.fastmcp import FastMCP
 
@@ -18,14 +19,19 @@ from autocalc.tools import REGISTRY
 from autocalc.update import with_notice
 
 mcp = FastMCP("hwc-calculator")
+_tool_lock = threading.Lock()
 
 
 def _tool_errors(fn):
     """Wrap a tool so CalculatorError becomes a structured {"error","hint"} payload."""
     @functools.wraps(fn)
     async def wrapper(*a, **k):
+        def run():
+            with _tool_lock:
+                return with_notice(fn(*a, **k))
+
         try:  # a worker thread: the tools block, and Playwright's sync API refuses to run inside the event loop
-            return await asyncio.to_thread(lambda: with_notice(fn(*a, **k)))
+            return await asyncio.to_thread(run)
         except CalculatorError as exc:
             return exc.as_dict()
     return wrapper
