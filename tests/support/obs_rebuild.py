@@ -29,7 +29,10 @@ def options(card: dict[str, Any]) -> dict[str, Any]:
         prod = p.get("addToList_product") or ""
         parts = prod.split("|")
         unit = "TB" if len(parts) > 1 and "TB" in parts[1] else "GB"
-        comps.append({"factor": f, "value": p.get("usageValue", 0), "unit": unit})
+        value = p.get("usageValue", 0)
+        if f.startswith("size") and p.get("usageMeasureId") == 17 and unit == "TB":
+            value /= 1024
+        comps.append({"factor": f, "value": value, "unit": unit})
     return {"region": sp["region"], "components": comps, "storage_class": storage_class,
             "multi_az": multi_az, "billing": "ondemand"}
 
