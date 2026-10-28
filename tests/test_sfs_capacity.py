@@ -21,3 +21,10 @@ def test_on_demand_alias_covers_high_throughput_capacity():
     rewrite = {"global_REGIONINFO": {"chargeMode": "ONDEMAND"},
                "template_RENDER": {"calculator_sfsPeriod_12input": 1}}
     assert for_page("sfsturbo", rewrite)["template_RENDER"] == {"calculator_sfsDemand_12input": 1}
+
+
+def test_capacity_that_loses_precision_in_the_form_is_rejected():
+    from autocalc.errors import ValidationError
+
+    with pytest.raises(ValidationError, match="capacity"):
+        SfsTurboBuilder(object()).build("region", size_gb=500)
