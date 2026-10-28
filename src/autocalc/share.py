@@ -21,7 +21,8 @@ class Session:
         from autocalc import auth
 
         self._transport = transport
-        self.http = self._client(cookie_header or auth.session_cookies())
+        self._explicit_cookie = cookie_header is not None
+        self.http = self._client(cookie_header if self._explicit_cookie else auth.session_cookies())
 
     def _client(self, cookie: str) -> Any:
         import httpx
@@ -42,7 +43,7 @@ class Session:
         except ValueError as err:
             raise CalculatorError(f"{path}: HTTP {r.status_code} {r.text[:300]}") from err
         code = str(data.get("retCode", "200"))
-        if code == "CBC.0101" and _retry:
+        if code == "CBC.0101" and _retry and not self._explicit_cookie:
             # session went stale -> re-read the browser profile once, then retry
             self._renew()
             return self._call(method, path, params, body, _retry=False)
