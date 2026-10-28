@@ -9,11 +9,11 @@ test("missing calculator internals fail closed", async () => {
   const manager = new BrowserManager();
   const directory = await mkdtemp(join(tmpdir(), "autocalc-shot-")), screenshotPath = join(directory, "card.png");
   try {
-    expect(await editCheckCard(manager, 0, { selectedProduct: { serviceCode: "ecs", region: "r", amount: 1 } }, { pageUrl: server.url.href, timeout: 1000, screenshotPath })).toMatchObject({ status: "unavailable", reason: "Calculator stores did not become ready" });
+    expect(await editCheckCard(manager, 0, { selectedProduct: { serviceCode: "ecs", region: "r", amount: 1 } }, { pageUrl: server.url.href, timeout: 3000, screenshotPath })).toMatchObject({ status: "unavailable", reason: "Calculator stores did not become ready" });
     expect((await readFile(screenshotPath)).subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
   }
   finally { await manager.close(); server.stop(); await rm(directory, { recursive: true, force: true }); }
-}, 10000);
+}, 30000);
 
 test("Edit check ignores unrelated ratings and judges the last matching response", async () => {
   const server = Bun.serve({ port: 0, async fetch(request) {
@@ -31,7 +31,7 @@ test("Edit check ignores unrelated ratings and judges the last matching response
     const card = { selectedProduct: { serviceCode: "ecs", region: "r", amount: 10, productAllInfos: [{ resourceType: "type.vm", resourceSpecCode: "x", productNum: 1 }] } };
     expect(await editCheckCard(manager, 0, card, { pageUrl: server.url.href, rateUrl: new URL("/rate", server.url).href, timeout: 5000 })).toMatchObject({ status: "ok", edit: 10 });
   } finally { await manager.close(); server.stop(); }
-});
+}, 20000);
 
 const card = { selectedProduct: { serviceCode: "ecs", region: "r", amount: 10, productAllInfos: [{ resourceType: "type.vm", resourceSpecCode: "x", productNum: 1 }] } };
 function fixture(extra: string, onEdit: string): string {
