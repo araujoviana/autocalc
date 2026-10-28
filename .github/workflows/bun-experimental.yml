@@ -1,0 +1,31 @@
+name: Experimental Bun
+
+on:
+  push:
+    paths:
+      - 'experimental/bun/**'
+      - '.github/workflows/bun-experimental.yml'
+  pull_request:
+    paths:
+      - 'experimental/bun/**'
+      - '.github/workflows/bun-experimental.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: experimental/bun
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - run: bun --bun x playwright install --with-deps chromium
+      - run: bun run check
+      - run: bun run check:boundaries
+      - run: bun run test:offline
