@@ -60,3 +60,12 @@ def test_explicit_header_skips_profile(profile_reads):
     seen: list[httpx.Request] = []
     Session("cbc-sid=given", transport=_transport(["200"], seen)).lists()
     assert profile_reads == [] and "csrf" not in seen[0].headers
+
+
+def test_explicit_header_does_not_fall_back_to_another_profile_on_rejection(profile_reads):
+    seen: list[httpx.Request] = []
+    with pytest.raises(CalculatorError) as ei:
+        Session("cbc-sid=given", transport=_transport(["CBC.0101"], seen)).lists()
+    assert ei.value.code == "AUTH_EXPIRED"
+    assert profile_reads == []
+    assert len(seen) == 1
