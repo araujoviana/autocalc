@@ -8,6 +8,7 @@ builder selects the plan by factor.
 
 from __future__ import annotations
 
+import copy
 from typing import Any
 
 from autocalc.services.base import Builder, _stepper, register, unit_str
@@ -81,10 +82,6 @@ class ObsBuilder(Builder):
                 if factor.startswith("size") and it.get("storageType") not in (None, CLASS_TOKEN.get(storage_class)):
                     continue
                 return it
-        # fall back to the size item of this class
-        for it in items:
-            if it.get("storageType") == CLASS_TOKEN.get(storage_class) and spec == "obs.001":
-                return it
         from autocalc.errors import SpecNotFound
         raise SpecNotFound(f"OBS usage line {factor!r} not found in {region}")
 
@@ -131,18 +128,23 @@ class ObsBuilder(Builder):
 
         for c in components or []:
             factor = c["factor"]
+            if multi_az and factor in ("size", "size_warm"):
+                factor += "_3az"
             value = c.get("value", 0)
             spec, ttl, umid, kind = COMPONENT.get(factor, ("obs.001", "calc_8_", GB, "unit"))
             if factor.startswith("size"):
                 spec, ttl, kind = "obs.001", "calc_7_", "size"
             item = self._item(region, factor, storage_class, spec)
-            p = self.product(item, "ondemand", periods, hours, plan_match=lambda pl, f=factor: pl.get("usageFactor") == f)
+            p = self.product(copy.deepcopy(item), "ondemand", periods, hours,
+                             plan_match=lambda pl, f=factor: pl.get("usageFactor") == f)
             size_unit = c.get("unit", "TB")
             step_tok = "calc_30_" if storage_class == "cold" else "calc_29_"
             is_transition = factor.startswith("transition")
             if factor.startswith("size"):
                 umid = TB if size_unit == "TB" else GB
-                p.update(productNum=720, usageValue=value, usageMeasureId=umid,
+                rated_value = value * 1024 if factor.endswith("_3az") and size_unit == "TB" else value
+                rated_measure = 17 if factor.endswith("_3az") else umid
+                p.update(productNum=720, usageValue=rated_value, usageMeasureId=rated_measure,
                          addToList_product=f"{class_tok} | {value:g}{size_unit} | {az_tok} | {step_tok} | calc_45_:1calc_46_")
             else:
                 prod = f"{value / 10000:g}calc_12_" if is_transition else self._prod(kind, value, umid)
