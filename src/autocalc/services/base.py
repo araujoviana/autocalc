@@ -19,6 +19,7 @@ import json
 import secrets
 import time
 from collections.abc import Callable
+from contextvars import ContextVar
 from typing import Any
 
 from autocalc.client import BILLING, Billing, Calculator, CalculatorError
@@ -42,6 +43,8 @@ HOUR_MEASURE_ID = 4
 GB_MEASURE_ID = 17
 
 # registry: service code -> builder factory (populated by autocalc.services)
+_FORM_ONLY = ContextVar("builder_form_only", default=False)
+
 REGISTRY: dict[str, Callable[..., Builder]] = {}
 
 
@@ -80,6 +83,18 @@ class Builder:
     def build(self, *args: Any, **opts: Any) -> dict[str, Any]:
         """Return one card {"buyUrl","rewriteValue","selectedProduct"}. Overridden per service."""
         raise NotImplementedError
+
+    def input_signature(self):
+        """Arguments accepted by the publication form input path."""
+        return inspect.signature(self.build)
+
+    def form(self, **opts: Any) -> dict[str, Any]:
+        """Resolve catalog tokens and return only requested page state, without rating."""
+        token = _FORM_ONLY.set(True)
+        try:
+            return self.build(**opts)["rewriteValue"]
+        finally:
+            _FORM_ONLY.reset(token)
 
     # ---- catalog --------------------------------------------------------
 
@@ -189,6 +204,18 @@ class Builder:
                  quantity_tokens: tuple[str, str] = ("calc_29_", "calc_30_")) -> dict[str, Any]:
         charge_mode, mode_name, period_type, time_measure = CHARGE[billing]
         time_value = hours if billing == "ondemand" else periods
+        if _FORM_ONLY.get():
+            form = {"global_TITLE": {"tag": SITE}, "global_DESCRIPTION": description or self.description,
+                    "global_REGIONINFO": {"region": region, "locationType": "commonAZ", "chargeMode": charge_mode},
+                    "template_RENDER": rewrite}
+            if include_time:
+                if billing == "ondemand":
+                    form["global_ONDEMANDTIME"] = {"UNSET_Stepper_0": _stepper(HOUR_MEASURE_ID, hours)}
+                else:
+                    form["global_PERIODTIME"] = {"UNSET_PeriodTime": {"measureValue": periods, "measureId": time_measure}}
+            if include_quantity:
+                form["global_QUANTITY"] = {"UNSET_Stepper_0": _stepper(41, quantity, *quantity_tokens)}
+            return {"rewriteValue": form}
         time_tag = int(time.time() * 1000)
         for idx, p in enumerate(products):
             p.setdefault("productNum", quantity)

@@ -11,6 +11,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Literal
+from urllib.parse import urlsplit
 
 from autocalc.errors import PageEncodeFailed
 from autocalc.page import store
@@ -40,6 +41,7 @@ class Driver:
         self.page, self.service = page, service
         self.timeout, self.quiet, self.poll_ms, self.clock = timeout, quiet, poll_ms, clock
         self.frontend_version: str | None = None
+        self._step_deadline: float | None = None
         self._inflight = 0
         self._catalogs: set[int] = set()  # region catalogs still loading
         self._last_activity = clock()
@@ -50,10 +52,13 @@ class Driver:
         self._sent: dict[int, tuple[Any, int]] = {}  # id(request) -> (request, step)
         self._responses: list[tuple[Any, int]] = []
         self._failed_gens: set[int] = set()
+        self._load_failures: list[dict[str, Any]] = []
+        self._page_errors: list[str] = []
         page.on("request", self._on_request)
         page.on("response", self._on_response)
         page.on("requestfailed", self._on_failed)
         page.on("requestfinished", self._on_catalog_done)
+        page.on("pageerror", self._on_page_error)
 
     # ---- network watch ----------------------------------------------------------
 
@@ -74,13 +79,27 @@ class Driver:
             self._catalogs.discard(id(request))
             self._last_activity = self.clock()
 
+    def _on_page_error(self, error: Any) -> None:
+        # Exception names only: messages and stacks can contain upstream data or tokens.
+        self._page_errors = [*self._page_errors[-7:], str(getattr(error, "name", "Error"))[:60]]
+
+    def _record_load_failure(self, request: Any, status: int | None = None) -> None:
+        kind = getattr(request, "resource_type", "")
+        if kind not in ("document", "script", "xhr", "fetch"):
+            return
+        host = urlsplit(request.url).hostname
+        self._load_failures = [*self._load_failures[-11:], {"host": host, "type": kind, "status": status}]
+
     def _on_failed(self, request: Any) -> None:
+        self._record_load_failure(request)
         self._on_catalog_done(request)
         if request.url and RATING_PATH in request.url:
             self._inflight = max(0, self._inflight - 1)
             self._sent.pop(id(request), None)
 
     def _on_response(self, response: Any) -> None:
+        if getattr(response, "status", 200) >= 400 and getattr(response, "request", None):
+            self._record_load_failure(response.request, response.status)
         if RATING_PATH in response.url:
             self._inflight = max(0, self._inflight - 1)
             self._last_activity = self.clock()
@@ -103,18 +122,30 @@ class Driver:
     # ---- helpers ----------------------------------------------------------------
 
     def _fail(self, message: str, *, step: str | None = None, field: str | None = None) -> PageEncodeFailed:
-        return PageEncodeFailed(message, service=self.service, step=step, field=field,
-                                frontend_version=self.frontend_version)
+        error = PageEncodeFailed(message, service=self.service, step=step, field=field,
+                                 frontend_version=self.frontend_version)
+        if step == "open":
+            error.details["load"] = {"state": self._safe_js("loadState"),
+                                     "failed_resources": list(self._load_failures),
+                                     "script_errors": list(self._page_errors)}
+        return error
 
     def wait(self, probe: Callable[[], Any], timeout: float | None = None) -> Any:
         """Poll ``probe`` until it returns something truthy; ``None`` on timeout."""
         deadline = self.clock() + (self.timeout if timeout is None else timeout)
+        if self._step_deadline is not None:
+            deadline = min(deadline, self._step_deadline)
         while True:
             if value := probe():
                 return value
             if self.clock() >= deadline:
                 return None
             self.page.wait_for_timeout(self.poll_ms)
+
+    def _native_timeout_ms(self) -> float:
+        """Keep Playwright's own waits inside the remaining step budget (zero disables its timeout)."""
+        remaining = self.timeout if self._step_deadline is None else self._step_deadline - self.clock()
+        return max(1, remaining * 1000)
 
     def _touch(self) -> None:
         self._last_activity = self.clock()
@@ -152,18 +183,22 @@ class Driver:
         self._touch()
 
     def apply(self, step: Step) -> None:
-        self._gen += 1
-        if step.kind == "auto":  # let the form say what the control is
-            step = self._resolve(step)
-            if step is None:
-                return
-        if step.kind == "add":
-            self._add(step)
-        elif step.kind == "stepper":
-            self._stepper(step)
-        else:
-            self._choose(step)
-        self._touch()
+        self._step_deadline = self.clock() + self.timeout
+        try:
+            self._gen += 1
+            if step.kind == "auto":  # let the form say what the control is
+                step = self._resolve(step)
+                if step is None:
+                    return
+            if step.kind == "add":
+                self._add(step)
+            elif step.kind == "stepper":
+                self._stepper(step)
+            else:
+                self._choose(step)
+            self._touch()
+        finally:
+            self._step_deadline = None
 
     def _form_value(self, step: Step) -> Any:
         """What the form state holds for this control, or ``None`` if it isn't a template control."""
@@ -191,6 +226,8 @@ class Driver:
         ctl = ctl or self.wait(lambda: store.js(self.page, "describe", step.component_id))
         if not ctl:
             raise self._fail(f"The form has no control {step.component_id}.", field=step.component_id)
+        if ctl["kind"] == "base-radio-stepper":
+            ctl = store.js(self.page, "radioStepper", step.component_id, step.value) or ctl
         kind = {"base-radio-group": "radio", "base-select": "select", "base-stepper": "stepper", "base-radio-stepper": "stepper",
                 "common-input": "stepper"}.get(ctl["kind"])
         if kind is None:
@@ -204,6 +241,8 @@ class Driver:
         """The control and the requested option, waiting for both to appear (choices narrow later ones)."""
         def probe():
             ctl = store.js(self.page, "describe", step.component_id)
+            if ctl and ctl["kind"] == "base-radio-stepper":
+                ctl = store.js(self.page, "radioStepper", step.component_id, step.value) or ctl
             if not ctl:
                 return None
             opt = next((o for o in ctl["options"] if o.get("value") == step.value), None)
@@ -246,13 +285,13 @@ class Driver:
         ctl = self.wait(probe)
         if not ctl:
             raise self._fail(f"The form has no control {step.component_id}.", field=step.component_id)
-        box = self.page.locator(f"[id='{ctl['id']}'] input").first
+        box = self.page.locator(f"[id='{ctl['id']}'] input:visible").first
         if not box.is_visible() and self._held(step):  # e.g. the ELB IP count of a private load balancer
             return
         try:
-            box.fill(_number(step.value))
-            box.press("Enter")
-            box.blur()  # a plain input (SFS capacity) only commits on blur
+            box.fill(_number(step.value), timeout=self._native_timeout_ms())
+            box.press("Enter", timeout=self._native_timeout_ms())
+            box.blur(timeout=self._native_timeout_ms())  # a plain input (SFS capacity) only commits on blur
         except Exception as exc:
             raise self._fail(f"Could not type into {step.component_id}.", field=step.component_id) from exc
 
@@ -282,7 +321,7 @@ class Driver:
 
         before = rows()
         try:  # a pointer click: the add button ignores a DOM click()
-            self.page.click(f"[id='{step.component_id}'] .common-addible-addDisk", timeout=self.timeout * 1000)
+            self.page.click(f"[id='{step.component_id}'] .common-addible-addDisk", timeout=self._native_timeout_ms())
         except Exception as exc:
             raise self._fail(f"The form has no add button for {step.component_id}.", field=step.component_id) from exc
         if not self.wait(lambda: rows() > before):

@@ -2,6 +2,10 @@ site_name: autocalc
 site_description: Verified share links from cloud pricing calculators, for AI agents and the people who use them.
 docs_dir: docs
 strict: true
+exclude_docs: |
+  /quotes.md
+  /reports/
+  /private/
 
 theme:
   name: material

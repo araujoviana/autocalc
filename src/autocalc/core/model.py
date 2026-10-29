@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import math
+from dataclasses import dataclass, field, fields
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
@@ -27,11 +28,39 @@ class Requirement:
     group: str | None = None
     options: dict[str, Any] = field(default_factory=dict)  # passed to the service builder
 
+    def __post_init__(self) -> None:
+        for name in ("id", "service", "region", "billing"):
+            if not isinstance(getattr(self, name), str) or not getattr(self, name).strip():
+                raise ValidationError(f"{name} must be a nonempty string.", field=name)
+        for name in ("spec", "group"):
+            value = getattr(self, name)
+            if value is not None and (not isinstance(value, str) or not value.strip()):
+                raise ValidationError(f"{name} must be a nonempty string when supplied.", field=name)
+        if self.az is not None and (not isinstance(self.az, str) or not self.az.strip()):
+            raise ValidationError("az must be a nonempty string when supplied.", field="az")
+        if isinstance(self.quantity, bool) or not isinstance(self.quantity, int) or self.quantity < 1:
+            raise ValidationError("quantity must be a positive integer.", field="quantity")
+        if self.billing not in ("ondemand", "monthly", "yearly", "ri"):
+            raise ValidationError("Unknown billing mode.", field="billing")
+        if not isinstance(self.options, dict) or not isinstance(self.needs, dict):
+            raise ValidationError("options and needs must be objects.")
+        for name, value in self.needs.items():
+            if name not in ("vcpus", "memory_gb"):
+                raise ValidationError(f"Unknown need {name!r}.", field="needs")
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+                raise ValidationError("Needs must be finite nonnegative numbers.", field="needs")
+
     def to_dict(self) -> dict[str, Any]:
         return dict(self.__dict__)
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> Requirement:
+        if not isinstance(d, dict):
+            raise ValidationError("Each requirement must be an object.")
+        unknown = set(d) - {f.name for f in fields(cls)}
+        missing = {"id", "service", "region", "billing"} - set(d)
+        if unknown or missing:
+            raise ValidationError(f"Invalid requirement keys: unknown={sorted(unknown)}, missing={sorted(missing)}.")
         return cls(**d)
 
 
@@ -77,12 +106,14 @@ class Draft:
     decisions: list[Decision] = field(default_factory=list)
     created: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     version: int = VERSION
+    publishing: bool = False
+    publication: dict[str, Any] | None = None
 
     def add_decision(self, d: Decision) -> None:
         """Record a decision, replacing an earlier one for the same requirement."""
         if d.by not in ("auto", "human"):
             raise ValidationError("A decision is made by 'auto' or 'human'.", field="by", allowed=["auto", "human"])
-        if not d.justification.strip():
+        if not isinstance(d.justification, str) or not d.justification.strip():
             raise ValidationError("A decision needs a justification.", field="justification")
         ids = [r.id for r in self.requirements]
         if d.requirement_id not in ids:
@@ -97,11 +128,11 @@ class Draft:
     def to_dict(self) -> dict[str, Any]:
         return {"version": self.version, "id": self.id, "customer": self.customer, "provider": self.provider,
                 "created": self.created, "requirements": [r.to_dict() for r in self.requirements],
-                "decisions": [d.to_dict() for d in self.decisions]}
+                "decisions": [d.to_dict() for d in self.decisions], "publication": self.publication, "publishing": self.publishing}
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> Draft:
         return cls(id=d["id"], customer=d["customer"], provider=d["provider"], created=d["created"],
-                   version=d.get("version", VERSION),
+                   version=d.get("version", VERSION), publication=d.get("publication"), publishing=d.get("publishing", False),
                    requirements=[Requirement.from_dict(r) for r in d["requirements"]],
                    decisions=[Decision.from_dict(x) for x in d["decisions"]])

@@ -76,6 +76,7 @@ def _click(driver: Driver, key: str, label: str) -> tuple[bool, bool]:
 
 def check_card(driver: Driver, index: int, card: dict[str, Any]) -> EditResult:
     """Edit one card already in the page's cart and compare the re-priced amount with the stored one."""
+    driver.service = card.get("selectedProduct", {}).get("serviceCode") or "shared-list"
     page = driver.page
     stored = store.cents(card["selectedProduct"]["amount"])
     key = card["selectedProduct"].get("_cartId")
@@ -134,7 +135,7 @@ def check_card(driver: Driver, index: int, card: dict[str, Any]) -> EditResult:
     return EditResult(index, stored, edit, True, None, seen_warning)
 
 
-def edit_check(list_id: str, calc: Calculator | None = None, service: str = "ecs") -> list[EditResult]:
+def edit_check(list_id: str, calc: Calculator | None = None, service: str = "shared-list") -> list[EditResult]:
     """One result per card of the saved list, in list order. Raises only if the list cannot be read."""
     from autocalc.page.browser import page_context
     from autocalc.share import share_detail

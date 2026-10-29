@@ -15,9 +15,11 @@ FunctionGraph compute cannot currently be priced (only the request line is billa
 from __future__ import annotations
 
 import json
+import math
 from typing import Any
 
 from autocalc.client import Billing
+from autocalc.errors import ValidationError
 from autocalc.services.base import Builder, _stepper, register
 
 GROUP = "functionstage_functionstage"
@@ -45,6 +47,11 @@ class FunctionBuilder(Builder):
               billing: Billing = "ondemand", quantity: int = 1, hours: float = 730,
               memory_mb: float = 128, compute_units: float | None = None, request_units: float | None = None,
               title: str | None = None) -> dict[str, Any]:
+        for field, value in {"requests": requests, "gb_seconds": gb_seconds, "memory_mb": memory_mb}.items():
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+                raise ValidationError("FunctionGraph usage must be finite nonnegative numbers.", field=field)
+        if gb_seconds > 0 or (compute_units is not None and compute_units != 0):
+            raise ValidationError("FunctionGraph compute has no reliable upstream price; positive compute cannot be quoted.", field="gb_seconds")
         req = self.product(self._item(region, "request"), billing, 1, hours)
         req.update(addToList_title="calc_2_", addToList_product=requests / 1_000_000,
                    usageFactor="request", usageValue=requests / 1_000_000, usageMeasureId=32)

@@ -11,6 +11,8 @@
   autocalc doctor
   autocalc install-browser
   autocalc update [--to vX.Y.Z]
+  autocalc validate LIST_ID
+  Additional JSON tool commands are listed by --help.
   autocalc page-controls SERVICE
 """
 
@@ -21,8 +23,10 @@ import inspect
 import json
 import re
 import sys
+import types
 import typing
 from importlib import metadata
+from pathlib import Path
 
 from autocalc import frontend
 from autocalc.client import Calculator
@@ -61,7 +65,7 @@ def _print_err(exc: CalculatorError) -> int:
 def _json_arg(value: str):
     """A JSON value, or @path to read it from a file."""
     try:
-        return json.loads(open(value[1:], encoding="utf-8").read() if value.startswith("@") else value)
+        return json.loads(Path(value[1:]).read_text(encoding="utf-8") if value.startswith("@") else value)
     except (OSError, ValueError) as exc:
         raise argparse.ArgumentTypeError(f"not valid JSON (or readable @file): {exc}") from exc
 
@@ -84,9 +88,13 @@ def _add_tool_commands(sub, taken: set[str]) -> dict[str, tuple]:
         hints = typing.get_type_hints(fn)
         for par in inspect.signature(fn).parameters.values():
             t, req = hints.get(par.name, str), par.default is inspect.Parameter.empty
+            if typing.get_origin(t) in (typing.Union, types.UnionType):
+                scalar = [value for value in typing.get_args(t) if value is not type(None)]
+                if len(scalar) == 1:
+                    t = scalar[0]
             opt = "--" + par.name.replace("_", "-")
             if t is bool:
-                p.add_argument(opt, dest=par.name, action="store_true")
+                p.add_argument(opt, dest=par.name, action=argparse.BooleanOptionalAction, default=False if req else par.default)
             elif t in (int, float, str):
                 p.add_argument(opt, dest=par.name, type=t, required=req, default=None if req else par.default)
             else:
@@ -138,7 +146,6 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("page-controls", help="list the controls of a service's calculator page")
     p.add_argument("service")
     tool_cmds = _add_tool_commands(sub, set(sub.choices))
-    sub._choices_actions = [c for c in sub._choices_actions if c.dest not in JSON_TWINS]  # argparse has no public way to hide one
     a = ap.parse_args(argv)
 
     try:
@@ -224,11 +231,7 @@ def _doctor() -> int:
     print("autocalc doctor\n" + "-" * 40)
     ok = True
     checks = {"menuInfo": ("GET", f"{CALC}/menuInfo", {"sign": "common", "language": "en-us"}, None),
-              "inquiry": ("POST", INQUIRY, None, {"regionId": "sa-brazil-1", "chargingMode": 0, "periodType": 2, "periodNum": 1,
-                                                   "subscriptionNum": 1, "siteCode": "HWC", "productInfos": [
-                                                       {"id": "a", "cloudServiceType": "hws.service.type.ec2",
-                                                        "resourceType": "hws.resource.type.vm",
-                                                        "resourceSpecCode": "c7n.large.2.linux", "productNum": 1}]}),
+              "inquiry": ("POST", INQUIRY, None, {"siteCode": "HWC", "productInfos": []}),
               "exchange-rate": ("GET", EXCHANGE, {"page_no": 1, "page_size": 5}, None)}
     for name, (method, url, params, body) in checks.items():
         try:
@@ -240,14 +243,17 @@ def _doctor() -> int:
         except Exception as exc:  # noqa: BLE001
             ok = False
             print(f"[FAIL] {name}: {exc}  -> check network / proxy")
+    calc = None
     try:
-        Calculator()
+        calc = Calculator()
         live = frontend.live_version()
-        print(f"[ok]   frontend version: {live or 'unknown'}")
+        ok = ok and bool(live)
+        print(f"[{'ok' if live else 'FAIL'}]   frontend version: {live or 'unknown'}")
         for note in frontend.warnings(sorted(VERIFIED), live):
             print(f"[warn] {note}")
     except Exception as exc:  # noqa: BLE001
-        print(f"[warn] frontend version: {exc}")
+        ok = False
+        print(f"[FAIL] frontend version: {exc}")
     browser = auth.find_browser()
     print(f"[{'warn' if browser.name == 'bundled' else 'ok'}]   browser: {browser.describe()}"
           + ("  -> install Chrome or Edge, or run `autocalc install-browser`" if browser.name == "bundled" else ""))
@@ -255,7 +261,9 @@ def _doctor() -> int:
     print(f"[ok]   profile: {udd}" if udd.exists() else f"[warn] profile: none yet  -> {auth.LOGIN_HINT}")
     try:
         auth.data_dir().mkdir(parents=True, exist_ok=True)
-        print(f"[ok]   cache/config: {Calculator().cache_dir}")
+        if calc is None:
+            calc = Calculator()
+        print(f"[ok]   cache/config: {calc.cache_dir}")
     except Exception as exc:  # noqa: BLE001
         ok = False
         print(f"[FAIL] cache dir: {exc}")
@@ -263,4 +271,4 @@ def _doctor() -> int:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

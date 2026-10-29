@@ -22,3 +22,7 @@ uv run python -m tests.support.render    # publish a list, open it headless, the
   ([Refresh the golden corpus](refresh-corpus.md)) and skip without it.
 - `tests.support.render` **creates and deletes a list in your account**. It needs
   `autocalc login`.
+
+Synthetic public form requests in `tests/fixtures/public/` run offline in CI. They contain no
+customer cards. The `Anonymous calculator drift` workflow can be dispatched manually and runs
+weekly against anonymous page/rating endpoints. It needs no account secrets and saves no lists.

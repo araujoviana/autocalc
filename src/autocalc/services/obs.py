@@ -9,12 +9,14 @@ builder selects the plan by factor.
 from __future__ import annotations
 
 import copy
+import math
 from typing import Any
 
+from autocalc.errors import ValidationError
 from autocalc.services.base import Builder, _stepper, register, unit_str
 
 GROUP = "obs_obs"
-GB = 10          # GB measure
+TRAFFIC_GB_MEASURE_ID = 10  # backend traffic GB; storage GB uses measure 17
 REQ = 54         # requests (per 10k) measure
 TB = 9           # storage expressed in TB
 CLASS_TOKEN = {"standard": "dataInfo_2_", "warm": "dataInfo_3_", "cold": "dataInfo_1_"}
@@ -42,9 +44,9 @@ STEPS = {
 
 # usageFactor -> (spec, title, usageMeasureId, prod-template kind)
 COMPONENT: dict[str, tuple[str, str, int, str]] = {
-    "download.external": ("obs.001", "calc_8_", GB, "unit"),
-    "download_warm.external": ("obs.001", "calc_8_", GB, "unit"),
-    "download_cold.external": ("obs.001", "calc_8_", GB, "unit"),
+    "download.external": ("obs.001", "calc_8_", TRAFFIC_GB_MEASURE_ID, "unit"),
+    "download_warm.external": ("obs.001", "calc_8_", TRAFFIC_GB_MEASURE_ID, "unit"),
+    "download_cold.external": ("obs.001", "calc_8_", TRAFFIC_GB_MEASURE_ID, "unit"),
     "get": ("obs.001", "calc_13_", REQ, "plain12"),
     "put": ("obs.001", "calc_14_", REQ, "plain12"),
     "get_warm": ("obs.001", "calc_13_", 31, "plain16"),
@@ -54,10 +56,10 @@ COMPONENT: dict[str, tuple[str, str, int, str]] = {
     "put_cold": ("obs.001", "calc_14_", 31, "plain16"),
     "delete_cold": ("obs.001", "calc_15_", 31, "plain16"),
     "delete": ("obs.001", "calc_15_", 31, "plain16"),
-    "download.cdn": ("obs", "calc_10_", GB, "unit"),
+    "download.cdn": ("obs", "calc_10_", TRAFFIC_GB_MEASURE_ID, "unit"),
     "download_crr": ("obs.001", "calc_11_", 17, "unit"),
-    "retrieval_size_warm": ("obs.001", "calc_18_", GB, "retrieval"),
-    "restore_size_ex": ("obs.001", "calc_18_", GB, "retrieval"),
+    "retrieval_size_warm": ("obs.001", "calc_18_", TRAFFIC_GB_MEASURE_ID, "retrieval"),
+    "restore_size_ex": ("obs.001", "calc_18_", TRAFFIC_GB_MEASURE_ID, "retrieval"),
     "transition_warm": ("obs.001", "detail_145_", 14, "plain12"),
     "transition_cold": ("obs.001", "detail_145_", 14, "plain12"),
 }
@@ -89,6 +91,45 @@ class ObsBuilder(Builder):
               storage_class: str = "standard", multi_az: bool = False,
               package: str | None = None, billing: str = "ondemand", periods: int = 1, hours: float = 730,
               quantity: int = 1, title: str | None = None) -> dict[str, Any]:
+        if isinstance(quantity, bool) or not isinstance(quantity, int) or quantity != 1:
+            raise ValidationError("OBS form supports one usage card.", field="quantity", allowed=[1])
+        if package and components:
+            raise ValidationError("OBS package and usage components cannot be combined.", field="components")
+        if package and (storage_class != "standard" or multi_az):
+            raise ValidationError("OBS packages have no verified class or multi AZ override.", field="package")
+        if not package and not components:
+            raise ValidationError("OBS usage requires explicit components.", field="components")
+        if storage_class not in CLASS_TOKEN:
+            raise ValidationError("Unknown OBS storage class.", field="storage_class", allowed=list(CLASS_TOKEN))
+        if not package and billing != "ondemand":
+            raise ValidationError("OBS usage components require ondemand billing.", field="billing", allowed=["ondemand"])
+        if multi_az and storage_class == "cold":
+            raise ValidationError("Cold OBS storage does not support multi AZ.", field="multi_az")
+        seen_controls = set()
+        for component in components or []:
+            if not isinstance(component, dict):
+                raise ValidationError("OBS components must be objects.", field="components")
+            factor = component.get("factor")
+            if not isinstance(factor, str):
+                raise ValidationError("OBS factor must be a string.", field="factor")
+            value = component.get("value")
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+                raise ValidationError("OBS usage values must be finite nonnegative numbers.", field="value")
+            if isinstance(factor, str) and factor.endswith("_3az") and not multi_az:
+                raise ValidationError("A three AZ storage factor requires multi_az=true.", field="multi_az")
+            expected_class = "warm" if "warm" in str(factor) else "cold" if "cold" in str(factor) or factor == "restore_size_ex" else "standard"
+            if factor not in ("download.cdn", "download_crr") and storage_class != expected_class:
+                raise ValidationError("OBS usage factor does not match storage_class.", field="factor")
+            control = "storage" if str(factor).startswith("size") else STEPS.get(factor, (factor,))[0]
+            if control in seen_controls:
+                raise ValidationError("Multiple OBS components target the same form control.", field="components")
+            seen_controls.add(control)
+            if factor not in COMPONENT and factor not in (SIZE_FACTOR[storage_class], SIZE_FACTOR[storage_class] + "_3az"):
+                raise ValidationError("Unknown or incompatible OBS usage factor.", field="factor", allowed=[SIZE_FACTOR[storage_class], *COMPONENT])
+            if factor.startswith("size") and component.get("unit") not in ("GB", "TB"):
+                raise ValidationError("OBS storage requires an explicit unit.", field="unit", allowed=["GB", "TB"])
+            if factor in COMPONENT and factor not in STEPS:
+                raise ValidationError("OBS factor has no verified form control.", field="factor", allowed=list(STEPS))
         products: list[dict[str, Any]] = []
         class_tok = CLASS_TOKEN.get(storage_class, "dataInfo_2_")
         az_tok = "dataInfo_5_" if multi_az else "dataInfo_4_"
@@ -131,7 +172,7 @@ class ObsBuilder(Builder):
             if multi_az and factor in ("size", "size_warm"):
                 factor += "_3az"
             value = c.get("value", 0)
-            spec, ttl, umid, kind = COMPONENT.get(factor, ("obs.001", "calc_8_", GB, "unit"))
+            spec, ttl, umid, kind = COMPONENT.get(factor, ("obs.001", "calc_8_", TRAFFIC_GB_MEASURE_ID, "unit"))
             if factor.startswith("size"):
                 spec, ttl, kind = "obs.001", "calc_7_", "size"
             item = self._item(region, factor, storage_class, spec)
@@ -141,7 +182,7 @@ class ObsBuilder(Builder):
             step_tok = "calc_30_" if storage_class == "cold" else "calc_29_"
             is_transition = factor.startswith("transition")
             if factor.startswith("size"):
-                umid = TB if size_unit == "TB" else GB
+                umid = TB if size_unit == "TB" else TRAFFIC_GB_MEASURE_ID
                 rated_value = value * 1024 if factor.endswith("_3az") and size_unit == "TB" else value
                 rated_measure = 17 if factor.endswith("_3az") else umid
                 p.update(productNum=720, usageValue=rated_value, usageMeasureId=rated_measure,
@@ -160,11 +201,11 @@ class ObsBuilder(Builder):
     @staticmethod
     def _template(components: list[dict[str, Any]], class_tok: str, az_tok: str) -> dict[str, Any]:
         """Rebuild the pay-per-use render template (the components the portal enumerates)."""
-        tr: dict[str, Any] = {}
+        tr: dict[str, Any] = {"calculator_multiAZ_radio": {"multiAZType": az_tok}}
         for c in components:
             f, v = c["factor"], c.get("value", 0)
             if f.startswith("size"):
-                tr.setdefault("calculator_multiAZ_radio", {})["UNSET_Stepper_0"] = _stepper(TB if c.get("unit", "TB") == "TB" else GB, v)
+                tr.setdefault("calculator_multiAZ_radio", {})["UNSET_Stepper_0"] = _stepper(TB if c.get("unit", "TB") == "TB" else TRAFFIC_GB_MEASURE_ID, v)
                 continue
             step = STEPS.get(f)
             if not step:
@@ -173,7 +214,7 @@ class ObsBuilder(Builder):
             tr.setdefault(key, {})[sub] = _stepper(mid, v, name, name)
             if key == "calculator_Traffic_Read_radio":
                 tr[key]["restorationType"] = "dataInfo_6_"
-        if "calculator_multiAZ_radio" in tr:
+        if "UNSET_Stepper_0" in tr["calculator_multiAZ_radio"]:
             tr["calculator_multiAZ_radio"]["UNSET_Stepper_2"] = _stepper(20, 1)
             tr["calculator_multiAZ_radio"]["multiAZType"] = az_tok
         tr["calculator_productType_switch"] = {"productType": "calc_29_"}

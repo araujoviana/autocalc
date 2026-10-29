@@ -198,14 +198,16 @@ class FakeLocator:
     def is_disabled(self):
         return bool(self.page.fns.get("_disabled", {}).get(self.selector))
 
-    def fill(self, text):
+    def fill(self, text, **kwargs):
+        self.page.native_timeouts.append(kwargs.get("timeout"))
         self.page.typed[self.selector] = text
 
-    def press(self, key):
+    def press(self, key, **kwargs):
+        self.page.native_timeouts.append(kwargs.get("timeout"))
         self.page.pressed.append((self.selector, key))
 
-    def blur(self):
-        pass
+    def blur(self, **kwargs):
+        self.page.native_timeouts.append(kwargs.get("timeout"))
 
 
 class FakePage:
@@ -215,6 +217,7 @@ class FakePage:
         self.clock, self.fns = clock, fns
         self.handlers: dict[str, list] = {}
         self.typed: dict[str, str] = {}
+        self.native_timeouts = []
         self.pressed: list = []
         self.clicked: list = []
         self.calls: list = []
@@ -299,10 +302,11 @@ def test_missing_control_names_the_field():
 def test_stepper_types_and_reads_back():
     clock = FakeClock()
     page = FakePage(clock, describe={"kind": "base-stepper", "id": "calculator_evs_stepper_1_1", "options": []},
-                    readBack=lambda cfg: page.typed.get("[id='calculator_evs_stepper_1_1'] input"))
+                    readBack=lambda cfg: page.typed.get("[id='calculator_evs_stepper_1_1'] input:visible"))
     _driver(page, clock).apply(Step("calculator_evs_stepper_|addible0|_0_Stepper_0", "stepper", 50))
-    assert page.typed == {"[id='calculator_evs_stepper_1_1'] input": "50"}
-    assert page.pressed == [("[id='calculator_evs_stepper_1_1'] input", "Enter")]
+    assert page.typed == {"[id='calculator_evs_stepper_1_1'] input:visible": "50"}
+    assert page.pressed == [("[id='calculator_evs_stepper_1_1'] input:visible", "Enter")]
+    assert page.native_timeouts == [5000, 5000, 5000]
 
 
 def test_stepper_clamped_value_fails():
@@ -608,3 +612,60 @@ def test_edit_check_warning_alone_does_not_fail(saved_card):
     page = _edit_page(clock, saved_card, warning=True)
     r = check_card(_driver(page, clock), 0, saved_card)
     assert r.equal and r.warning
+
+
+def test_missing_control_has_one_step_timeout_budget():
+    clock = FakeClock()
+    page = FakePage(clock, describe=None, formState={})
+    driver = _driver(page, clock)
+    with pytest.raises(PageEncodeFailed):
+        driver.apply(Step("missing", "auto", "value"))
+    assert clock.now <= driver.timeout + driver.poll_ms / 1000
+    assert driver._step_deadline is None
+
+
+def test_native_actions_use_remaining_step_budget():
+    clock = FakeClock()
+    page = FakePage(clock)
+    driver = _driver(page, clock)
+    driver._step_deadline = 5
+    clock.now = 4.5
+    assert driver._native_timeout_ms() == 500
+    clock.now = 6
+    assert driver._native_timeout_ms() == 1  # Playwright treats zero as unlimited
+
+
+def test_radio_stepper_uses_offered_preset_instead_of_hidden_input():
+    clock = FakeClock()
+    page = FakePage(clock,
+                    describe={'kind': 'base-radio-stepper', 'id': 'parent', 'options': []},
+                    radioStepper={'kind': 'base-radio-group', 'id': 'nested',
+                                  'options': [{'value': 16, 'text': '16 GB'}]},
+                    clickOption='ok', readBack='16 GB')
+    _driver(page, clock).apply(Step('memory', 'auto', 16))
+    assert ('clickOption', 'memory', 16) in page.calls
+    assert not page.typed
+
+
+def test_radio_stepper_keeps_custom_numeric_fallback():
+    clock = FakeClock()
+    page = FakePage(clock,
+                    describe={'kind': 'base-radio-stepper', 'id': 'parent', 'options': []},
+                    radioStepper=None, readBack='18')
+    _driver(page, clock).apply(Step('memory', 'auto', 18))
+    assert page.typed == {"[id='parent'] input:visible": '18'}
+
+
+def test_mount_failure_diagnostics_exclude_tokens_and_messages():
+    clock = FakeClock()
+    page = FakePage(clock, loadState={'ready': 'complete', 'vue': False})
+    driver = _driver(page, clock)
+    driver._on_failed(SimpleNamespace(url='https://assets.test/private/token?secret=hidden', resource_type='script'))
+    driver._on_page_error(SimpleNamespace(name='TypeError', message='secret value'))
+    error = driver._fail('Form did not mount.', step='open')
+    assert error.details['load'] == {
+        'state': {'ready': 'complete', 'vue': False},
+        'failed_resources': [{'host': 'assets.test', 'type': 'script', 'status': None}],
+        'script_errors': ['TypeError'],
+    }
+    assert 'secret' not in json.dumps(error.as_dict())

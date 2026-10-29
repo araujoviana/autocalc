@@ -9,12 +9,14 @@ from __future__ import annotations
 
 import asyncio
 import functools
+import logging
 import threading
+from contextlib import nullcontext
 
 from mcp.server.fastmcp import FastMCP
 
 from autocalc import workflow  # noqa: F401  (registers the workflow tools)
-from autocalc.errors import CalculatorError
+from autocalc.errors import CalculatorError, UpstreamError, ValidationError
 from autocalc.tools import REGISTRY
 from autocalc.update import with_notice
 
@@ -27,13 +29,20 @@ def _tool_errors(fn):
     @functools.wraps(fn)
     async def wrapper(*a, **k):
         def run():
-            with _tool_lock:
+            # Serialize account mutations, while independent catalog reads remain available.
+            writes = {"publish_quote", "delete_price_list", "rename_price_list", "duplicate_price_list", "auth_login", "auth_logout", "revise_quote", "draft_quote", "recover_draft"}
+            with _tool_lock if fn.__name__ in writes else nullcontext():
                 return with_notice(fn(*a, **k))
 
         try:  # a worker thread: the tools block, and Playwright's sync API refuses to run inside the event loop
             return await asyncio.to_thread(run)
         except CalculatorError as exc:
             return exc.as_dict()
+        except (TypeError, KeyError, ValueError) as exc:
+            return ValidationError(str(exc), hint="Check the tool arguments and required options.").as_dict()
+        except Exception:
+            logging.getLogger(__name__).exception("Tool %s failed", fn.__name__)
+            return UpstreamError("Tool execution failed.", hint="Retry or inspect the server logs.").as_dict()
     return wrapper
 
 

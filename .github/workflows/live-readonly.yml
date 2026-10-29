@@ -1,0 +1,18 @@
+name: Anonymous calculator drift
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 5 * * 1'
+permissions:
+  contents: read
+jobs:
+  anonymous-page-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+      - run: uv sync --locked --group dev
+      - run: uv run playwright install --with-deps chromium
+      - name: Anonymous page and rating comparison (no saved lists or session)
+        run: uv run pytest tests/test_public_form_live.py -m live

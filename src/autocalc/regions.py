@@ -36,7 +36,7 @@ _ALIASES: dict[str, str] = {
     "singapore": "ap-southeast-3", "hong kong": "ap-southeast-1", "cn-hong kong": "ap-southeast-1",
     "bangkok": "ap-southeast-2", "jakarta": "ap-southeast-4", "manila": "ap-southeast-5",
     "istanbul": "tr-west-1", "cairo": "af-north-1", "moscow": "ru-moscow-1",
-    "kuala lumpur": "my-kualalumpur-1", "dublin": "eu-west-0", "amsterdam": "eu-west-0",
+    "kuala lumpur": "my-kualalumpur-1", "dublin": "eu-west-101",
     "paris": "eu-west-0",
 }
 
@@ -88,7 +88,7 @@ class RegionResolver:
         # substring fallback on ids and display names
         hits: set[str] = set()
         for key, rids in idx.items():
-            if q in key or key in q:
+            if len(q) >= 4 and (q in key or key in q):
                 hits |= rids
         return sorted(hits)
 

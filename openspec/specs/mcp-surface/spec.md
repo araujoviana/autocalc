@@ -138,18 +138,17 @@ services. A card the page cannot encode SHALL fail with `PAGE_ENCODE_FAILED` and
 - **WHEN** one of the cards cannot be encoded by the page
 - **THEN** `publish_quote` fails with `PAGE_ENCODE_FAILED` naming the field, and no list exists afterwards
 
-### Requirement: A recipe service says when it ignores the chosen spec
-When a draft decision for a recipe service names a spec, `publish_quote` SHALL add a warning
-that the spec was not applied and that the card uses the requirement's options and the page's
-defaults.
+### Requirement: Publication preserves the selected specification
+`publish_quote` SHALL reject a selected spec that has no verified mapping to the service form,
+before saving a list. A warning is insufficient for an unapplied specification.
 
-#### Scenario: Recipe service with a chosen spec
-- **WHEN** a draft with a recipe service and a decided spec is published
-- **THEN** the result's `warnings` names the service and the spec that was not applied
+#### Scenario: Recipe service with an unmapped spec
+- **WHEN** a draft decision selects a spec that the recipe cannot apply
+- **THEN** publication fails with `VALIDATION` and saves no list
 
 #### Scenario: Service that applies its spec
-- **WHEN** a builder service with a `spec_arg` is published
-- **THEN** no such warning is added
+- **WHEN** a builder has a verified mapping for the selected spec
+- **THEN** publication applies it and checks the resulting form state
 
 ### Requirement: Tools that drive a browser work over MCP
 Every tool SHALL run off the server's event loop so that tools using a browser (`publish_quote`,
@@ -207,8 +206,12 @@ the summed total.
 - **THEN** the Quotes sheet has a header, a `prod` row, a `dev` row and a Total row, and each link opens its list
 
 ### Requirement: Fixed sheet layout
-The workbook SHALL have these sheets in this order, each with a bold header row, the columns below
-in that order, and rows in input order:
+The workbook SHALL contain Quotes, Decisions, Resources and Totals, in that order, with bold
+headers and rows in input order. Columns SHALL follow the layout scenario below.
+
+#### Scenario: Column layout
+- **WHEN** a workbook is exported
+- **THEN** the columns are as follows:
 
 - **Quotes**: Environment, Calculator (the list's name), Total (USD, a number), Link (a clickable
   share URL, wrapped in its cell), then a Total row that sums the totals.

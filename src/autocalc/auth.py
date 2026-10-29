@@ -31,7 +31,14 @@ from pathlib import Path
 from typing import Any
 
 from autocalc.client import CALC
-from autocalc.errors import AuthExpired, AuthLoginFailed, AuthProfileBusy, ValidationError
+from autocalc.errors import (
+    AuthExpired,
+    AuthLoginFailed,
+    AuthProfileBusy,
+    UnexpectedResponse,
+    UpstreamError,
+    ValidationError,
+)
 
 CALCULATOR_URL = "https://www.huaweicloud.com/intl/en-us/pricing/calculator.html"
 LOGIN_HINT = "Run `autocalc login` to sign in once in a browser window."
@@ -200,7 +207,8 @@ def redact_cookie_header(header: str) -> str:
 def _cookie_header(cookies: Any) -> str:
     seen: dict[str, str] = {}
     for c in cookies:
-        if c.get("domain", "").lstrip(".").endswith("huaweicloud.com"):
+        domain = c.get("domain", "").lstrip(".").lower()
+        if domain == "huaweicloud.com" or domain.endswith(".huaweicloud.com"):
             seen[c["name"]] = c["value"]
     return "; ".join(f"{k}={v}" for k, v in seen.items())
 
@@ -212,10 +220,18 @@ def _probe_login(ctx: Any, timeout: float) -> bool:
     while True:
         try:
             r = ctx.request.get(url, timeout=15000)
-            if r.status == 200 and str(r.json().get("retCode")) == "200":
-                return True
-        except Exception:
-            pass
+            data = r.json()
+        except Exception as exc:
+            raise UpstreamError("Could not check the browser login session.", hint="Check network connectivity and retry.") from exc
+        if r.status != 200:
+            raise UpstreamError(f"Login session probe returned HTTP {r.status}.")
+        if not isinstance(data, dict):
+            raise UnexpectedResponse("Login session probe returned an invalid payload.")
+        code = str(data.get("retCode"))
+        if code == "200":
+            return True
+        if code != "CBC.0101":
+            raise UnexpectedResponse("Login session probe returned an unknown status.")
         if time.time() >= deadline:
             return False
         time.sleep(2)
@@ -226,8 +242,8 @@ def _visit(ctx: Any, timeout_ms: int) -> None:
     try:
         page = ctx.pages[0] if ctx.pages else ctx.new_page()
         page.goto(CALCULATOR_URL, wait_until="domcontentloaded", timeout=timeout_ms)
-    except Exception:
-        pass
+    except Exception as exc:
+        raise UpstreamError("Could not open the calculator to renew the login session.", hint="Check network connectivity and retry.") from exc
 
 
 def _mask(ctx: Any) -> str | None:
@@ -263,10 +279,12 @@ def _session_path(prof: str) -> Path:
 
 
 def _save_session(prof: str, header: str, mask: str | None) -> None:
-    """Write the cookie header inside the profile directory, readable by the owner only."""
+    """Write inside the profile: POSIX mode 0600; Windows inherits the user profile ACL."""
     path = _session_path(prof)
     path.parent.mkdir(parents=True, exist_ok=True)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    if os.name != "nt":
+        os.fchmod(fd, 0o600)
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         json.dump({"cookie": header, "account_mask": mask}, f)
 
@@ -290,16 +308,24 @@ def _header_valid(header: str) -> bool:
     """One share/list call with the saved header: no browser, a second or less."""
     import httpx
 
-    headers = {"Cookie": header}
-    for part in header.split(";"):
-        k, _, v = part.strip().partition("=")
-        if k == "csrf":
-            headers["csrf"] = v
+    from autocalc.share import session_headers
+
+    headers = session_headers(header)
     try:
         r = httpx.get(f"{CALC}/share/list", headers=headers, timeout=15)
-        return r.status_code == 200 and str(r.json().get("retCode")) == "200"
-    except Exception:
-        return False
+        data = r.json()
+    except httpx.HTTPError as exc:
+        raise UpstreamError("Could not check the saved login session.", hint="Check connectivity and retry; your saved session was preserved.") from exc
+    except ValueError as exc:
+        raise UnexpectedResponse("Login session probe returned invalid JSON.") from exc
+    if r.status_code != 200:
+        raise UpstreamError(f"Login session probe returned HTTP {r.status_code}.")
+    if not isinstance(data, dict):
+        raise UnexpectedResponse("Login session probe returned an invalid payload.")
+    code = str(data.get("retCode"))
+    if code not in ("200", "CBC.0101"):
+        raise UnexpectedResponse("Login session probe returned an unknown status.")
+    return code == "200"
 
 
 # Per-process cookie cache (D1): the browser is closed, the profile stays unlocked.
@@ -346,7 +372,7 @@ def login(prof: str | None = None, timeout: float = 300) -> LoginResult:
         _visit(ctx, 60000)
         if not _probe_login(ctx, timeout):
             raise AuthLoginFailed("Timed out waiting for login.",
-                                  hint="Run `autocalc login` again and finish signing in within 5 minutes.")
+                                  hint=f"Run `autocalc login --timeout {timeout:g}` again and finish signing in within {timeout:g} seconds.")
         header = _cookie_header(ctx.cookies())
         if not header:
             raise AuthLoginFailed("Logged in, but the profile holds no huaweicloud cookies.", hint=LOGIN_HINT)

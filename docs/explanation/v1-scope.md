@@ -13,28 +13,15 @@ listed per row: no priced SKU, a one-time purchase, a support contract, a profes
 Checked live on 2026-10-17: the catalog lists 97 services;
 4 are not counted, so **93 count and the v1 target is 47**.
 
-| Status | Services |
-|---|---|
-| verified | 50 |
-| wave 2 | 0 |
-| wave 3 | 0 |
-| later | 43 |
-| not counted | 4 |
+The former count of 50 included default-only page acceptance and incomplete prices. It did not
+establish request fidelity and is withdrawn. The v1 target is **not yet demonstrated**.
+Publication requires an eligible builder, supported billing, representable quantity/options,
+a mapped chosen specification, and matching requested/page/global values before price checks.
 
-v1 is reached: 50 services are verified, above the target of 47. Waves are an order of work,
-not a promise: a service moves to *later* if its form cannot be replayed or its Edit view cannot
-reproduce the stored price.
-
-Wave 3 left three services in *later*: `cbh` (monthly and yearly cards come back with unpriced
-products in `sa-brazil-1`), `hcss` (Edit re-prices to 11.40 monthly where stored is 3.50) and
-`ccm` (one-time purchase only, no recurring mode). `ga`, `cc`, `aad`, `edgesec` and `ucs` have
-global pages with no region control; once the encoder skipped the region step they passed.
-Per-service notes: `ssa` is verified on-demand only; `dsc`, `cc` and `aad` monthly and yearly only
-(their on-demand cards price at zero or at the monthly amount); `edgesec` monthly only (its
-page offers no yearly period; on-demand repeats the monthly amount).
-
-Waves 1 (the builders that already existed) and 2 (databases and storage, driven by form recipes) are done: see the results in
-[ADR-0001](../adr/0001-page-as-encoder.md). Wave 3 (networking, security, middleware) is done too.
+The table below separates eligible builders from blocked paths. Eligibility does not guarantee
+that every regional spec or option combination can publish. Recipes without a chosen-spec
+mapping reject decided catalog specs. LTS, FunctionGraph and default-only recipes are blocked;
+CCE turbo is blocked while standard clusters remain eligible.
 
 ## Every service
 
@@ -65,26 +52,26 @@ Waves 1 (the builders that already existed) and 2 (databases and storage, driven
 | Business Applications | `workspace` | Workspace | later |
 | Compute | `dcc` | Dedicated Computing Cluster | later |
 | Compute | `deh` | Dedicated Host | later |
-| Compute | `ecs` | Elastic Cloud Server | verified |
-| Compute | `function` | FunctionGraph | verified |
+| Compute | `ecs` | Elastic Cloud Server | eligible |
+| Compute | `function` | FunctionGraph | blocked pending verification |
 | Compute | `hcss` | Flexus L Instance | later |
-| Compute | `hecs` | Flexus X Instance | verified |
-| Containers | `cce` | Cloud Container Engine | verified |
-| Containers | `cci` | Cloud Container Instance | verified |
-| Containers | `ucs` | Ubiquitous Cloud Native Service | verified |
+| Compute | `hecs` | Flexus X Instance | blocked pending verification |
+| Containers | `cce` | Cloud Container Engine | eligible |
+| Containers | `cci` | Cloud Container Instance | eligible |
+| Containers | `ucs` | Ubiquitous Cloud Native Service | blocked pending verification |
 | Content Delivery & Edge Computing | `cdn` | Content Delivery Network | later |
 | Content Delivery & Edge Computing | `wsa` | Whole Site Acceleration | later |
-| Databases | `ddm` | Distributed Database Middleware | verified |
-| Databases | `dds` | Document Database Service | verified |
-| Databases | `drs` | Data Replication Service | verified |
-| Databases | `gaussdb` | GaussDB | verified |
-| Databases | `hrds` | Flexus RDS | verified |
-| Databases | `memcached` | DCS (for Memcached) | verified |
-| Databases | `nosql` | GeminiDB | verified |
-| Databases | `rds` | Relational Database Service | verified |
-| Databases | `rdsformariadb` | RDS for MariaDB | verified |
-| Databases | `redis` | DCS (for Redis) | verified |
-| Databases | `taurusdb` | TaurusDB | verified |
+| Databases | `ddm` | Distributed Database Middleware | eligible (spec mapping required) |
+| Databases | `dds` | Document Database Service | eligible (spec mapping required) |
+| Databases | `drs` | Data Replication Service | eligible (spec mapping required) |
+| Databases | `gaussdb` | GaussDB | eligible (spec mapping required) |
+| Databases | `hrds` | Dedicated RDS | eligible (spec mapping required) |
+| Databases | `memcached` | DCS (for Memcached) | eligible (spec mapping required) |
+| Databases | `nosql` | GeminiDB | eligible |
+| Databases | `rds` | Relational Database Service | eligible |
+| Databases | `rdsformariadb` | RDS for MariaDB | eligible (spec mapping required) |
+| Databases | `redis` | DCS (for Redis) | eligible (spec mapping required) |
+| Databases | `taurusdb` | TaurusDB | eligible (spec mapping required) |
 | Developer Services | `astrozero` | Huawei Cloud Astro Zero | later |
 | Developer Services | `devcloud` | CodeArts | later |
 | Developer Services | `servicestage` | ServiceStage | later |
@@ -92,48 +79,48 @@ Waves 1 (the builders that already existed) and 2 (databases and storage, driven
 | IoT | `iotda` | IoT Device Access | later |
 | MacroVerse aPaaS | `koomessage` | KooMessage | later |
 | Management & Governance | `aom` | Application Operations Management | later |
-| Management & Governance | `apm` | Application Performance Management | verified |
-| Management & Governance | `lts` | Log Tank Service | verified |
+| Management & Governance | `apm` | Application Performance Management | eligible |
+| Management & Governance | `lts` | Log Tank Service | blocked pending verification |
 | Media Services | `cloudrtc` | Huawei Cloud Real-Time Communication | later |
 | Media Services | `live` | Live | later |
 | Media Services | `mpc` | Media Processing Center | later |
 | Media Services | `vod` | Video on Demand | later |
-| Middleware | `apig` | API Gateway | verified |
+| Middleware | `apig` | API Gateway | eligible |
 | Middleware | `cse` | Cloud Service Engine | later |
 | Middleware | `eg` | EventGrid | later |
-| Middleware | `kafka` | DMS (for Kafka) | verified |
+| Middleware | `kafka` | DMS (for Kafka) | eligible |
 | Middleware | `mas` | Multi-Site High Availability Service | later |
-| Middleware | `rabbitMQ` | DMS (for RabbitMQ) | verified |
-| Middleware | `reliability` | DMS (for RocketMQ) | verified |
+| Middleware | `rabbitMQ` | DMS (for RabbitMQ) | eligible |
+| Middleware | `reliability` | Reliability (Distributed Message Service) | blocked pending verification |
 | Migration | `cdm` | Cloud Data Migration | later |
-| Networking | `cc` | Cloud Connect | verified |
-| Networking | `dline` | Direct Connect As A Service | verified |
-| Networking | `eip` | Elastic IP | verified |
-| Networking | `elb` | Elastic Load Balance | verified |
-| Networking | `er` | Enterprise Router | verified |
-| Networking | `esw` | Enterprise Switch | verified |
-| Networking | `ga` | Global Accelerator | verified |
-| Networking | `nat` | NAT Gateway | verified |
-| Networking | `vpcep` | VPC Endpoint | verified |
-| Networking | `vpn` | Virtual Private Network | verified |
+| Networking | `cc` | Cloud Connect | blocked pending verification |
+| Networking | `dline` | Direct Connect As A Service | eligible |
+| Networking | `eip` | Elastic IP | blocked pending verification |
+| Networking | `elb` | Elastic Load Balance | eligible |
+| Networking | `er` | Enterprise Router | eligible (spec mapping required) |
+| Networking | `esw` | Enterprise Switch | blocked pending verification |
+| Networking | `ga` | Global Accelerator | blocked pending verification |
+| Networking | `nat` | NAT Gateway | eligible |
+| Networking | `vpcep` | VPC Endpoint | blocked pending verification |
+| Networking | `vpn` | Virtual Private Network | blocked pending verification |
 | Professional Services | `hcoms` | HUAWEI CLOUD O&M Service | not counted: a professional service, not a resource |
-| Security & Compliance | `aad` | Anti-DDoS Service | verified |
+| Security & Compliance | `aad` | Anti-DDoS Service | blocked pending verification |
 | Security & Compliance | `cbh` | Cloud Bastion Host | later |
 | Security & Compliance | `ccm` | Cloud Certificate & Manager | later |
-| Security & Compliance | `cfw` | Cloud Firewall | verified |
-| Security & Compliance | `dbss` | Database Security Service | verified |
-| Security & Compliance | `dew` | Data Encryption Workshop | verified |
-| Security & Compliance | `dsc` | Data Security Center | verified |
-| Security & Compliance | `edgesec` | Edge Security | verified |
-| Security & Compliance | `hss` | Host Security Service | verified |
-| Security & Compliance | `ssa` | SecMaster | verified |
-| Security & Compliance | `waf` | Web Application Firewall | verified |
-| Storage | `cbr` | Cloud Backup and Recovery | verified |
-| Storage | `des` | Data Express Service | verified |
-| Storage | `dss` | Dedicated Distributed Storage Service | verified |
-| Storage | `evs` | Elastic Volume Service | verified |
-| Storage | `obs` | Object Storage Service | verified |
-| Storage | `sdrs` | Business Recovery Service | verified |
-| Storage | `sfs` | Scalable File Service | verified |
-| Storage | `sfsturbo` | Scalable File Service Turbo | verified |
+| Security & Compliance | `cfw` | Cloud Firewall | blocked pending verification |
+| Security & Compliance | `dbss` | Database Security Service | blocked pending verification |
+| Security & Compliance | `dew` | Data Encryption Workshop | eligible |
+| Security & Compliance | `dsc` | Data Security Center | blocked pending verification |
+| Security & Compliance | `edgesec` | Edge Security | blocked pending verification |
+| Security & Compliance | `hss` | Host Security Service | blocked pending verification |
+| Security & Compliance | `ssa` | Situation Awareness | eligible (spec mapping required) |
+| Security & Compliance | `waf` | Web Application Firewall | eligible |
+| Storage | `cbr` | Cloud Backup and Recovery | eligible |
+| Storage | `des` | Data Express Service | eligible (spec mapping required) |
+| Storage | `dss` | Dedicated Distributed Storage Service | eligible (spec mapping required) |
+| Storage | `evs` | Elastic Volume Service | eligible |
+| Storage | `obs` | Object Storage Service | eligible |
+| Storage | `sdrs` | Business Recovery Service | eligible (spec mapping required) |
+| Storage | `sfs` | Scalable File Service | eligible (spec mapping required) |
+| Storage | `sfsturbo` | Scalable File Service Turbo | eligible |
 | Support | `supportplans` | Support Plans | not counted: a support contract, not a resource |

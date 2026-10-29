@@ -76,3 +76,11 @@ def test_notice_is_silent_when_current_or_offline(monkeypatch, tmp_path):
     (tmp_path / "update-check.json").unlink()
     run_with(monkeypatch, "", git_rc=1)
     assert update.notice() is None
+
+
+def test_list_notice_is_logged_without_changing_rows(monkeypatch, caplog):
+    monkeypatch.setattr(update, "notice", lambda: "autocalc 1.0.0 is available")
+    rows = [{"spec": "x"}]
+    with caplog.at_level("WARNING", logger="autocalc.update"):
+        assert update.with_notice(rows) is rows
+    assert "1.0.0 is available" in caplog.text

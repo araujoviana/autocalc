@@ -24,11 +24,15 @@ class CceBuilder(Builder):
     def build(self, region: str, cluster_type: str = "standard", ha: bool = True, scale: str = "small",
               billing: Billing = "ondemand", quantity: int = 1, periods: int = 1, hours: float = 730,
               title: str | None = None) -> dict[str, Any]:
-        # cluster_type: 'standard' -> s2 (HA masters) / 'turbo' -> s1; scale = cluster size
+        # Turbo has distinct t-series catalog products and no verified form mapping yet.
+        if cluster_type != "standard":
+            from autocalc.errors import ValidationError
+            raise ValidationError("Only standard CCE clusters have a verified form mapping.", field="cluster_type", allowed=["standard"])
+        # HA standard uses s2; single-master standard uses s1.
         if scale not in SCALES:
             from autocalc.errors import ValidationError
             raise ValidationError(f"unknown CCE scale {scale!r}", field="scale", allowed=list(SCALES))
-        series = "s2" if (cluster_type == "standard" and ha) or cluster_type == "turbo" else "s1"
+        series = "s2" if ha else "s1"
         spec = f"cce.{series}.{scale}"
         p = self.product(self.catalog(region, GROUP, spec), billing, periods, hours)
         if billing == "ondemand":

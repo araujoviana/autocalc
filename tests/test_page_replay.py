@@ -98,7 +98,7 @@ PRICED = {"region": "sa-brazil-1", "chargeMode": "PERIOD"}  # what STATE asks fo
 
 
 def _card(**product):
-    return {"rewriteValue": {"template_RENDER": STATE["template_RENDER"]}, "selectedProduct": {**PRICED, **product}}
+    return {"rewriteValue": {**STATE, "template_RENDER": STATE["template_RENDER"]}, "selectedProduct": {**PRICED, **product}}
 
 
 def test_encode_card_tries_again_when_the_page_priced_another_region(monkeypatch):
@@ -131,14 +131,14 @@ def test_priced_elsewhere_ignores_a_region_that_was_not_asked():
 def test_encode_card_accepts_a_text_input_value_that_means_the_same(monkeypatch):
     got = {"calculator_ecs_radio": {"arch": "dataInfo_1_"}, "calculator_sfsPeriod_36input": "3.6",
            "calculator_evs_stepper": STATE["template_RENDER"]["calculator_evs_stepper"]}
-    card = {"rewriteValue": {"template_RENDER": got}, "selectedProduct": PRICED}
+    card = {"rewriteValue": {**STATE, "template_RENDER": got}, "selectedProduct": PRICED}
     assert _encode(monkeypatch, card) is card
 
 
 def test_encode_card_fails_when_the_page_card_lacks_a_requested_value(monkeypatch):
     got = dict(STATE["template_RENDER"], calculator_ecs_radio={"arch": "dataInfo_9_"})
     with pytest.raises(PageEncodeFailed) as ei:
-        _encode(monkeypatch, {"rewriteValue": {"template_RENDER": got}})
+        _encode(monkeypatch, {"rewriteValue": {**STATE, "template_RENDER": got}})
     assert ei.value.details["step"] == "form" and ei.value.details["field"] == "calculator_ecs_radio_arch"
 
 
@@ -180,3 +180,12 @@ def test_lean_context_skips_images_fonts_and_media_but_not_the_rest(monkeypatch)
     for kind in ("image", "font", "media", "script", "xhr"):
         routed[0](req(kind))
     assert verdicts == [("image", "abort"), ("font", "abort"), ("media", "abort"), ("script", "continue"), ("xhr", "continue")]
+
+
+@pytest.mark.parametrize("group", ["global_QUANTITY", "global_PERIODTIME"])
+def test_encode_card_rejects_missing_requested_global(monkeypatch, group):
+    card = _card()
+    card["rewriteValue"].pop(group)
+    with pytest.raises(PageEncodeFailed) as exc:
+        _encode(monkeypatch, card)
+    assert exc.value.details["step"] == "globals"

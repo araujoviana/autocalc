@@ -116,6 +116,18 @@ def encode_card(service: str, rewrite_value: dict[str, Any], *, timeout: float |
             driver.open()
             driver.run(card_steps(rewrite_value))
             card = driver.capture()
+        asked_globals = {k: v for k, v in global_values(rewrite_value).items() if v is not None}
+        got_globals = global_values(card["rewriteValue"])
+        period = rewrite_value.get("global_PERIODTIME", {}).get("UNSET_PeriodTime")
+        if period:
+            actual_period = card["rewriteValue"].get("global_PERIODTIME", {}).get("UNSET_PeriodTime", {})
+            for key in ("measureValue", "measureId"):
+                asked_globals[f"global_PERIODTIME_{key}"] = period[key]
+                got_globals[f"global_PERIODTIME_{key}"] = actual_period.get(key)
+        lost_globals = [key for key, value in asked_globals.items() if not same_value(value, got_globals.get(key))]
+        if lost_globals:
+            raise PageEncodeFailed("The page's card does not hold the requested quantity or duration.", service=service,
+                                   step="globals", field=sorted(lost_globals)[0], frontend_version=driver.frontend_version)
         asked = form_values(rewrite_value["template_RENDER"])
         got = form_values(card["rewriteValue"]["template_RENDER"])
         if (lost := {k: (v, got.get(k)) for k, v in asked.items() if not same_value(got.get(k), v)}):

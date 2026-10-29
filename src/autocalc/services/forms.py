@@ -110,6 +110,10 @@ class FormBuilder(Builder):
 
     def build(self, region: str, billing: Billing = "monthly", periods: int = 1, quantity: int = 1,
               hours: float = 730, **options: Any) -> dict[str, Any]:
+        if billing not in self.modes:
+            raise ValidationError(f"{self.service} does not support {billing!r}.", field="billing", allowed=list(self.modes))
+        if quantity != 1 and not self.recipe.quantity:
+            raise ValidationError(f"{self.service} cannot express quantity on its form.", field="quantity", allowed=[1])
         if unknown := sorted(set(options) - set(self.recipe.controls)):
             raise ValidationError(f"{self.service} has no option {unknown[0]!r}.", field=unknown[0],
                                   allowed=sorted(self.recipe.controls))
