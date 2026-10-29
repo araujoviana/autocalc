@@ -39,10 +39,8 @@ class DraftStore:
         with _STORE_LOCK, (self.dir / f"{key}.lock").open("a+b") as handle:
             if os.name == "nt":
                 import msvcrt
-                handle.seek(0)
-                if not handle.read(1):
-                    handle.write(b"0")
-                    handle.flush()
+                # Lock byte 0 of the (possibly empty) file; never read it, since a held
+                # msvcrt lock is mandatory and would make another process's read fail.
                 handle.seek(0)
                 msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
             else:
