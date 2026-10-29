@@ -4,10 +4,13 @@ import asyncio
 import threading
 import time
 
+import pytest
+
 from autocalc import server
 
 
-def test_mcp_workers_serialize_blocking_calls(monkeypatch):
+@pytest.mark.parametrize(("tool_name", "expected"), [("publish_quote", 1), ("search_skus", 3)])
+def test_mcp_workers_serialize_mutations_and_parallelize_reads(monkeypatch, tool_name, expected):
     monkeypatch.setattr(server, "with_notice", lambda value: value)
     active = 0
     maximum = 0
@@ -31,9 +34,11 @@ def test_mcp_workers_serialize_blocking_calls(monkeypatch):
                 active -= 1
         return "ok"
 
+    operation.__name__ = tool_name
+
     async def exercise():
         wrappers = [server._tool_errors(operation) for _ in range(3)]
         return await asyncio.gather(*(wrapped() for wrapped in wrappers))
 
     assert asyncio.run(exercise()) == ["ok"] * 3
-    assert maximum == 1
+    assert maximum == expected

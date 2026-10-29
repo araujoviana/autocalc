@@ -58,7 +58,10 @@ class CciBuilder(Builder):
         return p
 
     def build(self, region: str, vcpu: int = 1, mem_gb: int = 2, hours: float = 730,
-              billing: Billing = "ondemand", title: str | None = None) -> dict[str, Any]:
+              billing: Billing = "ondemand", quantity: int = 1, title: str | None = None) -> dict[str, Any]:
+        if quantity != 1:
+            from autocalc.errors import ValidationError
+            raise ValidationError("CCI form supports one usage card.", field="quantity", allowed=[1])
         cpu = self._line(region, CPU, vcpu, hours)
         mem = self._line(region, MEM, mem_gb, hours)
         template = {
@@ -77,7 +80,8 @@ class CciBuilder(Builder):
         stepper = {"measureId": 4, "measureValue": hours, "measureNameBeforeTrans": TIME_NAME,
                    "measurePluralNameBeforeTrans": TIME_NAME, "transRate": "", "transTarget": ""}
         card["rewriteValue"]["global_ONDEMANDTIME"] = {"UNSET_Stepper_0": stepper}
-        card["selectedProduct"]["purchaseTime"] = {"measureValue": hours, "measureId": 4,
+        if "selectedProduct" in card:
+            card["selectedProduct"]["purchaseTime"] = {"measureValue": hours, "measureId": 4,
                                                    "measureNameBeforeTrans": TIME_NAME,
                                                    "measurePluralNameBeforeTrans": TIME_NAME}
         return card

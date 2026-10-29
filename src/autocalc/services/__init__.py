@@ -7,6 +7,7 @@ from typing import Any
 
 from autocalc.client import Calculator
 from autocalc.services.base import REGISTRY, Builder  # noqa: F401
+from autocalc.services.forms import RECIPES
 
 # modules loaded for their side effect of registering a builder
 _MODULES = ("ecs", "evs", "cce", "obs", "rds", "sfs", "elb",
@@ -28,12 +29,16 @@ VERIFIED.update(dict.fromkeys(
     "11.4.201"))  # builder-wave-3
 
 
+# Acceptance of page defaults is not verification of requested configuration.
+
+ACCEPTED_DEFAULT_ONLY = {service for service, recipe in RECIPES.items() if not recipe.controls}
+for _service in ACCEPTED_DEFAULT_ONLY | {"function", "lts"}:
+    VERIFIED.pop(_service, None)
+
+
 def load_all() -> None:
     for m in _MODULES:
-        try:
-            importlib.import_module(f"autocalc.services.{m}")
-        except ImportError:
-            continue
+        importlib.import_module(f"autocalc.services.{m}")
 
 
 def get_builder(service: str, calc: Calculator | None = None) -> Builder:
@@ -51,7 +56,17 @@ def supported_services() -> list[dict[str, Any]]:
     out = []
     for svc, factory in sorted(REGISTRY.items()):
         b = factory(None)
-        out.append({"service": svc, "modes": list(getattr(b, "modes", ("monthly", "yearly", "ondemand"))),
+        reason = None
+        if svc in ACCEPTED_DEFAULT_ONLY:
+            reason = "Only page defaults have been accepted; requested configuration is unverified."
+        elif svc in {"function", "lts"}:
+            reason = "Incomplete pricing or form mapping; publication remains blocked."
+        elif svc in RECIPES and not b.spec_arg:
+            reason = "Selected catalog specs have no verified form mapping."
+        elif svc not in VERIFIED:
+            reason = "No verified page publication support."
+        out.append({"publication_supported": reason is None, "publication_blocked_reason": reason,
+                    "verified_frontend": VERIFIED.get(svc), "service": svc, "modes": list(getattr(b, "modes", ("monthly", "yearly", "ondemand"))),
                     "description": getattr(b, "description", ""), "options": b.options()})
     return out
 

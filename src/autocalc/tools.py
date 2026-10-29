@@ -7,6 +7,7 @@ Write tools (update/delete a saved list) use the one-time browser session
 
 from __future__ import annotations
 
+import math
 import re
 from collections.abc import Callable
 from typing import Any, Literal
@@ -66,7 +67,10 @@ def flat_sku(sku: dict[str, Any]) -> dict[str, Any]:
     """A search row for the agent: spec, a trimmed description and one USD amount per billing mode."""
     parts = [p for p in sku["description"].split(";") if not p.startswith(_NOISE)]
     return {"spec": sku["spec"], "description": ";".join(parts),
-            **{mode: price["amount"] for mode, price in sku["prices"].items()}}
+            **{mode: price["amount"] for mode, price in sku["prices"].items()},
+            **{key: value for key, value in sku["prices"].get("ondemand", {}).items()
+               if key in ("usage_factor", "usage_measure_id") and value is not None
+               and sku["prices"].get("ondemand", {}).get("usage_factor") not in (None, "Duration")}}
 
 
 @tool
@@ -129,45 +133,59 @@ def quote(region: str, items: list[dict[str, Any]], billing: Literal["ondemand",
 @tool
 def convert_currency(amount_usd: float, currency: str) -> Any:
     """Convert a USD amount using Huawei Cloud's own published exchange rate (e.g. BRL, EUR)."""
+    if isinstance(amount_usd, bool) or not isinstance(amount_usd, (int, float)) or not math.isfinite(amount_usd):
+        raise ValidationError("amount_usd must be finite.", field="amount_usd")
     rates = calc.exchange_rates()
-    rate = rates.get(currency.upper())
+    rate = 1 if currency.upper() == "USD" else rates.get(currency.upper())
     if rate is None:
-        return {"error": f"no rate for {currency}", "available": sorted(rates)}
+        raise ValidationError(f"No exchange rate for {currency}.", details={"available": sorted(rates)})
     return {"usd": amount_usd, "currency": currency.upper(), "rate": rate, "amount": round(amount_usd * rate, 2)}
 
 
 @tool
 def compare_modes(items: list[dict[str, Any]], modes: list[str] | None = None, region: str = "sa-brazil-1",
-                  currency: str = "USD") -> Any:
+                  currency: str = "USD", hours: float = 730, periods: int = 1) -> Any:
     """Compare the same bill of materials across billing modes.
 
     `items` are quote items ([{service, spec, quantity, size, usage_*}]).
     Returns the cost per mode and the saving vs on-demand. Modes: ondemand, monthly, yearly.
     """
     modes = modes or ["ondemand", "monthly", "yearly"]
+    if any(mode not in ("ondemand", "monthly", "yearly") for mode in modes):
+        raise ValidationError("Unknown comparison billing mode.", field="modes")
+    if isinstance(periods, bool) or not isinstance(periods, int) or periods < 1:
+        raise ValidationError("periods must be a positive integer.", field="periods")
+    if isinstance(hours, bool) or not isinstance(hours, (int, float)) or not math.isfinite(hours) or hours <= 0:
+        raise ValidationError("hours must be finite and positive.", field="hours")
     reg = _region(region)
     rows = []
     base = None
     for m in modes:
         try:
-            q = calc.quote(reg, items, m)  # type: ignore[arg-type]
+            q = calc.quote(reg, items, m, hours=hours, periods=periods)  # type: ignore[arg-type]
         except CalculatorError as exc:
             rows.append({"mode": m, "error": exc.message})
             continue
         total = q["total"]
-        if m == "yearly":
-            total = total / 12  # monthly-equivalent
+        if m in ("monthly", "yearly"):
+            total = total / (periods * (12 if m == "yearly" else 1))
         rows.append({"mode": m, "total_usd": q["total"], "monthly_equivalent_usd": round(total, 2)})
         if m == "ondemand":
             base = total
     for r in rows:
         if base and "monthly_equivalent_usd" in r:
             r["saving_vs_ondemand_pct"] = round((1 - r["monthly_equivalent_usd"] / base) * 100, 1)
-    out: dict[str, Any] = {"region": reg, "modes": rows}
+    out: dict[str, Any] = {"region": reg, "modes": rows, "hours": hours, "periods": periods}
     if currency.upper() != "USD":
         rate = calc.exchange_rates().get(currency.upper())
         out["currency"] = currency.upper()
+        if rate is None:
+            raise ValidationError(f"No exchange rate for {currency}.")
         out["rate"] = rate
+        for row in rows:
+            if "total_usd" in row:
+                row["total"] = round(row["total_usd"] * rate, 2)
+                row["monthly_equivalent"] = round(row["monthly_equivalent_usd"] * rate, 2)
     return out
 
 
@@ -218,20 +236,28 @@ def read_price_list(url_or_id: str) -> Any:
 
 
 @tool
-def export_quotes_xlsx(rows: list[dict[str, str]], path: str = "quotes.xlsx") -> Any:
+def export_quotes_xlsx(rows: list[dict[str, str]], path: str | None = None) -> Any:
     """Write a workbook of price lists, one row per environment, on four sheets:
     Quotes (environment, list name, total USD, link), Decisions (what was chosen and why),
     Resources (every priced resource) and Totals (instances, vCPUs, RAM, storage).
 
     rows: [{"env": "prod", "list": share url or id, "draft_id"?: id}], kept in this order. A list saved by
     publish_quote finds its decisions by itself; "draft_id" is for any other. Reads the lists anonymously.
-    `path` must end in .xlsx and is overwritten. Nothing is written if any list cannot be read.
+    `path` must end in .xlsx. Existing files are never overwritten. When omitted, a unique
+    workbook is created in the user data exports directory. Nothing is written if any list cannot be read.
     """
     from pathlib import Path
 
     from autocalc import summary, xlsx
     from autocalc.core import DraftStore
     from autocalc.share import SHARE_URL, share_detail
+    if path is None:
+        import secrets
+
+        from autocalc.auth import data_dir
+        path = str(data_dir() / "exports" / f"quotes-{secrets.token_hex(6)}.xlsx")
+    if Path(path).exists():
+        raise ValidationError("Export path already exists; choose a new filename.", field="path")
     if not path.lower().endswith(".xlsx"):
         raise ValidationError("path must end in .xlsx.", field="path")
     if not rows:
@@ -267,6 +293,7 @@ def export_quotes_xlsx(rows: list[dict[str, str]], path: str = "quotes.xlsx") ->
     grand = round(sum(q[2].value for q in quotes), 2)
     cols = list(zip(*totals, strict=True))
     sums = [xlsx.Sum(2, n, sum(c)) for c in cols[1:6]] + [xlsx.Sum(2, n, grand, money=True)]
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
     xlsx.write_workbook(Path(path), [
         xlsx.Sheet("Quotes", ["Environment", "Calculator", "Total (USD)", "Link"], quotes, [16, 40, 14, 60],
                    ["Total", None, xlsx.Sum(2, n, grand, money=True), None]),
@@ -300,10 +327,16 @@ def delete_price_list(url_or_id: str) -> Any:
     return {"deleted": _list_id(url_or_id)}
 
 
+def _validate_list_name(name: str) -> None:
+    if not isinstance(name, str) or not name.strip() or len(name) > 50:
+        raise ValidationError("List name must contain 1 to 50 characters.", field="name")
+
+
 @tool
 def rename_price_list(url_or_id: str, new_name: str) -> Any:
     """Rename a saved price list. Needs a login."""
     from autocalc.share import Session, share_detail
+    _validate_list_name(new_name)
     lid = _list_id(url_or_id)
     detail = share_detail(calc, lid)
     detail["name"] = new_name
@@ -315,9 +348,11 @@ def rename_price_list(url_or_id: str, new_name: str) -> Any:
 def duplicate_price_list(url_or_id: str, new_name: str | None = None) -> Any:
     """Copy a saved price list (optionally with a new name). Needs a login."""
     from autocalc.share import SHARE_URL, Session
+    if new_name is not None:
+        _validate_list_name(new_name)
     s = Session()
     lid = _list_id(url_or_id)
-    new_id = s._call("POST", "share/copy", params={"key": lid})["data"]
+    new_id = s.copy(lid)
     if new_name:
         from autocalc.share import share_detail
         d = share_detail(calc, new_id)
@@ -349,6 +384,8 @@ def _run_login() -> None:
         _login["result"] = {"logged_in": True, "account_mask": res.account_mask, "browser": res.browser}
     except CalculatorError as exc:
         _login["result"] = exc.as_dict()
+    except Exception:
+        _login["result"] = CalculatorError("Browser sign-in failed.", hint="Retry auth_login.").as_dict()
 
 
 @tool

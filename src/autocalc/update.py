@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import subprocess
@@ -24,7 +25,7 @@ def latest_tag(repo: str) -> str:
     """Newest ``vX.Y.Z`` tag, compared as numbers (``v0.10.0`` is newer than ``v0.9.0``)."""
     try:
         out = subprocess.run(["git", "ls-remote", "--tags", "--refs", repo, "v*"],
-                             capture_output=True, text=True, timeout=60)
+                             capture_output=True, text=True, timeout=3)
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise UpdateFailed(f"Could not list the release tags: {exc}", hint="Is git installed and the network up?") from exc
     if out.returncode:
@@ -67,9 +68,9 @@ def notice() -> str | None:
     except (OSError, ValueError, KeyError):
         pass
     try:
-        tag = latest_tag(_repo())
         stamp.parent.mkdir(parents=True, exist_ok=True)
-        stamp.write_text(json.dumps({"at": time.time(), "tag": tag}))
+        stamp.write_text(json.dumps({"at": time.time()}))
+        tag = latest_tag(_repo())
         have = version("autocalc")
     except Exception:  # offline, no tag or an unwritable config dir must not break a tool call
         return None
@@ -78,7 +79,9 @@ def notice() -> str | None:
 
 
 def with_notice(result):
-    """Add the notice to a dict result; other result shapes are left alone."""
-    if isinstance(result, dict) and (note := notice()):
-        return {**result, "update_notice": note}
+    """Attach notices to objects, or log them without changing a list/scalar contract."""
+    if note := notice():
+        if isinstance(result, dict):
+            return {**result, "update_notice": note}
+        logging.getLogger(__name__).warning("%s", note)
     return result

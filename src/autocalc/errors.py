@@ -171,7 +171,7 @@ class UnexpectedResponse(CalculatorError):
 # CBC.6006 spec not found / not sold, CBC.6008 product not exist.
 _EXCEPTION_MAP: dict[str, type[CalculatorError]] = {
     "CBC.0101": AuthExpired,
-    "CBC.0102": SpecNotFound,
+    "CBC.0102": ValidationError,
     "CBC.6001": ValidationError,
     "CBC.6006": SpecNotFound,
     "CBC.6008": SpecNotFound,
@@ -192,4 +192,4 @@ def raise_for_exception(data: dict[str, Any]) -> None:
         hint = "Run `autocalc login` to sign in once in a browser window."
     elif cls is SpecNotFound:
         hint = "Run search_skus for this service/region to find a valid spec."
-    raise cls(str(desc), code=str(exc), hint=hint, details={"exceptionId": exc})
+    raise cls(str(desc), hint=hint, details={"exceptionId": exc})

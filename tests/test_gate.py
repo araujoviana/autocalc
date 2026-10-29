@@ -118,3 +118,49 @@ def test_quantity_tokens_reach_both_the_form_state_and_the_purchase_quantity():
     pn = c["selectedProduct"]["purchaseNum"]
     assert (pn["measureNameBeforeTrans"], pn["measurePluralNameBeforeTrans"]) == ("calc_5_", "calc_6_")
 
+
+
+def test_empty_publication_creates_nothing():
+    from autocalc.errors import ValidationError
+    session = FakeSession()
+    with pytest.raises(ValidationError, match='empty'):
+        publish_checked('n', [], session=session, calc=object())
+    assert session.created == []
+
+
+@pytest.mark.parametrize('indices', [[], [1], [0, 0], [0, 1]])
+def test_gate_rejects_missing_duplicate_and_unexpected_checks(indices):
+    session = FakeSession()
+    with pytest.raises(GateFailed):
+        publish(session, checker(*(CardCheck(i, 't', D('10')) for i in indices)))
+    assert session.deleted == ['L1']
+
+
+@pytest.mark.parametrize('mutation', ['form', 'quantity', 'spec', 'missing'])
+def test_verify_compares_saved_cards_to_request(monkeypatch, mutation):
+    import copy
+    expected = card()
+    expected['rewriteValue'] = {'global_QUANTITY': {'UNSET_Stepper_0': {'measureValue': 3}},
+                                'template_RENDER': {'size': 100}}
+    expected['selectedProduct']['productAllInfos'] = [{'resourceSpecCode': 'requested', 'productNum': 3}]
+    saved = copy.deepcopy(expected)
+    if mutation == 'form':
+        saved['rewriteValue']['template_RENDER']['size'] = 1
+    elif mutation == 'quantity':
+        saved['selectedProduct']['productAllInfos'][0]['productNum'] = 1
+    elif mutation == 'spec':
+        saved['selectedProduct']['productAllInfos'][0]['resourceSpecCode'] = 'wrong'
+    detail = {'cartListData': [] if mutation == 'missing' else [saved]}
+    monkeypatch.setattr(gate, 'share_detail', lambda *_: detail)
+    monkeypatch.setattr(gate, 'validate_list', lambda _: {'issues': []})
+    checks, issues = gate.verify('L1', object(), edit=lambda _: [EditResult(0, D('10'), D('10'), True)] if mutation != 'missing' else [],
+                                rate=lambda _: D('10'), expected_cards=[expected])
+    assert issues or any(not check.ok for check in checks)
+
+
+def test_verify_rejects_duplicate_edit_results(monkeypatch):
+    monkeypatch.setattr(gate, 'share_detail', lambda *_: {'cartListData': [card()]})
+    monkeypatch.setattr(gate, 'validate_list', lambda _: {'issues': []})
+    result = EditResult(0, D('10'), D('10'), True)
+    _, issues = gate.verify('L1', object(), edit=lambda _: [result, result], rate=lambda _: D('10'))
+    assert any('duplicate' in issue for issue in issues)

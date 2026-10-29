@@ -1,0 +1,48 @@
+[
+  {
+    "service": "er",
+    "billing": "ondemand",
+    "options": {
+      "downflow_gb": 250,
+      "attachment_hours": 480,
+      "attachments": 3
+    },
+    "controls": {
+      "calculator_downflow_stepper_Stepper_0": 250,
+      "calculator_attachment_time_stepper_Stepper_0": 480,
+      "calculator_attachment_stepper_Stepper_0": 3
+    },
+    "quantity": 1
+  },
+  {
+    "service": "memcached",
+    "billing": "ondemand",
+    "options": {
+      "memory_gb": 8
+    },
+    "controls": {
+      "calculator_memcached_version_Stepper_0": 8
+    },
+    "quantity": 3
+  },
+  {
+    "service": "lts",
+    "billing": "ondemand",
+    "quantity": 1,
+    "options": {
+      "flow_gb_per_day": 10,
+      "index_percent": 50,
+      "retention_days": 60,
+      "cold_enabled": true,
+      "hot_retention_days": 30,
+      "months": 2
+    },
+    "controls": {
+      "calculator_ltsLogFlow_stepper_Stepper_0": 10,
+      "calculator_ltsLogIndexRate_stepper_Stepper_0": 50,
+      "calculator_ltsStorage_stepper_Stepper_0": 60,
+      "calculator_ltsHotStorage_stepper_Stepper_0": 30,
+      "calculator_lts_cold_switch_UNSET_Switch": "calc_3_"
+    }
+  }
+]

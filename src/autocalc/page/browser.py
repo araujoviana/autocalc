@@ -9,10 +9,11 @@ from __future__ import annotations
 import os
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Any
 
 from autocalc.auth import find_browser
-from autocalc.errors import PageEncodeFailed
+from autocalc.errors import PageEncodeFailed, ValidationError
 
 _LAUNCH_ARGS = ["--no-first-run", "--no-default-browser-check", "--disable-dev-shm-usage"]
 VIEWPORT = {"width": 1366, "height": 900}
@@ -59,3 +60,36 @@ def page_context(service: str = "", *, lean: bool = False, playwright: Callable[
                 browser.close()
             except Exception:
                 pass
+
+
+def _available_memory_bytes() -> int | None:
+    """Best-effort available RAM, capped by a Linux container's remaining allowance."""
+    estimates = []
+    try:
+        estimates.append(os.sysconf("SC_AVPHYS_PAGES") * os.sysconf("SC_PAGE_SIZE"))
+    except (AttributeError, OSError, ValueError):
+        pass
+    try:
+        limit = (Path("/sys/fs/cgroup") / "memory.max").read_text().strip()
+        if limit != "max":
+            used = int((Path("/sys/fs/cgroup") / "memory.current").read_text())
+            estimates.append(max(0, int(limit) - used))
+    except (OSError, ValueError):
+        pass
+    return min(estimates) if estimates else None
+
+
+def encode_workers() -> int:
+    """Conservative parallel browser budget; an explicit override is checked on use."""
+    override = os.environ.get("AUTOCALC_ENCODE_WORKERS")
+    if override is not None:
+        try:
+            workers = int(override)
+        except ValueError:
+            workers = 0
+        if not 1 <= workers <= 16:
+            raise ValidationError("AUTOCALC_ENCODE_WORKERS must be an integer from 1 to 16.")
+        return workers
+    available = _available_memory_bytes()
+    memory_budget = max(1, (available - 512 * 1024 ** 2) // (768 * 1024 ** 2)) if available is not None else 1
+    return min(3, os.cpu_count() or 1, memory_budget)

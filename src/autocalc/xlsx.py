@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -62,7 +63,18 @@ class Sheet:
     notes: list[str] = field(default_factory=list)  # plain lines under the table, after a blank row
 
 
+def _column(index: int) -> str:
+    result = ""
+    while index:
+        index, remainder = divmod(index - 1, 26)
+        result = chr(65 + remainder) + result
+    return result
+
+
 def _cell(ref: str, value, style: int) -> str:
+    numeric = value.value if isinstance(value, (Money, Sum)) else value
+    if isinstance(numeric, (int, float)) and not math.isfinite(numeric):
+        raise ValueError("Spreadsheet numbers must be finite.")
     if isinstance(value, Link):
         u = escape(value.url, {'"': "&quot;"})
         return f'<c r="{ref}" s="2" t="str"><f>HYPERLINK("{u}","{u}")</f><v>{escape(value.url)}</v></c>'
@@ -81,7 +93,7 @@ def _sheet_xml(sh: Sheet) -> str:
     xml = []
     for n, row in enumerate(body, 1):
         style = 1 if n == 1 else 4 if sh.total_row and n == len(body) else 6
-        cells = "".join(_cell(f"{chr(65 + i)}{n}", v, style) for i, v in enumerate(row) if v is not None)
+        cells = "".join(_cell(f"{_column(i + 1)}{n}", v, style) for i, v in enumerate(row) if v is not None)
         xml.append(f'<row r="{n}">{cells}</row>')
     for k, note in enumerate(sh.notes):
         n = len(body) + 2 + k
@@ -115,6 +127,8 @@ def write_workbook(path: str | Path, sheets: list[Sheet]) -> None:
         **{f"xl/worksheets/sheet{i}.xml": _sheet_xml(sh) for i, sh in zip(ids, sheets, strict=True)},
     }
     path = Path(path)
+    if path.exists():
+        raise FileExistsError(f"Refusing to overwrite existing workbook: {path}")
     tmp = path.with_suffix(".tmp")  # nothing at `path` unless the whole file was written
     with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
         for name, data in parts.items():

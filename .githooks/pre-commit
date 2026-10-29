@@ -20,7 +20,7 @@ patterns = [
 failures = []
 for raw in filter(None, paths):
     path = raw.decode("utf-8", "surrogateescape")
-    if blocked.search(path) or path.startswith("tests/fixtures/corpus/") or path == "docs/quotes.md" or path.startswith(".codegraph/"):
+    if blocked.search(path) or path.startswith("tests/fixtures/corpus/") or path == "docs/quotes.md" or path.startswith("docs/reports/") or path.startswith("docs/private/") or path.startswith(".codegraph/"):
         failures.append((path, "sensitive or local file"))
         continue
     blob = git("show", ":" + path)

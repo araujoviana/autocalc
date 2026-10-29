@@ -38,7 +38,7 @@ autocalc publish-quote --draft-id d-1a2b3c4d --name "acme web tier"   # runs the
 ```
 
 A requirement is `{"id","service","region","billing","quantity"?,"needs"?,"spec"?,"options"?}`.
-`publish-quote` builds the cards on the calculator page (a browser is needed) for the 50 verified services: ECS, EVS, CCE, ELB, OBS, RDS, SFS Turbo, API Gateway, APM, CBR, CCI, DEW, Direct Connect, FunctionGraph, Kafka, LTS, NAT, GeminiDB, RabbitMQ and WAF, plus the databases and storage services of wave 2 (GaussDB, RDS for MariaDB, TaurusDB, Flexus RDS, DCS for Redis and Memcached, DDS, DDM, DRS, SFS, DSS, SDRS, DES) and of wave 3 (ER, ESW, VPC Endpoint, EIP, VPN, Cloud Firewall, HSS, DBSS, DSC, SecMaster, DMS for RocketMQ, Flexus X, Global Accelerator, Cloud Connect, Anti-DDoS, Edge Security, UCS) for the billing modes each sells. Other services fail before anything is saved. The result carries `warnings` when the live calculator frontend differs from the one a service was verified on.
+`publish-quote` builds cards on the calculator page (a browser is needed). Support is restricted to services and options whose requested configuration can be preserved. Default-only recipes and known incomplete pricing paths are rejected before saving. The result carries `warnings` when the live calculator frontend differs from the verified version.
 
 ## Environment variables
 
@@ -53,3 +53,10 @@ A requirement is `{"id","service","region","billing","quantity"?,"needs"?,"spec"
 
 `autocalc-mcp` runs the MCP server (`hwc-calculator`) over stdio. Its tools are described by
 the `mcp-surface` spec.
+
+Configuration: `AUTOCALC_CONFIG` overrides the session/config directory (default `~/.config/autocalc`). `AUTOCALC_REPO` overrides the Git repository used for update checks.
+
+`compare-modes` accepts `--hours` (monthly on-demand usage) and `--periods` (months or years);
+monthly equivalents divide term totals by their duration. Use `inspect-draft` after a failed
+publication. An `unknown_outcome` requires reconciling saved lists before `recover-draft` with
+an explicit no-remote-list confirmation and justification. It never deletes remote lists.

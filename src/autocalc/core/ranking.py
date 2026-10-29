@@ -72,7 +72,7 @@ def _reason(req: Requirement, r: Ranked, exact: list[Ranked], covering: list[Ran
             return f"covers {_needs(req) or 'named spec ' + c.spec}; cheapest of {len(exact)} exact matches"
         return f"exact match; {_money(c.price - exact[0].candidate.price)} above the cheapest exact match"
     extra = ", ".join(f"+{_num(c.has[k] - v)} {LABELS.get(k, k)}" for k, v in req.needs.items() if c.has[k] > v)
-    why = f"covers {_needs(req)}" + (f" with {extra}" if extra else "")
+    why = (f"covers {_needs(req)}" if req.needs else "candidate spec") + (f" with {extra}" if extra else "")
     if req.spec and c.spec != req.spec:
         why += f"; not the named spec {req.spec}"
     if r is covering[0]:

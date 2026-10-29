@@ -30,7 +30,8 @@ def test_every_verified_service_has_a_builder_and_a_version():
 
 def test_every_recipe_service_is_verified_with_its_modes():
     from autocalc.services.forms import RECIPES
-    assert set(RECIPES) <= set(VERIFIED)
+    assert {s for s, r in RECIPES.items() if r.controls} <= set(VERIFIED)
+    assert not {s for s, r in RECIPES.items() if not r.controls} & set(VERIFIED)
     assert get_builder("hrds", calc=object()).modes == ("monthly", "yearly")
 
 

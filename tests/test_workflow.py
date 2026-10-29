@@ -37,6 +37,7 @@ def store(tmp_path, monkeypatch):
 
 
 class FakeBuilder:
+    modes = ("monthly", "yearly", "ondemand")
     spec_arg = "flavor"
 
     def __init__(self, svc, seen):
@@ -44,6 +45,9 @@ class FakeBuilder:
 
     def spec_option(self, spec):
         return spec
+
+    def form(self, **kw):
+        return self.build(**kw)["rewriteValue"]
 
     def build(self, **kw):
         self.seen.update(svc=self.svc, **kw)
@@ -128,7 +132,7 @@ def test_cli_runs_a_tool_with_json_arguments(store, tmp_path, capsys):
     assert json.loads(capsys.readouterr().out)["pending"] == ["r1"]
 
 
-def test_recipe_service_warns_that_the_chosen_spec_is_not_applied(store, monkeypatch):
+def test_recipe_service_rejects_spec_that_cannot_be_applied(store, monkeypatch):
     d = workflow.draft_quote("acme", [req(service="er", needs={"vcpus": 1000})])
     from autocalc.core import decide
     decide(DraftStore(), d["draft_id"], "r1", "c7n.large.2", "test")
@@ -140,8 +144,8 @@ def test_recipe_service_warns_that_the_chosen_spec_is_not_applied(store, monkeyp
     monkeypatch.setattr(workflow, "encode_card", lambda svc, rv: {"selectedProduct": {}})
     monkeypatch.setattr(workflow, "publish_checked", lambda *a, **k: {"id": "L1", "url": "u", "checks": []})
     monkeypatch.setattr(workflow.frontend, "live_version", lambda: None)
-    out = workflow.publish_quote(d["draft_id"], "n")
-    assert any("c7n.large.2" in w and "not applied" in w for w in out["warnings"])
+    with pytest.raises(ValidationError, match="cannot apply"):
+        workflow.publish_quote(d["draft_id"], "n")
 
 
 def test_mcp_tools_run_off_the_event_loop():
@@ -309,3 +313,84 @@ def test_reserved_instance_lines_take_their_size_from_the_cpu_and_mem_fields():
           "cpu": "16dataInfo_36_", "mem": "32BSSUNIT.pluralUnit.102", "inquiryResult": {"amount": 1}}
     rows = summary.resources({"cartListData": [{"selectedProduct": {"productAllInfos": [ri]}}]})
     assert (rows[0]["vcpus"], rows[0]["ram_gb"], rows[0]["instances"]) == (32, 64, 2)
+
+
+def test_publish_is_idempotent_and_freezes_decisions(store, monkeypatch):
+    d = workflow.draft_quote("acme", [req(needs={"vcpus": 2, "memory_gb": 4})])
+    monkeypatch.setattr(workflow, "get_builder", lambda svc, calc=None: FakeBuilder(svc, {}))
+    monkeypatch.setattr(workflow, "encode_card", lambda svc, rv: {"selectedProduct": {}})
+    calls = []
+    def publish(*args, **kwargs):
+        calls.append(1)
+        return {"id": "L1", "url": "u", "checks": []}
+    monkeypatch.setattr(workflow, "publish_checked", publish)
+    monkeypatch.setattr(workflow.frontend, "live_version", lambda: None)
+    first = workflow.publish_quote(d["draft_id"], "n")
+    assert workflow.publish_quote(d["draft_id"], "n") == first
+    assert len(calls) == 1
+    with pytest.raises(ValidationError, match="cannot be revised"):
+        workflow.revise_quote(d["draft_id"], [{"requirement_id": "r1", "spec": "c7n.large.2", "justification": "change"}])
+
+
+def test_export_default_uses_user_data_and_does_not_overwrite(monkeypatch, tmp_path, store):
+    from pathlib import Path
+
+    from autocalc import auth
+    monkeypatch.setattr(auth, "data_dir", lambda: tmp_path / "user-data")
+    _fake_lists(monkeypatch, {"aaa": _detail("test", 10)})
+    first = tools.export_quotes_xlsx([{"env": "test", "list": "aaa"}])
+    second = tools.export_quotes_xlsx([{"env": "test", "list": "aaa"}])
+    assert Path(first["path"]).parent == tmp_path / "user-data" / "exports"
+    assert first["path"] != second["path"]
+    before = Path(first["path"]).read_bytes()
+    with pytest.raises(ValidationError, match="already exists"):
+        tools.export_quotes_xlsx([{"env": "test", "list": "aaa"}], first["path"])
+    assert Path(first["path"]).read_bytes() == before
+
+
+def test_ambiguous_publication_is_not_retried(store, monkeypatch):
+    d = workflow.draft_quote("acme", [req(needs={"vcpus": 2, "memory_gb": 4})])
+    monkeypatch.setattr(workflow, "get_builder", lambda svc, calc=None: FakeBuilder(svc, {}))
+    monkeypatch.setattr(workflow, "encode_card", lambda svc, rv: {"selectedProduct": {}})
+    calls = []
+    def uncertain(*args, **kwargs):
+        calls.append(True)
+        raise RuntimeError('connection lost after save')
+    monkeypatch.setattr(workflow, "publish_checked", uncertain)
+    with pytest.raises(RuntimeError):
+        workflow.publish_quote(d["draft_id"], "n")
+    with pytest.raises(ValidationError, match="unknown outcome"):
+        workflow.publish_quote(d["draft_id"], "n")
+    assert len(calls) == 1
+    with pytest.raises(ValidationError, match="cannot be revised"):
+        workflow.revise_quote(d["draft_id"], [{"requirement_id": "r1", "spec": "c7n.large.2", "justification": "change"}])
+
+
+def test_verified_result_survives_index_failure(store, monkeypatch):
+    d = workflow.draft_quote("acme", [req(needs={"vcpus": 2, "memory_gb": 4})])
+    monkeypatch.setattr(workflow, "get_builder", lambda svc, calc=None: FakeBuilder(svc, {}))
+    monkeypatch.setattr(workflow, "encode_card", lambda svc, rv: {"selectedProduct": {}})
+    calls = []
+    def published(*args, **kwargs):
+        calls.append(True)
+        return {"id": "L1", "url": "u", "checks": []}
+    monkeypatch.setattr(workflow, "publish_checked", published)
+    def broken_index(*args):
+        raise OSError('disk full')
+    monkeypatch.setattr(DraftStore, "link", broken_index)
+    with pytest.raises(OSError):
+        workflow.publish_quote(d["draft_id"], "n")
+    assert workflow.publish_quote(d["draft_id"], "n")["id"] == "L1"
+    assert len(calls) == 1
+
+
+def test_option_builder_cannot_publish_a_different_decision_spec(store, monkeypatch):
+    d = workflow.draft_quote('acme', [req(service='cce', needs={'vcpus': 2, 'memory_gb': 4})])
+    class OptionsBuilder(FakeBuilder):
+        spec_arg = None
+    monkeypatch.setattr(workflow, 'get_builder', lambda svc, calc=None: OptionsBuilder(svc, {}))
+    monkeypatch.setattr(workflow, 'encode_card', lambda svc, rv: {
+        'selectedProduct': {'productAllInfos': [{'resourceSpecCode': 'different'}]}})
+    with pytest.raises(ValidationError, match='does not contain the selected spec'):
+        workflow.publish_quote(d['draft_id'], 'n')
+    assert not store.load(d['draft_id']).publishing

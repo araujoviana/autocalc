@@ -20,7 +20,9 @@ _LIB = r"""
 const appEl = document.querySelector('#app');
 const app = appEl && appEl.__vue_app__;
 const plain = (v) => JSON.parse(JSON.stringify(v === undefined ? null : v));
+let snapshot;
 function findAll(pred) {
+  if (snapshot) return snapshot.filter(pred);
   const out = [], seen = new Set();
   const root = app && (app._instance || (app._container._vnode && app._container._vnode.component));
   const stack = root ? [root] : [];
@@ -28,7 +30,7 @@ function findAll(pred) {
     const i = stack.pop();
     if (!i || seen.has(i)) continue;
     seen.add(i);
-    if (pred(i)) out.push(i);
+    out.push(i);
     const walk = (v) => {
       if (!v) return;
       if (v.component) stack.push(v.component);
@@ -38,14 +40,20 @@ function findAll(pred) {
     };
     walk(i.subTree);
   }
-  return out;
+  snapshot = out;
+  return snapshot.filter(pred);
 }
 const visible = (i) => !!(i.subTree && i.subTree.el && i.subTree.el.offsetParent);
-function control(cfg) {
+function control(cfg, value) {
   const all = findAll((i) => {
     const vc = i.props && i.props.viewConfig, n = i.type.__name || '';
     return vc && vc.id === cfg && i.props.idHeader && (n.startsWith('base-') || n === 'common-input') && n !== 'base-form-group';
   });
+  if (value !== undefined) {
+    const radio = all.find((i) => visible(i) && i.type.__name === 'base-radio-group'
+      && (i.props.sourceData || []).some((o) => o.value === value));
+    if (radio) return radio;
+  }
   return all.find(visible) || null;
 }
 function optionLabels(o) {
@@ -53,6 +61,11 @@ function optionLabels(o) {
 }
 function cartStore() { return app.config.globalProperties.$pinia._s.get('cartInfo').$state; }
 const FNS = {
+  loadState() {
+    return {ready: document.readyState, app: !!appEl, vue: !!app,
+      templates: findAll((i) => i.type.__name === 'template-render').length,
+      scripts: document.scripts.length};
+  },
   ready() { return !!app && findAll((i) => i.type.__name === 'template-render').length > 0; },
   version() { return [...document.scripts].map((s) => s.src).filter(Boolean); },
   removeOverlays(sel) { document.querySelectorAll(sel).forEach((e) => e.remove()); return true; },
@@ -66,8 +79,13 @@ const FNS = {
     if (!i) return null;
     return { kind: i.type.__name, id: i.props.idHeader, options: plain(i.props.sourceData || []) };
   },
+  radioStepper(cfg, value) {
+    const i = control(cfg, value);
+    if (!i || i.type.__name !== 'base-radio-group') return null;
+    return { kind: i.type.__name, id: i.props.idHeader, options: plain(i.props.sourceData || []) };
+  },
   clickOption(cfg, value) {
-    const i = control(cfg);
+    const i = control(cfg, value);
     if (!i) return 'missing';
     const opts = plain(i.props.sourceData || []);
     const idx = opts.findIndex((o) => o.value === value);
@@ -99,7 +117,12 @@ const FNS = {
     return 'ok';
   },
   readBack(cfg) {
-    const i = control(cfg);
+    let i = control(cfg);
+    if (i && i.type.__name === 'base-radio-stepper') {
+      const nested = findAll((c) => c.type.__name === 'base-radio-group' && visible(c)
+        && c.props.viewConfig && c.props.viewConfig.id === cfg)[0];
+      if (nested) i = nested;
+    }
     if (!i) return null;
     const el = i.subTree.el;
     if (i.type.__name === 'base-radio-group') {
@@ -133,12 +156,22 @@ const FNS = {
 };
 """
 
-SCRIPT = "async ({fn, args}) => {" + _LIB + "\nreturn await FNS[fn](...args);\n}"
+# Install code once per document; globals are read again for each call so an initially
+# absent Vue app and later component replacements are never cached across polls.
+_BRIDGE = "__autocalc_page_bridge_v1__"
+INSTALL_REQUIRED = {"__autocalc_install_required__": True}
+INSTALL_SCRIPT = "() => { globalThis." + _BRIDGE + " = async ({fn, args}) => {" + _LIB + "\nreturn await FNS[fn](...args); }; }"
+SCRIPT = "async (payload) => globalThis." + _BRIDGE + " ? await globalThis." + _BRIDGE + "(payload) : {__autocalc_install_required__: true}"
 
 
 def js(page: Any, fn: str, *args: Any) -> Any:
     """Call one named function of the page library."""
-    return page.evaluate(SCRIPT, {"fn": fn, "args": list(args)})
+    payload = {"fn": fn, "args": list(args)}
+    result = page.evaluate(SCRIPT, payload)
+    if result == INSTALL_REQUIRED:
+        page.evaluate(INSTALL_SCRIPT)
+        return page.evaluate(SCRIPT, payload)
+    return result
 
 
 # ---- pure normalizers --------------------------------------------------------------
@@ -183,7 +216,7 @@ def rewrite_mismatches(stored: Any, current: Any, path: str = "") -> list[str]:
                 out.append(sub)
             else:
                 out.extend(rewrite_mismatches(value, other, sub))
-        elif value != other:
+        elif (sorted(map(str, value)) != sorted(map(str, other)) if isinstance(value, list) and isinstance(other, list) else value != other):
             out.append(sub)
     return out
 

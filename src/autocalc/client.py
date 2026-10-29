@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
+import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -17,7 +19,14 @@ from typing import Any, Literal
 
 import httpx
 
-from autocalc.errors import CalculatorError, UpstreamError, raise_for_exception
+from autocalc.errors import (
+    CalculatorError,
+    SpecNotFound,
+    UnexpectedResponse,
+    UpstreamError,
+    ValidationError,
+    raise_for_exception,
+)
 
 API = "https://portal-intl.huaweicloud.com/api"
 CALC = f"{API}/calculator/rest/cbc/portalcalculatornodeservice/v4/api"
@@ -67,10 +76,48 @@ class Sku:
 
 class Calculator:
     def __init__(self, cache_dir: str | os.PathLike | None = None, ttl: float = 24 * 3600, timeout: float = 60):
-        self.http = httpx.Client(headers=HEADERS, timeout=timeout, follow_redirects=True)
+        self._http: httpx.Client | None = None
+        self._http_lock = threading.Lock()
+        self._timeout = timeout
         self.cache_dir = Path(cache_dir or os.environ.get("AUTOCALC_CACHE", Path.home() / ".cache" / "autocalc"))
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.ttl = ttl
+
+    @property
+    def http(self) -> httpx.Client:
+        with self._http_lock:
+            if self._http is None:
+                self._http = httpx.Client(headers=HEADERS, timeout=self._timeout, follow_redirects=True)
+            return self._http
+
+    @http.setter
+    def http(self, value: httpx.Client) -> None:
+        with self._http_lock:
+            self._http = value
+
+    def prune_cache(self, max_bytes: int = 64 * 1024 * 1024) -> dict[str, int]:
+        """Remove expired/oldest generated catalog cache files; preserve unrelated user files."""
+        entries = []
+        now, removed, freed = time.time(), 0, 0
+        for path in self.cache_dir.glob("*.json"):
+            if not re.fullmatch(r"[0-9a-f]{40}\.json", path.name) or path.is_symlink():
+                continue
+            try:
+                stat = path.stat()
+            except OSError:
+                continue
+            entries.append((stat.st_mtime, stat.st_size, path))
+        size = sum(entry[1] for entry in entries)
+        for modified, length, path in sorted(entries):
+            if now - modified < self.ttl and size <= max_bytes:
+                continue
+            try:
+                path.unlink()
+            except OSError:
+                continue
+            size -= length
+            removed += 1
+            freed += length
+        return {"removed": removed, "bytes_freed": freed}
 
     # ---- raw transport -------------------------------------------------
 
@@ -78,10 +125,14 @@ class Calculator:
                   refresh: bool = False) -> Any:
         key = hashlib.sha1(f"{url}?{json.dumps(params, sort_keys=True)}".encode()).hexdigest()
         path = self.cache_dir / f"{key}.json"
-        if not refresh and path.exists() and time.time() - path.stat().st_mtime < self.ttl:
-            return json.loads(path.read_text())
-        # CDN mirror first when available: faster and survives an API outage (D2).
-        for target in ([fallback] if (not refresh and fallback) else []) + [url]:
+        if not refresh:
+            try:
+                if time.time() - path.stat().st_mtime < self.ttl:
+                    return json.loads(path.read_text())
+            except (OSError, ValueError):
+                pass
+        # Prefer the live API; the CDN is disaster recovery, not the source of truth.
+        for target in [url] + ([fallback] if fallback else []):
             try:
                 r = self.http.get(target, params=params if target == url else None)
                 r.raise_for_status()
@@ -92,7 +143,16 @@ class Calculator:
         else:
             raise UpstreamError(f"could not fetch {url}", hint="Check network reachability (`autocalc doctor`).",
                                 details={"url": url})
-        path.write_text(json.dumps(data))
+        import tempfile
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        with tempfile.NamedTemporaryFile(mode="w", dir=self.cache_dir, delete=False) as cached:
+            json.dump(data, cached)
+        os.replace(cached.name, path)
+        if target != url:
+            # Retry the primary API after five minutes when serving mirror data.
+            cached_at = time.time() - max(0, self.ttl - 300)
+            os.utime(path, (cached_at, cached_at))
+        self.prune_cache()
         return data
 
     # ---- catalog -------------------------------------------------------
@@ -168,6 +228,7 @@ class Calculator:
                         step, mu = p.get("measureUnitStep"), p.get("measureUnit")
                         entry["per"] = f"{step or 1} {units.get(str(mu), {}).get('unit', mu)}"
                         entry["usage_factor"] = p.get("usageFactor")
+                        entry["usage_measure_id"] = p.get("usageMeasureId") or p.get("measureUnit")
                     prices.setdefault(p["billingMode"].lower(), entry)
                 out.append(Sku(
                     service=service,
@@ -204,15 +265,20 @@ class Calculator:
                 continue
             if min_memory_gb is not None and (mem is None or mem < min_memory_gb):
                 continue
-            hits.append(s)
+            if not any(h.as_dict() == s.as_dict() for h in hits):
+                hits.append(s)
         mode = billing or "ondemand"
         hits.sort(key=lambda s: (s.prices.get(mode, {}).get("amount") is None, s.prices.get(mode, {}).get("amount") or 0))
         return [h.as_dict() for h in hits[:limit]]
 
-    def find_sku(self, service: str, region: str, spec: str) -> Sku:
+    def find_sku(self, service: str, region: str, spec: str, usage_factor: str | None = None) -> Sku:
         matches = [s for s in self.skus(service, region) if s.spec == spec]
+        if usage_factor is not None:
+            matches = [s for s in matches if s.prices.get("ondemand", {}).get("usage_factor") == usage_factor]
         if not matches:
-            raise CalculatorError(f"spec {spec!r} not found for service {service!r} in {region}")
+            raise SpecNotFound(f"spec {spec!r} not found for service {service!r} in {region}")
+        if len({json.dumps(s.as_dict(), sort_keys=True) for s in matches}) > 1:
+            raise ValidationError(f"Ambiguous spec {spec!r}; specify usage_factor.")
         return matches[0]
 
     # ---- live rating ---------------------------------------------------
@@ -263,10 +329,33 @@ class Calculator:
         other usage factors (traffic, requests...) are priced for usage_value as given.
         monthly/yearly: `periods` months or years.
         """
+        if billing not in ("ondemand", "monthly", "yearly"):
+            raise ValidationError("Unsupported quote billing mode.", field="billing")
+        if isinstance(hours, bool) or not isinstance(hours, (int, float)) or not math.isfinite(hours) or hours <= 0:
+            raise ValidationError("hours must be finite and positive.", field="hours")
+        if isinstance(periods, bool) or not isinstance(periods, int) or periods < 1:
+            raise ValidationError("periods must be a positive integer.", field="periods")
+        if not isinstance(items, list) or not items:
+            raise ValidationError("items must be a nonempty list.", field="items")
+        allowed = {"service", "spec", "quantity", "size", "size_measure_id", "usage_factor", "usage_value", "usage_measure_id"}
+        for item in items:
+            if not isinstance(item, dict) or set(item) - allowed:
+                raise ValidationError("Unknown quote item fields.", field="items")
+            for key in ("service", "spec"):
+                if not isinstance(item.get(key), str) or not item[key].strip():
+                    raise ValidationError(f"{key} must be a nonempty string.", field=key)
+            quantity = item.get("quantity", 1)
+            if isinstance(quantity, bool) or not isinstance(quantity, int) or quantity < 1:
+                raise ValidationError("quantity must be a positive integer.", field="quantity")
+            for key in ("size", "usage_value"):
+                value = item.get(key)
+                if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))
+                                          or not math.isfinite(value) or value < 0):
+                    raise ValidationError(f"{key} must be finite and nonnegative.", field=key)
         charging_mode, period_type = BILLING[billing]
         products, scale, meta = [], {}, {}
         for i, it in enumerate(items):
-            sku = self.find_sku(it["service"], region, it["spec"])
+            sku = self.find_sku(it["service"], region, it["spec"], it.get("usage_factor"))
             pid = f"item{i}"
             p: dict[str, Any] = {
                 "id": pid,
@@ -284,14 +373,14 @@ class Calculator:
                 if plan is None:
                     raise CalculatorError(f"{sku.spec} has no on-demand price in {region}")
                 factor = it.get("usage_factor") or plan.get("usage_factor") or "Duration"
-                if factor == "Duration":
-                    p.update(usageFactor="Duration", usageMeasureId=HOUR_MEASURE_ID, usageValue=1)
+                if factor.lower() == "duration":
+                    p.update(usageFactor=factor, usageMeasureId=HOUR_MEASURE_ID, usageValue=1)
                     scale[pid] = hours
                 else:
                     if it.get("usage_value") is None:
                         raise CalculatorError(f"{sku.spec}: usage_value required for usage factor {factor!r}")
                     p.update(usageFactor=factor, usageValue=it["usage_value"],
-                             usageMeasureId=it.get("usage_measure_id", GB_MEASURE_ID))
+                             usageMeasureId=it.get("usage_measure_id") or plan.get("usage_measure_id") or GB_MEASURE_ID)
                     if factor.startswith("size"):
                         scale[pid] = hours
             products.append(p)
@@ -308,8 +397,20 @@ class Calculator:
             "productInfos": products,
         }
         res = self.inquiry(body)
+        rated = res.get("productRatingResult")
+        if (not isinstance(rated, list) or len(rated) != len(products)
+                or any(not isinstance(row, dict) for row in rated)
+                or {row.get("id") for row in rated} != set(meta)):
+            raise UnexpectedResponse("Rating did not return exactly one result per requested product.")
+        for row in rated:
+            for key in ("amount", "originalAmount"):
+                value = row.get(key)
+                if key == "originalAmount" and value is None:
+                    continue
+                if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                    raise UnexpectedResponse("Rating returned an invalid amount.")
         lines, total, original = [], 0.0, 0.0
-        for r in res.get("productRatingResult", []):
+        for r in rated:
             k = scale.get(r["id"], 1.0)
             amt, orig = r["amount"] * k, (r.get("originalAmount") or r["amount"]) * k
             total, original = total + amt, original + orig
@@ -328,12 +429,13 @@ class Calculator:
     # ---- currency ------------------------------------------------------
 
     def exchange_rates(self) -> dict[str, float]:
-        rates, page = {}, 1
+        rates, page, fetched = {}, 1, 0
         while True:
             d = self._get_json(EXCHANGE, {"page_no": page, "page_size": 100})
             rows = d.get("data") or []
+            fetched += len(rows)
             rates.update({x["currency"]: x["rate"] for x in rows if x.get("baseCurrency") == "USD"})
-            if not rows or len(rates) >= int(d.get("totalSize") or 0) or page > 20:
+            if not rows or fetched >= int(d.get("totalSize") or 0) or page > 20:
                 return rates
             page += 1
 
