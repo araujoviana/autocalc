@@ -48,7 +48,7 @@ export class Catalog {
         const per = onetime ? `${String(plan.periodNum || 1)} ${mode === "monthly" ? "month" : "year"}` : `${String(plan.measureUnitStep || 1)} ${asString(unit.unit) || String(plan.measureUnit ?? "")}`;
         prices[mode] = { amount: plan.amount, currency: "USD", per, ...(onetime ? {} : { usage_factor: plan.usageFactor }) };
       }
-      return { service, group, spec: asString(item.resourceSpecCode), description: resolve(item.productSpecSysDesc), prices, cloudServiceType: item.cloudServiceType, resourceType: item.resourceType };
+      return { service, group, spec: asString(item.resourceSpecCode), description: resolve(item.productSpecSysDesc), prices, cloudServiceType: item.cloudServiceType, resourceType: item.resourceType, offPage: group === "ec2_vm" && service === "ecs" && !item.vmType };
     }));
   }
   async search(service: string, region: string, options: { query?: string; billing?: string | undefined; min_vcpus?: number | undefined; min_memory_gb?: number | undefined; limit?: number; refresh?: boolean } = {}) {
@@ -59,7 +59,7 @@ export class Catalog {
       if (!terms.every(term => haystack.includes(term)) || (options.billing && !sku.prices[options.billing])) return false;
       const cpu = /vCPUs:\s*([\d.]+)/.exec(sku.description), memory = /Memory:\s*([\d.]+)\s*MB/.exec(sku.description);
       return (options.min_vcpus === undefined || (!!cpu && Number(cpu[1]) >= options.min_vcpus)) && (options.min_memory_gb === undefined || (!!memory && Number(memory[1]) / 1024 >= options.min_memory_gb));
-    }).sort((a, b) => (a.prices[options.billing ?? "ondemand"]?.amount ?? Infinity) - (b.prices[options.billing ?? "ondemand"]?.amount ?? Infinity)).slice(0, options.limit ?? 30).map(({ cloudServiceType: _cloudServiceType, resourceType: _resourceType, ...sku }) => sku);
+    }).sort((a, b) => (a.prices[options.billing ?? "ondemand"]?.amount ?? Infinity) - (b.prices[options.billing ?? "ondemand"]?.amount ?? Infinity)).slice(0, options.limit ?? 30).map(({ cloudServiceType: _cloudServiceType, resourceType: _resourceType, offPage: _offPage, ...sku }) => sku);
   }
   async productInfo(service: string, region: string, refresh = false): Promise<z.output<typeof productSchema>> {
     service = vendorServiceCode(service);
