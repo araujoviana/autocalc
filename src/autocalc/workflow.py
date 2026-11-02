@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 from typing import Any, Literal
 
-from autocalc import frontend, tools
+from autocalc import frontend, quote_file, tools  # noqa: F401  (quote_file registers plan/apply_quote)
 from autocalc.core import DraftStore, Requirement
 from autocalc.core import draft_quote as _draft
 from autocalc.core.draft import decide_many

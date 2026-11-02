@@ -1,0 +1,82 @@
+service: cce
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_clustertype_radio_productType
+  kind: base-radio-group
+  title: Product Category
+  value_type: Filter
+  option_key: productType
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+- id: calculator_clustertype_radio_clusterType
+  kind: base-radio-group
+  title: Cluster Type
+  value_type: Filter
+  option_key: clusterType
+  values: catalog
+  after:
+  - calculator_clustertype_radio_productType
+- id: calculator_clustertype_radio_clusterNodeScale
+  kind: base-radio-group
+  title: Cluster Scale
+  value_type: Filter
+  option_key: clusterNodeScale
+  values: catalog
+  after:
+  - calculator_clustertype_radio_clusterType
+- id: calculator_clustertype_radio_clusterMasterScale
+  kind: base-radio-group
+  title: Master Nodes
+  value_type: Filter
+  option_key: clusterMasterScale
+  values: catalog
+  after:
+  - calculator_clustertype_radio_clusterNodeScale
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_clustertype_radio_clusterMasterScale
+  option: periods
+- id: global_QUANTITY_Stepper_0
+  kind: base-stepper
+  title: Quantity
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  ranges:
+  - min: 1.0
+    max: 999.0
+    default: 1.0
+    unit: PCS
+  after:
+  - global_PERIODTIME_UNSET_PeriodTime
+  option: quantity

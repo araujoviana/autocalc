@@ -1,0 +1,195 @@
+service: ecs
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_ecs_radio_arch
+  kind: base-radio-group
+  title: CPU Architecture
+  value_type: Filter
+  option_key: arch
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+  option: flavor
+- id: calculator_ecs_radio_vmType
+  kind: base-radio-group
+  title: Type
+  value_type: Filter
+  option_key: vmType
+  values: catalog
+  after:
+  - calculator_ecs_radio_arch
+  option: flavor
+- id: calculator_ecs_radio_generation
+  kind: base-radio-group
+  value_type: Filter
+  option_key: generation
+  values: catalog
+  after:
+  - calculator_ecs_radio_vmType
+  option: flavor
+- id: calculator_ecs_radio_cpu
+  kind: base-radio-group
+  value_type: Filter
+  option_key: cpu
+  values: catalog
+  after:
+  - calculator_ecs_radio_generation
+  option: flavor
+- id: calculator_ecs_radio_mem
+  kind: base-radio-group
+  value_type: Filter
+  option_key: mem
+  values: catalog
+  after:
+  - calculator_ecs_radio_cpu
+  option: flavor
+- id: calculator_ims_select___platform
+  kind: base-select
+  title: Image
+  value_type: Filter
+  option_key: __platform
+  values: catalog
+  after:
+  - calculator_ecs_radio_mem
+  option: image
+- id: calculator_ims_select_name
+  kind: base-select
+  value_type: Filter
+  option_key: name
+  values: catalog
+  after:
+  - calculator_ims_select___platform
+  option: image
+- id: calculator_evs_stepper_main_type
+  kind: base-select
+  title: System Disk
+  value_type: Filter
+  option_key: type
+  default: dataInfo_43_
+  values: catalog
+  after:
+  - calculator_ims_select_name
+  option: system_disk
+- id: calculator_evs_stepper_main_Stepper_0
+  kind: base-stepper
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 40.0
+    max: 1024.0
+    step: 10.0
+    default: 40.0
+    unit: GiB
+  after:
+  - calculator_evs_stepper_main_type
+  option: system_disk
+- id: calculator_eip_switch_UNSET_Switch
+  kind: base-radio-group
+  title: EIP
+  value_type: Filter
+  option_key: UNSET_Switch
+  values: catalog
+  after:
+  - calculator_evs_stepper_main_Stepper_0
+  option: bandwidth_mbit
+- id: calculator_eip_radio_eipSpec
+  kind: base-radio-group
+  title: EIP Type
+  value_type: Filter
+  option_key: eipSpec
+  values: catalog
+  after:
+  - calculator_eip_switch_UNSET_Switch
+  unsupported: true
+  note: fixed to the default EIP spec by the recipe
+- id: calculator_eip_radio_shareType
+  kind: base-radio-group
+  title: Bandwidth Type
+  value_type: Filter
+  option_key: shareType
+  values: catalog
+  after:
+  - calculator_eip_radio_eipSpec
+  unsupported: true
+  note: fixed to dedicated bandwidth by the recipe
+- id: calculator_eip_radio_eipType
+  kind: base-radio-group
+  title: Billed By
+  value_type: Filter
+  option_key: eipType
+  values: catalog
+  after:
+  - calculator_eip_radio_shareType
+  option: bandwidth_type
+- id: calculator_eip_radio_Stepper_1
+  kind: base-stepper
+  title: Bandwidth Size
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_1
+  values: catalog
+  ranges:
+  - min: 5.0
+    max: 2000.0
+    default: 5.0
+    when: ^19_share
+  - min: 1.0
+    max: 2000.0
+    default: 5.0
+    when: ^19_s?bgp
+  - min: 1.0
+    max: 9999.0
+    default: 1.0
+    when: ^12_
+  after:
+  - calculator_eip_radio_eipType
+  option: bandwidth_mbit
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_eip_radio_Stepper_1
+  option: periods
+- id: global_QUANTITY_Stepper_0
+  kind: base-stepper
+  title: Quantity
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  ranges:
+  - min: 1.0
+    max: 1000.0
+    default: 1.0
+    unit: ECS
+  after:
+  - global_PERIODTIME_UNSET_PeriodTime
+  option: quantity

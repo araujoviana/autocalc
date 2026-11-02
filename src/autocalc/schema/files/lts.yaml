@@ -1,0 +1,126 @@
+service: lts
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_ltsLogFlow_stepper_Stepper_0
+  kind: base-stepper
+  title: Raw Log Size
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 9999999999.0
+    default: 10.0
+    unit: GB/day
+  - min: 1.0
+    max: 9999999999.0
+    unit: TB/day
+  after:
+  - global_REGIONINFO_chargeMode
+- id: calculator_lts_cold_switch_UNSET_Switch
+  kind: base-radio-group
+  title: Intelligent Cold Storage
+  value_type: Filter
+  option_key: UNSET_Switch
+  values: catalog
+  after:
+  - calculator_ltsLogFlow_stepper_Stepper_0
+- id: calculator_ltsStorage_normal_stepper_Stepper_0
+  kind: base-stepper
+  title: Log Storage Duration (Days)
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 365.0
+    default: 30.0
+  after:
+  - calculator_lts_cold_switch_UNSET_Switch
+- id: calculator_ltsLogIndexRate_stepper_Stepper_0
+  kind: base-stepper
+  title: Index Field Ratio
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 100.0
+    default: 100.0
+    unit: '%'
+  after:
+  - calculator_ltsStorage_normal_stepper_Stepper_0
+- id: calculator_lts_transfer_basic_stepper_Stepper_0
+  kind: base-stepper
+  title: Daily Basic Transfer Volume
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 9999999999.0
+    default: 10.0
+    unit: GB/day
+  - min: 0.0
+    max: 9999999999.0
+    unit: TB/day
+  after:
+  - calculator_ltsLogIndexRate_stepper_Stepper_0
+- id: calculator_lts_transfer_senior_stepper_Stepper_0
+  kind: base-stepper
+  title: Daily Advanced Transfer Volume
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 9999999999.0
+    default: 10.0
+    unit: GB/day
+  - min: 0.0
+    max: 9999999999.0
+    unit: TB/day
+  after:
+  - calculator_lts_transfer_basic_stepper_Stepper_0
+- id: global_ONDEMANDTIME_Stepper_0
+  kind: base-stepper
+  title: Required Duration
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  ranges:
+  - min: 1.0
+    max: 60.0
+    default: 1.0
+    unit: month
+  - min: 1.0
+    max: 30.0
+    default: 1.0
+    unit: day
+  after:
+  - calculator_lts_transfer_senior_stepper_Stepper_0
+  option: hours

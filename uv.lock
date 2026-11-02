@@ -47,6 +47,7 @@ dependencies = [
     { name = "mcp" },
     { name = "playwright" },
     { name = "pydantic" },
+    { name = "pyyaml" },
 ]
 
 [package.dev-dependencies]
@@ -66,6 +67,7 @@ requires-dist = [
     { name = "mcp", specifier = ">=1.2,<2" },
     { name = "playwright", specifier = ">=1.63.0" },
     { name = "pydantic", specifier = ">=2.14.1" },
+    { name = "pyyaml", specifier = ">=6" },
 ]
 
 [package.metadata.requires-dev]

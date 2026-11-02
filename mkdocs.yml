@@ -43,6 +43,7 @@ nav:
   - Reference:
       - CLI: reference/cli.md
       - Errors: reference/errors.md
+      - Quote files and card schemas: reference/quote-files.md
       - Huawei calculator backend: reference/huawei-backend.md
   - Explanation:
       - Architecture: explanation/architecture.md

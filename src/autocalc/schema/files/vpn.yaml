@@ -1,0 +1,160 @@
+service: vpn
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_gatewayType_radio_gatewayType
+  kind: base-radio-group
+  title: VPN Edition
+  value_type: Filter
+  option_key: gatewayType
+  default: dataInfo_16_
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_gatewayMode_radio_gatewayMode
+  kind: base-radio-group
+  title: Mode
+  value_type: Filter
+  option_key: gatewayMode
+  default: dataInfo_20_
+  values: catalog
+  after:
+  - calculator_gatewayType_radio_gatewayType
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_evpnNetworkType_switch_UNSET_Switch
+  kind: base-radio-group
+  title: Network Type
+  value_type: Filter
+  option_key: UNSET_Switch
+  values: catalog
+  after:
+  - calculator_gatewayMode_radio_gatewayMode
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_evpnGatewaySpec_radio_calGatewaySpec
+  kind: base-radio-group
+  title: Specification
+  value_type: Filter
+  option_key: calGatewaySpec
+  values: catalog
+  after:
+  - calculator_evpnNetworkType_switch_UNSET_Switch
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_evpnGatewaySpec_radio_calNonFixedIP
+  kind: base-radio-group
+  title: Access via Non-fixed IP Addresses
+  value_type: Filter
+  option_key: calNonFixedIP
+  default: dataInfo_19_
+  values: catalog
+  after:
+  - calculator_evpnGatewaySpec_radio_calGatewaySpec
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_evpnGatewaySpec_radio_Stepper_1
+  kind: base-radio-stepper
+  title: VPN Connection Groups
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_1
+  values: catalog
+  ranges:
+  - min: 10.0
+    max: 10.0
+    default: 10.0
+    when: S2C-VPN-Ent.Basic
+  - min: 10.0
+    max: 100.0
+    default: 10.0
+    when: V300||V1G||S2C-VPN-Ent.GM
+  - min: 1.0
+    max: 10.0
+    default: 1.0
+    when: S2C-VPN-Ent.Basic
+  - min: 1.0
+    max: 100.0
+    default: 1.0
+    when: V300||V1G||S2C-VPN-Ent.GM
+  after:
+  - calculator_evpnGatewaySpec_radio_calNonFixedIP
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_evpnShareBandwidth_switch_UNSET_Switch
+  kind: base-radio-group
+  title: Using Shared Bandwidth
+  value_type: Filter
+  option_key: UNSET_Switch
+  default: dataInfo_23_
+  values: catalog
+  after:
+  - calculator_evpnGatewaySpec_radio_Stepper_1
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_evpnEip1_stepper_Stepper_0
+  kind: base-stepper
+  title: EIP 1 Bandwidth
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 300.0
+    default: 1.0
+    unit: Mbit/s
+  after:
+  - calculator_evpnShareBandwidth_switch_UNSET_Switch
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_evpnEip2_stepper_Stepper_0
+  kind: base-stepper
+  title: EIP 2 Bandwidth
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 300.0
+    default: 1.0
+    unit: Mbit/s
+  after:
+  - calculator_evpnEip1_stepper_Stepper_0
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_evpnEip2_stepper_Stepper_0
+  option: periods

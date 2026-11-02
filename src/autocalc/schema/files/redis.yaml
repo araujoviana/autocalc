@@ -1,0 +1,97 @@
+service: redis
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_redis_version_edition
+  kind: base-radio-group
+  title: Edition
+  value_type: Filter
+  option_key: edition
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+  option: edition
+- id: calculator_redis_version_version
+  kind: base-radio-group
+  title: Version
+  value_type: Filter
+  option_key: version
+  values: catalog
+  after:
+  - calculator_redis_version_edition
+  option: version
+- id: calculator_redis_version_instance_type
+  kind: base-radio-group
+  title: Instance Type
+  value_type: Filter
+  option_key: instance_type
+  values: catalog
+  after:
+  - calculator_redis_version_version
+  option: instance_type
+- id: calculator_redis_version_cpu_storage
+  kind: base-radio-group
+  title: CPU | Memory
+  value_type: Filter
+  option_key: cpu_storage
+  values: catalog
+  after:
+  - calculator_redis_version_instance_type
+  option: cpu_storage
+- id: calculator_redis_version_spec
+  kind: base-radio-group
+  title: Specification
+  value_type: Filter
+  option_key: spec
+  values: catalog
+  after:
+  - calculator_redis_version_cpu_storage
+  option: spec
+- id: calculator_redis_quantity_Stepper_0
+  kind: base-stepper
+  title: Quantity
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 100.0
+    unit: instance
+  after:
+  - calculator_redis_version_spec
+  option: instances
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_redis_quantity_Stepper_0
+  option: periods

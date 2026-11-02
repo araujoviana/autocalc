@@ -1,0 +1,10 @@
+customer: Example Corp (synthetic)
+name: "[autocalc] example"
+defaults:
+  region: sa-brazil-1
+  billing: monthly
+cards:
+  - id: web
+    service: ecs
+    needs: {vcpus: 4, memory_gb: 8}
+    options: {bandwidth_mbit: 10}

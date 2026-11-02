@@ -1,0 +1,55 @@
+service: vpcep
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_vpcep_serviceType_serviceType
+  kind: base-radio-group
+  title: Service Category
+  value_type: Filter
+  option_key: serviceType
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_vpcep_time_Stepper_0
+  kind: base-stepper
+  title: Purchase Duration
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 999999.0
+    default: 1.0
+    unit: hour
+  after:
+  - calculator_vpcep_serviceType_serviceType
+  unsupported: true
+  note: not in the recipe; the page default is kept

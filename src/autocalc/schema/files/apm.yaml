@@ -1,0 +1,109 @@
+service: apm
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_apm2Enterprise150_stepper_Stepper_0
+  kind: base-stepper
+  title: Basic Packages
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 9999.0
+    default: 1.0
+  after:
+  - global_REGIONINFO_chargeMode
+- id: calculator_apm2Enterprise1200_stepper_Stepper_0
+  kind: base-stepper
+  title: Medium Packages
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 9999.0
+    default: 0.0
+  after:
+  - calculator_apm2Enterprise150_stepper_Stepper_0
+- id: calculator_apm2Enterprise9600_stepper_Stepper_0
+  kind: base-stepper
+  title: Advanced Packages
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 9999.0
+    default: 0.0
+  after:
+  - calculator_apm2Enterprise1200_stepper_Stepper_0
+- id: calculator_apm2Enterprise36500_stepper_Stepper_0
+  kind: base-stepper
+  title: Golden Packages
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 9999.0
+    default: 0.0
+  after:
+  - calculator_apm2Enterprise9600_stepper_Stepper_0
+- id: calculator_apm2Enterprise109500_stepper_Stepper_0
+  kind: base-stepper
+  title: Platinum Packages
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 9999.0
+    default: 0.0
+  after:
+  - calculator_apm2Enterprise36500_stepper_Stepper_0
+- id: calculator_apm2Enterprise182500_stepper_Stepper_0
+  kind: base-stepper
+  title: Top Packages
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 9999.0
+    default: 0.0
+  after:
+  - calculator_apm2Enterprise109500_stepper_Stepper_0
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_apm2Enterprise182500_stepper_Stepper_0
+  option: periods

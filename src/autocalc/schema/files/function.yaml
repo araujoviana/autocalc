@@ -1,0 +1,72 @@
+service: function
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_fgs_request_Stepper_0
+  kind: base-stepper
+  title: Average Requests (Ten thousand counts)
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 1000000000000000.0
+    default: 100.0
+    unit: month
+  - min: 0.0
+    max: 1000000000000000.0
+    default: 10000.0
+    unit: day
+  - min: 0.0
+    max: 1000000000000000.0
+    default: 10000.0
+    unit: hour
+  after:
+  - global_REGIONINFO_chargeMode
+- id: calculator_fgs_compute
+  kind: common-input
+  title: calc_3_
+  default: 100.0
+  after:
+  - calculator_fgs_request_Stepper_0
+- id: calculator_fgs_memory_Stepper_0
+  kind: base-stepper
+  title: Amount of memory allocated
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 128.0
+    max: 1024.0
+    default: 128.0
+    unit: MB
+  - min: 0.0
+    max: 10.0
+    default: 0.0
+    unit: GB
+  after:
+  - calculator_fgs_compute

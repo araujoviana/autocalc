@@ -1,0 +1,154 @@
+service: elb
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  default: ONDEMAND
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_elb_type_elbType
+  kind: base-radio-group
+  title: Type
+  value_type: Filter
+  option_key: elbType
+  default: dataInfo_3_
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+- id: calculator_elb_type_spec_azType
+  kind: base-radio-group
+  title: Sub-AZ
+  value_type: Filter
+  option_key: azType
+  values: catalog
+  after:
+  - calculator_elb_type_elbType
+- id: calculator_elb_type_spec_flavorCatagory
+  kind: base-radio-group
+  title: Specifications
+  value_type: Filter
+  option_key: flavorCatagory
+  default: calc_43_
+  values: catalog
+  after:
+  - calculator_elb_type_spec_azType
+- id: calculator_flavor_checkboxGroup_flavorType
+  kind: base-checkbox-group
+  title: Load Balancing Type
+  value_type: Filter
+  option_key: flavorType
+  values: catalog
+  after:
+  - calculator_elb_type_spec_flavorCatagory
+- id: calculator_tcp_new_connections_Stepper_0
+  kind: base-stepper
+  title: New Connections
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 99999999.0
+    default: 0.0
+  after:
+  - calculator_flavor_checkboxGroup_flavorType
+- id: calculator_tcp_max_concurrent_connections_Stepper_0
+  kind: base-stepper
+  title: Maximum Concurrent Connections
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 99999999.0
+    default: 0.0
+  after:
+  - calculator_tcp_new_connections_Stepper_0
+- id: calculator_tcp_data_switch_UNSET_Switch
+  kind: base-radio-group
+  value_type: Filter
+  option_key: UNSET_Switch
+  values: catalog
+  after:
+  - calculator_tcp_max_concurrent_connections_Stepper_0
+- id: calculator_tcp_flow_Stepper_0
+  kind: base-stepper
+  title: Processed Bytes
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 99999999.0
+    default: 0.0
+    unit: GB/hour
+  - min: 0.0
+    max: 99999999.0
+    default: 0.0
+    unit: GB/day
+  - min: 0.0
+    max: 99999999.0
+    default: 0.0
+    unit: GB/month
+  after:
+  - calculator_tcp_data_switch_UNSET_Switch
+- id: calculator_lcu_network_Stepper_0
+  kind: base-stepper
+  title: LCUs (Network Load Balancing)
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 1.0
+    default: 1.0
+    unit: LCU
+  after:
+  - calculator_tcp_flow_Stepper_0
+- id: calculator_ip_Stepper_0
+  kind: base-radio-stepper
+  title: Network Type
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 2.0
+    default: 2.0
+    unit: PCS
+  after:
+  - calculator_lcu_network_Stepper_0
+- id: global_ONDEMANDTIME_Stepper_0
+  kind: base-stepper
+  title: Required Duration
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  ranges:
+  - min: 1.0
+    max: 9999.0
+    default: 1.0
+    unit: hour
+  after:
+  - calculator_ip_Stepper_0
+  option: hours

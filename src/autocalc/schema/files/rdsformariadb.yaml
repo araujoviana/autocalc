@@ -1,0 +1,121 @@
+service: rdsformariadb
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_rdsvm_radio_dbType
+  kind: base-radio-group
+  title: DB Engine
+  value_type: Filter
+  option_key: dbType
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_rdsvm_radio_dbVersion
+  kind: base-radio-group
+  title: DB Engine Version
+  value_type: Filter
+  option_key: dbVersion
+  values: catalog
+  after:
+  - calculator_rdsvm_radio_dbType
+  option: db_version
+- id: calculator_rdsvm_radio_instanceType
+  kind: base-radio-group
+  title: DB Instance Type
+  value_type: Filter
+  option_key: instanceType
+  values: catalog
+  after:
+  - calculator_rdsvm_radio_dbVersion
+  option: instance_type
+- id: calculator_rdsvm_radio_publicType
+  kind: base-radio-group
+  title: DB Instance Class
+  value_type: Filter
+  option_key: publicType
+  values: catalog
+  after:
+  - calculator_rdsvm_radio_instanceType
+  option: public_type
+- id: calculator_rdsvm_radio2_spec
+  kind: base-select
+  value_type: Filter
+  option_key: spec
+  values: catalog
+  after:
+  - calculator_rdsvm_radio_publicType
+  option: spec
+- id: calculator_rdsvolume_stepper_type
+  kind: base-select
+  title: Storage
+  value_type: Filter
+  option_key: type
+  values: catalog
+  after:
+  - calculator_rdsvm_radio2_spec
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_rdsvolume_stepper_Stepper_0
+  kind: base-stepper
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  default: dataInfo_18_
+  values: catalog
+  ranges:
+  - min: 40.0
+    max: 4000.0
+    step: 10.0
+    default: 40.0
+  after:
+  - calculator_rdsvolume_stepper_type
+  option: storage_gb
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_rdsvolume_stepper_Stepper_0
+  option: periods
+- id: global_QUANTITY_Stepper_0
+  kind: base-stepper
+  title: Quantity
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  ranges:
+  - min: 1.0
+    max: 50.0
+    default: 1.0
+    unit: PCS
+  after:
+  - global_PERIODTIME_UNSET_PeriodTime
+  option: quantity

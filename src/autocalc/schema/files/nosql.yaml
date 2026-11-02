@@ -1,0 +1,134 @@
+service: nosql
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_nosql_versionType_group_versionType
+  kind: base-radio-group
+  title: Compatible API
+  value_type: Filter
+  option_key: versionType
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+- id: calculator_nosql_versionType_group_deploymentModal
+  kind: base-radio-group
+  title: Storage Type
+  value_type: Filter
+  option_key: deploymentModal
+  values: catalog
+  after:
+  - calculator_nosql_versionType_group_versionType
+- id: calculator_nosql_redis_modal_productModal
+  kind: base-radio-group
+  title: Product Type
+  value_type: Filter
+  option_key: productModal
+  values: catalog
+  after:
+  - calculator_nosql_versionType_group_deploymentModal
+- id: calculator_nosql_redis_type_type
+  kind: base-radio-group
+  title: DB Instance Type
+  value_type: Filter
+  option_key: type
+  values: catalog
+  after:
+  - calculator_nosql_redis_modal_productModal
+- id: calculator_nosql_redis_version_radio_version
+  kind: base-radio-group
+  title: Compatible Version
+  value_type: Filter
+  option_key: version
+  values: catalog
+  after:
+  - calculator_nosql_redis_type_type
+- id: calculator_nosql_redis_radio_cpuType
+  kind: base-radio-group
+  title: CPU Type
+  value_type: Filter
+  option_key: cpuType
+  values: catalog
+  after:
+  - calculator_nosql_redis_version_radio_version
+- id: calculator_nosql_redis_switch_UNSET_Switch
+  kind: base-radio-group
+  title: Instance Creation Method
+  value_type: Filter
+  option_key: UNSET_Switch
+  values: catalog
+  after:
+  - calculator_nosql_redis_radio_cpuType
+- id: calculator_nosql_redis_public_publicType
+  kind: base-radio-group
+  title: Node Specifications
+  value_type: Filter
+  option_key: publicType
+  values: catalog
+  after:
+  - calculator_nosql_redis_switch_UNSET_Switch
+- id: calculator_nosql_redis_vm_select_spec
+  kind: base-select
+  value_type: Filter
+  option_key: spec
+  values: catalog
+  after:
+  - calculator_nosql_redis_public_publicType
+- id: calculator_nosql_redis_colony_node_stepper_Stepper_0
+  kind: base-stepper
+  title: Nodes
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 3.0
+    max: 12.0
+    default: 2.0
+    unit: ' '
+  after:
+  - calculator_nosql_redis_vm_select_spec
+- id: calculator_nosql_redis_rs_stepper_Stepper_0
+  kind: base-stepper
+  title: Total Storage Space
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 10.0
+    max: 480.0
+    default: 10.0
+    unit: GB
+  after:
+  - calculator_nosql_redis_colony_node_stepper_Stepper_0
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_nosql_redis_rs_stepper_Stepper_0
+  option: periods

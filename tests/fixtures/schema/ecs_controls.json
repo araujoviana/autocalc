@@ -1,0 +1,305 @@
+[
+ {
+  "id": "global_QUANTITY_Stepper_0",
+  "kind": "base-stepper",
+  "title": "Quantity",
+  "value_type": "Stepper_ProductNum",
+  "option_key": "UNSET_Stepper_0",
+  "default": null,
+  "ranges": [
+   {
+    "min": 1,
+    "max": 1000,
+    "step": 1,
+    "default": 1,
+    "unit": "ECS",
+    "when": null
+   }
+  ],
+  "y": 1020,
+  "x": 0,
+  "options": []
+ },
+ {
+  "id": "global_PERIODTIME_UNSET_PeriodTime",
+  "kind": "base-radio-group",
+  "title": "Required Duration",
+  "value_type": "Filter",
+  "option_key": "UNSET_PeriodTime",
+  "default": null,
+  "ranges": [],
+  "y": 1080,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ },
+ {
+  "id": "calculator_eip_radio_Stepper_1",
+  "kind": "base-stepper",
+  "title": "Bandwidth Size",
+  "value_type": "Stepper_Resource",
+  "option_key": "UNSET_Stepper_1",
+  "default": null,
+  "ranges": [
+   {
+    "min": 5,
+    "max": 2000,
+    "step": 1,
+    "default": 5,
+    "unit": null,
+    "when": "^19_share"
+   },
+   {
+    "min": 1,
+    "max": 2000,
+    "step": 1,
+    "default": 5,
+    "unit": null,
+    "when": "^19_s?bgp"
+   },
+   {
+    "min": 1,
+    "max": 9999,
+    "step": 1,
+    "default": 1,
+    "unit": null,
+    "when": "^12_"
+   }
+  ],
+  "y": 960,
+  "x": 0,
+  "options": []
+ },
+ {
+  "id": "calculator_eip_radio_eipType",
+  "kind": "base-radio-group",
+  "title": "Billed By",
+  "value_type": "Filter",
+  "option_key": "eipType",
+  "default": null,
+  "ranges": [],
+  "y": 780,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ },
+ {
+  "id": "calculator_eip_radio_shareType",
+  "kind": "base-radio-group",
+  "title": "Bandwidth Type",
+  "value_type": "Filter",
+  "option_key": "shareType",
+  "default": null,
+  "ranges": [],
+  "y": 840,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ },
+ {
+  "id": "calculator_eip_radio_eipSpec",
+  "kind": "base-radio-group",
+  "title": "EIP Type",
+  "value_type": "Filter",
+  "option_key": "eipSpec",
+  "default": null,
+  "ranges": [],
+  "y": 900,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ },
+ {
+  "id": "calculator_eip_switch_UNSET_Switch",
+  "kind": "base-radio-group",
+  "title": "EIP",
+  "value_type": "Filter",
+  "option_key": "UNSET_Switch",
+  "default": null,
+  "ranges": [],
+  "y": 720,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ },
+ {
+  "id": "calculator_evs_stepper_main_Stepper_0",
+  "kind": "base-stepper",
+  "title": null,
+  "value_type": "Stepper_Resource",
+  "option_key": "UNSET_Stepper_0",
+  "default": null,
+  "ranges": [
+   {
+    "min": 40,
+    "max": 1024,
+    "step": 10,
+    "default": 40,
+    "unit": "GiB",
+    "when": null
+   }
+  ],
+  "y": 660,
+  "x": 0,
+  "options": []
+ },
+ {
+  "id": "calculator_evs_stepper_main_type",
+  "kind": "base-select",
+  "title": "System Disk",
+  "value_type": "Filter",
+  "option_key": "type",
+  "default": "dataInfo_43_",
+  "ranges": [],
+  "y": 600,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ },
+ {
+  "id": "calculator_ims_select_name",
+  "kind": "base-select",
+  "title": null,
+  "value_type": "Filter",
+  "option_key": "name",
+  "default": null,
+  "ranges": [],
+  "y": 540,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ },
+ {
+  "id": "calculator_ims_select___platform",
+  "kind": "base-select",
+  "title": "Image",
+  "value_type": "Filter",
+  "option_key": "__platform",
+  "default": null,
+  "ranges": [],
+  "y": 480,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ },
+ {
+  "id": "calculator_ecs_radio_mem",
+  "kind": "base-radio-group",
+  "title": null,
+  "value_type": "Filter",
+  "option_key": "mem",
+  "default": null,
+  "ranges": [],
+  "y": 420,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ },
+ {
+  "id": "calculator_ecs_radio_cpu",
+  "kind": "base-radio-group",
+  "title": null,
+  "value_type": "Filter",
+  "option_key": "cpu",
+  "default": null,
+  "ranges": [],
+  "y": 360,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ },
+ {
+  "id": "calculator_ecs_radio_generation",
+  "kind": "base-radio-group",
+  "title": null,
+  "value_type": "Filter",
+  "option_key": "generation",
+  "default": null,
+  "ranges": [],
+  "y": 300,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ },
+ {
+  "id": "calculator_ecs_radio_vmType",
+  "kind": "base-radio-group",
+  "title": "Type",
+  "value_type": "Filter",
+  "option_key": "vmType",
+  "default": null,
+  "ranges": [],
+  "y": 240,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ },
+ {
+  "id": "calculator_ecs_radio_arch",
+  "kind": "base-radio-group",
+  "title": "CPU Architecture",
+  "value_type": "Filter",
+  "option_key": "arch",
+  "default": null,
+  "ranges": [],
+  "y": 180,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ },
+ {
+  "id": "global_REGIONINFO_chargeMode",
+  "kind": "base-radio-group",
+  "title": "Billing Mode",
+  "value_type": "Filter",
+  "option_key": "chargeMode",
+  "default": "",
+  "ranges": [],
+  "y": 120,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ },
+ {
+  "id": "global_REGIONINFO_locationType",
+  "kind": "base-radio-group",
+  "title": "AZ",
+  "value_type": "Filter",
+  "option_key": "locationType",
+  "default": "",
+  "ranges": [],
+  "y": 60,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ },
+ {
+  "id": "global_REGIONINFO_region",
+  "kind": "base-region",
+  "title": "Region",
+  "value_type": "Filter",
+  "option_key": "region",
+  "default": "ap-southeast-1",
+  "ranges": [],
+  "y": 0,
+  "x": 0,
+  "options": [
+   "x"
+  ]
+ }
+]

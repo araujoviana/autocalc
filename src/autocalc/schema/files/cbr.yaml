@@ -1,0 +1,64 @@
+service: cbr
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_cbr_type_item
+  kind: base-select
+  title: Vault Type
+  value_type: Filter
+  option_key: item
+  default: calc_3_
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+- id: calculator_cbr_type_Stepper_0
+  kind: base-stepper
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 10.0
+    max: 10485760.0
+    step: 1000.0
+    default: 1000.0
+    when: vault.(backup|replication).*
+  - min: 1024.0
+    max: 10485760.0
+    step: 1024.0
+    default: 2048.0
+    when: vault.hybrid.*
+  after:
+  - calculator_cbr_type_item
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_cbr_type_Stepper_0
+  option: periods

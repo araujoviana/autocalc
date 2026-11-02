@@ -1,0 +1,123 @@
+service: aad
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_cad_resourceType_UNSET_Switch
+  kind: base-radio-group
+  title: Instance Type
+  value_type: Filter
+  option_key: UNSET_Switch
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_native_areaResource_UNSET_Switch
+  kind: base-radio-group
+  title: Region
+  value_type: Filter
+  option_key: UNSET_Switch
+  values: catalog
+  after:
+  - calculator_cad_resourceType_UNSET_Switch
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_native_areaSpecification_servicePack
+  kind: base-radio-group
+  title: Protection Level
+  value_type: Filter
+  option_key: servicePack
+  values: catalog
+  after:
+  - calculator_native_areaResource_UNSET_Switch
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_cnad_sourceBtnRadio_UNSET_Switch
+  kind: base-radio-group
+  title: Resource Location
+  value_type: Filter
+  option_key: UNSET_Switch
+  values: catalog
+  after:
+  - calculator_native_areaSpecification_servicePack
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_native_serviceBW_servicebandwidth
+  kind: base-radio-group
+  title: Service Bandwidth
+  value_type: Filter
+  option_key: servicebandwidth
+  values: catalog
+  after:
+  - calculator_cnad_sourceBtnRadio_UNSET_Switch
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_cad_elastic_bandwidth_switch_Stepper_0
+  kind: base-radio-stepper
+  title: Elastic Bandwidth
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 3.0
+    default: 1.0
+    unit: Mbit/s
+  after:
+  - calculator_native_serviceBW_servicebandwidth
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_native_protectedip_Stepper_0
+  kind: base-stepper
+  title: Protected IP Addresses
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 50.0
+    max: 1000.0
+    step: 5.0
+    default: 50.0
+    unit: Number
+  after:
+  - calculator_cad_elastic_bandwidth_switch_Stepper_0
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_native_protectedip_Stepper_0
+  option: periods
+- id: global_QUANTITY_Stepper_0
+  kind: base-stepper
+  title: Quantity
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  ranges:
+  - min: 1.0
+    max: 99.0
+    default: 1.0
+    unit: PCS
+  after:
+  - global_PERIODTIME_UNSET_PeriodTime
+  option: quantity

@@ -1,0 +1,172 @@
+service: ssa
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_ssa_edition_version1
+  kind: base-radio-group
+  title: Specification
+  value_type: Filter
+  option_key: version1
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+  option: edition
+- id: calculator_ssa_api2_Stepper_0
+  kind: base-stepper
+  title: Quota
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 99999.0
+    default: 1.0
+    unit: PCS
+  after:
+  - calculator_ssa_edition_version1
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_ssa_largrScreen_UNSET_Switch
+  kind: base-radio-group
+  title: Large Screen
+  value_type: Filter
+  option_key: UNSET_Switch
+  values: catalog
+  after:
+  - calculator_ssa_api2_Stepper_0
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_ssa_siem_UNSET_Switch
+  kind: base-radio-group
+  title: Log Audit
+  value_type: Filter
+  option_key: UNSET_Switch
+  values: catalog
+  after:
+  - calculator_ssa_largrScreen_UNSET_Switch
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_ssa_collectionstepper_Stepper_0
+  kind: base-stepper
+  title: New Log
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 500.0
+    step: 5.0
+    default: 0.0
+    unit: GB/Day
+  after:
+  - calculator_ssa_siem_UNSET_Switch
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_ssa_retentionstepper_Stepper_0
+  kind: base-stepper
+  title: Log Retention Duration
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 180.0
+    default: 7.0
+    unit: day
+  after:
+  - calculator_ssa_collectionstepper_Stepper_0
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_ssa_siem_checkboxGroup_product1
+  kind: base-checkbox-group
+  value_type: Filter
+  option_key: product1
+  values: catalog
+  after:
+  - calculator_ssa_retentionstepper_Stepper_0
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_ssa_soar_UNSET_Switch
+  kind: base-radio-group
+  title: SOAR
+  value_type: Filter
+  option_key: UNSET_Switch
+  values: catalog
+  after:
+  - calculator_ssa_siem_checkboxGroup_product1
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_ssa_soarstepper_Stepper_0
+  kind: base-stepper
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 9999.0
+    default: 1.0
+    unit: quotas (operations)/day
+  after:
+  - calculator_ssa_soar_UNSET_Switch
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_ssa_insight_UNSET_Switch
+  kind: base-radio-group
+  title: Security Analysis
+  value_type: Filter
+  option_key: UNSET_Switch
+  values: catalog
+  after:
+  - calculator_ssa_soarstepper_Stepper_0
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_ssa_insightstepper_Stepper_0
+  kind: base-stepper
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 9999.0
+    default: 1.0
+    unit: GB/Day
+  after:
+  - calculator_ssa_insight_UNSET_Switch
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  default: '1_19'
+  values: catalog
+  after:
+  - calculator_ssa_insightstepper_Stepper_0
+  option: periods

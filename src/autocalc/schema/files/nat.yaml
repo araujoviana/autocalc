@@ -1,0 +1,53 @@
+service: nat
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_nat_type_nattype
+  kind: base-radio-group
+  title: Gateway
+  value_type: Filter
+  option_key: nattype
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+- id: calculator_nat_radio_type
+  kind: base-select
+  title: Type
+  value_type: Filter
+  option_key: type
+  values: catalog
+  after:
+  - calculator_nat_type_nattype
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_nat_radio_type
+  option: periods

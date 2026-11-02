@@ -1,0 +1,78 @@
+service: memcached
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_memcached_version_instance_type
+  kind: base-radio-group
+  title: Instance Type
+  value_type: Filter
+  option_key: instance_type
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+  option: instance_type
+- id: calculator_memcached_version_Stepper_0
+  kind: base-radio-stepper
+  title: Specification
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 2.0
+    max: 9999.0
+    default: 2.0
+  after:
+  - calculator_memcached_version_instance_type
+  option: memory_gb
+- id: global_ONDEMANDTIME_Stepper_0
+  kind: base-stepper
+  title: Required Duration
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  ranges:
+  - min: 1.0
+    max: 9999.0
+    default: 1.0
+    unit: hour
+  after:
+  - calculator_memcached_version_Stepper_0
+  option: hours
+- id: global_QUANTITY_Stepper_0
+  kind: base-stepper
+  title: Quantity
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  ranges:
+  - min: 1.0
+    max: 500.0
+    default: 1.0
+    unit: instance
+  after:
+  - global_ONDEMANDTIME_Stepper_0
+  option: quantity

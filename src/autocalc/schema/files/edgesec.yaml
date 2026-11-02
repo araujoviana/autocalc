@@ -1,0 +1,135 @@
+service: edgesec
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_edgesec_editionRadio_edition
+  kind: base-radio-group
+  title: Edition
+  value_type: Filter
+  option_key: edition
+  default: dataInfo_2_
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_edgesec_domainStepper_Stepper_0
+  kind: base-stepper
+  title: Domain Name Expansion Package
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 148.0
+    default: 0.0
+  after:
+  - calculator_edgesec_editionRadio_edition
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_edgesec_ruleStepper_Stepper_0
+  kind: base-stepper
+  title: Rule Expansion Package
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 1000.0
+    default: 0.0
+  after:
+  - calculator_edgesec_domainStepper_Stepper_0
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_edgesec_areaRadio_areaType
+  kind: base-radio-group
+  title: Region
+  value_type: Filter
+  option_key: areaType
+  values: catalog
+  after:
+  - calculator_edgesec_ruleStepper_Stepper_0
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_edgesec_areaRadio_chargingModel
+  kind: base-radio-group
+  title: Billing Option
+  value_type: Filter
+  option_key: chargingModel
+  values: catalog
+  after:
+  - calculator_edgesec_areaRadio_areaType
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_edgesec_areaRadio_Stepper_0
+  kind: base-stepper
+  title: Traffic
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 9999999.0
+    default: 0.0
+  - min: 0.0
+    max: 9999999.0
+    default: 0.0
+  after:
+  - calculator_edgesec_areaRadio_chargingModel
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_edgesec_requestsStepper_Stepper_0
+  kind: base-stepper
+  title: Requests
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 9999999.0
+    default: 0.0
+    unit: Ten thousand times
+  after:
+  - calculator_edgesec_areaRadio_Stepper_0
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_edgesec_dynamic_requestsStepper_Stepper_0
+  kind: base-stepper
+  title: Whole Site Acceleration Requests
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 9999999.0
+    default: 0.0
+    unit: Ten thousand times
+  after:
+  - calculator_edgesec_requestsStepper_Stepper_0
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_edgesec_dynamic_requestsStepper_Stepper_0
+  option: periods

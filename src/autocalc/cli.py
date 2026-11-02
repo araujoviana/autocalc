@@ -145,6 +145,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--to", help="a release tag, vX.Y.Z (default: the newest)")
     p = sub.add_parser("page-controls", help="list the controls of a service's calculator page")
     p.add_argument("service")
+    p = sub.add_parser("schema", help="the generated card schema: pull | coverage | diff")
+    p.add_argument("action", choices=["pull", "coverage", "diff"])
+    p.add_argument("service")
     tool_cmds = _add_tool_commands(sub, set(sub.choices))
     a = ap.parse_args(argv)
 
@@ -182,6 +185,8 @@ def main(argv: list[str] | None = None) -> int:
             from autocalc.page.controls import page_controls
             print(json.dumps(page_controls(a.service), indent=2))
             return 0
+        if a.cmd == "schema":
+            return _schema(a.action, a.service)
         if a.cmd == "lists":
             from autocalc.share import Session
             for x in Session().lists():
@@ -222,6 +227,24 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+def _schema(action: str, service: str) -> int:
+    from autocalc.schema import generate
+    committed = generate.load_service(service) if service.isalnum() else None
+    if action != "pull" and committed is None:
+        print(f"No committed schema for {service}; run `autocalc schema pull {service}`.")
+        return 1
+    if action == "coverage":
+        print(json.dumps(generate.coverage(committed), indent=2))
+    elif action == "diff":
+        d = generate.diff(committed, generate.pull(service))
+        print(json.dumps(d, indent=2))
+        return 1 if any(d.values()) else 0
+    else:
+        (generate.FILES / f"{service}.yaml").write_text(generate.dump(generate.pull(service)), encoding="utf-8")
+        print(f"Wrote schema for {service}.")
+    return 0
+
+
 def _doctor() -> int:
     import httpx
 
@@ -250,6 +273,9 @@ def _doctor() -> int:
         ok = ok and bool(live)
         print(f"[{'ok' if live else 'FAIL'}]   frontend version: {live or 'unknown'}")
         for note in frontend.warnings(sorted(VERIFIED), live):
+            print(f"[warn] {note}")
+        from autocalc.schema import generate
+        for note in generate.stale_notes(live):
             print(f"[warn] {note}")
     except Exception as exc:  # noqa: BLE001
         ok = False

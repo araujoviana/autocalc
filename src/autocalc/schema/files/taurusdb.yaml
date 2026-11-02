@@ -1,0 +1,157 @@
+service: taurusdb
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_engine_switcher_dbType
+  kind: base-radio-group
+  title: DB Engine
+  value_type: Filter
+  option_key: dbType
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_gaussdb_radio_enterpriseInstance
+  kind: base-radio-group
+  title: DB Instance Type
+  value_type: Filter
+  option_key: enterpriseInstance
+  values: catalog
+  after:
+  - calculator_engine_switcher_dbType
+  option: enterprise_instance
+- id: calculator_gaussdb_radio_dbVersionType
+  kind: base-radio-group
+  title: DB Engine Version
+  value_type: Filter
+  option_key: dbVersionType
+  values: catalog
+  after:
+  - calculator_gaussdb_radio_enterpriseInstance
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_gaussdb_radio_azMode
+  kind: base-radio-group
+  title: AZ Type
+  value_type: Filter
+  option_key: azMode
+  default: dataInfo_4_
+  values: catalog
+  after:
+  - calculator_gaussdb_radio_dbVersionType
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_gaussdb_publicType_switch_publicType
+  kind: base-radio-group
+  title: CPU Architecture
+  value_type: Filter
+  option_key: publicType
+  values: catalog
+  after:
+  - calculator_gaussdb_radio_azMode
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_gaussdb_publicType_switch_publicGaussdbType
+  kind: base-radio-group
+  title: Instance Specifications
+  value_type: Filter
+  option_key: publicGaussdbType
+  values: catalog
+  after:
+  - calculator_gaussdb_publicType_switch_publicType
+  option: public_type
+- id: calculator_gaussdb_publicType_switch_spec
+  kind: base-select
+  title: ' '
+  value_type: Filter
+  option_key: spec
+  values: catalog
+  after:
+  - calculator_gaussdb_publicType_switch_publicGaussdbType
+  option: spec
+- id: calculator_gaussdb_publicType_switch_Stepper_0
+  kind: base-stepper
+  title: Nodes
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 2.0
+    max: 10.0
+    default: 2.0
+  after:
+  - calculator_gaussdb_publicType_switch_spec
+  option: nodes
+- id: calculator_gaussdb_volume_stepper_type
+  kind: base-select
+  title: Storage Space
+  value_type: Filter
+  option_key: type
+  values: catalog
+  after:
+  - calculator_gaussdb_publicType_switch_Stepper_0
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_gaussdb_volume_stepper_Stepper_0
+  kind: base-stepper
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  default: dataInfo_36_
+  values: catalog
+  ranges:
+  - min: 10.0
+    max: 128000.0
+    step: 10.0
+    default: 10.0
+  after:
+  - calculator_gaussdb_volume_stepper_type
+  option: storage_gb
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_gaussdb_volume_stepper_Stepper_0
+  option: periods
+- id: global_QUANTITY_Stepper_0
+  kind: base-stepper
+  title: Quantity
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  ranges:
+  - min: 1.0
+    max: 50.0
+    default: 1.0
+    unit: PCS
+  after:
+  - global_PERIODTIME_UNSET_PeriodTime
+  option: quantity

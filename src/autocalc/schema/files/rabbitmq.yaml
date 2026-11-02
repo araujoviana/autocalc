@@ -1,0 +1,103 @@
+service: rabbitmq
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_rabbitMQ_version_switch_UNSET_Switch
+  kind: base-radio-group
+  title: Version
+  value_type: Filter
+  option_key: UNSET_Switch
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+- id: calculator_rabbitMQ_instanceType_switch_instanceType
+  kind: base-radio-group
+  title: Instance Type
+  value_type: Filter
+  option_key: instanceType
+  values: catalog
+  after:
+  - calculator_rabbitMQ_version_switch_UNSET_Switch
+- id: calculator_rabbitMQ_architecture_switch_architectureName
+  kind: base-radio-group
+  title: Architecture
+  value_type: Filter
+  option_key: architectureName
+  values: catalog
+  after:
+  - calculator_rabbitMQ_instanceType_switch_instanceType
+- id: calculator_rabbitMQ_specType_switch_specName
+  kind: base-radio-group
+  title: Flavor
+  value_type: Filter
+  option_key: specName
+  values: catalog
+  after:
+  - calculator_rabbitMQ_architecture_switch_architectureName
+- id: calculator_rabbitMQ_new_storage_stepper_storageType
+  kind: base-select
+  title: Storage Space
+  value_type: Filter
+  option_key: storageType
+  default: dataInfo_12_
+  values: catalog
+  after:
+  - calculator_rabbitMQ_specType_switch_specName
+- id: calculator_rabbitMQ_new_storage_stepper_Stepper_0
+  kind: base-stepper
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 100.0
+    max: 30000.0
+    step: 100.0
+    default: 100.0
+  after:
+  - calculator_rabbitMQ_new_storage_stepper_storageType
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_rabbitMQ_new_storage_stepper_Stepper_0
+  option: periods
+- id: global_QUANTITY_Stepper_0
+  kind: base-stepper
+  title: Quantity
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  ranges:
+  - min: 1.0
+    max: 999.0
+    default: 1.0
+    unit: instance
+  after:
+  - global_PERIODTIME_UNSET_PeriodTime
+  option: quantity

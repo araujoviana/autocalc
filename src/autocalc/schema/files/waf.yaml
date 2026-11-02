@@ -1,0 +1,92 @@
+service: waf
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_waf_wafModeRadio_wafMode
+  kind: base-radio-group
+  title: WAF Mode
+  value_type: Filter
+  option_key: wafMode
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+- id: calculator_waf_editionRadio_edition
+  kind: base-radio-group
+  title: Edition
+  value_type: Filter
+  option_key: edition
+  values: catalog
+  after:
+  - calculator_waf_wafModeRadio_wafMode
+- id: calculator_waf_domainStepper_Stepper_0
+  kind: base-stepper
+  title: Domain Expansion Package
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 1000.0
+    default: 0.0
+    unit: PCS
+  after:
+  - calculator_waf_editionRadio_edition
+- id: calculator_waf_bandwidthStepper_Stepper_0
+  kind: base-stepper
+  title: QPS Extension Package
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 1000.0
+    default: 0.0
+    unit: PCS
+  after:
+  - calculator_waf_domainStepper_Stepper_0
+- id: calculator_waf_ruleStepper_Stepper_0
+  kind: base-stepper
+  title: Rule Expansion Package
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 0.0
+    max: 1000.0
+    default: 0.0
+    unit: PCS
+  after:
+  - calculator_waf_bandwidthStepper_Stepper_0
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_waf_ruleStepper_Stepper_0
+  option: periods

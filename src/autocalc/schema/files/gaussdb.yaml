@@ -1,0 +1,134 @@
+service: gaussdb
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_opgauss_radio_databseType
+  kind: base-radio-group
+  title: DB Engine
+  value_type: Filter
+  option_key: databseType
+  default: dataInfo_30_
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+  option: database_type
+- id: calculator_opgauss_radio_dbOpenGaussVersion
+  kind: base-radio-group
+  title: DB Engine Version
+  value_type: Filter
+  option_key: dbOpenGaussVersion
+  default: dataInfo_27_
+  values: catalog
+  after:
+  - calculator_opgauss_radio_databseType
+  option: db_version
+- id: calculator_opgauss_radio_insType
+  kind: base-radio-group
+  title: DB Instance Type
+  value_type: Filter
+  option_key: insType
+  default: dataInfo_24_
+  values: catalog
+  after:
+  - calculator_opgauss_radio_dbOpenGaussVersion
+  option: instance_type
+- id: calculator_opgauss_radio_deployModel
+  kind: base-radio-group
+  title: Deployment Model
+  value_type: Filter
+  option_key: deployModel
+  values: catalog
+  after:
+  - calculator_opgauss_radio_insType
+  option: deploy_model
+- id: calculator_opgauss_spec_radio_publicOpengaussType
+  kind: base-radio-group
+  title: Instance Specifications
+  value_type: Filter
+  option_key: publicOpengaussType
+  values: catalog
+  after:
+  - calculator_opgauss_radio_deployModel
+  option: public_type
+- id: calculator_opgauss_spec_radio_spec
+  kind: base-select
+  title: ' '
+  value_type: Filter
+  option_key: spec
+  values: catalog
+  after:
+  - calculator_opgauss_spec_radio_publicOpengaussType
+  option: spec
+- id: calculator_openGauss_volume_stepper_type
+  kind: base-select
+  title: Storage Space
+  value_type: Filter
+  option_key: type
+  values: catalog
+  after:
+  - calculator_opgauss_spec_radio_spec
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_openGauss_volume_stepper_Stepper_0
+  kind: base-stepper
+  title: Storage Space
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  default: dataInfo_17_
+  values: catalog
+  ranges:
+  - min: 40.0
+    max: 24000.0
+    step: 4.0
+    default: 40.0
+  after:
+  - calculator_openGauss_volume_stepper_type
+  option: storage_gb
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_openGauss_volume_stepper_Stepper_0
+  option: periods
+- id: global_QUANTITY_Stepper_0
+  kind: base-stepper
+  title: Quantity
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  ranges:
+  - min: 1.0
+    max: 50.0
+    default: 1.0
+    unit: PCS
+  after:
+  - global_PERIODTIME_UNSET_PeriodTime
+  option: quantity

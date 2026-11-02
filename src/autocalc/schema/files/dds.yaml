@@ -1,0 +1,175 @@
+service: dds
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_dds_versionType_radio_type
+  kind: base-radio-group
+  title: DB Instance Type
+  value_type: Filter
+  option_key: type
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+  option: type
+- id: calculator_dds_versionType_radio_flavorType
+  kind: base-radio-group
+  title: Specifications
+  value_type: Filter
+  option_key: flavorType
+  values: catalog
+  after:
+  - calculator_dds_versionType_radio_type
+  option: flavor_type
+- id: calculator_dds_colony_mongos_spec
+  kind: base-select
+  title: dds mongos Class
+  value_type: Filter
+  option_key: spec
+  values: catalog
+  after:
+  - calculator_dds_versionType_radio_flavorType
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_dds_colony_mongos_Stepper_0
+  kind: base-stepper
+  title: dds mongos Quantity
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 2.0
+    max: 32.0
+    default: 2.0
+    unit: dataInfo_22_
+  after:
+  - calculator_dds_colony_mongos_spec
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_dds_colony_shard_spec
+  kind: base-select
+  title: shard Class
+  value_type: Filter
+  option_key: spec
+  values: catalog
+  after:
+  - calculator_dds_colony_mongos_Stepper_0
+  option: shard_spec
+- id: calculator_dds_colony_shard_Stepper_0
+  kind: base-stepper
+  title: shard Quantity
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 2.0
+    max: 32.0
+    default: 2.0
+    unit: dataInfo_22_
+  after:
+  - calculator_dds_colony_shard_spec
+  option: shards
+- id: calculator_dds_colony_shard_volume_ioType
+  kind: base-select
+  title: shard Storage Space
+  value_type: Filter
+  option_key: ioType
+  values: catalog
+  after:
+  - calculator_dds_colony_shard_Stepper_0
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_dds_colony_shard_volume_Stepper_0
+  kind: base-stepper
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 10.0
+    max: 5000.0
+    step: 10.0
+    default: 10.0
+  after:
+  - calculator_dds_colony_shard_volume_ioType
+  option: shard_storage_gb
+- id: calculator_dds_colony_config_stepper_2_spec
+  kind: base-select
+  title: config Class
+  value_type: Filter
+  option_key: spec
+  values: catalog
+  after:
+  - calculator_dds_colony_shard_volume_Stepper_0
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_dds_colony_config_stepper_3_ioType
+  kind: base-select
+  title: config Storage Space
+  value_type: Filter
+  option_key: ioType
+  values: catalog
+  after:
+  - calculator_dds_colony_config_stepper_2_spec
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_dds_colony_config_stepper_3_Stepper_0
+  kind: base-stepper
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 20.0
+    max: 20.0
+    step: 10.0
+    default: 20.0
+  after:
+  - calculator_dds_colony_config_stepper_3_ioType
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_PERIODTIME_UNSET_PeriodTime
+  kind: base-radio-group
+  title: Required Duration
+  value_type: Filter
+  option_key: UNSET_PeriodTime
+  values: catalog
+  after:
+  - calculator_dds_colony_config_stepper_3_Stepper_0
+  option: periods
+- id: global_QUANTITY_Stepper_0
+  kind: base-stepper
+  title: Quantity
+  value_type: Stepper_ProductNum
+  option_key: UNSET_Stepper_0
+  ranges:
+  - min: 1.0
+    max: 50.0
+    default: 1.0
+    unit: PCS
+  after:
+  - global_PERIODTIME_UNSET_PeriodTime
+  option: quantity

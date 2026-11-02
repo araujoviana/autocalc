@@ -1,0 +1,69 @@
+service: ga
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_ga_stepper_main_SourceEndpoint
+  kind: base-select
+  title: Access Point
+  value_type: Filter
+  option_key: SourceEndpoint
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_ga_stepper_main_DestinationEndpoint
+  kind: base-select
+  title: Region
+  value_type: Filter
+  option_key: DestinationEndpoint
+  values: catalog
+  after:
+  - calculator_ga_stepper_main_SourceEndpoint
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_ga_stepper_main_Stepper_0
+  kind: base-stepper
+  title: Traffic
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 99999999999.0
+    default: 1.0
+  after:
+  - calculator_ga_stepper_main_DestinationEndpoint
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: calculator_accelerator_stepper_Stepper_0
+  kind: base-stepper
+  title: Required Duration
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 99999999999.0
+    default: 1.0
+    unit: hour
+  after:
+  - calculator_ga_stepper_main_Stepper_0
+  unsupported: true
+  note: not in the recipe; the page default is kept
