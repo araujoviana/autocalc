@@ -217,16 +217,22 @@ def _cookie_header(cookies: Any) -> str:
     return "; ".join(f"{k}={v}" for k, v in seen.items())
 
 
-def _probe_login(ctx: Any, timeout: float) -> bool:
-    """Poll share/list; 200 means logged in, CBC.0101 means not yet."""
+def _probe_login(ctx: Any, timeout: float, *, signing_in: bool = False) -> bool:
+    """Poll share/list; 200 means logged in, CBC.0101 means not yet. While ``signing_in`` the browser has not
+    reached the calculator yet and the endpoint answers HTTP 400: that also means not yet."""
     deadline = time.time() + timeout
     url = f"{CALC}/share/list"
     while True:
         try:
             r = ctx.request.get(url, timeout=15000)
-            data = r.json()
+            data = None if r.status == 400 and signing_in else r.json()
         except Exception as exc:
             raise UpstreamError("Could not check the browser login session.", hint="Check network connectivity and retry.") from exc
+        if r.status == 400 and signing_in:
+            if time.time() >= deadline:
+                return False
+            time.sleep(2)
+            continue
         if r.status != 200:
             raise UpstreamError(f"Login session probe returned HTTP {r.status}.")
         if not isinstance(data, dict):
@@ -388,7 +394,7 @@ def login(prof: str | None = None, timeout: float = 300) -> LoginResult:
     choice = find_browser()
     with _open_profile(prof, headless=False, choice=choice) as ctx:
         _open_login(ctx, 60000)
-        if not _probe_login(ctx, timeout):
+        if not _probe_login(ctx, timeout, signing_in=True):
             raise AuthLoginFailed("Timed out waiting for login.",
                                   hint=f"Run `autocalc login --timeout {timeout:g}` again and finish signing in within {timeout:g} seconds.")
         header = _cookie_header(ctx.cookies())

@@ -566,3 +566,23 @@ def test_open_login_leaves_exactly_one_tab(monkeypatch):
     page, old = _Page(), [_Page(), _Page()]
     auth._open_login(_ctx(page, old), 1000)
     assert page.urls == [auth.LOGIN_URL] and not page.closed and all(p.closed for p in old)
+
+
+class _Probe:
+    def __init__(self, statuses):
+        self.statuses, self.request = list(statuses), self
+
+    def get(self, url, timeout=None):
+        status = self.statuses.pop(0)
+        return SimpleNamespace(status=status, json=lambda: {"retCode": "200"} if status == 200 else {})
+
+
+def test_probe_while_signing_in_waits_through_http_400(monkeypatch):
+    monkeypatch.setattr(auth.time, "sleep", lambda s: None)
+    assert auth._probe_login(_Probe([400, 400, 200]), 60, signing_in=True) is True
+    assert auth._probe_login(_Probe([400] * 50), 0, signing_in=True) is False
+
+
+def test_probe_outside_sign_in_still_fails_on_http_400():
+    with pytest.raises(auth.UpstreamError, match="HTTP 400"):
+        auth._probe_login(_Probe([400]), 0)
