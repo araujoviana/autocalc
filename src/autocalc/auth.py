@@ -250,10 +250,8 @@ def _visit(ctx: Any, timeout_ms: int) -> None:
 
 
 def _open_login(ctx: Any, timeout_ms: int) -> None:
-    """Go straight to the sign-in form (it returns to the calculator afterwards), unless already signed in."""
-    if _probe_login(ctx, 0):
-        _visit(ctx, timeout_ms)  # signed in already: just renew the calculator session
-        return
+    """Go straight to the sign-in form; it returns to the calculator afterwards, and when the profile is
+    already signed in the SSO sends it back at once. (No probe first: before any page loads it answers 400.)"""
     try:
         page = ctx.pages[0] if ctx.pages else ctx.new_page()
         page.goto(LOGIN_URL, wait_until="domcontentloaded", timeout=timeout_ms)

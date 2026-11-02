@@ -545,9 +545,8 @@ def test_login_url_goes_to_the_sign_in_form_and_returns_to_the_calculator():
     assert parse_qs(u.query)["service"] == [auth.CALCULATOR_URL + "#/ecs"]
 
 
-@pytest.mark.parametrize("signed_in, first", [(False, "LOGIN"), (True, "CALC")])
-def test_open_login_skips_the_calculator_page_unless_already_signed_in(monkeypatch, signed_in, first):
-    monkeypatch.setattr(auth, "_probe_login", lambda ctx, t: signed_in)
+def test_open_login_goes_straight_to_the_sign_in_form_without_probing(monkeypatch):
+    monkeypatch.setattr(auth, "_probe_login", lambda *a: pytest.fail("probed before any page loaded"))
     page = _Page()
     auth._open_login(_ctx(page), 1000)
-    assert page.urls == [auth.LOGIN_URL if first == "LOGIN" else auth.CALCULATOR_URL]
+    assert page.urls == [auth.LOGIN_URL]
