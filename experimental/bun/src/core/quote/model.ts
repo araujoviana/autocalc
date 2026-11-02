@@ -4,9 +4,12 @@ import { formatDecimal, parseDecimal, type Dec } from "./decimal.ts";
 
 export const VERSION = 1;
 
-export function invalid(message: string, field?: string, allowed?: unknown[]): CalculatorError {
+/** Python-style timestamp ("+00:00" suffix) so both implementations write the same shape. */
+export const isoNow = () => new Date().toISOString().replace("Z", "+00:00");
+
+export function invalid(message: string, field?: string, allowed?: unknown[], hint?: string): CalculatorError {
   const details = { ...(field ? { field } : {}), ...(allowed?.length ? { allowed } : {}) };
-  const hint = allowed?.length ? `Valid ${field ?? "values"}: ${allowed.join(", ")}` : undefined;
+  hint ??= allowed?.length ? `Valid ${field ?? "values"}: ${allowed.join(", ")}` : undefined;
   return new CalculatorError("VALIDATION", message, hint, Object.keys(details).length ? details : undefined);
 }
 
@@ -60,7 +63,7 @@ export class Draft {
   constructor(
     readonly id: string, readonly customer: string, readonly provider: string,
     public requirements: Requirement[] = [], public decisions: Decision[] = [],
-    public created: string = new Date().toISOString(), public version: number = VERSION,
+    public created: string = isoNow(), public version: number = VERSION,
     public publishing = false, public publication: Record<string, unknown> | null = null,
   ) {}
 

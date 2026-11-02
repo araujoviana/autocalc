@@ -21,6 +21,9 @@ MAP: dict[str, list[str]] = {
     "test_core_huawei": ["unit/core-huawei.test.ts"],
     "test_core_model": ["unit/core-model.test.ts"],
     "test_core_ranking": ["unit/core-ranking.test.ts"],
+    "test_core_draft": ["unit/core-draft.test.ts"],
+    "test_core_runs": ["unit/core-runs.test.ts"],
+    "test_core_store": ["unit/core-store.test.ts"],
     "test_cli_auth": ["unit/cli-syntax.test.ts"],
     "test_ecs_defaults": ["unit/ecs.test.ts"],
     "test_list_names": ["unit/lists.test.ts"],
@@ -37,8 +40,8 @@ MAP: dict[str, list[str]] = {
 # No TypeScript counterpart yet; the note says where it is planned (tasks.md) or why none is needed.
 MISSING: dict[str, str] = {
     "test_audit_page_comparison": "4.1", "test_audit_service_safety": "4.1",
-    "test_core_draft": "2.2", 
-    "test_core_runs": "2.2", "test_core_store": "2.2",
+    
+    
     "test_form_only": "4.1", "test_forms": "4.1", "test_frontend": "5.2", "test_gate": "4.2",
     "test_live": "live marker, kept out of CI", "test_page": "4.1", "test_page_live": "live marker",
     "test_page_replay": "4.1", "test_public_form_fixtures": "4.1", "test_public_form_live": "live marker",

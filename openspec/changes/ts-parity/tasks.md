@@ -9,7 +9,7 @@
 ## 2. Core (ADR-0005, 0006, 0009, 0010, 0015)
 
 - [x] 2.1 Port the core model, `Provider` interface and ranking (`core/model.py`, `provider.py`, `ranking.py`) and `HuaweiProvider`. Verify: ported `test_core_model`, `test_core_ranking`, `test_core_huawei` pass in `bun test`.
-- [ ] 2.2 Port the draft store and run records using the same on-disk JSON as Python (D4). Verify: ported `test_core_store`, `test_core_runs`, `test_core_draft` pass, and a draft written by Python opens in TypeScript and the reverse (round-trip test).
+- [x] 2.2 Port the draft store and run records using the same on-disk JSON as Python (D4). Verify: ported `test_core_store`, `test_core_runs`, `test_core_draft` pass, and a draft written by Python opens in TypeScript and the reverse (round-trip test).
 
 ## 3. Workflow tools (ADR-0007)
 
