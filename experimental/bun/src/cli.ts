@@ -71,24 +71,8 @@ export async function main(argv: string[]): Promise<number> {
   program.command("rename").description("Rename a saved price list").argument("<url_or_id>").argument("<name>").action(async (urlOrId: string, name: string) => { await print("rename_price_list", { url_or_id: urlOrId, new_name: name }); });
   program.command("duplicate").description("Copy a saved price list").argument("<url_or_id>").option("--name <name>").action(async (urlOrId: string, options: { name?: string }) => { await print("duplicate_price_list", { url_or_id: urlOrId, ...(options.name ? { new_name: options.name } : {}) }); });
   program.command("login").description("Sign in through a browser").option("--timeout <seconds>", "Login deadline, default 300 seconds").option("--profile <name>").action(async (options: { timeout?: string; profile?: string }) => { if (options.profile) program.setOptionValue("profile", options.profile); await print("auth_login", options.timeout === undefined ? {} : { timeout: options.timeout }); });
-  const auth = program.command("auth").description("Inspect or import authentication");
+  const auth = program.command("auth").description("Inspect authentication");
   auth.command("status").description("Show local session metadata").action(async () => { await print("auth_status", {}); });
-  auth.command("import").description("Import a cURL session from a file, stdin, or Windows clipboard").argument("[file]").option("--clipboard", "Read the Windows clipboard").action(async (file: string | undefined, options: { clipboard?: boolean }) => {
-    if (file && options.clipboard) throw new CalculatorError("VALIDATION", "Provide a file or --clipboard, not both");
-    let text: string;
-    if (options.clipboard || !file) {
-      const executable = Bun.which("powershell.exe");
-      if (!executable) throw new CalculatorError("VALIDATION", "Windows PowerShell is unavailable");
-      const child = Bun.spawn([executable, "-NoProfile", "-Command", "Get-Clipboard -Raw"], { stdin: "ignore", stdout: "pipe", stderr: "pipe" });
-      const timer = setTimeout(() => child.kill(), 20000);
-      try {
-        const [output, , status] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
-        if (status !== 0) throw new CalculatorError("UPSTREAM", "Could not read the Windows clipboard");
-        text = output;
-      } finally { clearTimeout(timer); }
-    } else text = file === "-" ? await Bun.stdin.text() : await readFile(file!, "utf8");
-    process.stdout.write(`${JSON.stringify(await getCore().importAuth(text), null, 2)}\n`);
-  });
   program.command("logout").description("Clear the current profile session").action(async () => { await getCore().logout(); process.stdout.write("Logged out\n"); });
   try { await program.parseAsync(argv); return signalCode ?? commandExit ?? (commandFailed ? 1 : 0); }
   catch (error) {

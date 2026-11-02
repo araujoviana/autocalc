@@ -50,7 +50,6 @@ export function createCore(options: { reader?: ActionContext["reader"]; catalogR
       if (signal.aborted) throw new CalculatorError("CANCELLED", "Request cancelled");
       return registry[name as keyof typeof registry].invoke(withSignal(context, signal), rawInput);
     },
-    async importAuth(text: string) { ensureOpen(); return auth.importCurl(text); },
     async updatePriceList(reference: string, items: unknown, options: { dryRun?: boolean } = {}) {
       ensureOpen();
       const parsed = ListReference.safeParse(reference);
@@ -66,17 +65,9 @@ export function createCore(options: { reader?: ActionContext["reader"]; catalogR
       if (!options.dryRun) await lists.update(id, { ...detail, ...payload });
       return { ...result, id, dry_run: !!options.dryRun };
     },
-    async publishLegacyEcs(name: string, items: unknown, sessionFile?: string) {
+    async publishLegacyEcs(name: string, items: unknown) {
       ensureOpen();
-      if (!sessionFile) return publishLegacyEcs(name, items, input => registry.create_price_list.invoke(withSignal(context, shutdown.signal), input));
-      const legacyBrowser = new BrowserManager({ profilePath: paths.profileDir, headed: config.headed, ...(config.executable ? { executable: config.executable } : {}) });
-      const legacyAuth = new AuthManager({ profile: config.profile!, ...paths, sessionFile, browser: legacyBrowser, headed: config.headed, ...(config.executable ? { executable: config.executable } : {}) });
-      const legacyLists = new ListSession((method, url, body) => legacyAuth.call(method, url, body), () => legacyAuth.refresh());
-      temporaryAuth.add(legacyAuth);
-      try {
-        const scoped = { ...context, createList: (payload: Record<string, unknown>) => legacyLists.create(payload) };
-        return await publishLegacyEcs(name, items, input => registry.create_price_list.invoke(withSignal(scoped, shutdown.signal), input));
-      } finally { try { await legacyAuth.close(); } finally { temporaryAuth.delete(legacyAuth); } }
+      return publishLegacyEcs(name, items, input => registry.create_price_list.invoke(withSignal(context, shutdown.signal), input));
     },
     async logout() { ensureOpen(); return auth.logout(); },
     async validate(reference: string) { ensureOpen(); return validateList(await shareDetail(context.reader, reference)); },

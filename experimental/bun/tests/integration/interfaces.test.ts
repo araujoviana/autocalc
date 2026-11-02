@@ -7,11 +7,9 @@ test("CLI help initializes without starting Chromium", async () => {
   expect(output).toContain("read");
 });
 
-test("auth import without a file uses the legacy clipboard path", async () => {
-  const proc = Bun.spawn([process.execPath, "run", "src/cli.ts", "auth", "import"], { env: { ...process.env, PATH: "/nonexistent" }, stdout: "pipe", stderr: "pipe" });
-  const [stderr, exit] = await Promise.all([new Response(proc.stderr).text(), proc.exited]);
-  expect(exit).toBe(2);
-  expect(stderr).toContain("PowerShell is unavailable");
+test("the cURL import command is gone (ADR-0011)", async () => {
+  const proc = Bun.spawn([process.execPath, "run", "src/cli.ts", "auth", "import"], { stdout: "pipe", stderr: "pipe" });
+  expect(await proc.exited).not.toBe(0);
 });
 
 test("CLI domain errors include the code and exit with input error status", async () => {

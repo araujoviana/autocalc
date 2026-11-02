@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import functools
 import json
+import re
 import logging
 import threading
 from contextlib import nullcontext
@@ -71,7 +72,7 @@ def schema_index() -> str:
 def schema_of(service: str) -> str:
     """One service's card schema: controls, option names, order, ranges. Needs no login and no browser."""
     from autocalc.schema import generate
-    if "/" in service or not (generate.FILES / f"{service}.yaml").exists():
+    if not re.fullmatch(r"[\w-]+", service) or not (generate.FILES / f"{service}.yaml").is_file():
         raise ValueError(f"No schema for {service!r}; read autocalc://schema/index for the list.")
     return (generate.FILES / f"{service}.yaml").read_text(encoding="utf-8")
 

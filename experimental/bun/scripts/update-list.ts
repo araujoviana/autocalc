@@ -26,7 +26,7 @@ if (!reference || !payloadPath) {
 const config = resolveConfig({});
 const paths = profilePaths(config.profile!);
 const auth = new AuthManager({
-  profile: config.profile!, configDir: paths.configDir, profileDir: paths.profileDir,
+  profile: config.profile!, profileDir: paths.profileDir,
   headed: !!config.headed, ...(config.executable ? { executable: config.executable } : {}),
 });
 const lists = new ListSession((method, url, body) => auth.call(method, url, body), () => auth.refresh());

@@ -1,74 +1,21 @@
 import { CalculatorError } from "./errors.ts";
 import { allowCookieDomain } from "./session-store.ts";
-import type { SessionRecord } from "./session-store.ts";
-import { SessionStore, systemCredentialBackend } from "./session-store.ts";
+import { SessionStore } from "./session-store.ts";
 import { BrowserManager } from "./browser.ts";
 import { endpoints, PAGE, MASK } from "./endpoints.ts";
 import { request } from "playwright";
 import { abortable } from "./pricing.ts";
 import type { APIRequestContext } from "playwright";
-import { readFile, unlink } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 
-const legacySessionFile = fileURLToPath(new URL("../../.session.curl", import.meta.url));
-
-function shellTokens(text: string): string[] {
-  const input = text.replace(/\\\r?\n/g, " ");
-  const tokens: string[] = [];
-  let token = "", quote = "", escaped = false, active = false;
-  for (const char of input) {
-    if (escaped) { token += char; escaped = false; active = true; continue; }
-    if (char === "\\" && quote !== "'") { escaped = true; active = true; continue; }
-    if (quote) { if (char === quote) quote = ""; else token += char; active = true; continue; }
-    if (char === "'" || char === '"') { quote = char; active = true; continue; }
-    if (/\s/.test(char)) { if (active) { tokens.push(token); token = ""; active = false; } continue; }
-    token += char; active = true;
-  }
-  if (quote || escaped) throw new CalculatorError("VALIDATION", "Malformed cURL quoting");
-  if (active) tokens.push(token);
-  return tokens;
-}
-export function parseCurl(text: string): { cookie: string; csrf?: string; userAgent?: string } {
-  const tokens = shellTokens(text);
-  let cookie = "", csrf: string | undefined, userAgent: string | undefined;
-  for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i];
-    if (token === "-b" || token === "--cookie") { cookie = tokens[++i] ?? ""; continue; }
-    if (token !== "-H" && token !== "--header") continue;
-    const header = tokens[++i] ?? "";
-    const at = header.indexOf(":");
-    if (at < 0) continue;
-    const name = header.slice(0, at).trim().toLowerCase(), value = header.slice(at + 1).trim();
-    if (name === "cookie") cookie = value;
-    if (name === "csrf") csrf = value;
-    if (name === "user-agent") userAgent = value;
-  }
-  if (!cookie) cookie = /["']?cookie["']?\s*[=:]\s*["']([^"']+)["']/i.exec(text)?.[1] ?? "";
-  if (!cookie) throw new CalculatorError("VALIDATION", "No cookie header found in cURL input");
-  csrf ??= cookie.split(";").map(part => part.trim()).find(part => part.startsWith("csrf="))?.slice(5);
-  return { cookie, ...(csrf === undefined ? {} : { csrf }), ...(userAgent === undefined ? {} : { userAgent }) };
-}
 export function cookieHeader(cookies: Array<{ name: string; value: string; domain: string }>): string {
   return cookies.filter(cookie => allowCookieDomain(cookie.domain)).map(cookie => `${cookie.name}=${cookie.value}`).join("; ");
 }
-export function sessionStatus(session: SessionRecord | undefined, now = Date.now() / 1000, profile = "default") {
+export function sessionStatus(session: { cookie: string; account_mask?: string | null | undefined; saved_at: number } | undefined, now = Date.now() / 1000, profile = "default") {
   if (!session) return { available: false, logged_in: false, authenticated: null, profile, hint: "Run autocalc login to sign in." };
-  const names = session.cookie_header.split(";").map(part => part.trim().split("=")[0]).filter((name): name is string => !!name);
-  return { available: true, logged_in: true, authenticated: null, profile: session.profile ?? profile, account_mask: session.account_mask ?? null, source: session.source ?? "login", age_hours: Math.round((now - session.saved_at) / 36) / 100, cookies: `${names.length} cookies (${names.slice(0, 6).join(", ")}${names.length > 6 ? "..." : ""})`, cookie_names: names, cookie_count: names.length, backend: "file" };
+  const names = session.cookie.split(";").map(part => part.trim().split("=")[0]).filter((name): name is string => !!name);
+  return { available: true, logged_in: true, authenticated: null, profile, account_mask: session.account_mask ?? null, age_hours: Math.round((now - session.saved_at) / 36) / 100, cookies: `${names.length} cookies (${names.slice(0, 6).join(", ")}${names.length > 6 ? "..." : ""})`, cookie_names: names, cookie_count: names.length, backend: "profile" };
 }
-
-export async function migrateLegacySession(store: SessionStore, path: string, profile: string): Promise<boolean> {
-  if (await store.load()) return false;
-  let source: string;
-  try { source = await readFile(path, "utf8"); }
-  catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return false; throw error; }
-  const parsed = parseCurl(source);
-  await store.save({ cookie_header: parsed.cookie, ...(parsed.csrf === undefined ? {} : { csrf: parsed.csrf }), ...(parsed.userAgent === undefined ? {} : { user_agent: parsed.userAgent }), saved_at: Date.now() / 1000, source: "import", profile });
-  const saved = await store.load();
-  if (!saved || saved.cookie_header !== parsed.cookie || saved.csrf !== parsed.csrf || saved.user_agent !== parsed.userAgent) throw new CalculatorError("UNEXPECTED_RESPONSE", "Could not verify migrated session");
-  if (await readFile(path, "utf8") === source) await unlink(path);
-  return true;
-}
+const csrfOf = (cookie: string) => cookie.split(";").map(part => part.trim()).find(part => part.startsWith("csrf="))?.slice(5);
 
 export class AuthManager {
   private requestContext: APIRequestContext | undefined;
@@ -80,29 +27,17 @@ export class AuthManager {
   private readonly browser: BrowserManager;
   private readonly abort = new AbortController();
   private closing: Promise<void> | undefined;
-  constructor(private readonly options: { profile: string; configDir: string; profileDir: string; executable?: string | undefined; headed?: boolean | undefined; sessionFile?: string | undefined; keychain?: boolean | undefined; browser?: BrowserManager | undefined; requestFactory?: typeof request.newContext | undefined }) {
-    this.store = new SessionStore(options.configDir, options.profile, options.keychain === false ? undefined : systemCredentialBackend());
+  constructor(private readonly options: { profile: string; profileDir: string; executable?: string | undefined; headed?: boolean | undefined; browser?: BrowserManager | undefined; requestFactory?: typeof request.newContext | undefined }) {
+    this.store = new SessionStore(options.profileDir);
     this.browser = options.browser ?? new BrowserManager({ profilePath: options.profileDir, ...(options.executable ? { executable: options.executable } : {}), ...(options.headed === undefined ? {} : { headed: options.headed }) });
   }
-  async status() { const status = sessionStatus(await this.store.load(), Date.now() / 1000, this.options.profile); return { ...status, backend: this.store.backendName }; }
-  async importCurl(text: string) {
-    const parsed = parseCurl(text);
-    await this.store.save({ cookie_header: parsed.cookie, ...(parsed.csrf === undefined ? {} : { csrf: parsed.csrf }), ...(parsed.userAgent === undefined ? {} : { user_agent: parsed.userAgent }), saved_at: Date.now() / 1000, source: "import", profile: this.options.profile });
-    await this.store.clearLogoutMarker();
-    this.refreshedCredentials = undefined;
-    await this.resetRequest();
-    return this.status();
-  }
+  async status() { const status = sessionStatus(await this.store.load(), Date.now() / 1000, this.options.profile); return status; }
   private async credentials(): Promise<{ cookie: string; csrf?: string; userAgent?: string }> {
-    if (await this.store.isLoggedOut()) throw new CalculatorError("AUTH_REQUIRED", "This profile is logged out", "Run login or import a session.");
     if (this.refreshedCredentials) return this.refreshedCredentials;
-    const path = this.options.sessionFile ?? process.env.AUTOCALC_SESSION;
-    if (path) return parseCurl(await readFile(path, "utf8"));
-    await migrateLegacySession(this.store, legacySessionFile, this.options.profile); // no-op when a login is stored
     const stored = await this.store.load();
-    if (!stored) throw new CalculatorError("AUTH_REQUIRED", "No calculator session found", "Run login or import a cURL session.");
-    const credentials = parseCurl(`curl -H ${JSON.stringify(`Cookie: ${stored.cookie_header}`)}`);
-    return { ...credentials, ...(stored.csrf === undefined || credentials.csrf !== undefined ? {} : { csrf: stored.csrf }), ...(stored.user_agent === undefined ? {} : { userAgent: stored.user_agent }) };
+    if (!stored) throw new CalculatorError("AUTH_REQUIRED", "No calculator session found", "Run autocalc login.");
+    const csrf = csrfOf(stored.cookie);
+    return { cookie: stored.cookie, ...(csrf === undefined ? {} : { csrf }) };
   }
   private async resetRequest() {
     this.requestEpoch++;
@@ -156,9 +91,9 @@ export class AuthManager {
             let mask: string | undefined;
             try { const result: unknown = await abortable(async () => (await context.request.get(MASK, { timeout: Math.min(8000, Math.max(1, deadline - Date.now())) })).json(), signal); if (result && typeof result === "object") { const data = result as Record<string, unknown>; const value = data.maskedName ?? data.accountName ?? data.userName ?? data.masked_user; if (typeof value === "string") mask = value; } } catch { if (signal?.aborted) throw new CalculatorError("CANCELLED", "Login cancelled"); }
             if (signal?.aborted || this.abort.signal.aborted) throw new CalculatorError("CANCELLED", "Login cancelled");
-            await this.store.save({ cookie_header: cookies, saved_at: Date.now() / 1000, source: "login", profile: this.options.profile, ...(mask === undefined ? {} : { account_mask: mask }) });
-            await this.store.clearLogoutMarker();
-            this.refreshedCredentials = { ...parseCurl(`curl -H ${JSON.stringify(`Cookie: ${cookies}`)}`), ...(this.lastUserAgent === undefined ? {} : { userAgent: this.lastUserAgent }) };
+            await this.store.save({ cookie: cookies, account_mask: mask ?? null });
+            const csrf = csrfOf(cookies);
+            this.refreshedCredentials = { cookie: cookies, ...(csrf === undefined ? {} : { csrf }), ...(this.lastUserAgent === undefined ? {} : { userAgent: this.lastUserAgent }) };
             await this.resetRequest();
             return this.status();
           }
@@ -181,7 +116,6 @@ export class AuthManager {
     this.refreshedCredentials = undefined;
     this.lastUserAgent = undefined;
     await this.resetRequest();
-    await this.store.markLoggedOut();
     await this.store.clear();
     await this.browser.withProfile(false, async context => {
       await context.clearCookies();
