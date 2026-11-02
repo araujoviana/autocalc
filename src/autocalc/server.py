@@ -10,8 +10,8 @@ from __future__ import annotations
 import asyncio
 import functools
 import json
-import re
 import logging
+import re
 import threading
 from contextlib import nullcontext
 
