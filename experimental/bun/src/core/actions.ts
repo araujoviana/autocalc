@@ -1,5 +1,6 @@
 import type { z } from "zod";
-import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, CreateListInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput } from "./schemas.ts";
+import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, CreateListInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput } from "./schemas.ts";
+import { draftQuoteTool, reviseQuoteTool, listDraftsTool, inspectDraftTool, recoverDraftTool } from "./workflow.ts";
 import { readPriceList, shareDetail } from "./lists.ts";
 import { CalculatorError } from "./errors.ts";
 import { RegionResolver } from "./regions.ts";
@@ -147,6 +148,11 @@ export const handlers = {
     catch { throw new CalculatorError("UPSTREAM", "List was copied but could not be renamed", "Find the copied list using its ID before retrying.", { created_id: id }); }
     return { id, name: input.new_name ?? null, url: shareLink(id) };
   }),
+  draft_quote: handler(DraftQuoteInput, draftQuoteTool),
+  revise_quote: handler(ReviseQuoteInput, reviseQuoteTool),
+  list_drafts: handler(EmptyInput, listDraftsTool),
+  inspect_draft: handler(DraftIdInput, inspectDraftTool),
+  recover_draft: handler(RecoverDraftInput, recoverDraftTool),
   auth_status: handler(EmptyInput, async ctx => ctx.auth.status()),
   auth_login: handler(LoginInput, async (ctx, input) => ctx.auth.login(input.timeout, true, ctx.signal)),
 } as const;

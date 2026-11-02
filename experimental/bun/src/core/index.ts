@@ -19,6 +19,9 @@ import { allOk } from "./edit-check.ts";
 import { doctor } from "./diagnostics.ts";
 import { request } from "playwright";
 import { endpoints, PAGE } from "./endpoints.ts";
+import { HuaweiProvider } from "../providers/huawei.ts";
+import { DraftStore } from "./quote/store.ts";
+import { checkAvailability } from "./availability.ts";
 import { mkdir } from "node:fs/promises";
 import { ListReference } from "./schemas.ts";
 
@@ -29,7 +32,9 @@ export function createCore(options: { reader?: ActionContext["reader"]; catalogR
   const browser = new BrowserManager({ profilePath: paths.profileDir, headed: config.headed, ...(config.executable ? { executable: config.executable } : {}) });
   const auth = new AuthManager({ profile: config.profile!, ...paths, headed: config.headed, browser, ...(config.executable ? { executable: config.executable } : {}) });
   const lists = options.listSession ?? new ListSession((method, url, body) => auth.call(method, url, body), () => auth.refresh());
-  const context: ActionContext = { reader: options.reader ?? transport!, catalog: new Catalog(options.catalogReader ?? transport!), rating: options.rating ?? (body => inquiry(value => transport!.post(RATE, value), body)), createList: options.createList ?? (payload => lists.create(payload)), lists, auth };
+  const catalog = new Catalog(options.catalogReader ?? transport!);
+  const provider = new HuaweiProvider({ skus: (service, region) => catalog.skus(service, region), checkMode: async (service, region, billing) => checkAvailability(await catalog.menu(), service, region, billing as "ondemand" | "monthly" | "yearly") });
+  const context: ActionContext = { provider, drafts: new DraftStore(), reader: options.reader ?? transport!, catalog, rating: options.rating ?? (body => inquiry(value => transport!.post(RATE, value), body)), createList: options.createList ?? (payload => lists.create(payload)), lists, auth };
   const temporaryAuth = new Set<AuthManager>();
   const shutdown = new AbortController();
   let closed = false, closing: Promise<void> | undefined;

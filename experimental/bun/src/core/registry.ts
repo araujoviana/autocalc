@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, CreateListInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput } from "./schemas.ts";
+import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, CreateListInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput } from "./schemas.ts";
 import { CalculatorError } from "./errors.ts";
 
 import type { ActionContext } from "./types.ts";
@@ -30,6 +30,11 @@ export const registry = {
   delete_price_list: action("Delete the specified price list; confirm with the user first", ListReferenceInput, "delete", handlers.delete_price_list, false, true),
   rename_price_list: action("Rename a saved price list", RenameListInput, "rename", handlers.rename_price_list, false),
   duplicate_price_list: action("Copy a price list, optionally renaming the copy", DuplicateListInput, "duplicate", handlers.duplicate_price_list, false),
+  draft_quote: action("Start a quote from requirements; exact matches are confirmed, others list candidates", DraftQuoteInput, "draft-quote", handlers.draft_quote, false),
+  revise_quote: action("Record the user's choices for pending requirements", ReviseQuoteInput, "revise-quote", handlers.revise_quote, false),
+  list_drafts: action("List local quote drafts", EmptyInput, "list-drafts", handlers.list_drafts),
+  inspect_draft: action("Inspect a draft's publication state", DraftIdInput, "inspect-draft", handlers.inspect_draft),
+  recover_draft: action("Reset an interrupted publication after confirming no remote list exists", RecoverDraftInput, "recover-draft", handlers.recover_draft, false),
   auth_status: action("Show local authentication status without a live probe", EmptyInput, "auth status", handlers.auth_status),
   auth_login: action("Open a browser for manual Huawei Cloud sign-in", LoginInput, "login", handlers.auth_login, false),
 } as const;

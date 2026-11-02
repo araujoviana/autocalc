@@ -129,3 +129,7 @@ export const CreateListInput = z.strictObject({ name: Nonempty.describe("Saved l
 export const RenameListInput = z.strictObject({ url_or_id: ListReference, new_name: Nonempty.describe("New list name") });
 export const DuplicateListInput = z.strictObject({ url_or_id: ListReference, new_name: Nonempty.optional().describe("Optional copy name") });
 export const LoginInput = z.strictObject({ timeout: Numeric.pipe(z.number().positive()).default(300).describe("Login timeout in seconds") });
+export const DraftQuoteInput = z.strictObject({ customer: Nonempty.describe("Customer label"), requirements: z.array(z.record(z.string(), z.unknown())).min(1).describe("Requirements: {id, service, region, billing, quantity?, needs?, spec?, options?}") });
+export const ReviseQuoteInput = z.strictObject({ draft_id: Nonempty.describe("Draft id"), decisions: z.array(z.strictObject({ requirement_id: Nonempty.describe("Requirement id"), spec: Nonempty.describe("Chosen SKU spec"), justification: Nonempty.describe("Why this spec") })).min(1).describe("The user's choices") });
+export const DraftIdInput = z.strictObject({ draft_id: Nonempty.describe("Draft id") });
+export const RecoverDraftInput = z.strictObject({ draft_id: Nonempty.describe("Draft id"), confirmed_no_remote_list: BooleanInput.describe("True only after checking saved lists"), justification: z.string().describe("How the user reconciled") });
