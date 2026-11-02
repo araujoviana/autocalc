@@ -63,12 +63,32 @@ test("legacy repo session is found when launched from another directory", async 
   await symlink(resolve("node_modules"), join(repo, "node_modules"), "dir");
   await writeFile(join(repo, ".session.curl"), "curl -H 'Cookie: sid=synthetic'");
   const server = Bun.serve({ port: 0, fetch: request => Response.json({ verified: request.headers.get("cookie") === "sid=synthetic" }) });
-  const script = `const { AuthManager } = await import(process.env.TEST_AUTH_MODULE); const auth = new AuthManager({ profile: "test", configDir: process.env.TEST_CONFIG, profileDir: process.env.TEST_CONFIG }); try { const response = await auth.call("GET", process.env.TEST_URL); if (!response.body.verified) process.exitCode = 1; } finally { await auth.close(); }`;
+  const script = `const { AuthManager } = await import(process.env.TEST_AUTH_MODULE); const auth = new AuthManager({ profile: "test", keychain: false, configDir: process.env.TEST_CONFIG, profileDir: process.env.TEST_CONFIG }); try { const response = await auth.call("GET", process.env.TEST_URL); if (!response.body.verified) process.exitCode = 1; } finally { await auth.close(); }`;
   try {
     const proc = Bun.spawn([process.execPath, "-e", script], { cwd: other, env: { ...process.env, AUTOCALC_SESSION: "", TEST_AUTH_MODULE: join(repo, "src/core/auth.ts"), TEST_CONFIG: config, TEST_URL: server.url.href }, stdout: "pipe", stderr: "pipe" });
     const [stderr, exit] = await Promise.all([new Response(proc.stderr).text(), proc.exited]);
     expect({ exit, stderr }).toEqual({ exit: 0, stderr: "" });
     await expect(access(join(repo, ".session.curl"))).rejects.toThrow();
+  } finally { server.stop(); await rm(directory, { recursive: true, force: true }); }
+}, 15000);
+
+test("a stored login beats an implicit legacy repo session (issue #1)", async () => {
+  const { cp, mkdir, mkdtemp, rm, symlink, writeFile, access } = await import("node:fs/promises");
+  const { join, resolve } = await import("node:path");
+  const { tmpdir } = await import("node:os");
+  const directory = await mkdtemp(join(tmpdir(), "autocalc-legacy-precedence-"));
+  const repo = join(directory, "repo"), config = join(directory, "config");
+  await mkdir(join(repo, "src"), { recursive: true });
+  await cp(resolve("src/core"), join(repo, "src/core"), { recursive: true });
+  await symlink(resolve("node_modules"), join(repo, "node_modules"), "dir");
+  await writeFile(join(repo, ".session.curl"), "curl -H 'Cookie: sid=legacy'");
+  const server = Bun.serve({ port: 0, fetch: request => Response.json({ cookie: request.headers.get("cookie") }) });
+  const script = `const { AuthManager } = await import(process.env.TEST_AUTH_MODULE); const auth = new AuthManager({ profile: "test", keychain: false, configDir: process.env.TEST_CONFIG, profileDir: process.env.TEST_CONFIG }); try { await auth.importCurl("curl -H 'Cookie: sid=stored'"); const response = await auth.call("GET", process.env.TEST_URL); if (response.body.cookie !== "sid=stored") { console.error(JSON.stringify(response.body)); process.exitCode = 1; } } finally { await auth.close(); }`;
+  try {
+    const proc = Bun.spawn([process.execPath, "-e", script], { cwd: directory, env: { ...process.env, AUTOCALC_SESSION: "", TEST_AUTH_MODULE: join(repo, "src/core/auth.ts"), TEST_CONFIG: config, TEST_URL: server.url.href }, stdout: "pipe", stderr: "pipe" });
+    const [stderr, exit] = await Promise.all([new Response(proc.stderr).text(), proc.exited]);
+    expect({ exit, stderr }).toEqual({ exit: 0, stderr: "" });
+    await access(join(repo, ".session.curl")); // untouched: not migrated over a stored login
   } finally { server.stop(); await rm(directory, { recursive: true, force: true }); }
 }, 15000);
 
@@ -79,7 +99,7 @@ test("cancelling login interrupts browser navigation", async () => {
   const started = new Promise<void>(resolve => { began = resolve; });
   const page = { goto: async () => { began(); await new Promise<void>((_resolve, reject) => { stop = reject; }); }, close: async () => { stop(new Error("closed")); } };
   const browser = { withProfile: async (_headed: boolean, operation: (context: unknown) => Promise<unknown>) => operation({ pages: () => [page] }), close: async () => {} } as unknown as import("../../src/core/browser.ts").BrowserManager;
-  const auth = new AuthManager({ profile: "test", configDir: "/unused", profileDir: "/unused", browser });
+  const auth = new AuthManager({ profile: "test", keychain: false, configDir: "/unused", profileDir: "/unused", browser });
   try {
     const result = auth.login(60, true, controller.signal);
     await started;
@@ -97,7 +117,7 @@ test("an explicit session file supplies the compatible request headers", async (
   const path = join(directory, "session.curl");
   const server = Bun.serve({ port: 0, fetch(request) { return Response.json({ verified: request.headers.get("cookie") === "csrf=synthetic; session=synthetic" && request.headers.get("csrf") === "synthetic" && request.headers.get("user-agent") === "synthetic-agent" }); } });
   await writeFile(path, "curl -H 'Cookie: csrf=synthetic; session=synthetic' -H 'User-Agent: synthetic-agent'");
-  const auth = new AuthManager({ profile: "test", configDir: directory, profileDir: join(directory, "profile"), sessionFile: path });
+  const auth = new AuthManager({ profile: "test", keychain: false, configDir: directory, profileDir: join(directory, "profile"), sessionFile: path });
   try { expect(await auth.call("GET", server.url.href)).toMatchObject({ status: 200, body: { verified: true } }); }
   finally { await auth.close(); server.stop(); await rm(directory, { recursive: true, force: true }); }
 });
@@ -118,7 +138,7 @@ test("refresh retries with newly acquired cookies instead of the stale explicit 
   } });
   const page = { goto: async () => {}, close: async () => {} };
   const browser = { withProfile: async (_headed: boolean, operation: (context: unknown) => Promise<unknown>) => operation({ pages: () => [page], request: { get: async () => ({ ok: () => true, json: async () => ({ retCode: "200" }) }) }, cookies: async () => [{ name: "csrf", value: "fresh", domain: ".huaweicloud.com" }, { name: "sid", value: "fresh", domain: ".huaweicloud.com" }] }), close: async () => {} } as unknown as import("../../src/core/browser.ts").BrowserManager;
-  const auth = new AuthManager({ profile: "test", configDir: directory, profileDir: join(directory, "profile"), sessionFile: path, browser });
+  const auth = new AuthManager({ profile: "test", keychain: false, configDir: directory, profileDir: join(directory, "profile"), sessionFile: path, browser });
   const lists = new ListSession((method, _url, body) => auth.call(method, server.url.href, body), () => auth.refresh());
   try {
     expect(await lists.lists()).toEqual([]);
@@ -138,7 +158,7 @@ test("concurrent authenticated calls share one request context", async () => {
   const server = Bun.serve({ port: 0, fetch: () => Response.json({ ok: true }) });
   let contexts = 0;
   const factory: typeof request.newContext = async options => { contexts++; await Bun.sleep(50); return request.newContext(options); };
-  const auth = new AuthManager({ profile: "test", configDir: directory, profileDir: join(directory, "profile"), sessionFile: path, requestFactory: factory });
+  const auth = new AuthManager({ profile: "test", keychain: false, configDir: directory, profileDir: join(directory, "profile"), sessionFile: path, requestFactory: factory });
   try {
     const results = await Promise.all(Array.from({ length: 5 }, () => auth.call("GET", server.url.href)));
     expect(results.every(result => result.status === 200)).toBe(true);
@@ -165,7 +185,7 @@ test("closing during request initialization disposes the eventual context", asyn
     context.dispose = async (...args) => { await dispose(...args); disposed = true; };
     return context;
   };
-  const auth = new AuthManager({ profile: "test", configDir: directory, profileDir: join(directory, "profile"), sessionFile: path, requestFactory: factory });
+  const auth = new AuthManager({ profile: "test", keychain: false, configDir: directory, profileDir: join(directory, "profile"), sessionFile: path, requestFactory: factory });
   try {
     const pending = auth.call("GET", "http://127.0.0.1:1/");
     const rejected = pending.then(() => undefined, error => error as unknown);

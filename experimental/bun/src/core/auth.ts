@@ -80,8 +80,8 @@ export class AuthManager {
   private readonly browser: BrowserManager;
   private readonly abort = new AbortController();
   private closing: Promise<void> | undefined;
-  constructor(private readonly options: { profile: string; configDir: string; profileDir: string; executable?: string | undefined; headed?: boolean | undefined; sessionFile?: string | undefined; browser?: BrowserManager | undefined; requestFactory?: typeof request.newContext | undefined }) {
-    this.store = new SessionStore(options.configDir, options.profile, systemCredentialBackend());
+  constructor(private readonly options: { profile: string; configDir: string; profileDir: string; executable?: string | undefined; headed?: boolean | undefined; sessionFile?: string | undefined; keychain?: boolean | undefined; browser?: BrowserManager | undefined; requestFactory?: typeof request.newContext | undefined }) {
+    this.store = new SessionStore(options.configDir, options.profile, options.keychain === false ? undefined : systemCredentialBackend());
     this.browser = options.browser ?? new BrowserManager({ profilePath: options.profileDir, ...(options.executable ? { executable: options.executable } : {}), ...(options.headed === undefined ? {} : { headed: options.headed }) });
   }
   async status() { const status = sessionStatus(await this.store.load(), Date.now() / 1000, this.options.profile); return { ...status, backend: this.store.backendName }; }
@@ -98,9 +98,7 @@ export class AuthManager {
     if (this.refreshedCredentials) return this.refreshedCredentials;
     const path = this.options.sessionFile ?? process.env.AUTOCALC_SESSION;
     if (path) return parseCurl(await readFile(path, "utf8"));
-    await migrateLegacySession(this.store, legacySessionFile, this.options.profile);
-    try { return parseCurl(await readFile(legacySessionFile, "utf8")); }
-    catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+    await migrateLegacySession(this.store, legacySessionFile, this.options.profile); // no-op when a login is stored
     const stored = await this.store.load();
     if (!stored) throw new CalculatorError("AUTH_REQUIRED", "No calculator session found", "Run login or import a cURL session.");
     const credentials = parseCurl(`curl -H ${JSON.stringify(`Cookie: ${stored.cookie_header}`)}`);
