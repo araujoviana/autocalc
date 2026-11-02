@@ -23,7 +23,6 @@ accepted ADR is never edited: a reversal is a new ADR that supersedes it (see
 | [0014](0014-saved-list-naming-and-prune.md) | Saved lists are named `[autocalc] <customer> – <date>`, with `prune` | superseded by 0016 |
 | [0015](0015-strangler-core-and-aws-second.md) | Strangler migration to a provider-neutral core; AWS second | accepted |
 | [0016](0016-python-canonical-and-publication-support.md) | Python canonical; publication requires request fidelity; supersedes 0014 | accepted (Python-canonical part superseded by 0017 once accepted) |
-
 | [0017](0017-typescript-on-bun-is-the-target.md) | TypeScript on Bun is the target implementation | proposed |
 | [0018](0018-declarative-quotes-and-generated-card-schema.md) | Declarative quotes: a generated card schema, with plan and apply | proposed |
 
