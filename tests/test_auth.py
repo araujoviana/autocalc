@@ -523,3 +523,31 @@ def test_a_profile_given_as_a_path_is_refused_with_a_hint(monkeypatch):
     assert "not a path" in ei.value.hint
     monkeypatch.setenv("AUTOCALC_PROFILE", "work")
     assert auth.profile_dir().name == "browser-profile-work"
+
+
+class _Page:
+    def __init__(self):
+        self.urls = []
+
+    def goto(self, url, **kw):
+        self.urls.append(url)
+
+
+def _ctx(page):
+    from types import SimpleNamespace
+    return SimpleNamespace(pages=[page], new_page=lambda: page)
+
+
+def test_login_url_goes_to_the_sign_in_form_and_returns_to_the_calculator():
+    from urllib.parse import parse_qs, urlsplit
+    u = urlsplit(auth.LOGIN_URL)
+    assert (u.netloc, u.path, u.fragment) == ("auth.huaweicloud.com", "/authui/login.html", "/login")
+    assert parse_qs(u.query)["service"] == [auth.CALCULATOR_URL + "#/ecs"]
+
+
+@pytest.mark.parametrize("signed_in, first", [(False, "LOGIN"), (True, "CALC")])
+def test_open_login_skips_the_calculator_page_unless_already_signed_in(monkeypatch, signed_in, first):
+    monkeypatch.setattr(auth, "_probe_login", lambda ctx, t: signed_in)
+    page = _Page()
+    auth._open_login(_ctx(page), 1000)
+    assert page.urls == [auth.LOGIN_URL if first == "LOGIN" else auth.CALCULATOR_URL]

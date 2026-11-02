@@ -29,6 +29,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from autocalc.client import CALC
 from autocalc.errors import (
@@ -41,6 +42,8 @@ from autocalc.errors import (
 )
 
 CALCULATOR_URL = "https://www.huaweicloud.com/intl/en-us/pricing/calculator.html"
+LOGIN_URL = ("https://auth.huaweicloud.com/authui/login.html?locale=en-us&site=intl&service="
+             + quote(CALCULATOR_URL + "#/ecs", safe="") + "#/login")
 LOGIN_HINT = "Run `autocalc login` to sign in once in a browser window."
 _LAUNCH_ARGS = ["--no-first-run", "--no-default-browser-check", "--disable-dev-shm-usage"]
 # Chromium's single-instance lock: a symlink on Linux/macOS, a file on Windows.
@@ -246,6 +249,18 @@ def _visit(ctx: Any, timeout_ms: int) -> None:
         raise UpstreamError("Could not open the calculator to renew the login session.", hint="Check network connectivity and retry.") from exc
 
 
+def _open_login(ctx: Any, timeout_ms: int) -> None:
+    """Go straight to the sign-in form (it returns to the calculator afterwards), unless already signed in."""
+    if _probe_login(ctx, 0):
+        _visit(ctx, timeout_ms)  # signed in already: just renew the calculator session
+        return
+    try:
+        page = ctx.pages[0] if ctx.pages else ctx.new_page()
+        page.goto(LOGIN_URL, wait_until="domcontentloaded", timeout=timeout_ms)
+    except Exception as exc:
+        raise UpstreamError("Could not open the Huawei Cloud sign-in page.", hint="Check network connectivity and retry.") from exc
+
+
 def _mask(ctx: Any) -> str | None:
     """Best-effort account mask; returns None when not exposed."""
     try:
@@ -369,7 +384,7 @@ def login(prof: str | None = None, timeout: float = 300) -> LoginResult:
     _cleanup_legacy()
     choice = find_browser()
     with _open_profile(prof, headless=False, choice=choice) as ctx:
-        _visit(ctx, 60000)
+        _open_login(ctx, 60000)
         if not _probe_login(ctx, timeout):
             raise AuthLoginFailed("Timed out waiting for login.",
                                   hint=f"Run `autocalc login --timeout {timeout:g}` again and finish signing in within {timeout:g} seconds.")
