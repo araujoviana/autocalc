@@ -93,6 +93,7 @@ def fake_profile(monkeypatch):
         yield FakeContext(state.logged_in)
 
     monkeypatch.setattr(auth, "_open_profile", fake_open)
+    monkeypatch.setattr(auth, "_TAB_SETTLE", 0)
     return state
 
 
@@ -271,6 +272,7 @@ def test_read_profile_checks_without_polling(monkeypatch, after_visit):
         yield ctx
 
     monkeypatch.setattr(auth, "_open_profile", fake_open)
+    monkeypatch.setattr(auth, "_TAB_SETTLE", 0)
     read = auth._read_profile("default")
     assert (read is not None) is after_visit
     assert (ctx.probes, ctx.visits) == (2, 1)
@@ -527,15 +529,21 @@ def test_a_profile_given_as_a_path_is_refused_with_a_hint(monkeypatch):
 
 class _Page:
     def __init__(self):
-        self.urls = []
+        self.urls, self.closed = [], False
+
+    def close(self):
+        self.closed = True
+
+    def wait_for_timeout(self, ms):
+        pass
 
     def goto(self, url, **kw):
         self.urls.append(url)
 
 
-def _ctx(page):
+def _ctx(page, restored=()):
     from types import SimpleNamespace
-    return SimpleNamespace(pages=[page], new_page=lambda: page)
+    return SimpleNamespace(pages=[*restored, page], new_page=lambda: page)
 
 
 def test_login_url_goes_to_the_sign_in_form_and_returns_to_the_calculator():
@@ -546,7 +554,15 @@ def test_login_url_goes_to_the_sign_in_form_and_returns_to_the_calculator():
 
 
 def test_open_login_goes_straight_to_the_sign_in_form_without_probing(monkeypatch):
+    monkeypatch.setattr(auth, "_TAB_SETTLE", 0)
     monkeypatch.setattr(auth, "_probe_login", lambda *a: pytest.fail("probed before any page loaded"))
     page = _Page()
     auth._open_login(_ctx(page), 1000)
     assert page.urls == [auth.LOGIN_URL]
+
+
+def test_open_login_leaves_exactly_one_tab(monkeypatch):
+    monkeypatch.setattr(auth, "_TAB_SETTLE", 0)
+    page, old = _Page(), [_Page(), _Page()]
+    auth._open_login(_ctx(page, old), 1000)
+    assert page.urls == [auth.LOGIN_URL] and not page.closed and all(p.closed for p in old)

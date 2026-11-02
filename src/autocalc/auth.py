@@ -44,6 +44,7 @@ from autocalc.errors import (
 CALCULATOR_URL = "https://www.huaweicloud.com/intl/en-us/pricing/calculator.html"
 LOGIN_URL = ("https://auth.huaweicloud.com/authui/login.html?locale=en-us&site=intl&service="
              + quote(CALCULATOR_URL + "#/ecs", safe="") + "#/login")
+_TAB_SETTLE = 1.5  # seconds for the browser to restore its old tabs before we close them
 LOGIN_HINT = "Run `autocalc login` to sign in once in a browser window."
 _LAUNCH_ARGS = ["--no-first-run", "--no-default-browser-check", "--disable-dev-shm-usage"]
 # Chromium's single-instance lock: a symlink on Linux/macOS, a file on Windows.
@@ -253,8 +254,12 @@ def _open_login(ctx: Any, timeout_ms: int) -> None:
     """Go straight to the sign-in form; it returns to the calculator afterwards, and when the profile is
     already signed in the SSO sends it back at once. (No probe first: before any page loads it answers 400.)"""
     try:
-        page = ctx.pages[0] if ctx.pages else ctx.new_page()
+        page = ctx.new_page()
         page.goto(LOGIN_URL, wait_until="domcontentloaded", timeout=timeout_ms)
+        for _ in range(2):  # the browser restores last session's tabs a moment after launch: keep just ours
+            for other in [p for p in ctx.pages if p is not page]:
+                other.close()
+            time.sleep(_TAB_SETTLE)
     except Exception as exc:
         raise UpstreamError("Could not open the Huawei Cloud sign-in page.", hint="Check network connectivity and retry.") from exc
 
