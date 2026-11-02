@@ -34,7 +34,20 @@ test("CLI and MCP return the same supported services", async () => {
     const prompt = await client.getPrompt({ name: "quote_workflow" });
     expect(prompt.messages.length).toBeGreaterThan(0);
     const promptText = JSON.stringify(prompt.messages);
-    for (const step of ["describe_service", "search_skus", "create_price_list", "compare_modes", "730"]) expect(promptText).toContain(step);
+    for (const step of ["autocalc://schema/index", "draft_quote", "revise_quote", "publish_quote", "compare_modes", "730"]) expect(promptText).toContain(step);
+    expect(promptText).not.toContain("create_price_list");
+  } finally { await client.close(); }
+}, 15000);
+
+test("schema resources list services and read one without login", async () => {
+  const client = new Client({ name: "autocalc-schema", version: "1" });
+  await client.connect(new StdioClientTransport({ command: process.execPath, args: ["run", "src/mcp.ts"], stderr: "pipe" }));
+  try {
+    const index = JSON.parse(((await client.readResource({ uri: "autocalc://schema/index" })).contents[0] as { text: string }).text) as Array<{ service: string; mapped_percent: number }>;
+    expect(index.find(row => row.service === "ecs")?.mapped_percent).toBeGreaterThan(0);
+    expect(((await client.readResource({ uri: "autocalc://schema/ecs" })).contents[0] as { text: string }).text).toContain("service: ecs");
+    await expect(client.readResource({ uri: "autocalc://schema/..%2Fx" })).rejects.toThrow();
+    await expect(client.readResource({ uri: "autocalc://schema/nope" })).rejects.toThrow(/No schema/);
   } finally { await client.close(); }
 }, 15000);
 

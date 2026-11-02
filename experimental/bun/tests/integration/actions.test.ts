@@ -1,3 +1,4 @@
+import { flatSku } from "../../src/core/actions.ts";
 import { expect, test } from "bun:test";
 import { createCore } from "../../src/core/index.ts";
 test("quote finds the exact catalog SKU beyond the search result limit", async () => {
@@ -98,7 +99,7 @@ test("region comparison preserves per-region failures", async () => {
     if (url.includes("language?")) return { ecs: {} };
     return { global: { "la-south-2": "Santiago" }, regionsOfSite: { HWC: ["la-south-2"] }, menuInfos: [{ parentCategoryName: "Compute", subCategoryLists: [{ urlPath: "ecs", categoryName: "ECS", hasCalculator: true, regionOnline: { regionList: ["la-south-2"] } }] }] };
   } }, rating: async body => ({ productRatingResult: (body.productInfos as Array<{ id: string }>).map(({ id }) => ({ id, amount: 2, originalAmount: 2 })) }) });
-  try { expect(await core.invoke("compare_regions", { items: [{ service: "ecs", spec: "x" }], regions: ["Santiago", "unknown"] })).toMatchObject({ regions: [{ region: "la-south-2", total_usd: 2 }, { region: "unknown", error: "REGION_NOT_FOUND" }] }); }
+  try { expect(await core.invoke("compare_regions", { items: [{ service: "ecs", spec: "x" }], regions: ["Santiago", "unknown"] })).toMatchObject({ billing: "monthly", regions: [{ region: "la-south-2", total_usd: 2 }, { region: "unknown", error: "REGION_NOT_FOUND" }] }); }
   finally { await core.close(); }
 });
 
@@ -111,6 +112,9 @@ test("empty billing mode comparison uses Python's default modes", async () => {
   try {
     const result = await core.invoke("compare_modes", { region: "r", items: [{ service: "ecs", spec: "x" }], modes: [] }) as { modes: Array<{ mode: string }> };
     expect(result.modes.map(row => row.mode)).toEqual(["ondemand", "monthly", "yearly"]);
+    const two = await core.invoke("compare_modes", { region: "r", items: [{ service: "ecs", spec: "x" }], periods: 2, hours: 100 }) as { hours: number; periods: number; modes: Array<{ mode: string; monthly_equivalent_usd: number }> };
+    expect([two.hours, two.periods]).toEqual([100, 2]);
+    expect(two.modes.map(row => row.monthly_equivalent_usd)).toEqual([100, 0.5, 0.04]);
   } finally { await core.close(); }
 });
 
@@ -266,4 +270,22 @@ test("quote refuses ambiguous OBS usage lines", async () => {
   } }, rating: async () => ({}) });
   try { await expect(core.invoke("quote", { region: "r", items: [{ service: "obs", spec: "obs.001", usage_factor: "get", usage_value: 1 }] })).rejects.toMatchObject({ code: "VALIDATION", message: expect.stringContaining("ambiguous") }); }
   finally { await core.close(); }
+});
+
+test("search rows are flat: one amount per mode, noise trimmed, no service or group", () => {
+  const row = flatSku({ spec: "s", description: "vCPUs: 2;Remark: x;Memory: 4", prices: { ondemand: { amount: 0.1, usage_factor: "Hour", usage_measure_id: 4 }, monthly: { amount: 50 } } });
+  expect(row).toEqual({ spec: "s", description: "vCPUs: 2;Memory: 4", ondemand: 0.1, monthly: 50, usage_factor: "Hour", usage_measure_id: 4 });
+  expect(flatSku({ spec: "d", description: "", prices: { ondemand: { amount: 1, usage_factor: "Duration" } } })).toEqual({ spec: "d", description: "", ondemand: 1 });
+});
+
+test("slow sign-in returns waiting and a second call rejoins the same login", async () => {
+  const { handlers } = await import("../../src/core/actions.ts");
+  let opened = 0, finish!: (value: unknown) => void;
+  const auth = { login: () => { opened++; return new Promise(resolve => { finish = resolve; }); } };
+  const ctx = { auth } as unknown as Parameters<typeof handlers.auth_login>[0];
+  expect(await handlers.auth_login(ctx, { wait_seconds: 0.01 })).toMatchObject({ logged_in: false, waiting: true });
+  const second = handlers.auth_login(ctx, { wait_seconds: 5 });
+  finish({ logged_in: true });
+  expect(await second).toEqual({ logged_in: true });
+  expect(opened).toBe(1);
 });

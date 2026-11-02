@@ -14,7 +14,7 @@
 ## 3. Workflow tools (ADR-0007)
 
 - [x] 3.1 Port `draft_quote`, `revise_quote`, `list_drafts`, `inspect_draft`, `recover_draft` (`workflow.py`, `core/draft.py`). Verify: ported `test_workflow` passes; the registry diff (1.2) no longer lists them. Note: the unknown-option check of `draft_quote` moves to 4.3b (schema validator).
-- [ ] 3.2 Match MCP output shaping and the token budget (ADR-0008). Verify: ported output-format scenarios from `openspec/specs/mcp-surface/` pass.
+- [x] 3.2 Match MCP output shaping and the token budget (ADR-0008). Verify: ported output-format scenarios from `openspec/specs/mcp-surface/` pass.
 
 ## 4. Page encoder, gate and publish (ADR-0001, 0003, 0016)
 

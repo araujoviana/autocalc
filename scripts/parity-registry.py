@@ -31,12 +31,16 @@ def typescript_side() -> dict[str, dict[str, list[str]]]:
     return json.loads(run.stdout)
 
 
+# TS shares one schema between MCP and CLI; these are documented Python CLI flags (docs/reference/cli.md) that Python keeps off MCP.
+CLI_ONLY = {"search_skus": {"refresh"}, "auth_login": {"timeout"}}
+
+
 def diff(py: dict, ts: dict) -> list[str]:
     lines = [f"only in Python: {n}" for n in sorted(py.keys() - ts.keys())]
     lines += [f"only in TypeScript: {n}" for n in sorted(ts.keys() - py.keys())]
     for name in sorted(py.keys() & ts.keys()):
         for key in ("properties", "required"):
-            a, b = set(py[name][key]), set(ts[name][key])
+            a, b = set(py[name][key]), set(ts[name][key]) - CLI_ONLY.get(name, set())
             if a != b:
                 lines.append(f"{name}.{key}: Python-only {sorted(a - b)}, TypeScript-only {sorted(b - a)}")
     return lines

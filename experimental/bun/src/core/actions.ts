@@ -46,12 +46,24 @@ async function runQuote(ctx: ActionContext, input: z.output<typeof QuoteInput>) 
     return { cloudServiceType: sku.cloudServiceType, resourceType: sku.resourceType, description: sku.description, usageFactor: sku.prices.ondemand?.usage_factor };
   }, ctx.rating);
 }
+const NOISE = ["Remark:", "Spot Duartion:", "Spot Duration:"];
+/** One agent-facing search row: spec, trimmed description and one USD amount per billing mode (mirrors Python flat_sku). */
+export function flatSku(sku: { spec: string; description: string; prices: Record<string, { amount: unknown; usage_factor?: unknown; usage_measure_id?: unknown }> }) {
+  const ondemand = sku.prices.ondemand, row: Record<string, unknown> = { spec: sku.spec, description: sku.description.split(";").filter(part => !NOISE.some(noise => part.startsWith(noise))).join(";") };
+  for (const [mode, price] of Object.entries(sku.prices)) row[mode] = price.amount;
+  if (ondemand && ondemand.usage_factor != null && ondemand.usage_factor !== "Duration") {
+    row.usage_factor = ondemand.usage_factor;
+    if (ondemand.usage_measure_id != null) row.usage_measure_id = ondemand.usage_measure_id;
+  }
+  return row;
+}
+// One sign-in at a time: later calls rejoin it instead of opening a second window.
+const logins = new WeakMap<object, Promise<unknown>>();
 export const handlers = {
   read_price_list: handler(ListReferenceInput, (ctx, input) => readPriceList(ctx.reader, input.url_or_id)),
   list_services: handler(ListServicesInput, async (ctx, input) => (await ctx.catalog.services(input.query)).map(({ service, name, category }) => ({ service, name, category }))),
   list_regions: handler(ListRegionsInput, async (ctx, input) => {
     const names = await ctx.catalog.regions();
-    if (input.region) { const id = new RegionResolver(names).resolve(input.region); return { resolved: id, display: names[id] ?? input.region }; }
     if (!input.service) return names;
     const service = (await ctx.catalog.services()).find(item => item.service === vendorServiceCode(input.service));
     return Object.fromEntries((service?.regions ?? []).map(id => [id, names[id] ?? id]));
@@ -59,7 +71,7 @@ export const handlers = {
   search_skus: handler(SearchInput, async (ctx, input) => {
     const names = await ctx.catalog.regions();
     const region = new RegionResolver(names).resolve(input.region);
-    return ctx.catalog.search(input.service, region, input);
+    return (await ctx.catalog.search(input.service, region, input)).map(flatSku);
   }),
   describe_service: handler(DescribeInput, async (ctx, input) => {
     const menu = await ctx.catalog.menu();
@@ -78,27 +90,31 @@ export const handlers = {
     const rows = [];
     for (const region of input.regions) {
       ensureNotCancelled(ctx);
-      try { const result = await runQuote(ctx, { region, items: input.items, billing: input.mode, periods: 1, hours: 730 }); rows.push({ region: result.region, total_usd: result.total, currency: result.currency }); }
+      try { const result = await runQuote(ctx, { region, items: input.items, billing: input.billing, periods: 1, hours: 730 }); rows.push({ region: result.region, total_usd: result.total, currency: result.currency }); }
       catch (error) { if (!(error instanceof CalculatorError) || error.code === "CANCELLED") throw error; rows.push({ region, error: error.code, message: error.message, hint: error.hint ?? null }); }
     }
-    return { mode: input.mode, regions: rows };
+    return { billing: input.billing, regions: rows };
   }),
   compare_modes: handler(CompareModesInput, async (ctx, input) => {
     const region = new RegionResolver(await ctx.catalog.regions()).resolve(input.region);
-    const rows: Array<{ mode: string; total_usd?: number; monthly_equivalent_usd?: number; saving_vs_ondemand_pct?: number; error?: string }> = [];
+    const rows: Array<{ mode: string; total_usd?: number; monthly_equivalent_usd?: number; saving_vs_ondemand_pct?: number; total?: number; monthly_equivalent?: number; error?: string }> = [];
     let base: number | undefined;
     for (const mode of input.modes.length ? input.modes : ["ondemand", "monthly", "yearly"] as const) {
       ensureNotCancelled(ctx);
       try {
-        const result = await runQuote(ctx, { region, items: input.items, billing: mode, periods: 1, hours: 730 });
-        const monthly = mode === "yearly" ? result.total / 12 : result.total;
+        const result = await runQuote(ctx, { region, items: input.items, billing: mode, periods: input.periods, hours: input.hours });
+        const monthly = mode === "ondemand" ? result.total : result.total / (input.periods * (mode === "yearly" ? 12 : 1));
         rows.push({ mode, total_usd: result.total, monthly_equivalent_usd: roundPython(monthly, 2) });
         if (mode === "ondemand") base = monthly;
       } catch (error) { if (!(error instanceof CalculatorError) || error.code === "CANCELLED") throw error; rows.push({ mode, error: error.message }); }
     }
     if (base) for (const row of rows) if (row.monthly_equivalent_usd !== undefined) row.saving_vs_ondemand_pct = roundPython((1 - row.monthly_equivalent_usd / base) * 100, 1);
-    const currency = input.currency.toUpperCase();
-    return currency === "USD" ? { region, modes: rows } : { region, modes: rows, currency, rate: (await exchangeRates(page => ctx.catalog.exchangePage(page)))[currency] ?? null };
+    const currency = input.currency.toUpperCase(), out: Record<string, unknown> = { region, modes: rows, hours: input.hours, periods: input.periods };
+    if (currency === "USD") return out;
+    const rate = (await exchangeRates(page => ctx.catalog.exchangePage(page)))[currency];
+    if (rate === undefined) throw new CalculatorError("VALIDATION", `No exchange rate for ${input.currency}.`);
+    for (const row of rows) if (row.total_usd !== undefined && row.monthly_equivalent_usd !== undefined) { row.total = roundPython(row.total_usd * rate, 2); row.monthly_equivalent = roundPython(row.monthly_equivalent_usd * rate, 2); }
+    return { ...out, currency, rate };
   }),
   supported_services: handler(EmptyInput, async () => supportedServices()),
   create_price_list: handler(CreateListInput, async (ctx, input) => {
@@ -154,5 +170,11 @@ export const handlers = {
   inspect_draft: handler(DraftIdInput, inspectDraftTool),
   recover_draft: handler(RecoverDraftInput, recoverDraftTool),
   auth_status: handler(EmptyInput, async ctx => ctx.auth.status()),
-  auth_login: handler(LoginInput, async (ctx, input) => ctx.auth.login(input.timeout, true, ctx.signal)),
+  auth_login: handler(LoginInput, async (ctx, input) => {
+    if (input.timeout !== undefined) return ctx.auth.login(input.timeout, true, ctx.signal);
+    let running = logins.get(ctx.auth);
+    if (!running) { running = ctx.auth.login(300, true).finally(() => logins.delete(ctx.auth)); running.catch(() => undefined); logins.set(ctx.auth, running); }
+    const waiting = Symbol(), first = await Promise.race([running, new Promise<symbol>(resolve => setTimeout(() => resolve(waiting), input.wait_seconds * 1000))]);
+    return first === waiting ? { logged_in: false, waiting: true, hint: "Finish signing in in the browser window, then call auth_status." } : first;
+  }),
 } as const;
