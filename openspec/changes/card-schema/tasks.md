@@ -35,8 +35,8 @@
 
 ## 6. Spike: state and update-in-place
 
-- [ ] 6.1 With a throwaway account list, call `share/update` with changed cards and record whether the list id and share link stay the same. Verify: a short note in `docs/explanation/huawei/` with the observed result, the date and frontend version, with no client data.
-- [ ] 6.2 Decide state (local, shared, or none) in a follow-up ADR using 6.1. Verify: the ADR exists or the decision is recorded here as deferred.
+- [x] 6.1 With a throwaway account list, call `share/update` with changed cards and record whether the list id and share link stay the same. Verify: a short note in `docs/explanation/huawei/` with the observed result, the date and frontend version, with no client data.
+- [x] 6.2 (deferred: recorded as an open question; see `docs/explanation/huawei/share-update.md` for the finding that an update needs a rollback the gate does not have) Decide state (local, shared, or none) in a follow-up ADR using 6.1. Verify: the ADR exists or the decision is recorded here as deferred.
 
 ## 7. Docs and rebase
 

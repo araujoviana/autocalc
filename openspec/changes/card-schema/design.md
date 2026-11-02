@@ -101,5 +101,9 @@ the validator, so the legal values in an error cannot disagree with the schema.
   whether re-apply updates or recreates. Local versus shared state is deliberately not decided
   here and would be its own ADR after the spike. Until then `apply` creates a new list and
   records its id beside the quote file.
+  **Spike result (2026-11-02, frontend 11.4.201):** `share/update` keeps the key and the link and
+  replaces the cards (`docs/explanation/huawei/share-update.md`). But the gate deletes on a failed
+  check, which is wrong for a list whose link is already out: an update needs the previous body
+  restored on failure. Decision deferred to its own ADR; `apply` still creates.
 - File naming and location of user quote files (config directory or the working directory).
   Cosmetic; settle when implementing task 4.1.

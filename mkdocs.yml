@@ -57,6 +57,7 @@ nav:
           - Regions: explanation/huawei/regions.md
           - Catalog drift: explanation/huawei/catalog-drift.md
           - Sessions: explanation/huawei/sessions.md
+          - share/update keeps the link: explanation/huawei/share-update.md
           - Concurrency: explanation/huawei/concurrency.md
           - Page encoder: explanation/huawei/page-encoder.md
           - Publish gate: explanation/huawei/publish-gate.md
