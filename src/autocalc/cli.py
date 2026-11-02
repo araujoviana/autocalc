@@ -28,7 +28,7 @@ import typing
 from importlib import metadata
 from pathlib import Path
 
-from autocalc import frontend
+from autocalc import frontend, ui
 from autocalc.client import Calculator
 from autocalc.errors import CalculatorError
 from autocalc.regions import RegionResolver
@@ -56,9 +56,9 @@ def _friendly_region(calc: Calculator, value: str) -> str:
 
 
 def _print_err(exc: CalculatorError) -> int:
-    print(f"error[{exc.code}]: {exc.message}", file=sys.stderr)
+    print(f"{ui.paint('error', 'red', sys.stderr)}[{exc.code}]: {exc.message}", file=sys.stderr)
     if exc.hint:
-        print(f"  -> {exc.hint}", file=sys.stderr)
+        print(f"  {ui.paint('->', 'dim', sys.stderr)} {exc.hint}", file=sys.stderr)
     return 2
 
 
@@ -148,6 +148,7 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("schema", help="the generated card schema: pull | coverage | diff")
     p.add_argument("action", choices=["pull", "coverage", "diff"])
     p.add_argument("service")
+    p.add_argument("--json", action="store_true", help="print JSON even on a terminal")
     tool_cmds = _add_tool_commands(sub, set(sub.choices))
     a = ap.parse_args(argv)
 
@@ -155,22 +156,32 @@ def main(argv: list[str] | None = None) -> int:
         if a.cmd in tool_cmds:
             fn, names = tool_cmds[a.cmd]
             from autocalc.update import with_notice
-            print(json.dumps(with_notice(fn(**{n: getattr(a, n) for n in names})), indent=2, ensure_ascii=False, default=str))
+            result = with_notice(fn(**{n: getattr(a, n) for n in names}))
+            human = _quote_view(a.cmd, result) if ui.fancy() else None
+            print(human or json.dumps(result, indent=2, ensure_ascii=False, default=str))
             return 0
         if a.cmd == "login":
             from autocalc import auth
             print("Opening a browser window. Sign in to Huawei Cloud; this window closes when done.")
             res = auth.login(a.profile, timeout=a.timeout)
-            print(f"Logged in as {res.account_mask or 'your account'} \u2713 (browser: {res.browser})")
+            print(ui.status("ok", f"Logged in as {res.account_mask or 'your account'} (browser: {res.browser})"))
             return 0
         if a.cmd == "logout":
             from autocalc import auth
             removed = auth.logout(a.profile)
-            print("Signed out. Deleted: " + ", ".join(removed) if removed else "Already signed out; nothing to delete.")
+            print(ui.status("ok", "Signed out. Deleted: " + ", ".join(removed)) if removed
+                  else ui.status("warn", "Already signed out; nothing to delete."))
             return 0
         if a.cmd == "auth":
             from autocalc import auth
-            print(json.dumps(auth.status(a.profile), indent=2))
+            st = auth.status(a.profile)
+            if not ui.fancy():
+                print(json.dumps(st, indent=2))
+            elif st["logged_in"]:
+                print(ui.status("ok", f"Signed in as {st.get('account_mask') or 'your account'}"))
+                print(ui.table([("profile", st["profile"]), ("browser", st["browser"]), ("cookies", st["cookies"])]))
+            else:
+                print(ui.status("warn", "Not signed in") + f"  -> {st.get('hint', auth.LOGIN_HINT)}")
             return 0
         if a.cmd == "doctor":
             return _doctor()
@@ -186,11 +197,19 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(page_controls(a.service), indent=2))
             return 0
         if a.cmd == "schema":
-            return _schema(a.action, a.service)
+            return _schema(a.action, a.service, a.json)
         if a.cmd == "lists":
             from autocalc.share import Session
-            for x in Session().lists():
-                print(f"{x.get('key')}  {x.get('name','')[:40]:<40} {x.get('totalPrice',{}).get('amount') if isinstance(x.get('totalPrice'),dict) else x.get('totalPrice')}")
+            rows = [(x.get("key"), x.get("name", "")[:40],
+                     x.get("totalPrice", {}).get("amount") if isinstance(x.get("totalPrice"), dict) else x.get("totalPrice"))
+                    for x in Session().lists()]
+            if not ui.fancy():
+                for key, name, total in rows:
+                    print(f"{key}  {name:<40} {total}")
+            else:
+                print(ui.table(rows, ("KEY", "NAME", "TOTAL")) if rows else "No saved lists.")
+                if rows:
+                    print(ui.paint(f"{len(rows)} saved list{'s' * (len(rows) != 1)}", "dim"))
             return 0
 
         c = Calculator()
@@ -200,16 +219,24 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(validate_list(share_detail(c, a.list_id)), indent=2))
             return 0
         if a.cmd == "services":
-            for s in c.services():
-                if a.query.lower() in f"{s['service']} {s['name']} {s['category']}".lower():
+            found = [s for s in c.services() if a.query.lower() in f"{s['service']} {s['name']} {s['category']}".lower()]
+            if not ui.fancy():
+                for s in found:
                     print(f"{s['service']:<16} {s['name']}  [{s['category']}]")
+            else:
+                print(ui.table([(s["service"], s["name"], s["category"]) for s in found], ("SERVICE", "NAME", "CATEGORY")))
+                print(ui.paint(f"{len(found)} service{'s' * (len(found) != 1)}", "dim"))
         elif a.cmd == "regions":
             regions = c.regions()
             if a.service:
                 allowed = next((s["regions"] for s in c.services() if s["service"] == a.service), [])
                 regions = {r: regions.get(r, r) for r in allowed}
-            for r, n in regions.items():
-                print(f"{r:<20} {n}")
+            if not ui.fancy():
+                for r, n in regions.items():
+                    print(f"{r:<20} {n}")
+            else:
+                print(ui.table(list(regions.items()), ("REGION", "NAME")))
+                print(ui.paint(f"{len(regions)} region{'s' * (len(regions) != 1)}", "dim"))
         elif a.cmd == "search":
             region = _friendly_region(c, a.region)
             for h in c.search(a.service, region, " ".join(a.terms), a.billing, a.vcpus, a.mem, a.limit):
@@ -227,22 +254,63 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def _schema(action: str, service: str) -> int:
+def _schema(action: str, service: str, as_json: bool = False) -> int:
     from autocalc.schema import generate
+    human = ui.fancy() and not as_json
     committed = generate.load_service(service) if service.isalnum() else None
     if action != "pull" and committed is None:
-        print(f"No committed schema for {service}; run `autocalc schema pull {service}`.")
+        msg = f"No committed schema for {service}; run `autocalc schema pull {service}`."
+        print(ui.status("fail", msg) if human else msg)
         return 1
     if action == "coverage":
-        print(json.dumps(generate.coverage(committed), indent=2))
+        c = generate.coverage(committed)
+        if not human:
+            print(json.dumps(c, indent=2))
+        else:
+            print("\n".join([ui.status(k, i) for k, key in (("ok", "mapped"), ("warn", "unmapped")) for i in c[key]]
+                             + [ui.paint(f"- {i} (unsupported)", "dim") for i in c["unsupported"]]))
+            print(ui.paint(f"Coverage {len(c['mapped'])}/{len(c['mapped']) + len(c['unmapped'])} mapped "
+                           f"({c['mapped_percent']}%), {len(c['unsupported'])} unsupported", "bold"))
     elif action == "diff":
         d = generate.diff(committed, generate.pull(service))
-        print(json.dumps(d, indent=2))
+        if not human:
+            print(json.dumps(d, indent=2))
+        else:
+            for key, kind in (("added", "warn"), ("removed", "fail"), ("changed", "warn")):
+                for i in d[key]:
+                    print(ui.status(kind, f"{key}: {i}"))
+            drift = any(d.values())
+            print(ui.status("warn" if drift else "ok", f"{service}: " + (
+                f"{len(d['added'])} added, {len(d['removed'])} removed, {len(d['changed'])} changed"
+                f"  -> autocalc schema pull {service}" if drift else "no drift from the live page")))
         return 1 if any(d.values()) else 0
     else:
         (generate.FILES / f"{service}.yaml").write_text(generate.dump(generate.pull(service)), encoding="utf-8")
-        print(f"Wrote schema for {service}.")
+        print(ui.status("ok", f"Wrote schema for {service}.") if human else f"Wrote schema for {service}.")
     return 0
+
+
+def _quote_view(cmd: str, result: dict) -> str | None:
+    """A terminal summary of plan-quote / apply-quote; None for every other tool (they print JSON)."""
+    if cmd == "plan-quote" and "cards" in result:
+        rows = []
+        for c in result["cards"]:
+            notes = []
+            if c.get("unmapped_options"):
+                notes.append("unmapped: " + ", ".join(c["unmapped_options"]))
+            if c.get("lock_drift"):
+                notes.append(f"price moved from {c['lock_drift']['locked_price']}")
+            if "candidates" in c:
+                notes.append(f"{len(c['candidates'])} candidates: choose a spec")
+            rows.append((c["id"], c.get("spec", "-"), c.get("price") or "-", "; ".join(notes)))
+        problems = sum(1 for c in result["cards"] if "spec" not in c or c.get("unmapped_options") or c.get("lock_drift"))
+        out = ui.table(rows, ("CARD", "SPEC", "PRICE", "NOTES"))
+        return out + "\n" + (ui.status("warn", f"{problems} of {len(rows)} cards need attention before apply")
+                             if problems else ui.status("ok", f"{len(rows)} cards resolved; ready to apply"))
+    if cmd == "apply-quote" and result.get("url"):
+        checks = result.get("checks") or []
+        return ui.status("ok", f"Published {result.get('name', '')}  {len(checks)} cards verified") + f"\n  {result['url']}"
+    return None
 
 
 def _doctor() -> int:
@@ -251,8 +319,14 @@ def _doctor() -> int:
     from autocalc import auth
     from autocalc.client import CALC, EXCHANGE, INQUIRY
 
-    print("autocalc doctor\n" + "-" * 40)
+    print(ui.paint("autocalc doctor", "bold") + "\n" + "-" * 40)
     ok = True
+    warns = 0
+
+    def line(kind: str, text: str) -> None:
+        nonlocal warns
+        warns += kind == "warn"
+        print(ui.status(kind, text))
     checks = {"menuInfo": ("GET", f"{CALC}/menuInfo", {"sign": "common", "language": "en-us"}, None),
               "inquiry": ("POST", INQUIRY, None, {"siteCode": "HWC", "productInfos": []}),
               "exchange-rate": ("GET", EXCHANGE, {"page_no": 1, "page_size": 5}, None)}
@@ -262,37 +336,41 @@ def _doctor() -> int:
                               headers={"Origin": "https://www.huaweicloud.com"})
             good = r.status_code == 200
             ok = ok and good
-            print(f"[{'ok' if good else 'FAIL'}]   {name}: HTTP {r.status_code}")
+            line("ok" if good else "fail", f"{name}: HTTP {r.status_code}")
         except Exception as exc:  # noqa: BLE001
             ok = False
-            print(f"[FAIL] {name}: {exc}  -> check network / proxy")
+            line("fail", f"{name}: {exc}  -> check network / proxy")
     calc = None
     try:
         calc = Calculator()
         live = frontend.live_version()
         ok = ok and bool(live)
-        print(f"[{'ok' if live else 'FAIL'}]   frontend version: {live or 'unknown'}")
+        line("ok" if live else "fail", f"frontend version: {live or 'unknown'}")
         for note in frontend.warnings(sorted(VERIFIED), live):
-            print(f"[warn] {note}")
+            line("warn", note)
         from autocalc.schema import generate
         for note in generate.stale_notes(live):
-            print(f"[warn] {note}")
+            line("warn", note)
     except Exception as exc:  # noqa: BLE001
         ok = False
-        print(f"[FAIL] frontend version: {exc}")
+        line("fail", f"frontend version: {exc}")
     browser = auth.find_browser()
-    print(f"[{'warn' if browser.name == 'bundled' else 'ok'}]   browser: {browser.describe()}"
-          + ("  -> install Chrome or Edge, or run `autocalc install-browser`" if browser.name == "bundled" else ""))
+    bundled = browser.name == "bundled"
+    line("warn" if bundled else "ok", f"browser: {browser.describe()}"
+         + ("  -> install Chrome or Edge, or run `autocalc install-browser`" if bundled else ""))
     udd = auth.profile_dir()
-    print(f"[ok]   profile: {udd}" if udd.exists() else f"[warn] profile: none yet  -> {auth.LOGIN_HINT}")
+    line("ok", f"profile: {udd}") if udd.exists() else line("warn", f"profile: none yet  -> {auth.LOGIN_HINT}")
     try:
         auth.data_dir().mkdir(parents=True, exist_ok=True)
         if calc is None:
             calc = Calculator()
-        print(f"[ok]   cache/config: {calc.cache_dir}")
+        line("ok", f"cache/config: {calc.cache_dir}")
     except Exception as exc:  # noqa: BLE001
         ok = False
-        print(f"[FAIL] cache dir: {exc}")
+        line("fail", f"cache dir: {exc}")
+    if ui.fancy():
+        print("-" * 40 + "\n" + (ui.status("ok", "All checks passed" + (f" ({warns} warning{'s' * (warns != 1)})" if warns else ""))
+                                 if ok else ui.status("fail", "Some checks failed; see above")))
     return 0 if ok else 1
 
 
