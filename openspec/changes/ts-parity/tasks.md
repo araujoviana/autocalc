@@ -3,8 +3,8 @@
 ## 1. Baseline
 
 - [x] 1.1 Create branch `ts-parity` from `main` and merge `origin/bun-migration-review` into it. Verify: `cd experimental/bun && bun install --frozen-lockfile && bun run check && bun run test:offline` passes.
-- [ ] 1.2 Add `scripts/parity-registry.*` that dumps tool names and input schemas from Python (`src/autocalc/tools.py` + `workflow.py`) and from `experimental/bun/src/core/registry.ts`, and diffs them. Verify: it reports exactly the known gaps (six workflow tools, `export_quotes_xlsx`, TS-only `create_price_list`) and exits non-zero.
-- [ ] 1.3 Add a parity test-map listing each `tests/test_*.py` file and its TypeScript counterpart or "missing". Verify: running it prints one row per Python test file with no unknown entries.
+- [x] 1.2 Add `scripts/parity-registry.*` that dumps tool names and input schemas from Python (`src/autocalc/tools.py` + `workflow.py`) and from `experimental/bun/src/core/registry.ts`, and diffs them. Verify: it reports exactly the known gaps (six workflow tools, `export_quotes_xlsx`, TS-only `create_price_list`) and exits non-zero.
+- [x] 1.3 Add a parity test-map listing each `tests/test_*.py` file and its TypeScript counterpart or "missing". Verify: running it prints one row per Python test file with no unknown entries.
 
 ## 2. Core (ADR-0005, 0006, 0009, 0010, 0015)
 
