@@ -1,3 +1,4 @@
+import { CardInput } from "../schemas.ts";
 /** What publish_quote needs to know about each builder (ports Python's VERIFIED, spec_arg and spec_option). */
 import { supportedServices } from "./index.ts";
 
@@ -13,3 +14,11 @@ export const specOption = (service: string, spec: string) => service === "nat" ?
 /** Services whose form cannot express a quantity other than 1. */
 export const SINGLE_QUANTITY = new Set(["nat", "obs", "lts", "function", "elb", "cci", "nosql"]);
 export const modesOf = (service: string): string[] => supportedServices().find(entry => entry.service === service)?.modes ?? [];
+
+const NOT_OPTIONS = new Set(["service", "region", "billing", "quantity", "periods", "hours"]);
+/** The option names a card of this service may carry: the builder input minus what a requirement has itself. */
+export function legalOptions(service: string): string[] | null {
+  const entry = (CardInput as unknown as { options: Array<{ shape: Record<string, any> }> }).options.find(option => option.shape.service.def.values[0] === service);
+  return entry ? Object.keys(entry.shape).filter(key => !NOT_OPTIONS.has(key) && key !== SPEC_ARG[service]).sort() : null;
+}
+

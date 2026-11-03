@@ -4,6 +4,7 @@ import { formatDecimal } from "./quote/decimal.ts";
 import { decideMany, draftQuote } from "./quote/draft.ts";
 import { invalid, requirementFromJSON, type Draft } from "./quote/model.ts";
 import { rank } from "./quote/ranking.ts";
+import { legalOptions } from "./services/publication.ts";
 import type { ActionContext } from "./types.ts";
 
 const SHOWN = 5;
@@ -21,13 +22,16 @@ async function view(ctx: ActionContext, draft: Draft) {
 
 export async function draftQuoteTool(ctx: ActionContext, input: { customer: string; requirements: unknown[] }) {
   if (!Array.isArray(input.requirements) || input.requirements.length === 0) throw invalid("requirements must be a nonempty list.", "requirements");
-  // option names are not checked here yet: the schema-driven validator (task 4.3b) owns that
   const resolver = new RegionResolver(await ctx.catalog.regions());
   const reqs = input.requirements.map(raw => {
     if (raw && typeof raw === "object" && !Array.isArray(raw) && typeof (raw as { region?: unknown }).region === "string" && (raw as { region: string }).region)
       raw = { ...raw, region: resolver.resolve((raw as { region: string }).region) };
     return requirementFromJSON(raw);
   });
+  for (const r of reqs) {
+    const allowed = legalOptions(r.service), unknown = Object.keys(r.options).filter(name => allowed && !allowed.includes(name)).sort();
+    if (unknown.length) throw invalid(`${r.service} has no option '${unknown[0]}'.`, unknown[0], allowed!, "supported_services lists each service's options.");
+  }
   return view(ctx, await draftQuote(ctx.provider, input.customer, reqs, ctx.drafts));
 }
 

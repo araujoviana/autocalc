@@ -111,14 +111,18 @@ test("a builder that takes options cannot publish a card with a different spec t
   expect((await run(ctx, "inspect_draft", { draft_id: id })).state).toBe("ready");
 });
 
-test("options the builder does not take are refused before the page opens", async () => {
+test("options the builder does not take are refused at draft time, and again at publish for a draft saved by other means", async () => {
   const { ctx, seen } = await setup();
-  const id = await draft(ctx, req({ options: { sytem_disk: ["GPSSD", 40] } }));
-  const error = await rejects(run(ctx, "publish_quote", { draft_id: id, name: "n" }));
-  expect(error.message).toContain("Invalid ecs builder options");
+  expect((await rejects(run(ctx, "draft_quote", { customer: "acme", requirements: [req({ options: { sytem_disk: ["GPSSD", 40] } })] }))).message).toContain("no option 'sytem_disk'");
+  expect((await rejects(run(ctx, "draft_quote", { customer: "acme", requirements: [req({ options: { flavor: "x" } })] }))).message).toContain("no option 'flavor'");
+  for (const [options, text] of [[{ sytem_disk: ["GPSSD", 40] }, "Invalid ecs builder options"], [{ flavor: "x" }, "duplicate"]] as const) {
+    const id = await draft(ctx);
+    const saved = await ctx.drafts.load(id);
+    saved.requirements[0]!.options = options;
+    await ctx.drafts.save(saved);
+    expect((await rejects(run(ctx, "publish_quote", { draft_id: id, name: "n" }))).message).toContain(text);
+  }
   expect(seen.forms).toEqual([]);
-  const duplicate = await rejects(run(ctx, "publish_quote", { draft_id: await draft(ctx, req({ options: { flavor: "x" } })), name: "n" }));
-  expect(duplicate.message).toContain("duplicate");
 });
 
 test("the list name is validated and a quantity the form cannot express is refused", async () => {

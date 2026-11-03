@@ -133,3 +133,5 @@ export const ReviseQuoteInput = z.strictObject({ draft_id: Nonempty.describe("Dr
 export const DraftIdInput = z.strictObject({ draft_id: Nonempty.describe("Draft id") });
 export const PublishQuoteInput = z.strictObject({ draft_id: Nonempty.describe("Draft id"), name: Nonempty.describe("Saved list name, 1 to 50 characters"), settlement: z.enum(["total", "monthly"]).default("total").describe("Settlement display"), currency: Nonempty.default("USD").describe("Share link currency") });
 export const RecoverDraftInput = z.strictObject({ draft_id: Nonempty.describe("Draft id"), confirmed_no_remote_list: BooleanInput.describe("True only after checking saved lists"), justification: z.string().describe("How the user reconciled") });
+export const PlanQuoteInput = z.strictObject({ path: Nonempty.describe("Path of the quote YAML file") });
+export const ApplyQuoteInput = z.strictObject({ path: Nonempty.describe("Path of the quote YAML file"), name: z.string().default("").describe("List name; default: name in the file") });

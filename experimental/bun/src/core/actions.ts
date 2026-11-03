@@ -1,7 +1,8 @@
 import type { z } from "zod";
-import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput, PublishQuoteInput } from "./schemas.ts";
+import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, PlanQuoteInput, ApplyQuoteInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput, PublishQuoteInput } from "./schemas.ts";
 import { draftQuoteTool, reviseQuoteTool, listDraftsTool, inspectDraftTool, recoverDraftTool } from "./workflow.ts";
 import { publishQuoteTool } from "./publish.ts";
+import * as quoteFile from "./quote-file.ts";
 import { readPriceList, shareDetail } from "./lists.ts";
 import { CalculatorError } from "./errors.ts";
 import { RegionResolver } from "./regions.ts";
@@ -132,6 +133,8 @@ export const handlers = {
   draft_quote: handler(DraftQuoteInput, draftQuoteTool),
   revise_quote: handler(ReviseQuoteInput, reviseQuoteTool),
   publish_quote: handler(PublishQuoteInput, publishQuoteTool),
+  plan_quote: handler(PlanQuoteInput, async (ctx, input) => quoteFile.plan(ctx, await quoteFile.load(input.path))),
+  apply_quote: handler(ApplyQuoteInput, async (ctx, input) => quoteFile.apply(ctx, await quoteFile.load(input.path), input.name || undefined)),
   list_drafts: handler(EmptyInput, listDraftsTool),
   inspect_draft: handler(DraftIdInput, inspectDraftTool),
   recover_draft: handler(RecoverDraftInput, recoverDraftTool),
