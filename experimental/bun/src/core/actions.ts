@@ -1,6 +1,7 @@
 import type { z } from "zod";
-import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, CreateListInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput } from "./schemas.ts";
+import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, CreateListInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput, PublishQuoteInput } from "./schemas.ts";
 import { draftQuoteTool, reviseQuoteTool, listDraftsTool, inspectDraftTool, recoverDraftTool } from "./workflow.ts";
+import { publishQuoteTool } from "./publish.ts";
 import { readPriceList, shareDetail } from "./lists.ts";
 import { CalculatorError } from "./errors.ts";
 import { RegionResolver } from "./regions.ts";
@@ -162,6 +163,7 @@ export const handlers = {
   }),
   draft_quote: handler(DraftQuoteInput, draftQuoteTool),
   revise_quote: handler(ReviseQuoteInput, reviseQuoteTool),
+  publish_quote: handler(PublishQuoteInput, publishQuoteTool),
   list_drafts: handler(EmptyInput, listDraftsTool),
   inspect_draft: handler(DraftIdInput, inspectDraftTool),
   recover_draft: handler(RecoverDraftInput, recoverDraftTool),

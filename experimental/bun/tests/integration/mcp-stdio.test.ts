@@ -7,7 +7,7 @@ test("MCP starts over stdio and lists shared actions", async () => {
   await client.connect(transport);
   try {
     const tools = (await client.listTools()).tools;
-    expect(tools).toHaveLength(22);
+    expect(tools).toHaveLength(23);
     expect(tools.map(tool => tool.name)).toEqual(expect.arrayContaining(["read_price_list", "list_services", "list_regions"]));
     const search = tools.find(tool => tool.name === "search_skus");
     const limit = search?.inputSchema.properties?.limit;

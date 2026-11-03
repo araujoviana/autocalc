@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { randomBytes } from "node:crypto";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { CalculatorError } from "./errors.ts";
 import { roundPython } from "./rounding.ts";
 
@@ -33,13 +34,18 @@ export function productFromCatalog(raw: unknown, billing: "ondemand" | "monthly"
 export function stepper(measureId: number, value: number, name = "", plural = "") {
   return { measureId, measureValue: value, measureNameBeforeTrans: name, measurePluralNameBeforeTrans: plural, transRate: "", transTarget: "" };
 }
+const formOnly = new AsyncLocalStorage<true>();
+/** Run `work` so builders resolve catalog tokens and return the requested page state without rating anything. */
+export const inFormOnlyMode = <T>(work: () => Promise<T>): Promise<T> => formOnly.run(true, work);
+
 export async function assembleCard(input: { service: string; region: string; billing: "ondemand" | "monthly" | "yearly" | "ri"; periods: number; hours: number; quantity: number; products: Record<string, unknown>[]; description: string; rewrite: Record<string, unknown>; title?: string | undefined; buyUrl?: string; includeTime?: boolean; includeQuantity?: boolean; priceFn?: (products: Record<string, unknown>[]) => void }, rate: (body: Record<string, unknown>) => Promise<Record<string, unknown>>) {
   const charges = { ondemand: ["ONDEMAND", "ONDEMAND", 4, 4], monthly: ["PERIOD", "MONTHLY", 2, 20], yearly: ["PERIOD", "YEARLY", 3, 19], ri: ["RI", "RI", 3, 19] } as const;
   const [chargeMode, chargeModeName, periodType, measureId] = charges[input.billing];
   const timeTag = Date.now();
   const products = structuredClone(input.products);
   products.forEach((product, index) => { product.productNum ??= input.quantity; product.inquiryTag ??= "normal"; product.selfProductNum ??= 1; product.selectIndex = index; });
-  if (input.priceFn) input.priceFn(products);
+  if (formOnly.getStore()) { /* the page rates the card, not us (ADR-0016) */ }
+  else if (input.priceFn) input.priceFn(products);
   else if (input.billing === "ri") throw new CalculatorError("VALIDATION", "RI cards require an RI pricing function");
   else await rateProducts(products, input.region, input.billing, input.periods, timeTag, rate);
   const selected: Record<string, unknown> = { region: input.region, locationType: "commonAZ", chargeMode, tag: "general.online.portal", serviceCode: input.service, timeTag, chargeModeName, periodType, periodNum: input.billing === "ondemand" ? 1 : input.periods, subscriptionNum: 1, description: input.description, productAllInfos: products };

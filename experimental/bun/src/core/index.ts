@@ -24,6 +24,12 @@ import { DraftStore } from "./quote/store.ts";
 import { checkAvailability } from "./availability.ts";
 import { mkdir } from "node:fs/promises";
 import { ListReference } from "./schemas.ts";
+import { inFormOnlyMode } from "./cards.ts";
+import { buildCard as buildServiceCard } from "./services/index.ts";
+import { encodeCard } from "./page/encode.ts";
+import { editCheck } from "./page/edit.ts";
+import { publishChecked, verify } from "./gate.ts";
+import type { PublishPorts } from "./publish.ts";
 
 export function createCore(options: { reader?: ActionContext["reader"]; catalogReader?: ConstructorParameters<typeof Catalog>[0]; rating?: ActionContext["rating"]; createList?: ActionContext["createList"]; listSession?: ActionContext["lists"]; cacheDir?: string; profile?: string; headed?: boolean } = {}) {
   const transport = options.reader && options.catalogReader && options.rating ? undefined : new PublicTransport(new CatalogCache(options.cacheDir ?? process.env.AUTOCALC_CACHE ?? join(homedir(), ".cache", "autocalc")));
@@ -34,7 +40,15 @@ export function createCore(options: { reader?: ActionContext["reader"]; catalogR
   const lists = options.listSession ?? new ListSession((method, url, body) => auth.call(method, url, body), () => auth.refresh());
   const catalog = new Catalog(options.catalogReader ?? transport!);
   const provider = new HuaweiProvider({ skus: (service, region) => catalog.skus(service, region), checkMode: async (service, region, billing) => checkAvailability(await catalog.menu(), service, region, billing as "ondemand" | "monthly" | "yearly") });
-  const context: ActionContext = { provider, drafts: new DraftStore(), reader: options.reader ?? transport!, catalog, rating: options.rating ?? (body => inquiry(value => transport!.post(RATE, value), body)), createList: options.createList ?? (payload => lists.create(payload)), lists, auth };
+  const rating: ActionContext["rating"] = options.rating ?? (body => inquiry(value => transport!.post(RATE, value), body));
+  const reader = options.reader ?? transport!;
+  const publish: PublishPorts = {
+    form: async input => (await inFormOnlyMode(() => buildServiceCard(input as never, { productInfo: (service, region) => catalog.productInfo(service, region), rate: async () => { throw new CalculatorError("AUTOCALC", "A form-only build must not rate."); } }))).rewriteValue as Record<string, unknown>,
+    encode: (service, rewriteValue) => encodeCard(browser, service, rewriteValue),
+    publish: (name, cards, publishOptions) => publishChecked(name, cards, { ...publishOptions, lists, check: (listId, expected) => verify(listId, { reader, rate: rating, edit: id => editCheck(reader, browser, id) }, expected) }),
+    liveVersion: async () => { try { return /CBC-PortalCalculator\/([0-9.]+)/.exec(await (await fetch(PAGE, { signal: AbortSignal.timeout(20000) })).text())?.[1]; } catch { return undefined; } },
+  };
+  const context: ActionContext = { publish, provider, drafts: new DraftStore(), reader: options.reader ?? transport!, catalog, rating: options.rating ?? (body => inquiry(value => transport!.post(RATE, value), body)), createList: options.createList ?? (payload => lists.create(payload)), lists, auth };
   const temporaryAuth = new Set<AuthManager>();
   const shutdown = new AbortController();
   let closed = false, closing: Promise<void> | undefined;

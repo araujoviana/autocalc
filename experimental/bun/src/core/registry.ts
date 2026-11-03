@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, CreateListInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput } from "./schemas.ts";
+import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, CreateListInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput, PublishQuoteInput } from "./schemas.ts";
 import { CalculatorError } from "./errors.ts";
 
 import type { ActionContext } from "./types.ts";
@@ -32,6 +32,7 @@ export const registry = {
   duplicate_price_list: action("Copy a price list, optionally renaming the copy", DuplicateListInput, "duplicate", handlers.duplicate_price_list, false),
   draft_quote: action("Start a quote from requirements; exact matches are confirmed, others list candidates", DraftQuoteInput, "draft-quote", handlers.draft_quote, false),
   revise_quote: action("Record the user's choices for pending requirements", ReviseQuoteInput, "revise-quote", handlers.revise_quote, false),
+  publish_quote: action("Publish a fully decided draft: builds the cards, saves the list, verifies it on the website and returns the link", PublishQuoteInput, "publish-quote", handlers.publish_quote, false),
   list_drafts: action("List local quote drafts", EmptyInput, "list-drafts", handlers.list_drafts),
   inspect_draft: action("Inspect a draft's publication state", DraftIdInput, "inspect-draft", handlers.inspect_draft),
   recover_draft: action("Reset an interrupted publication after confirming no remote list exists", RecoverDraftInput, "recover-draft", handlers.recover_draft, false),
