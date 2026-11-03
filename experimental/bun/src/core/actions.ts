@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, CreateListInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput, PublishQuoteInput } from "./schemas.ts";
+import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput, PublishQuoteInput } from "./schemas.ts";
 import { draftQuoteTool, reviseQuoteTool, listDraftsTool, inspectDraftTool, recoverDraftTool } from "./workflow.ts";
 import { publishQuoteTool } from "./publish.ts";
 import { readPriceList, shareDetail } from "./lists.ts";
@@ -119,38 +119,6 @@ export const handlers = {
     return { ...out, currency, rate };
   }),
   supported_services: handler(EmptyInput, async () => supportedServices()),
-  create_price_list: handler(CreateListInput, async (ctx, input) => {
-    const menu = await ctx.catalog.menu();
-    const resolver = new RegionResolver(menu.global);
-    const cards: Array<Awaited<ReturnType<typeof buildCard>>> = [];
-    const warnings: string[] = [];
-    for (const [index, item] of input.items.entries()) {
-      try {
-      const region = resolver.resolve(item.region);
-      checkAvailability(menu, item.service, region, item.billing);
-      const card = await buildCard({ ...item, region }, { productInfo: (service, region) => ctx.catalog.productInfo(service, region), rate: ctx.rating });
-      const products = card.selectedProduct.productAllInfos;
-      if (item.service === "ecs" && item.billing === "ri" && Array.isArray(products) && products.some((product: Record<string, unknown>) => product._productType && typeof product.productNum === "number" && product.productNum < item.quantity)) warnings.push("An ECS RI disk quantity is lower than the requested VM quantity; inspect the disk cost.");
-      if (item.service === "redis") warnings.push("Redis Edit form fidelity is not yet verified against a saved card.");
-      if (item.service === "function") warnings.push("FunctionGraph compute pricing may be unavailable upstream; inspect the compute line.");
-      cards.push(card);
-      } catch (error) {
-        if (!(error instanceof CalculatorError)) throw error;
-        throw new CalculatorError(error.code, error.message, error.hint, { ...error.details, index, ...(item.title ? { title: item.title } : {}) });
-      }
-    }
-    const orderedCards = orderObsCards(input.items, cards);
-    if (orderedCards.some((card, index) => card !== cards[index])) warnings.push("OBS cards were reordered to reduce calculator Edit state leakage; verify Edit results before relying on the list.");
-    if (input.items.some(item => item.service === "obs" && !item.package)) warnings.push("The calculator has a known OBS Edit defect; saved storage capacity can reset when edited. Verify the stored configuration before and after Edit.");
-    const payload = sharePayload(input.name, orderedCards, input.settlement);
-    const totals = payload.totalPrice;
-    const summary = orderedCards.map(card => { const selected = card.selectedProduct; return { service: selected.serviceCode, title: selected._customTitle, mode: selected.chargeModeName, amount: selected.amount }; });
-    const result = { name: input.name, dry_run: input.dry_run, total_usd: totals.amount, items: summary, warnings, settlement: input.settlement, currency: input.currency };
-    if (input.dry_run) return result;
-    ensureNotCancelled(ctx);
-    const id = await ctx.createList(payload);
-    return { ...result, id, url: shareLink(id, input.currency) };
-  }),
   list_my_price_lists: handler(EmptyInput, async ctx => (await ctx.lists.lists()).map(raw => { const row = raw && typeof raw === "object" ? raw as Record<string, unknown> : {}; const id = String(row.key ?? ""); return { name: row.name ?? null, id, url: shareLink(id), total: row.totalPrice ?? null, updated: row.updateTime ?? null }; })),
   delete_price_list: handler(ListReferenceInput, async (ctx, input) => { ensureNotCancelled(ctx); await ctx.lists.delete(input.url_or_id); return { deleted: input.url_or_id }; }),
   rename_price_list: handler(RenameListInput, async (ctx, input) => { const detail = await shareDetail(ctx.reader, input.url_or_id); ensureNotCancelled(ctx); await ctx.lists.update(input.url_or_id, { ...detail, name: input.new_name }); return { id: input.url_or_id, name: input.new_name }; }),

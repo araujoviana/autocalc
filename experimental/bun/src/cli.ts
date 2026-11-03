@@ -52,16 +52,8 @@ export async function main(argv: string[]): Promise<number> {
   });
   program.command("supported").description("List supported card builders").action(async () => { await print("supported_services", {}); });
   program.command("describe").description("Describe service availability").argument("<service>").option("--region <name>").action(async (service: string, options: { region?: string }) => { await print("describe_service", { service, ...(options.region === undefined ? {} : { region: options.region }) }); });
-  program.command("create").description("Build or save a price list").argument("<name>").requiredOption("--items <file>", "JSON card array, or - for stdin").option("--dry-run", "Build without saving").option("--currency <currency>").option("--settlement <mode>").action(async (name: string, options: { items: string; dryRun?: boolean; currency?: string; settlement?: string }) => {
-    const items = await readItems(options.items);
-    await print("create_price_list", { name, items, dry_run: options.dryRun ?? false, ...(options.currency === undefined ? {} : { currency: options.currency }), ...(options.settlement === undefined ? {} : { settlement: options.settlement }) });
-  });
   program.command("read").description("Read a shared price list").argument("<url_or_id>").action(async (urlOrId: string) => {
     await print("read_price_list", { url_or_id: urlOrId });
-  });
-  program.command("update").description("Replace the cards in a saved price list").argument("<url_or_id>").requiredOption("--items <file>", "JSON card array, or - for stdin").option("--dry-run", "Build without saving").action(async (urlOrId: string, options: { items: string; dryRun?: boolean }) => {
-    const result = await getCore().updatePriceList(urlOrId, await readItems(options.items), { dryRun: !!options.dryRun });
-    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   });
   program.command("validate").description("Validate a shared price list").argument("<url_or_id>").action(async (urlOrId: string) => { const result = await getCore().validate(urlOrId); process.stdout.write(`${JSON.stringify(result, null, 2)}\n`); if (!result.ok) commandFailed = true; });
   program.command("render-check").description("Check anonymous calculator rendering").argument("<url_or_id>").action(async (urlOrId: string) => { const result = await getCore().renderCheck(urlOrId); process.stdout.write(`${JSON.stringify(result, null, 2)}\n`); if (!result.ok) commandFailed = true; });

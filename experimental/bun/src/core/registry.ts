@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, CreateListInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput, PublishQuoteInput } from "./schemas.ts";
+import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput, PublishQuoteInput } from "./schemas.ts";
 import { CalculatorError } from "./errors.ts";
 
 import type { ActionContext } from "./types.ts";
@@ -25,7 +25,6 @@ export const registry = {
   compare_regions: action("Compare prices across regions", CompareRegionsInput, "compare-regions", handlers.compare_regions),
   compare_modes: action("Compare billing modes", CompareModesInput, "compare-modes", handlers.compare_modes),
   supported_services: action("List supported card builders and billing modes", EmptyInput, "supported", handlers.supported_services),
-  create_price_list: action("Build calculator cards and optionally save a price list", CreateListInput, "create", handlers.create_price_list, false),
   list_my_price_lists: action("List saved price lists in the current account", EmptyInput, "lists", handlers.list_my_price_lists),
   delete_price_list: action("Delete the specified price list; confirm with the user first", ListReferenceInput, "delete", handlers.delete_price_list, false, true),
   rename_price_list: action("Rename a saved price list", RenameListInput, "rename", handlers.rename_price_list, false),

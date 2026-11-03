@@ -40,5 +40,6 @@ Each item is either assigned to the change that will close it or left unschedule
 | Restore publication for LTS storage/retention, FunctionGraph compute, CCE turbo and the default-only recipes once their control mappings and prices are verified ([audit remediation](how-to/audit-remediation.md)) | unscheduled |
 | Profile browser reuse and memory under concurrent tool calls | unscheduled |
 | The calculator's EU and China sites | unscheduled, after v1 |
+| Update a saved list in place from a quote (TS `update` was removed in ts-parity 4.3: it saved without the publish gate; needs a gated, rollback-safe design and the share-link spike) | unscheduled |
 
 When an item is done, remove its row in the same commit as the change that closes it.

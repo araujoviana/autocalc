@@ -4,4 +4,4 @@ import type { AuthManager } from "./auth.ts";
 import type { Provider } from "./quote/provider.ts";
 import type { DraftStore } from "./quote/store.ts";
 import type { PublishPorts } from "./publish.ts";
-export interface ActionContext { reader: { getUncached(url: string): Promise<unknown> }; catalog: Catalog; rating: (body: Record<string, unknown>) => Promise<Record<string, unknown>>; createList: (payload: Record<string, unknown>) => Promise<string>; lists: Pick<ListSession, "lists" | "create" | "update" | "delete" | "copy">; auth: Pick<AuthManager, "status" | "login">; provider: Provider; drafts: DraftStore; publish?: PublishPorts; signal?: AbortSignal }
+export interface ActionContext { reader: { getUncached(url: string): Promise<unknown> }; catalog: Catalog; rating: (body: Record<string, unknown>) => Promise<Record<string, unknown>>; lists: Pick<ListSession, "lists" | "create" | "update" | "delete" | "copy">; auth: Pick<AuthManager, "status" | "login">; provider: Provider; drafts: DraftStore; publish?: PublishPorts; signal?: AbortSignal }

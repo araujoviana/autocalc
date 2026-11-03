@@ -9,7 +9,7 @@ import { Catalog } from "./catalog.ts";
 import { abortable, inquiry } from "./pricing.ts";
 import { RATE } from "./endpoints.ts";
 import { AuthManager } from "./auth.ts";
-import { ListSession, publishLegacyEcs, shareDetail } from "./lists.ts";
+import { ListSession, shareDetail } from "./lists.ts";
 import { profilePaths, resolveConfig } from "./config.ts";
 import { validateList } from "./validate.ts";
 import { BrowserManager } from "./browser.ts";
@@ -31,7 +31,7 @@ import { editCheck } from "./page/edit.ts";
 import { publishChecked, verify } from "./gate.ts";
 import type { PublishPorts } from "./publish.ts";
 
-export function createCore(options: { reader?: ActionContext["reader"]; catalogReader?: ConstructorParameters<typeof Catalog>[0]; rating?: ActionContext["rating"]; createList?: ActionContext["createList"]; listSession?: ActionContext["lists"]; cacheDir?: string; profile?: string; headed?: boolean } = {}) {
+export function createCore(options: { reader?: ActionContext["reader"]; catalogReader?: ConstructorParameters<typeof Catalog>[0]; rating?: ActionContext["rating"]; listSession?: ActionContext["lists"]; cacheDir?: string; profile?: string; headed?: boolean } = {}) {
   const transport = options.reader && options.catalogReader && options.rating ? undefined : new PublicTransport(new CatalogCache(options.cacheDir ?? process.env.AUTOCALC_CACHE ?? join(homedir(), ".cache", "autocalc")));
   const config = resolveConfig({ ...(options.profile ? { profile: options.profile } : {}), ...(options.headed === undefined ? {} : { headed: options.headed }) });
   const paths = profilePaths(config.profile!);
@@ -48,7 +48,7 @@ export function createCore(options: { reader?: ActionContext["reader"]; catalogR
     publish: (name, cards, publishOptions) => publishChecked(name, cards, { ...publishOptions, lists, check: (listId, expected) => verify(listId, { reader, rate: rating, edit: id => editCheck(reader, browser, id) }, expected) }),
     liveVersion: async () => { try { return /CBC-PortalCalculator\/([0-9.]+)/.exec(await (await fetch(PAGE, { signal: AbortSignal.timeout(20000) })).text())?.[1]; } catch { return undefined; } },
   };
-  const context: ActionContext = { publish, provider, drafts: new DraftStore(), reader: options.reader ?? transport!, catalog, rating: options.rating ?? (body => inquiry(value => transport!.post(RATE, value), body)), createList: options.createList ?? (payload => lists.create(payload)), lists, auth };
+  const context: ActionContext = { publish, provider, drafts: new DraftStore(), reader: options.reader ?? transport!, catalog, rating: options.rating ?? (body => inquiry(value => transport!.post(RATE, value), body)), lists, auth };
   const temporaryAuth = new Set<AuthManager>();
   const shutdown = new AbortController();
   let closed = false, closing: Promise<void> | undefined;
@@ -63,25 +63,6 @@ export function createCore(options: { reader?: ActionContext["reader"]; catalogR
       const signal = invokeOptions.signal ? AbortSignal.any([shutdown.signal, invokeOptions.signal]) : shutdown.signal;
       if (signal.aborted) throw new CalculatorError("CANCELLED", "Request cancelled");
       return registry[name as keyof typeof registry].invoke(withSignal(context, signal), rawInput);
-    },
-    async updatePriceList(reference: string, items: unknown, options: { dryRun?: boolean } = {}) {
-      ensureOpen();
-      const parsed = ListReference.safeParse(reference);
-      if (!parsed.success) throw new CalculatorError("VALIDATION", "Invalid list reference");
-      const id = parsed.data;
-      const detail = await shareDetail(context.reader, id);
-      if (typeof detail.name !== "string" || !detail.name) throw new CalculatorError("UNEXPECTED_RESPONSE", "Saved list has no name");
-      let payload: Record<string, unknown> | undefined;
-      const scoped = { ...context, createList: async (value: Record<string, unknown>) => { payload = value; return id; } };
-      const result = await registry.create_price_list.invoke(withSignal(scoped, shutdown.signal), { name: detail.name, items, settlement: detail.billingMode === "cart.shareList.billingModeMonth" ? "monthly" : "total" }) as Record<string, unknown>;
-      if (!payload) throw new CalculatorError("UNEXPECTED_RESPONSE", "Could not build update payload");
-      if (shutdown.signal.aborted) throw new CalculatorError("CANCELLED", "Request cancelled");
-      if (!options.dryRun) await lists.update(id, { ...detail, ...payload });
-      return { ...result, id, dry_run: !!options.dryRun };
-    },
-    async publishLegacyEcs(name: string, items: unknown) {
-      ensureOpen();
-      return publishLegacyEcs(name, items, input => registry.create_price_list.invoke(withSignal(context, shutdown.signal), input));
     },
     async logout() { ensureOpen(); return auth.logout(); },
     async validate(reference: string) { ensureOpen(); return validateList(await shareDetail(context.reader, reference)); },

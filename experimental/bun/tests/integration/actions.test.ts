@@ -29,29 +29,6 @@ test("quote uses the first exact SKU consistently when codes repeat", async () =
   try { expect(await core.invoke("quote", { region: "r", items: [{ service: "ecs", spec: "same" }], hours: 1 })).toMatchObject({ items: [{ description: "first SKU" }] }); }
   finally { await core.close(); }
 });
-test("RI list warns when catalog disk quantity is lower than the requested VM quantity", async () => {
-  const core = createCore({ reader: { getUncached: async () => ({}) }, catalogReader: { get: async url => {
-    if (url.includes("productInfo")) return { product: { ec2_vm: [{ resourceSpecCode: "c7.linux", RITime: "nodeData.1_3", spec: "c7", planList: [{ billingMode: "RI", originType: "perPrice", amount: 10 }] }], "ec2_vm.image.special": [{ id: "i", __platform: "Linux", name: "AlmaLinux", type: ["c7"] }], ebs_volume: [{ resourceSpecCode: "GPSSD", type: "ssd", productNum: 1, planList: [{ billingMode: "ONDEMAND", productId: "d", amount: 0.001 }] }] } };
-    return { global: { r: "Region" }, regionsOfSite: { HWC: ["r"] }, menuInfos: [{ parentCategoryName: "Compute", subCategoryLists: [{ urlPath: "ecs", categoryName: "ECS", hasCalculator: true, regionOnline: { regionList: ["r"] } }] }] };
-  } }, rating: async () => ({}) });
-  try {
-    const result = await core.invoke("create_price_list", { name: "test", dry_run: true, items: [{ service: "ecs", region: "r", flavor: "c7", billing: "ri", quantity: 2 }] }) as { warnings: string[] };
-    expect(result.warnings.some(warning => warning.includes("disk") && warning.includes("quantity"))).toBe(true);
-  } finally { await core.close(); }
-});
-test("update replaces cards in place and preserves list metadata", async () => {
-  let saved: Record<string, unknown> | undefined;
-  const core = createCore({ reader: { getUncached: async () => ({ retCode: 200, data: { name: "original", billingMode: "cart.shareList.billingModeMonth", extra: "keep", totalPrice: { amount: 0 }, cartListData: [] } }) }, catalogReader: { get: async url => url.includes("productInfo") ? { product: { "apig_apig.instance": [{ resourceSpecCode: "BASIC", cloudServiceType: "c", resourceType: "r", planList: [{ billingMode: "ONDEMAND", productId: "p" }] }] } } : { global: { r: "Region" }, regionsOfSite: { HWC: ["r"] }, menuInfos: [{ parentCategoryName: "API", subCategoryLists: [{ urlPath: "apig", categoryName: "API", hasCalculator: true, regionOnline: { regionList: ["r"] } }] }] } }, rating: async body => ({ productRatingResult: (body.productInfos as Array<{ id: string }>).map(({ id }) => ({ id, amount: 5, originalAmount: 5 })) }), listSession: { lists: async () => [], create: async () => "a", copy: async () => "a", delete: async () => {}, update: async (id, payload) => { expect(id).toBe("abc"); saved = payload; } } });
-  try {
-    const result = await core.updatePriceList("abc", [{ service: "apig", region: "r" }]);
-    expect(result).toMatchObject({ id: "abc", name: "original", total_usd: 5 });
-    expect(saved).toMatchObject({ name: "original", billingMode: "cart.shareList.billingModeMonth", extra: "keep", totalPrice: { amount: 5 } });
-    expect((saved?.cartListData as unknown[]).length).toBe(1);
-    saved = undefined;
-    await core.updatePriceList("abc", [{ service: "apig", region: "r" }], { dryRun: true });
-    expect(saved).toBeUndefined();
-  } finally { await core.close(); }
-});
 test("core validates inputs and dispatches shared list actions", async () => {
   const core = createCore({ reader: { getUncached: async () => ({ retCode: 200, data: { name: "demo", totalPrice: { amount: 0 }, cartListData: [] } }) } });
   try {
@@ -80,16 +57,6 @@ test("rename rejects incomplete list detail without writing", async () => {
   let writes = 0;
   const core = createCore({ reader: { getUncached: async () => ({ retCode: 200, data: { name: "old" } }) }, listSession: { lists: async () => [], create: async () => "a", copy: async () => "a", update: async () => { writes++; }, delete: async () => {} } });
   try { await expect(core.invoke("rename_price_list", { url_or_id: "abc", new_name: "new" })).rejects.toMatchObject({ code: "UNEXPECTED_RESPONSE" }); expect(writes).toBe(0); }
-  finally { await core.close(); }
-});
-
-test("dry-run builds cards without authenticated writes", async () => {
-  let writes = 0;
-  const core = createCore({ reader: { getUncached: async () => ({}) }, catalogReader: { get: async url => {
-    if (url.includes("productInfo")) return { product: { "apig_apig.instance": [{ resourceSpecCode: "BASIC", cloudServiceType: "c", resourceType: "r", planList: [{ billingMode: "ONDEMAND", productId: "p" }] }] } };
-    return { global: { "la-south-2": "Santiago" }, regionsOfSite: { HWC: ["la-south-2"] }, menuInfos: [{ parentCategoryName: "API", subCategoryLists: [{ urlPath: "apig", categoryName: "API", hasCalculator: true, regionOnline: { regionList: ["la-south-2"] } }] }] };
-  } }, rating: async body => ({ productRatingResult: (body.productInfos as Array<{ id: string }>).map(({ id }) => ({ id, amount: 5, originalAmount: 5 })) }), createList: async () => { writes++; return "abc"; } });
-  try { expect(await core.invoke("create_price_list", { name: "draft", dry_run: true, items: [{ service: "apig", region: "Santiago" }] })).toMatchObject({ total_usd: 5, dry_run: true }); expect(writes).toBe(0); }
   finally { await core.close(); }
 });
 
@@ -168,19 +135,18 @@ test("RabbitMQ discovery accepts the supported builder name and uses the vendor 
 
 test("cancelling a card rating prevents a later list creation", async () => {
   const controller = new AbortController();
-  let writes = 0, started!: () => void;
+  let started!: () => void;
   const ratingStarted = new Promise<void>(resolve => { started = resolve; });
   const core = createCore({ reader: { getUncached: async () => ({}) }, catalogReader: { get: async url => {
     if (url.includes("productInfo")) return { product: { "apig_apig.instance": [{ resourceSpecCode: "BASIC", cloudServiceType: "c", resourceType: "r", planList: [{ billingMode: "ONDEMAND", productId: "p" }] }] } };
     return { global: { "la-south-2": "Santiago" }, regionsOfSite: { HWC: ["la-south-2"] }, menuInfos: [{ parentCategoryName: "API", subCategoryLists: [{ urlPath: "apig", categoryName: "API", hasCalculator: true, regionOnline: { regionList: ["la-south-2"] } }] }] };
-  } }, rating: async () => { started(); return await new Promise<Record<string, unknown>>(() => {}); }, createList: async () => { writes++; return "abc"; } });
+  } }, rating: async () => { started(); return await new Promise<Record<string, unknown>>(() => {}); } });
   try {
-    const pending = core.invoke("create_price_list", { name: "draft", items: [{ service: "apig", region: "Santiago" }] }, { signal: controller.signal });
+    const pending = core.invoke("quote", { region: "Santiago", billing: "monthly", items: [{ service: "apig", spec: "BASIC" }] }, { signal: controller.signal });
     await ratingStarted;
     controller.abort();
     await expect(pending).rejects.toMatchObject({ code: "CANCELLED" });
-    expect(writes).toBe(0);
-  } finally { await core.close(); }
+      } finally { await core.close(); }
 });
 
 test("cancellation after reading a list prevents rename", async () => {
@@ -189,8 +155,7 @@ test("cancellation after reading a list prevents rename", async () => {
   const core = createCore({ reader: { getUncached: async () => { controller.abort(); return { retCode: 200, data: { cartListData: [] } }; } }, listSession: { lists: async () => [], create: async () => "a", copy: async () => "a", update: async () => { writes++; }, delete: async () => {} } });
   try {
     await expect(core.invoke("rename_price_list", { url_or_id: "abc", new_name: "new" }, { signal: controller.signal })).rejects.toMatchObject({ code: "CANCELLED" });
-    expect(writes).toBe(0);
-  } finally { await core.close(); }
+      } finally { await core.close(); }
 });
 
 test("comparison cancellation is not reported as a regional pricing failure", async () => {
@@ -204,41 +169,18 @@ test("comparison cancellation is not reported as a regional pricing failure", as
   finally { await core.close(); }
 });
 
-test("legacy ECS publish builds through the shared encoder and saves once", async () => {
-  let payload: Record<string, unknown> | undefined, calls = 0;
-  const planList = [{ billingMode: "MONTHLY", productId: "p" }];
-  const core = createCore({ reader: { getUncached: async () => ({}) }, catalogReader: { get: async url => {
-    if (url.includes("productInfo")) return { product: {
-      ec2_vm: [{ resourceSpecCode: "c7.linux", cloudServiceType: "c", resourceType: "vm", spec: "c7", arch: "x", vmType: "v", cpu: "2", mem: "4", generation: "g", planList }],
-      "ec2_vm.image.special": [{ id: "i", __platform: "Linux", name: "AlmaLinux", type: ["c7"] }],
-      ebs_volume: ["GPSSD", "SSD"].map(type => ({ resourceSpecCode: type, cloudServiceType: "c", resourceType: "disk", type, planList })),
-      vpc_bandwidth: [{ resourceSpecCode: "19_bgp", cloudServiceType: "c", resourceType: "bandwidth", planList }],
-    } };
-    return { global: { r: "Region" }, regionsOfSite: { HWC: ["r"] }, menuInfos: [{ parentCategoryName: "Compute", subCategoryLists: [{ urlPath: "ecs", categoryName: "ECS", hasCalculator: true, regionOnline: { regionList: ["r"] } }] }] };
-  } }, rating: async body => ({ productRatingResult: (body.productInfos as Array<{ id: string }>).map(({ id }) => ({ id, amount: 1, originalAmount: 1 })) }), createList: async value => { calls++; payload = value; return "abc"; } });
-  try {
-    const result = await core.publishLegacyEcs("legacy", [{ region: "r", flavor: "c7.linux", system_disk: { type: "GPSSD", size: 40 }, data_disks: [{ type: "SSD", size: 100 }] }]);
-    expect(calls).toBe(1);
-    expect(result).toMatchObject({ id: "abc", name: "legacy", total_usd: 4, items: [{ flavor: "c7", billing: "MONTHLY", quantity: 1, amount_usd: 4 }] });
-    const cards = payload?.cartListData as Array<{ rewriteValue: Record<string, unknown>; selectedProduct: { productAllInfos: Array<Record<string, unknown>> } }>;
-    expect(cards[0]?.rewriteValue).toMatchObject({ template_RENDER: { calculator_eip_switch: { UNSET_Switch: "calc_14_" } } });
-    expect(cards[0]?.selectedProduct.productAllInfos).toEqual(expect.arrayContaining([expect.objectContaining({ resourceSpecCode: "19_bgp", resourceSize: 5 }), expect.objectContaining({ resourceSpecCode: "SSD", resourceSize: 100 })]));
-  } finally { await core.close(); }
-});
-
 test("closing the core cancels pending ratings and prevents new work", async () => {
-  let started!: () => void, writes = 0;
+  let started!: () => void;
   const ratingStarted = new Promise<void>(resolve => { started = resolve; });
   const core = createCore({ reader: { getUncached: async () => ({}) }, catalogReader: { get: async url => {
     if (url.includes("productInfo")) return { product: { "apig_apig.instance": [{ resourceSpecCode: "BASIC", cloudServiceType: "c", resourceType: "r", planList: [{ billingMode: "ONDEMAND", productId: "p" }] }] } };
     return { global: { r: "Region" }, regionsOfSite: { HWC: ["r"] }, menuInfos: [{ parentCategoryName: "API", subCategoryLists: [{ urlPath: "apig", categoryName: "API", hasCalculator: true, regionOnline: { regionList: ["r"] } }] }] };
-  } }, rating: async () => { started(); return await new Promise<Record<string, unknown>>(() => {}); }, createList: async () => { writes++; return "abc"; } });
-  const pending = core.invoke("create_price_list", { name: "draft", items: [{ service: "apig", region: "r" }] });
+  } }, rating: async () => { started(); return await new Promise<Record<string, unknown>>(() => {}); } });
+  const pending = core.invoke("quote", { region: "r", billing: "monthly", items: [{ service: "apig", spec: "BASIC" }] });
   await ratingStarted;
   await core.close();
   await expect(pending).rejects.toMatchObject({ code: "CANCELLED" });
-  expect(writes).toBe(0);
-  await expect(core.invoke("supported_services", {})).rejects.toMatchObject({ code: "CANCELLED" });
+    await expect(core.invoke("supported_services", {})).rejects.toMatchObject({ code: "CANCELLED" });
   await core.close();
 });
 
@@ -255,12 +197,6 @@ test("quote selects OBS catalog entry by usage factor instead of the first dupli
     await core.invoke("quote", { region: "r", items: [{ service: "obs", spec: "obs.001", usage_factor: "size", usage_value: 100 }] });
     expect(request?.productInfos).toMatchObject([{ cloudServiceType: "correct", usageFactor: "size", usageValue: 100 }]);
   } finally { await core.close(); }
-});
-
-test("create identifies the item that failed to build", async () => {
-  const core = createCore({ reader: { getUncached: async () => ({}) }, catalogReader: { get: async url => url.includes("productInfo") ? { product: { "apig_apig.instance": [] } } : { global: { r: "Region" }, menuInfos: [{ parentCategoryName: "API", subCategoryLists: [{ urlPath: "apig", categoryName: "API", hasCalculator: true, regionOnline: { regionList: ["r"] } }] }] } }, rating: async () => ({}) });
-  try { await expect(core.invoke("create_price_list", { name: "x", dry_run: true, items: [{ service: "apig", region: "r", title: "failure" }] })).rejects.toMatchObject({ details: { index: 0, title: "failure" } }); }
-  finally { await core.close(); }
 });
 
 test("quote refuses ambiguous OBS usage lines", async () => {

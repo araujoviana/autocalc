@@ -43,18 +43,3 @@ test("saved-list business codes retain their mapped domain errors", async () => 
   expect(await ok.lists()).toEqual([]);
 });
 
-test("legacy ECS publish preserves bandwidth defaults and both disk forms", async () => {
-  const { publishLegacyEcs } = await import("../../src/core/lists.ts");
-  let calls = 0;
-  const result = await publishLegacyEcs("legacy", [
-    { region: "r", flavor: "c7.linux", system_disk: { type: "GPSSD", size: "40" }, data_disks: [["SSD", 100]], quantity: 2 },
-    { region: "r", flavor: "c7.win", bandwidth_mbit: null },
-  ], async input => {
-    calls++;
-    expect(input.items[0]).toMatchObject({ service: "ecs", bandwidth_mbit: 5, system_disk: ["GPSSD", 40], data_disks: [["SSD", 100]] });
-    expect(input.items[1]).not.toHaveProperty("bandwidth_mbit");
-    return { id: "abc", url: "https://example.test/share", total_usd: 30, items: [{ mode: "MONTHLY", amount: 20 }, { mode: "MONTHLY", amount: 10 }] };
-  });
-  expect(calls).toBe(1);
-  expect(result).toMatchObject({ id: "abc", total_usd: 30, items: [{ flavor: "c7", billing: "MONTHLY", quantity: 2, amount_usd: 20 }, { flavor: "c7", quantity: 1, amount_usd: 10 }] });
-});
