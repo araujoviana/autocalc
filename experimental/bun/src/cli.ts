@@ -46,6 +46,10 @@ export async function main(argv: string[]): Promise<number> {
     } else process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   });
   program.command("convert").description("Convert a USD amount").argument("<amount>").argument("<currency>").action(async (amount: string, currency: string) => { await print("convert_currency", { amount_usd: amount, currency }); });
+  program.command("page-controls").description("List the controls of a service's calculator page").argument("<service>").action(async (service: string) => {
+    const { BrowserManager } = await import("./core/browser.ts"), { pageControls } = await import("./core/page/controls.ts"), manager = new BrowserManager({ headed: process.env.AUTOCALC_PAGE_HEADED === "1" || !!program.opts<{ headed?: boolean }>().headed });
+    try { process.stdout.write(`${JSON.stringify(await pageControls(manager, service), null, 2)}\n`); } finally { await manager.close(); }
+  });
   program.command("supported").description("List supported card builders").action(async () => { await print("supported_services", {}); });
   program.command("describe").description("Describe service availability").argument("<service>").option("--region <name>").action(async (service: string, options: { region?: string }) => { await print("describe_service", { service, ...(options.region === undefined ? {} : { region: options.region }) }); });
   program.command("create").description("Build or save a price list").argument("<name>").requiredOption("--items <file>", "JSON card array, or - for stdin").option("--dry-run", "Build without saving").option("--currency <currency>").option("--settlement <mode>").action(async (name: string, options: { items: string; dryRun?: boolean; currency?: string; settlement?: string }) => {
