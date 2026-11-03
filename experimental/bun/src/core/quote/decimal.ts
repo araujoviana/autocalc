@@ -24,3 +24,21 @@ export function formatDecimal(d: Dec): string {
   const sign = n < 0n ? "-" : "", digits = (n < 0n ? -n : n).toString().padStart(s + 1, "0");
   return s === 0 ? sign + digits : `${sign}${digits.slice(0, -s)}.${digits.slice(-s)}`;
 }
+
+export function addDecimal(a: Dec, b: Dec): Dec { const [x, y, s] = align(a, b); return { n: x + y, s }; }
+
+/** Round half away from zero to two places, like Python's quantize(Decimal("0.01"), ROUND_HALF_UP). */
+export function roundCents(d: Dec): Dec {
+  if (d.s <= 2) return { n: d.n * 10n ** BigInt(2 - d.s), s: 2 };
+  const divisor = 10n ** BigInt(d.s - 2), abs = d.n < 0n ? -d.n : d.n;
+  const q = abs / divisor + ((abs % divisor) * 2n >= divisor ? 1n : 0n);
+  return { n: d.n < 0n ? -q : q, s: 2 };
+}
+/** A number as the calculator displays it: Decimal(str(x)) rounded to cents. */
+export const cents = (amount: unknown): Dec => roundCents(parseDecimal(String(amount)));
+
+/** Fixed two places ("10.00"), the way Python prints a quantized Decimal. */
+export function formatCents(d: Dec): string {
+  const c = roundCents(d), abs = c.n < 0n ? -c.n : c.n, digits = abs.toString().padStart(3, "0");
+  return `${c.n < 0n ? "-" : ""}${digits.slice(0, -2)}.${digits.slice(-2)}`;
+}

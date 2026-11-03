@@ -57,7 +57,7 @@ export class Driver {
   private pageErrors: string[] = [];
   private loadState: unknown;
 
-  constructor(readonly page: PageLike, readonly service: string, options: DriverOptions = {}) {
+  constructor(readonly page: PageLike, public service: string, options: DriverOptions = {}) {
     this.timeout = options.timeout ?? 20; this.quiet = options.quiet ?? 1.5; this.pollMs = options.pollMs ?? 100;
     this.clock = options.clock ?? (() => performance.now() / 1000);
     this.lastActivity = this.clock();

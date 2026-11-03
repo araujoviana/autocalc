@@ -9,6 +9,7 @@ import { buildCard, supportedServices } from "./services/index.ts";
 import { shareLink, vendorServiceCode } from "./endpoints.ts";
 import { checkAvailability } from "./availability.ts";
 import { roundPython } from "./rounding.ts";
+import { sharePayload } from "./cards.ts";
 import type { ActionContext } from "./types.ts";
 
 function handler<S extends z.ZodType>(schema: S, fn: (context: ActionContext, input: z.output<S>) => Promise<unknown>) { return fn; }
@@ -140,14 +141,9 @@ export const handlers = {
     const orderedCards = orderObsCards(input.items, cards);
     if (orderedCards.some((card, index) => card !== cards[index])) warnings.push("OBS cards were reordered to reduce calculator Edit state leakage; verify Edit results before relying on the list.");
     if (input.items.some(item => item.service === "obs" && !item.package)) warnings.push("The calculator has a known OBS Edit defect; saved storage capacity can reset when edited. Verify the stored configuration before and after Edit.");
-    const totals = { amount: 0, discountAmount: 0, originalAmount: 0, perAmount: 0, monthlyAmount: 0 };
-    const summary = orderedCards.map((card, index) => {
-      const selected = card.selectedProduct;
-      if (typeof selected._customTitle === "string" && selected._customTitle.startsWith("custom.")) selected._customTitle = `custom.${String(selected.serviceCode)} ${index + 1}`;
-      for (const key of ["amount", "discountAmount", "originalAmount"] as const) totals[key] = roundPython(totals[key] + (typeof selected[key] === "number" ? selected[key] : 0), 6);
-      return { service: selected.serviceCode, title: selected._customTitle, mode: selected.chargeModeName, amount: selected.amount };
-    });
-    const payload = { billingMode: input.settlement === "monthly" ? "cart.shareList.billingModeMonth" : "cart.shareList.billingModeTotal", cartListData: orderedCards, name: input.name, totalPrice: totals };
+    const payload = sharePayload(input.name, orderedCards, input.settlement);
+    const totals = payload.totalPrice;
+    const summary = orderedCards.map(card => { const selected = card.selectedProduct; return { service: selected.serviceCode, title: selected._customTitle, mode: selected.chargeModeName, amount: selected.amount }; });
     const result = { name: input.name, dry_run: input.dry_run, total_usd: totals.amount, items: summary, warnings, settlement: input.settlement, currency: input.currency };
     if (input.dry_run) return result;
     ensureNotCancelled(ctx);

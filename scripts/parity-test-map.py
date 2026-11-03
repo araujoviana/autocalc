@@ -29,7 +29,13 @@ MAP: dict[str, list[str]] = {
     "test_list_names": ["unit/lists.test.ts"],
     "test_nosql": ["unit/nosql.test.ts"],
     "test_obs_multi_az": ["unit/obs.test.ts"],
+    "test_page": ["unit/page.test.ts", "unit/page-edit.test.ts"],
+    "test_page_replay": ["unit/page.test.ts"],
     "test_page_runtime": ["integration/runtime.test.ts"],
+    "test_audit_page_comparison": ["unit/page.test.ts"],
+    "test_gate": ["unit/gate.test.ts"],
+    "test_workflow": ["unit/workflow.test.ts"],
+    "test_share_session": ["unit/lists.test.ts", "unit/auth.test.ts"],
     "test_rating_contract": ["unit/pricing.test.ts"],
     "test_regions_errors": ["unit/regions.test.ts"],
     "test_registry": ["integration/interfaces.test.ts"],
@@ -39,15 +45,14 @@ MAP: dict[str, list[str]] = {
 }
 # No TypeScript counterpart yet; the note says where it is planned (tasks.md) or why none is needed.
 MISSING: dict[str, str] = {
-    "test_audit_page_comparison": "4.1", "test_audit_service_safety": "4.1",
-    
-    
-    "test_form_only": "4.1", "test_forms": "4.1", "test_frontend": "5.2", "test_gate": "4.2",
-    "test_live": "live marker, kept out of CI", "test_page": "4.1", "test_page_live": "live marker",
-    "test_page_replay": "4.1", "test_public_form_fixtures": "4.1", "test_public_form_live": "live marker",
+    "test_audit_service_safety": "4.3b (schema validator)",
+    "test_form_only": "4.3b (schema-driven replay)", "test_forms": "4.3b (schema-driven replay replaces recipes)",
+    "test_frontend": "5.2",
+    "test_live": "live marker, kept out of CI", "test_page_live": "live marker",
+    "test_public_form_fixtures": "4.3b", "test_public_form_live": "live marker",
     "test_quote_file": "4.3b", "test_region_sweep": "4.4", "test_schema": "4.3b",
-    "test_schema_invariants": "4.3b", "test_schema_live": "live marker", "test_share_session": "4.2",
-    "test_ui": "5.3 (CLI output)", "test_update": "5.2", "test_workflow": "3.1",
+    "test_schema_invariants": "4.3b", "test_schema_live": "live marker",
+    "test_ui": "5.3 (CLI output)", "test_update": "5.2"
 }
 
 

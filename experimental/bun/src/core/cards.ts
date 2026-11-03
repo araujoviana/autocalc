@@ -90,3 +90,14 @@ export async function rateProducts(products: Record<string, unknown>[], region: 
       perAmount: row.perAmount ?? null, perDiscountAmount: row.perDiscountAmount ?? null, perOriginalAmount: row.perOriginalAmount ?? null, perPeriodType: row.perPeriodType ?? null, measureId: row.measureId ?? 1, extendParams: row.extendParams ?? null };
   }
 }
+
+/** The share/add payload for built cards: renumbers generated titles, sums the totals. */
+export function sharePayload<C extends { selectedProduct: Record<string, unknown> }>(name: string, cards: C[], settlement: "total" | "monthly" = "total") {
+  const totalPrice = { amount: 0, discountAmount: 0, originalAmount: 0, perAmount: 0, monthlyAmount: 0 };
+  cards.forEach((card, index) => {
+    const selected = card.selectedProduct;
+    if (typeof selected._customTitle === "string" && selected._customTitle.startsWith("custom.")) selected._customTitle = `custom.${String(selected.serviceCode)} ${index + 1}`;
+    for (const key of ["amount", "discountAmount", "originalAmount"] as const) totalPrice[key] = roundPython(totalPrice[key] + (typeof selected[key] === "number" ? selected[key] : 0), 6);
+  });
+  return { billingMode: settlement === "monthly" ? "cart.shareList.billingModeMonth" : "cart.shareList.billingModeTotal", cartListData: cards, name, totalPrice };
+}
