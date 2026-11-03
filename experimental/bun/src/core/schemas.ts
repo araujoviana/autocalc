@@ -99,6 +99,11 @@ export const CardInput = z.discriminatedUnion("service", [ecs, evs, cce, obs, rd
     if (card.service === "sfsturbo" && Math.abs(card.size_gb * 10 / 1024 - Math.round(card.size_gb * 10 / 1024)) > 1e-9) ctx.addIssue({ code: "custom", path: ["size_gb"], message: "SFS Turbo capacity must be representable in 0.1 TB increments" });
     if (card.service === "obs") {
       if (card.storage_class === "cold" && card.multi_az && !card.package) ctx.addIssue({ code: "custom", path: ["multi_az"], message: "Cold multi-AZ capacity is not supported" });
+      const nonSizeFactors = new Set([
+        "download.external", "download_warm.external", "download_cold.external", "get", "put",
+        "get_warm", "put_warm", "delete_warm", "get_cold", "put_cold", "delete_cold", "delete",
+        "download.cdn", "download_crr", "retrieval_size_warm", "restore_size_ex", "transition_warm", "transition_cold",
+      ]);
       const seenFactors = new Set<string>();
       for (const [index, component] of (card.components ?? []).entries()) {
         if (seenFactors.has(component.factor)) ctx.addIssue({ code: "custom", path: ["components", index, "factor"], message: "Duplicate OBS usage factor" });
@@ -107,6 +112,12 @@ export const CardInput = z.discriminatedUnion("service", [ecs, evs, cce, obs, rd
           if (!component.unit) ctx.addIssue({ code: "custom", path: ["components", index, "unit"], message: "Storage capacity requires GB or TB" });
           const expected = { standard: card.multi_az ? "size_3az" : "size", warm: card.multi_az ? "size_warm_3az" : "size_warm", cold: "size_cold" }[card.storage_class];
           if (component.factor !== expected || (card.storage_class === "cold" && card.multi_az)) ctx.addIssue({ code: "custom", path: ["components", index, "factor"], message: "Storage factor must match storage class and availability zone" });
+        } else {
+          if (!nonSizeFactors.has(component.factor)) ctx.addIssue({ code: "custom", path: ["components", index, "factor"], message: "Unknown or incompatible OBS usage factor" });
+          const expectedClass = component.factor.includes("warm") ? "warm" : component.factor.includes("cold") || component.factor === "restore_size_ex" ? "cold" : "standard";
+          if (!["download.cdn", "download_crr"].includes(component.factor) && card.storage_class !== expectedClass) {
+            ctx.addIssue({ code: "custom", path: ["components", index, "factor"], message: "OBS usage factor does not match storage_class" });
+          }
         }
       }
       if (!card.package && !card.components?.length) ctx.addIssue({ code: "custom", message: "OBS requires a package or at least one component" });

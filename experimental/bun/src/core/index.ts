@@ -25,6 +25,7 @@ import { checkAvailability } from "./availability.ts";
 import { mkdir } from "node:fs/promises";
 import { ListReference } from "./schemas.ts";
 import { inFormOnlyMode } from "./cards.ts";
+import { buildRecipe, RECIPES } from "./services/forms.ts";
 import { buildCard as buildServiceCard } from "./services/index.ts";
 import { encodeCard } from "./page/encode.ts";
 import { editCheck } from "./page/edit.ts";
@@ -43,7 +44,9 @@ export function createCore(options: { reader?: ActionContext["reader"]; catalogR
   const rating: ActionContext["rating"] = options.rating ?? (body => inquiry(value => transport!.post(RATE, value), body));
   const reader = options.reader ?? transport!;
   const publish: PublishPorts = {
-    form: async input => (await inFormOnlyMode(() => buildServiceCard(input as never, { productInfo: (service, region) => catalog.productInfo(service, region), rate: async () => { throw new CalculatorError("AUTOCALC", "A form-only build must not rate."); } }))).rewriteValue as Record<string, unknown>,
+    form: async input => String(input.service) in RECIPES
+      ? buildRecipe(String(input.service), input as never).rewriteValue
+      : (await inFormOnlyMode(() => buildServiceCard(input as never, { productInfo: (service, region) => catalog.productInfo(service, region), rate: async () => { throw new CalculatorError("AUTOCALC", "A form-only build must not rate."); } }))).rewriteValue as Record<string, unknown>,
     encode: (service, rewriteValue) => encodeCard(browser, service, rewriteValue),
     publish: (name, cards, publishOptions) => publishChecked(name, cards, { ...publishOptions, lists, check: (listId, expected) => verify(listId, { reader, rate: rating, edit: id => editCheck(reader, browser, id) }, expected) }),
     liveVersion: async () => { try { return /CBC-PortalCalculator\/([0-9.]+)/.exec(await (await fetch(PAGE, { signal: AbortSignal.timeout(20000) })).text())?.[1]; } catch { return undefined; } },

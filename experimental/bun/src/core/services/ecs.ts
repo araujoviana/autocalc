@@ -30,8 +30,13 @@ export async function buildEcs(input: Extract<CardInput, { service: "ecs" }>, co
   const images = catalog.product["ec2_vm.image.special"] ?? [];
   const matches = (image: Record<string, unknown>) => input.image.toLowerCase().split(/\s+/).every(term => `${display(image.__platform)} ${imageName(image)}`.toLowerCase().includes(term));
   const family = display(vm.spec).split(".")[0];
-  const rawImage = images.find(image => matches(image) && Array.isArray(image.type) && image.type.includes(family)) ?? images.find(matches);
-  if (!rawImage) throw new CalculatorError("SPEC_NOT_FOUND", `Image ${input.image} not found`);
+  let matched = images.filter(image => matches(image) && Array.isArray(image.type) && image.type.includes(family));
+  if (!matched.length) matched = images.filter(matches);
+  if (!matched.length) throw new CalculatorError("SPEC_NOT_FOUND", `Image ${input.image} not found`);
+  const exact = matched.filter(image => imageName(image).toLowerCase() === input.image.toLowerCase() || String(image.id) === input.image);
+  if (exact.length === 1) matched = exact;
+  if (matched.length !== 1) throw new CalculatorError("VALIDATION", `Image '${input.image}' matches multiple catalog images; choose an exact name.`);
+  const rawImage = matched[0]!;
   const image = structuredClone(rawImage); image.name = imageName(image);
   Object.assign(image, { addToList_title: "calc_4_", addToList_product: `${display(image.__platform)} | ${image.name}` });
   const disks = [input.system_disk, ...(input.data_disks ?? [])], products = input.billing === "ri" ? [image, vm] : [vm, image];

@@ -7,6 +7,7 @@ import { availableParallelism, freemem } from "node:os";
 import { CalculatorError } from "./errors.ts";
 import { invalid } from "./quote/model.ts";
 import { CardInput } from "./schemas.ts";
+import { buildRecipe, RECIPES } from "./services/forms.ts";
 import { modesOf, SINGLE_QUANTITY, SPEC_ARG, specOption, VERIFIED, VERIFIED_FRONTEND } from "./services/publication.ts";
 import type { ActionContext } from "./types.ts";
 
@@ -79,6 +80,10 @@ export async function publishQuoteTool(ctx: ActionContext, input: { draft_id: st
       const specArg = SPEC_ARG[service], chosen = specArg ? { [specArg]: specOption(service, spec.get(r.id)!) } : {};
       const duplicate = Object.keys(r.options).filter(key => key in chosen || ["region", "billing", "quantity"].includes(key)).sort();
       if (duplicate.length) throw invalid("Options duplicate requirement fields.", duplicate[0]);
+      if (service in RECIPES) {
+        buildRecipe(service, { region: r.region, billing: r.billing, quantity: r.quantity, ...r.options });
+        return { service, region: r.region, billing: r.billing, quantity: r.quantity, ...r.options } as Dict;
+      }
       const parsed = CardInput.safeParse({ service, region: r.region, billing: r.billing, ...(r.quantity === 1 ? {} : { quantity: r.quantity }), ...chosen, ...r.options });
       if (!parsed.success) throw invalid(`Invalid ${r.service} builder options: ${parsed.error.issues.map(issue => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`, "options");
       return parsed.data as Dict;

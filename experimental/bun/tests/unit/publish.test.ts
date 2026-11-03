@@ -163,3 +163,14 @@ test("a real builder in form-only mode yields the same page state as the full ca
   const form = await inFormOnlyMode(() => buildCard(input, { productInfo, rate: async () => { throw new Error("rated"); } }));
   expect(form.rewriteValue).toEqual(full.rewriteValue);
 });
+
+test("a verified recipe service publishes through its recipe controls", async () => {
+  const { buildRecipe } = await import("../../src/core/services/forms.ts");
+  const { ctx, seen } = await setup({
+    form: async input => buildRecipe(String(input.service), input as never).rewriteValue,
+  });
+  const id = await draft(ctx, req({ service: "er", billing: "ondemand", options: { downflow_gb: 250, attachments: 2 } }));
+  const out = await run(ctx, "publish_quote", { draft_id: id, name: "n" });
+  expect(seen.encoded).toEqual(["er"]);
+  expect(out.id).toBe("L1");
+});

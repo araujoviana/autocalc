@@ -4,8 +4,9 @@ import type { CardInput } from "../schemas.ts";
 import { selectProduct } from "./common.ts";
 import type { BuilderContext } from "./common.ts";
 export async function buildCce(input: Extract<CardInput, { service: "cce" }>, context: BuilderContext) {
+  if (input.cluster_type !== "standard") throw new CalculatorError("VALIDATION", "Only standard CCE clusters have a verified form mapping.");
   if (!["small", "medium", "large", "xlarge"].includes(input.scale)) throw new CalculatorError("VALIDATION", `Unknown CCE scale ${input.scale}`);
-  const series = (input.cluster_type === "standard" && input.ha) || input.cluster_type === "turbo" ? "s2" : "s1";
+  const series = input.ha ? "s2" : "s1";
   const p = await selectProduct(context, "cce", input.region, "cce_cce.cluster", `cce.${series}.${input.scale}`, input.billing, input.hours);
   if (input.billing === "ondemand" && !Object.hasOwn(p, "usageFactor")) p.usageFactor = "duration";
   const keys = ["productType", "clusterType", "clusterNodeScale", "clusterMasterScale"];
