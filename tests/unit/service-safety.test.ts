@@ -84,7 +84,7 @@ test.each([
 test("capability discovery distinguishes publication support", () => {
   const rows = Object.fromEntries(supportedServices().map(row => [row.service, row]));
   expect(rows.ecs!.publication_supported).toBe(true);
-  for (const service of ["lts", "function", "eip", "redis"]) {
+  for (const service of ["lts", "function", "eip"]) {
     expect(rows[service]!.publication_supported).toBe(false);
     expect(rows[service]!.publication_blocked_reason).toBeTruthy();
   }

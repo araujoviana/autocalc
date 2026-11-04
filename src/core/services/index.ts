@@ -3,7 +3,7 @@ import { CalculatorError } from "../errors.ts";
 import type { BuilderContext } from "./common.ts";
 import { buildEcs } from "./ecs.ts"; import { buildEvs } from "./evs.ts"; import { buildCce } from "./cce.ts"; import { buildObs } from "./obs.ts"; import { buildRds } from "./rds.ts"; import { buildSfs } from "./sfs.ts"; import { buildElb } from "./elb.ts"; import { buildNat } from "./nat.ts"; import { buildApig } from "./apig.ts"; import { buildDline } from "./dline.ts"; import { buildCbr } from "./cbr.ts"; import { buildApm } from "./apm.ts"; import { buildWaf } from "./waf.ts"; import { buildFunction } from "./function.ts"; import { buildDew } from "./dew.ts"; import { buildLts } from "./lts.ts"; import { buildCci } from "./cci.ts"; import { buildRabbitmq } from "./rabbitmq.ts"; import { buildKafka } from "./kafka.ts"; import { buildNosql } from "./nosql.ts"; import { buildEip } from "./eip.ts"; import { buildRedis } from "./redis.ts";
 import { ACCEPTED_DEFAULT_ONLY, RECIPES } from "./forms.ts";
-import { legalOptions, SPEC_ARG, VERIFIED, VERIFIED_FRONTEND } from "./publication.ts";
+import { legalOptions, RECIPE_SPEC_FIELDS, SPEC_ARG, VERIFIED, VERIFIED_FRONTEND } from "./publication.ts";
 
 const builderDescriptions: Record<string, string> = {
   ecs: "Elastic Cloud Server", evs: "Elastic Volume Service", cce: "Cloud Container Engine", obs: "Object Storage Service",
@@ -35,7 +35,7 @@ export function supportedServices() {
       reason = "Only page defaults have been accepted; requested configuration is unverified.";
     } else if (service === "function" || service === "lts") {
       reason = "Incomplete pricing or form mapping; publication remains blocked.";
-    } else if (service in RECIPES && !SPEC_ARG[service]) {
+    } else if (service in RECIPES && !SPEC_ARG[service] && !RECIPE_SPEC_FIELDS[service]) {
       reason = "Selected catalog specs have no verified form mapping.";
     } else if (!VERIFIED.has(service)) {
       reason = "No verified page publication support.";
