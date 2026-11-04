@@ -91,8 +91,7 @@ controls:
     default: 300.0
   after:
   - calculator_eip_radio_eipType
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: bandwidth_mbps
 - id: calculator_ipQuantity_stepper_Stepper_0
   kind: base-stepper
   title: EIP Quantity
@@ -106,8 +105,7 @@ controls:
     unit: ' '
   after:
   - calculator_eip_radio_Stepper_0
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: ip_quantity
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

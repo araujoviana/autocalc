@@ -35,7 +35,7 @@ test.each([
 });
 
 test("unverified compute and storage defaults cannot publish", () => {
-  for (const service of ["function", "lts", "eip", "hecs"]) {
+  for (const service of ["function", "lts", "hecs"]) {
     expect(VERIFIED.has(service)).toBe(false);
   }
 });
@@ -84,9 +84,10 @@ test.each([
 test("capability discovery distinguishes publication support", () => {
   const rows = Object.fromEntries(supportedServices().map(row => [row.service, row]));
   expect(rows.ecs!.publication_supported).toBe(true);
-  for (const service of ["lts", "function", "eip"]) {
+  for (const service of ["lts", "function"]) {
     expect(rows[service]!.publication_supported).toBe(false);
     expect(rows[service]!.publication_blocked_reason).toBeTruthy();
   }
-  expect(rows.eip!.verified_frontend).toBeNull();
+  expect(rows.eip!.publication_supported).toBe(true);
+  expect(rows.eip!.verified_frontend).not.toBeNull();
 });

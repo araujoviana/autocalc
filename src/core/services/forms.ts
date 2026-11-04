@@ -125,7 +125,10 @@ export const RECIPES: Record<string, Recipe> = {
   vpcep: recipe("VPC Endpoint", {
     duration_hours: "calculator_vpcep_time_Stepper_0",
   }, { modes: OD }),
-  eip: recipe("Elastic IP", {}, { modes: PM_OD }),
+  eip: recipe("Elastic IP", {
+    ip_quantity: "calculator_ipQuantity_stepper_Stepper_0",
+    bandwidth_mbps: "calculator_eip_radio_Stepper_0",
+  }, { modes: PM_OD }),
   vpn: recipe("Virtual Private Network", {
     eip1_mbps: "calculator_evpnEip1_stepper_Stepper_0",
     eip2_mbps: "calculator_evpnEip2_stepper_Stepper_0",

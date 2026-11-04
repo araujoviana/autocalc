@@ -13,7 +13,7 @@ export const VERIFIED = new Set([
 /** The build option that takes the ranked catalog spec; absent when the options alone say what to buy. */
 export const SPEC_ARG: Record<string, string> = { apm: "spec", apig: "edition", dline: "port", sfsturbo: "tier", cbr: "vault_spec", rds: "flavor", evs: "type", nat: "size", ecs: "flavor" };
 /** The catalog group that holds the thing a card's spec names; without it a plan's candidates mix in disks and add-ons of the same service. */
-export const PRIMARY_GROUP: Record<string, string> = { ecs: "ec2_vm", evs: "ebs_volume", rds: "rds_rds.vm", sfs: "sfs_sfs", sdrs: "sdrs_hdrsinst", er: "er_er.attachment", vpcep: "vpc_vpcep", hss: "hss_hss", cfw: "cfw_cfw", vpn: "vpn_vpnconnection", des: "des_des", dss: "dss_dss.pool", maas: "modelarts_modelarts.tokens", memcached: "dcs_dcs.memcached", drs: "drs_drs.vm", ddm: "ddm_ddm", dds: "dds_dds.vm", gaussdb: "gaussdb_gaussdb.vm", rdsformariadb: "rdsformariadb_rdsformariadb.vm", taurusdb: "taurus_taurus.vm", hrds: "rds_rds.vm" };
+export const PRIMARY_GROUP: Record<string, string> = { ecs: "ec2_vm", evs: "ebs_volume", rds: "rds_rds.vm", sfs: "sfs_sfs", sdrs: "sdrs_hdrsinst", er: "er_er.attachment", eip: "vpc_bandwidth", vpcep: "vpc_vpcep", hss: "hss_hss", cfw: "cfw_cfw", vpn: "vpc_bandwidth", des: "des_des", dss: "dss_dss.pool", maas: "modelarts_modelarts.tokens", memcached: "dcs_dcs.memcached", drs: "drs_drs.vm", ddm: "ddm_ddm", dds: "dds_dds.vm", gaussdb: "gaussdb_gaussdb.vm", rdsformariadb: "rdsformariadb_rdsformariadb.vm", taurusdb: "taurus_taurus.vm", hrds: "rds_rds.vm" };
 /** Catalog spec code -> the value the option expects. */
 export const specOption = (service: string, spec: string) => service === "nat" ? spec.replace(/^natgateway_/, "") : service === "evs" ? spec.replace(/\.storage$/, "") : spec;
 /** Services whose pay-per-use SKUs carry usage plans with no list price in the catalog (OBS) or tiered by capacity (DSS): the card is priced from its usage components when rated, so a plan can only resolve the spec, not price it. */
@@ -23,10 +23,11 @@ export const RECIPE_SPEC_FIELDS: Record<string, { group: string; fields: Array<s
   redis: { group: "dcs_dcs3", fields: ["instance_type", "version", "edition", "cpu_storage", "spec"] },
   sfs: { group: "sfs_sfs", fields: [] }, // one SKU (SFS_SATA) whose price the capacity control scales: the spec only has to exist
   sdrs: { group: "sdrs_hdrsinst", fields: [] }, // one SKU; the protection-group count scales it
+  eip: { group: "vpc_bandwidth", fields: [] }, // the dedicated-bandwidth SKU (19_bgp); the bandwidth control scales it
   vpcep: { group: "vpc_vpcep", fields: [] }, // one SKU (vpcep.basic); the hours control scales it
   hss: { group: "hss_hss", fields: [] }, // the edition option picks the page's edition; the spec has to agree, which the gate checks
   cfw: { group: "cfw_cfw", fields: [] }, // same: edition option vs spec
-  vpn: { group: "vpn_vpnconnection", fields: [] },
+  vpn: { group: "vpc_bandwidth", fields: [] },
   er: { group: "er_er.attachment", fields: [] }, // the attachment SKU; the traffic SKU is added by the page from downflow_gb
   des: { group: "des_des", fields: [["transfer_type", "transferTypeClass"]] }, // Teleport or Disk
   dss: { group: "dss_dss.pool", fields: [["type", "type"]] }, // pool type from the SKU; capacity is an option, many SKUs share one code
@@ -59,8 +60,14 @@ export function legalOptions(service: string): string[] | null {
   return entry ? Object.keys(entry.shape).filter(key => !NOT_OPTIONS.has(key) && key !== SPEC_ARG[service]).sort() : null;
 }
 
+/** The page's HSS edition value for each catalog spec (live-verified: stored = rated = Edit for all but advanced, which was seen on the page). */
+const HSS_EDITIONS: Record<string, string> = { "hss.version.basic": "dataInfo_1_", "hss.version.premium": "dataInfo_4_", "hss.version.wtp": "dataInfo_3_", "hss.version.container.enterprise": "dataInfo_5_", "hss.version.advanced": "dataInfo_6_" };
 /** What a chosen spec rules out, found at plan time instead of after minutes of page encoding. Returns the problem, or null. */
 export const SPEC_RULES: Record<string, (spec: string, options: Record<string, unknown>) => string | null> = {
   des: (spec, options) => options.devices !== undefined && !spec.startsWith("des.teleport") ? `\`devices\` (onsite days) exists only on Teleport devices, not on ${spec}.` : null,
+  hss: (spec, options) => {
+    const want = HSS_EDITIONS[spec];
+    return want && options.edition !== undefined && options.edition !== want ? `HSS spec ${spec} is page edition ${want}, not ${String(options.edition)}.` : null;
+  },
   hrds: spec => /\.y1\./.test(spec) ? null : `Dedicated RDS (hrds) is sold as the y1 family (rds.<engine>.y1.*), not ${spec}.`,
 };

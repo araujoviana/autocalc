@@ -42,6 +42,8 @@ test("plan-time rules catch a spec the options cannot go with", async () => {
   expect(SPEC_RULES.des!("des.teleport.60TB", { devices: 3 })).toBeNull();
   expect(SPEC_RULES.des!("des.disk", {})).toBeNull();
   expect(SPEC_RULES.hrds!("rds.mysql.x1.xlarge.2", {})).toContain("y1");
+  expect(SPEC_RULES.hss!("hss.version.premium", { edition: "dataInfo_6_" })).toContain("dataInfo_4_");
+  expect(SPEC_RULES.hss!("hss.version.premium", { edition: "dataInfo_4_" })).toBeNull();
   expect(SPEC_RULES.hrds!("rds.mysql.y1.xlarge.2", {})).toBeNull();
 });
 

@@ -91,7 +91,7 @@ export async function validate(quote: Quote, dir?: string): Promise<Dict[]> {
     for (const [option, value] of Object.entries(card.options ?? {})) {
       if (!legal.includes(option)) { bad(card, option, `${service} has no option '${option}'.`, { allowed: legal, hint: SCHEMA_HINT }); continue; }
       if (typeof value !== "number") continue;
-      for (const r of controls.get(option)?.ranges.filter(range => range.when == null && range.min !== range.max) /* min = max is the page default of a state-dependent control, not a limit */ ?? [])
+      for (const r of (controls.get(option)?.ranges.some(range => range.when != null) ? [] : controls.get(option)?.ranges.filter(range => range.min !== range.max)) /* a control whose ranges depend on page state has no single limit */ /* min = max is the page default of a state-dependent control, not a limit */ ?? [])
         if ((r.min != null && value < r.min) || (r.max != null && value > r.max))
           bad(card, option, `${value} is outside the range ${g(r.min)}..${g(r.max)} ${r.unit ?? ""}`.trim(), { range: { min: r.min ?? null, max: r.max ?? null, step: r.step }, hint: SCHEMA_HINT });
     }
