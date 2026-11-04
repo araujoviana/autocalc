@@ -11,6 +11,8 @@ export * from "./units.ts";
 export * from "./expander.ts";
 export * from "./horizon.ts";
 export * from "./anti-split.ts";
+export * from "./ir.ts";
+export * from "./lockfile.ts";
 
 export interface CompiledQuote {
   document: QuoteDocument;

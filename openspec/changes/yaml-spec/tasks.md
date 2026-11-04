@@ -10,9 +10,9 @@
 
 ## 2. Canonical IR and Lockfile Generator
 
-- [ ] 2.1 Define `CanonicalResourceIR` data models and serialization formats and verify round-trip unit tests.
-- [ ] 2.2 Implement lockfile generator (`quote.lock.yaml`) and verify tests write pinned SKUs, rated amounts, and partition hashes.
-- [ ] 2.3 Implement lockfile drift detector and verify tests report price and SKU discrepancies against active catalog caches.
+- [x] 2.1 Define `CanonicalResourceIR` data models and serialization formats and verify round-trip unit tests.
+- [x] 2.2 Implement lockfile generator (`quote.lock.yaml`) and verify tests write pinned SKUs, rated amounts, and partition hashes.
+- [x] 2.3 Implement lockfile drift detector and verify tests report price and SKU discrepancies against active catalog caches.
 
 ## 3. Wire Optimization and Payload Budgeter
 
