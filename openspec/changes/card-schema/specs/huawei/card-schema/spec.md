@@ -5,13 +5,10 @@ A service's accepted card options are described by a schema generated from the c
 ## ADDED Requirements
 
 ### Requirement: A schema is generated from the page
-The system SHALL generate, for each supported service, a YAML schema from the service's
-calculator page, anonymously and without saving anything. For every control the schema SHALL
-record the control id, its kind, the option name callers use, the controls that precede it in the form
-(`after`, marked `source: order`), and its value range or static option values when the page
-offers them. A dependency observed by changing an earlier choice is marked `source: observed`.
-The page does not state dependencies, so order-based entries are a conservative upper bound.
-Each schema SHALL name the frontend version it was generated from.
+The system SHALL generate a YAML schema from each supported service's calculator page anonymously
+and without saving lists. For every control the schema SHALL record the control id, kind, option name,
+preceding controls (`after`, marked `source: order`), and value range or static options when offered.
+Observed dependencies are marked `source: observed`. Each schema SHALL name the frontend version.
 
 #### Scenario: Generate a schema
 - **WHEN** a schema is generated for a supported service

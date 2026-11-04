@@ -1,58 +1,88 @@
 # autocalc
 
-Turns "price this for customer Y" into a share link on the
-[Huawei Cloud pricing calculator](https://www.huaweicloud.com/intl/en-us/pricing/calculator.html).
-Use it from the terminal (CLI) or from an AI agent (MCP server).
+Generate verified price quotes and share links for the [Huawei Cloud Pricing Calculator](https://www.huaweicloud.com/intl/en-us/pricing/calculator.html) from your terminal (CLI) or AI coding agents (MCP server).
 
-> **⚠⚠⚠ Experimental. Expect it to break! ⚠⚠⚠**
-> autocalc is not a Huawei product and uses no official API. It drives the public pricing calculator
-> the way a person would, and relies on that page's internals. When Huawei changes the page, publishing
-> can fail or, worse, stop matching what the website shows, without any warning in advance.
-> Before you send a link to anyone, open it and check the total yourself. Run `autocalc doctor` before
-> relying on it, and do not use it for binding quotes. Prices are USD list prices, not an offer.
+> **Disclaimer**: `autocalc` is an unofficial, community-driven tool and is not affiliated with or endorsed by Huawei Cloud. It interfaces directly with public calculator endpoints and rating engines. Always inspect generated links and verify prices on the official portal before presenting formal quotes.
 
-- Catalog and price queries need no login and no AK/SK. Prices are USD list prices from Huawei's
-  own rating engine.
-- Saving a list and getting a share link needs a one-time browser sign-in. autocalc never sees
-  your password.
+---
 
-## Quick start
+## Highlights
 
+- **No login needed** for catalog queries, flavor search, and price calculations.
+- **One-time browser login** only when saving quote lists and generating share links.
+- **CLI & MCP server** out of the box (`autocalc` CLI and `autocalc-mcp` for Claude Code, Antigravity, etc.).
+- **Built on TypeScript & Bun** with Playwright for browser interactions. Zero external runtime dependencies for core rating & schema operations.
+
+---
+
+## Quick Start
+
+### Installation
+
+**Linux / macOS:**
 ```bash
-# 1. install (Windows: see the tutorial)
 curl -fsSL https://raw.githubusercontent.com/araujoviana/autocalc/main/install.sh | sh
-# 2. sign in (a browser opens)
-autocalc login                           
 ```
 
-The installer adds the MCP server to Claude Code when `claude` is on the path (otherwise:
-`claude mcp add hwc-calculator -- autocalc-mcp`). `autocalc update` moves to the newest release.
-Working on autocalc itself: `bun install`, then `bun run src/cli.ts`.
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/araujoviana/autocalc/main/install.ps1 | iex
+```
+
+*Requires [Bun](https://bun.sh).* To update anytime, run `autocalc update`.
+
+### Basic Usage
 
 ```bash
+# 1. Health check: verify connectivity and calculator frontend version
+autocalc doctor
+
+# 2. Search for available flavors and pricing
 autocalc search ecs "Sao Paulo" linux --vcpus 4 --mem 8
+
+# 3. Calculate a quote (standalone rating, no login needed)
 autocalc quote Santiago 'ecs:c7n.large.2.linux*3' 'ecs:SSD*3@100' --billing monthly
-autocalc doctor                   # health check: endpoints, auth, browser, cache
+
+# 4. (Optional) Sign in to save lists and generate shareable links
+autocalc login
 ```
 
-## Docs
+---
 
-Start at [`docs/index.md`](docs/index.md) (or `mkdocs serve`). The
-[first-quote tutorial](docs/tutorials/first-quote.md) is the best entry point; the
-[CLI reference](docs/reference/cli.md) and [architecture](docs/explanation/architecture.md) come next.
+## MCP Server (AI Agents)
+
+If Claude Code is installed, the installer automatically registers `hwc-calculator`. You can also configure it manually:
+
+```bash
+claude mcp add hwc-calculator -- autocalc-mcp
+```
+
+For configuration with other MCP clients, point to the `autocalc-mcp` binary or run `bun run src/mcp/index.ts`.
+
+---
 
 ## Development
 
-`bun install --frozen-lockfile`, then see [run the tests](docs/how-to/run-tests.md) for the
-checks CI runs. Behavior is specified in [`openspec/specs/`](openspec/specs/), and changes go
-through OpenSpec (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`). See [CONTRIBUTING](CONTRIBUTING.md).
+```bash
+git clone https://github.com/araujoviana/autocalc.git
+cd autocalc
+bun install --frozen-lockfile
 
-## Security
+# Run checks and tests
+bun run check
+bun run check:boundaries
+bun run test:offline
+```
 
-The login session grants access to your Huawei Cloud **account**, not just the calculator.
-It lives only in autocalc's browser profile directory (POSIX mode 0600 for the session file; inherited user-profile ACLs on Windows): it is never copied outside
-it, and cookie values are never logged. The browser profile and the golden corpus are gitignored. Never commit client data. See [sessions](docs/explanation/huawei/sessions.md).
+For contributing guidelines, specs, and architecture, see:
+- [Tutorial: Your First Quote](docs/tutorials/first-quote.md)
+- [CLI Reference](docs/reference/cli.md)
+- [Architecture & Design](docs/explanation/architecture.md)
+- [Contributing Guide](CONTRIBUTING.md)
+- [OpenSpec Specifications](openspec/specs/)
+
+---
 
 ## License
 
-[Apache License 2.0](LICENSE).
+[Apache License 2.0](LICENSE)
