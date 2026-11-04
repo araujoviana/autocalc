@@ -25,8 +25,7 @@ page that will not open once ([publish gate](explanation/huawei/publish-gate.md)
 
 ## What has not
 
-- The `version: "1"` declarative path has only been run offline. It needs a live `plan-quote` /
-  `apply-quote` run.
+- The `version: "1"` declarative path was run live once (2026-11-04, one ECS card): plan and apply passed the gate. Two gaps showed: the list is saved without the `[autocalc]` marker (declarative titles are stripped of tool branding on purpose, so find test lists by id), and `quote.lock.yaml` records `total_amount: 0` and card amounts of 0, so it does not yet carry real totals. Wire budgeting, partitioning and multi-card quotes have still only run offline.
 - Only ECS was exercised end to end by hand. Other services are covered by recorded fixtures and
   the region sweep ([run the tests](how-to/run-tests.md)).
 - The 19 builder services cannot take options through `apply_quote` yet.
