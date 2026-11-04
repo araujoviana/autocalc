@@ -13,6 +13,7 @@ export * from "./horizon.ts";
 export * from "./anti-split.ts";
 export * from "./ir.ts";
 export * from "./lockfile.ts";
+export * from "./wire.ts";
 
 export interface CompiledQuote {
   document: QuoteDocument;

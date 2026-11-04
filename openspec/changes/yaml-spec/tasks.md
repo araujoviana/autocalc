@@ -16,10 +16,10 @@
 
 ## 3. Wire Optimization and Payload Budgeter
 
-- [ ] 3.1 Implement wire size budgeter (compact JSON measurement, $\le$ 950 KiB and $\le$ 200 cards) and verify tests detect payload limit thresholds.
-- [ ] 3.2 Implement auto-partitioner for large quotes and verify tests split quotes into correlated sub-lists with titles $\le$ 55 characters.
-- [ ] 3.3 Implement lean card payload optimizer (pruning zero lines and unselected `bakPlanList` plans) and verify tests confirm identical pricing with reduced byte sizes.
-- [ ] 3.4 Enforce zero-watermark policy in card and list titles and verify tests confirm absence of `autocalc` branding in generated payloads.
+- [x] 3.1 Implement wire size budgeter (compact JSON measurement, $\le$ 950 KiB and $\le$ 200 cards) and verify tests detect payload limit thresholds.
+- [x] 3.2 Implement auto-partitioner for large quotes and verify tests split quotes into correlated sub-lists with titles $\le$ 55 characters.
+- [x] 3.3 Implement lean card payload optimizer (pruning zero lines and unselected `bakPlanList` plans) and verify tests confirm identical pricing with reduced byte sizes.
+- [x] 3.4 Enforce zero-watermark policy in card and list titles and verify tests confirm absence of `autocalc` branding in generated payloads.
 
 ## 4. 4-Tier Circuit Breaker and Vendor Adapter
 
