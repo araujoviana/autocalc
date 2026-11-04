@@ -50,6 +50,12 @@ export async function main(argv: string[]): Promise<number> {
     const { BrowserManager } = await import("./core/browser.ts"), { pageControls } = await import("./core/page/controls.ts"), manager = new BrowserManager({ headed: process.env.AUTOCALC_PAGE_HEADED === "1" || !!program.opts<{ headed?: boolean }>().headed });
     try { process.stdout.write(`${JSON.stringify(await pageControls(manager, service), null, 2)}\n`); } finally { await manager.close(); }
   });
+  program.command("schema").description("Manage service page schemas (pull, coverage, diff)").argument("<action>").argument("<service>").action(async (action: string, service: string) => {
+    if (!["pull", "coverage", "diff"].includes(action)) throw new CalculatorError("VALIDATION", `Invalid schema action ${action}`, "Choose from pull, coverage, diff.");
+    const { runSchemaCommand } = await import("./core/schema-model.ts");
+    const code = await runSchemaCommand(action, service, { headed: process.env.AUTOCALC_PAGE_HEADED === "1" || !!program.opts<{ headed?: boolean }>().headed, write: text => process.stdout.write(`${text}\n`) });
+    if (code !== 0) commandExit = code;
+  });
   program.command("supported").description("List supported card builders").action(async () => { await print("supported_services", {}); });
   program.command("describe").description("Describe service availability").argument("<service>").option("--region <name>").action(async (service: string, options: { region?: string }) => { await print("describe_service", { service, ...(options.region === undefined ? {} : { region: options.region }) }); });
   program.command("read").description("Read a shared price list").argument("<url_or_id>").action(async (urlOrId: string) => {

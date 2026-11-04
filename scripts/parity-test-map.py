@@ -45,6 +45,7 @@ MAP: dict[str, list[str]] = {
     "test_form_only": ["unit/publish.test.ts"],
     "test_forms": ["unit/forms.test.ts"],
     "test_public_form_fixtures": ["unit/forms.test.ts"],
+    "test_schema": ["unit/schema-invariants.test.ts"],
     "test_schema_invariants": ["unit/schema-invariants.test.ts"],
     "test_sfs_capacity": ["unit/sfs.test.ts"],
     "test_template_render": ["integration/render.test.ts"],
@@ -54,7 +55,7 @@ MISSING: dict[str, str] = {
     "test_frontend": "5.2",
     "test_live": "live marker, kept out of CI", "test_page_live": "live marker",
     "test_public_form_live": "live marker",
-    "test_region_sweep": "4.4", "test_schema": "4.3c (generator; the format is tested in quote-file.test.ts)",
+    "test_region_sweep": "4.4",
     "test_schema_live": "live marker",
     "test_ui": "5.3 (CLI output)", "test_update": "5.2"
 }
