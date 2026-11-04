@@ -206,5 +206,7 @@ export async function apply(ctx: ActionContext, quote: Quote, name?: string, dir
   const same = existing.filter(list => list.name === title);
   const duplicate = same.length ? `A list named "${title}" already exists (id ${String(same[0]!.key)}); this creates another.` : null;
   const published = await publishQuoteTool(ctx, { draft_id: result.draft_id, name: title, settlement: quote.settlement, currency: "USD" });
-  return duplicate ? { ...published, warnings: [...((published as Dict).warnings ?? []), duplicate] } : published;
+  const skipped = (((published as Dict).checks ?? []) as Dict[]).filter(check => check.edit_skipped).map(check => `Card "${check.title}": Edit check skipped for a known portal defect. ${check.edit_skipped}`);
+  const warnings = [...((published as Dict).warnings ?? []), ...(duplicate ? [duplicate] : []), ...skipped];
+  return warnings.length ? { ...published, warnings } : published;
 }

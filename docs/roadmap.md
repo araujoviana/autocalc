@@ -52,7 +52,7 @@ GitHub issues #1, #2, #4, #5 and #6 were written against the Python code or an e
 
 | # | Item | State | Issue |
 |---|---|---|---|
-| 1 | Call the circuit breaker (`resolveExecutionTier`, `detectCatalogPricingAnomalies`) from `plan-quote`, `apply-quote` and the gate. Today a known portal defect (OBS pay-per-use Edit) fails the gate, and the DCS HA yearly anomaly is never flagged | **open: implemented, not wired** | #2, #4.2, #5.3, #5.4, #6.9 |
+| 1 | Known portal defects (OBS pay-per-use, Kafka yearly) no longer fail the gate on a wrong Edit price when stored and rated prices agree; the check is flagged and `apply-quote` warns. **Still open:** the catalog anomaly guard (`detectCatalogPricingAnomalies`) is not called from `plan-quote`, and the lower degradation tiers (cached estimate, export only) are unused | partly done | #2, #4.2, #5.3, #5.4, #6.9 |
 | 2 | OBS schema holes: `unit` required on `size*` lines, `multi_az` rejected with a single-AZ factor, canonical zero-usage lines and order | open, to confirm per item | #4.3, #5.2, #6.2, #6.5 |
 | 3 | Per-field limits (DEW kms api 9,999, DEW secrets 99, OBS requests 9,999, OBS GB 102,400) validated, with splitting that respects tiered fields | open | #6.3, #6.4 |
 | 4 | Recover from `MUTATION_UNKNOWN`: look the list up by name and return it, or say it does not exist | open (the duplicate-name warning is the first half) | #4.1, #5.5 |

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { cardCheck, publishChecked, requestIssues, verify, type CardCheck } from "../../src/core/gate.ts";
+import { cardCheck, checkToJson, publishChecked, requestIssues, verify, type CardCheck } from "../../src/core/gate.ts";
 import { cents } from "../../src/core/quote/decimal.ts";
 import type { EditResult } from "../../src/core/page/edit.ts";
 
@@ -119,4 +119,25 @@ test("cents rounds half away from zero and prints two places", () => {
   expect(cents(-0.005)).toEqual({ n: -1n, s: 2 });
   expect(cents(1e-7)).toEqual({ n: 0n, s: 2 });
   expect(cents("10.499")).toEqual({ n: 1050n, s: 2 });
+});
+
+const obsCard = (amount: number): Dict => ({ selectedProduct: { amount, _customTitle: "obs", serviceCode: "obs", productAllInfos: [], chargeModeName: "ONDEMAND" }, rewriteValue: {} });
+
+test("a known portal defect on Edit does not fail a card whose stored and rated prices agree, and says so", async () => {
+  const { checks } = await verify("abc1", deps([obsCard(10)], async () => [{ index: 0, stored: D(10), edit: D(4), equal: false }], async () => D("10.00")));
+  expect(checks[0]!.problems.filter(p => !p.startsWith("["))).toEqual([]);
+  expect(checkToJson(checks[0]!).edit_skipped).toContain("GH-2-OBS-STORAGE-EDIT-DROP");
+});
+
+test("a known defect never excuses a rating mismatch or an Edit view that did not open", async () => {
+  const mismatch = await verify("abc1", deps([obsCard(10)], async () => [{ index: 0, stored: D(10), edit: D(4), equal: false }], async () => D("9.00")));
+  expect(mismatch.checks[0]!.problems[0]).toContain("rating engine prices the products at 9.00");
+  const unopened = await verify("abc1", deps([obsCard(10)], async () => [{ index: 0, stored: D(10), edit: null, equal: false, reason: "Edit view did not open" }], async () => D("10.00")));
+  expect(unopened.checks[0]!.problems).toContain("Edit view did not open");
+});
+
+test("an Edit drift on a service with no known defect still fails", async () => {
+  const { checks } = await verify("abc1", deps([card(10)], async () => [{ index: 0, stored: D(10), edit: D(4), equal: false }], async () => D("10.00")));
+  expect(checks[0]!.problems.some(p => p.includes("Edit re-prices to 4.00"))).toBe(true);
+  expect(checkToJson(checks[0]!).edit_skipped).toBeUndefined();
 });

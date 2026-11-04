@@ -31,6 +31,15 @@ itself will not open ("The calculator form did not appear."), the Edit check ope
 No price has been compared at that point, so the retry cannot hide a mismatch. A card that fails
 or differs after the page opened is never retried.
 
+A second exception covers portal bugs the tool cannot fix. `KNOWN_VENDOR_DEFECTS`
+(`src/core/compiler/circuit-breaker.ts`) lists a service and billing mode whose Edit view is known to
+re-price a correct card wrongly (OBS pay-per-use, issue #2; DMS Kafka yearly). For such a card, a
+different Edit price is not a failure, but only while the stored price and the rating-engine price
+still agree and the Edit view opened and produced a price. The check then carries `edit_skipped`
+with the defect id, and `apply-quote` prints it as a warning. A rating mismatch, a card that will not
+open and every other service still fail as before. Adding a row to the table is the only way to
+widen this, and each row must cite an issue.
+
 `AUTOCALC_KEEP_ON_FAIL=1` keeps a failed list so you can open it and look. It is an environment
 variable on purpose: no tool argument can turn the gate off.
 

@@ -5,6 +5,7 @@
  * Anything that fails, or cannot run, deletes the list and raises GATE_FAILED with no link.
  */
 import { sharePayload, rateProducts } from "./cards.ts";
+import { resolveExecutionTier } from "./compiler/circuit-breaker.ts";
 import { CalculatorError } from "./errors.ts";
 import { progress } from "./progress.ts";
 import { shareLink } from "./endpoints.ts";
@@ -21,14 +22,14 @@ const BILLING = { MONTHLY: "monthly", YEARLY: "yearly", ONDEMAND: "ondemand" } a
 /** ADR-0010: reads, at most 4 in flight. */
 export const RATING_WORKERS = 4;
 
-export interface CardCheck { index: number; title: string; stored: Dec; rated: Dec | null; edit: Dec | null; problems: string[] }
+export interface CardCheck { index: number; title: string; stored: Dec; rated: Dec | null; edit: Dec | null; problems: string[]; /** Set when a known portal defect made the Edit price untrustworthy and the rating-engine price stood in. */ edit_skipped?: string }
 export const cardOk = (check: CardCheck) => !check.problems.length;
 export function cardCheck(index: number, title: string, stored: Dec, extra: Partial<CardCheck> = {}): CardCheck {
   return { index, title, stored, rated: null, edit: null, problems: [], ...extra };
 }
 export function checkToJson(check: CardCheck) {
   const text = (value: Dec | null) => value === null ? null : formatCents(value);
-  return { index: check.index, title: check.title, stored: formatCents(check.stored), rated: text(check.rated), edit: text(check.edit), problems: check.problems, ok: cardOk(check) };
+  return { index: check.index, title: check.title, stored: formatCents(check.stored), rated: text(check.rated), edit: text(check.edit), problems: check.problems, ok: cardOk(check), ...(check.edit_skipped ? { edit_skipped: check.edit_skipped } : {}) };
 }
 
 /** The card's total, recomputed by the rating engine from its own stored products, in cents. */
@@ -110,6 +111,10 @@ export async function verify(listId: string, deps: VerifyDeps, expectedCards?: D
     const result = byIndex.get(check.index);
     if (!result) { check.problems.push("the Edit check returned no result for this card"); continue; }
     check.edit = result.edit;
+    const selected = cards[check.index]!.selectedProduct, billing = BILLING[selected.chargeModeName as keyof typeof BILLING] ?? "";
+    const { tier, defect } = resolveExecutionTier(String(selected.serviceCode ?? ""), billing);
+    // A known portal defect re-prices the card wrongly in Edit even though the card is right: the stored and rating-engine prices still must agree.
+    if (!result.equal && result.edit !== null && tier === "RATING_VERIFIED_EDIT_SKIPPED" && defect) { check.edit_skipped = `${defect.advisory} (${defect.defectId})`; continue; }
     if (!result.equal) check.problems.push(result.reason || `Edit re-prices to ${result.edit === null ? "nothing" : formatCents(result.edit)}, stored ${formatCents(check.stored)}`);
   }
   // validation issues name the card by title in brackets
