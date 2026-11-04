@@ -7,7 +7,7 @@ import { invalid } from "./quote/model.ts";
 import { rank } from "./quote/ranking.ts";
 import { publishQuoteTool } from "./publish.ts";
 import { loadService } from "./schema-model.ts";
-import { legalOptions, modesOf, PRIMARY_GROUP, SPEC_ARG, USAGE_PRICED, VERIFIED } from "./services/publication.ts";
+import { legalOptions, modesOf, PRIMARY_GROUP, SPEC_ARG, SPEC_RULES, USAGE_PRICED, VERIFIED } from "./services/publication.ts";
 import { draftQuoteTool } from "./workflow.ts";
 import { compileQuote, detectCatalogPricingAnomalies, buildCanonicalQuoteIR, generateLockfile, stringifyLockfile, sanitizeTitle, type QuoteDocument } from "./compiler/index.ts";
 import type { ActionContext } from "./types.ts";
@@ -151,6 +151,8 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
       const ranked = rank(requirement, await ctx.provider.candidates(requirement)).find(x => x.candidate.spec === decision.spec);
       const price = ranked && !USAGE_PRICED.has(requirement.service.toLowerCase()) ? formatDecimal(ranked.candidate.price) : null;
       Object.assign(row, { spec: decision.spec, price });
+      const conflict = SPEC_RULES[requirement.service.toLowerCase()]?.(decision.spec, requirement.options);
+      if (conflict) row.spec_problem = conflict;
       if (requirement.service.toLowerCase() === "ecs") {
         const choices = await ambiguousImages(ctx, requirement.region, decision.spec, requirement.options.image);
         if (choices.length) row.image_choices = choices;
@@ -213,6 +215,7 @@ export async function apply(ctx: ActionContext, quote: Quote, name?: string, dir
   if (result.pending.length) throw invalid(`Card '${result.pending[0]}' is unresolved; choose a spec with \`spec:\` in the file.`, "spec", result.pending);
   for (const row of result.cards) {
     if (row.unmapped_options.length) throw invalid(`Card '${row.id}' sets options the schema does not map: ${JSON.stringify(row.unmapped_options)}.`, row.unmapped_options[0], undefined, SCHEMA_HINT);
+    if (row.spec_problem) throw invalid(`Card '${row.id}': ${row.spec_problem}`, "spec", undefined, "Choose a spec this service can take with these options.");
     if (row.lock_drift) throw invalid(`Card '${row.id}' changed price since the lock was written; review and delete its lock entry to accept.`, "spec", [row.lock_drift.price]);
   }
   for (const row of result.cards) {

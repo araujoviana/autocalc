@@ -14,8 +14,6 @@ import { profilePaths, resolveConfig } from "./config.ts";
 import { validateList } from "./validate.ts";
 import { BrowserManager, discoverBrowserExecutable } from "./browser.ts";
 import { renderCheck } from "./page.ts";
-import { editCheckCard } from "./edit-check-browser.ts";
-import { allOk } from "./edit-check.ts";
 import { doctor } from "./diagnostics.ts";
 import { request } from "playwright";
 import { HuaweiProvider } from "../providers/huawei.ts";
@@ -27,6 +25,8 @@ import { buildRecipe, RECIPES } from "./services/forms.ts";
 import { buildCard as buildServiceCard } from "./services/index.ts";
 import { encodeCard } from "./page/encode.ts";
 import { editCheck } from "./page/edit.ts";
+import { formatCents } from "./quote/decimal.ts";
+import { roundPython } from "./rounding.ts";
 import { publishChecked, verify } from "./gate.ts";
 import type { PublishPorts } from "./publish.ts";
 import { liveVersion, warnings as frontendWarnings } from "./frontend.ts";
@@ -72,14 +72,16 @@ export function createCore(options: { reader?: ActionContext["reader"]; catalogR
     async logout() { ensureOpen(); return auth.logout(); },
     async validate(reference: string) { ensureOpen(); return validateList(await shareDetail(context.reader, reference)); },
     async renderCheck(reference: string) { ensureOpen(); return renderCheck(browser, reference); },
-    async editCheck(reference: string, limit?: number, screenshotDirectory?: string) {
+    async editCheck(reference: string, limit?: number) {
       ensureOpen();
-      const detail = await shareDetail(context.reader, reference);
-      const cards = limit === undefined ? detail.cartListData : detail.cartListData.slice(0, limit);
-      const results = [];
-      if (screenshotDirectory) await mkdir(screenshotDirectory, { recursive: true });
-      for (const [index, card] of cards.entries()) results.push(await editCheckCard(browser, index, card, screenshotDirectory ? { screenshotPath: join(screenshotDirectory, `card-${index + 1}.png`) } : {}));
-      return { ok: allOk(results), results };
+      const cards = (await shareDetail(context.reader, reference)).cartListData;
+      const checked = await editCheck(context.reader, browser, reference);
+      const results = checked.slice(0, limit ?? checked.length).map(result => {
+        const selected = (cards[result.index]?.selectedProduct ?? {}) as Record<string, unknown>;
+        const stored = Number(formatCents(result.stored)), edit = result.edit === null ? null : Number(formatCents(result.edit));
+        return { index: result.index, title: String(selected._customTitle ?? selected.serviceCode ?? `card ${result.index}`), status: result.equal ? "ok" as const : edit === null ? "unavailable" as const : "mismatch" as const, stored, edit, delta: edit === null ? null : roundPython(edit - stored, 6), added: [], removed: [], reason: result.reason ?? "" };
+      });
+      return { ok: results.length > 0 && results.every(result => result.status === "ok"), results };
     },
     async doctor() {
       ensureOpen();

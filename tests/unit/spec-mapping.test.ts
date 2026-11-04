@@ -35,3 +35,12 @@ test("every other mapped recipe is publishable, takes its page values from the S
   expect(RECIPE_SPEC_FIELDS.ssa).toBeUndefined();
   expect(supportedServices().find(entry => entry.service === "ssa")?.publication_supported).toBe(false);
 });
+
+test("plan-time rules catch a spec the options cannot go with", async () => {
+  const { SPEC_RULES } = await import("../../src/core/services/publication.ts");
+  expect(SPEC_RULES.des!("des.disk", { devices: 3 })).toContain("Teleport");
+  expect(SPEC_RULES.des!("des.teleport.60TB", { devices: 3 })).toBeNull();
+  expect(SPEC_RULES.des!("des.disk", {})).toBeNull();
+  expect(SPEC_RULES.hrds!("rds.mysql.x1.xlarge.2", {})).toContain("y1");
+  expect(SPEC_RULES.hrds!("rds.mysql.y1.xlarge.2", {})).toBeNull();
+});

@@ -53,3 +53,9 @@ export function legalOptions(service: string): string[] | null {
   const entry = (CardInput as unknown as { options: Array<{ shape: Record<string, any> }> }).options.find(option => option.shape.service.def.values[0] === service);
   return entry ? Object.keys(entry.shape).filter(key => !NOT_OPTIONS.has(key) && key !== SPEC_ARG[service]).sort() : null;
 }
+
+/** What a chosen spec rules out, found at plan time instead of after minutes of page encoding. Returns the problem, or null. */
+export const SPEC_RULES: Record<string, (spec: string, options: Record<string, unknown>) => string | null> = {
+  des: (spec, options) => options.devices !== undefined && !spec.startsWith("des.teleport") ? `\`devices\` (onsite days) exists only on Teleport devices, not on ${spec}.` : null,
+  hrds: spec => /\.y1\./.test(spec) ? null : `Dedicated RDS (hrds) is sold as the y1 family (rds.<engine>.y1.*), not ${spec}.`,
+};
