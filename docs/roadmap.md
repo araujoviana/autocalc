@@ -42,7 +42,7 @@ Each item is either assigned to the change that will close it or left unschedule
 | Profile browser reuse and memory under concurrent tool calls | unscheduled |
 | The calculator's EU and China sites | unscheduled, after v1 |
 | Update a saved list in place from a quote (`update` was removed in ts-parity 4.3: it saved without the publish gate; needs a gated, rollback-safe design, see [share update](explanation/huawei/share-update.md)) | unscheduled |
-| Map the 19 builder services' options to schema controls (`autocalc schema coverage <service>` is the to-do list); until then `apply_quote` refuses options on them | unscheduled |
+| Map the builder services' options to page controls where they are still partial (`autocalc schema coverage <service>` is the to-do list); builders already take options through `apply_quote` | unscheduled |
 | Live end-to-end check of the `version: "1"` compiler path (`plan-quote` / `apply-quote` on a declarative file) | unscheduled |
 
 

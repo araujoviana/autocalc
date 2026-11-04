@@ -71,3 +71,14 @@ compiler produces a deterministic canonical IR and `quote.lock.yaml`. Large quot
 against the calculator's request limit and split into several lists, never splitting a card that
 carries a base cost (CCE, NAT, ELB). Design: [ADR-0018](../adr/0018-declarative-quotes-and-generated-card-schema.md) and
 `openspec/specs/core/declarative-compiler/spec.md`.
+
+## Example
+
+[`example-project-quote.yaml`](example-project-quote.yaml) is a six-card project (ECS, EVS, RDS, Redis,
+NAT, OBS) that plans and publishes end to end. Notes from building it:
+
+- `spec` is the catalog code, not the console name: an ECS flavor carries its OS (`c7n.large.2.linux`),
+  EVS takes the disk type (`GPSSD2.storage`), RDS needs `options.storage_spec` and `options.storage_gb`.
+- NAT is on-demand only here, and the public gateway is `natgateway_*`; the `privatenat_*` codes are a
+  different product.
+- A usage card (OBS) is priced when the list is rated, so `plan-quote` shows no price for it.

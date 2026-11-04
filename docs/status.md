@@ -29,7 +29,7 @@ page that will not open once ([publish gate](explanation/huawei/publish-gate.md)
 - Besides ECS, one DMS Kafka card (`dms.platinum.c6.kafka`, monthly, São Paulo) passed the gate live on 2026-11-04 (stored, rated and Edit 144.20). Two Redis specs failed first, because the chosen spec never reached the Redis form; after mapping the SKU's fields onto the page controls both pass (`redis.single.xu1.tiny.128` 1.06, `redis.ha.xu1.large.r2.1` 36.55, all three prices equal). The other recipe services still cannot apply a requested spec. Services not named here were not tried.
 - Only ECS and that Kafka card were exercised end to end by hand. Other services are covered by recorded fixtures and
   the region sweep ([run the tests](how-to/run-tests.md)).
-- The 19 builder services cannot take options through `apply_quote` yet.
+- Builder services take options through `apply_quote`; `plan-quote` rejects ones the builder does not know. Their page-control coverage (`schema coverage`) is still partial.
 
 ## Next to 0.9
 

@@ -7,7 +7,7 @@ import { invalid } from "./quote/model.ts";
 import { rank } from "./quote/ranking.ts";
 import { publishQuoteTool } from "./publish.ts";
 import { loadService } from "./schema-model.ts";
-import { legalOptions, modesOf, SPEC_ARG, USAGE_PRICED, VERIFIED } from "./services/publication.ts";
+import { legalOptions, modesOf, PRIMARY_GROUP, SPEC_ARG, USAGE_PRICED, VERIFIED } from "./services/publication.ts";
 import { draftQuoteTool } from "./workflow.ts";
 import { compileQuote, detectCatalogPricingAnomalies, buildCanonicalQuoteIR, generateLockfile, stringifyLockfile, sanitizeTitle, type QuoteDocument } from "./compiler/index.ts";
 import type { ActionContext } from "./types.ts";
@@ -141,7 +141,7 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
   const lock = await readLock(quote);
   // a pin applies only to the request it was made for: a changed `needs` is a new question
   const pins = (card: Dict) => { const pin = lock[card.id]; return pin && !card.spec && sameNeeds(pin.needs, card.needs) ? pin : undefined; };
-  const view = await draftQuoteTool(ctx, { customer: quote.customer, requirements: quote.cards.map(card => ({ ...card, ...(pins(card) ? { spec: pins(card).spec } : {}) })) });
+  const view = await draftQuoteTool(ctx, { customer: quote.customer, requirements: quote.cards.map(card => ({ ...card, ...(!card.group && PRIMARY_GROUP[card.service.toLowerCase()] ? { group: PRIMARY_GROUP[card.service.toLowerCase()] } : {}), ...(pins(card) ? { spec: pins(card).spec } : {}) })) });
   const draft = await ctx.drafts.load(view.draft_id);
   const decided = new Map(draft.decisions.map(d => [d.requirement_id, d]));
   const rows: Dict[] = [], next: Dict = { ...lock };

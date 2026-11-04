@@ -42,7 +42,7 @@ export class Catalog {
       const prices: Record<string, { amount: number; currency: string; per: string; usage_factor?: unknown }> = {};
       for (const raw of Array.isArray(item.planList) ? item.planList : []) {
         const plan = asObject(raw), mode = asString(plan.billingMode).toLowerCase();
-        if (plan.planType !== "PRICEPLAN" || typeof plan.amount !== "number" || !Number.isFinite(plan.amount) || !mode || prices[mode]) continue;
+        if ((plan.planType !== undefined && plan.planType !== "PRICEPLAN") || typeof plan.amount !== "number" || !Number.isFinite(plan.amount) || !mode || prices[mode]) continue;
         const onetime = asString(plan.billingEvent).endsWith("onetime");
         const unit = asObject(units[String(plan.measureUnit)]);
         const per = onetime ? `${String(plan.periodNum || 1)} ${mode === "monthly" ? "month" : "year"}` : `${String(plan.measureUnitStep || 1)} ${asString(unit.unit) || String(plan.measureUnit ?? "")}`;
