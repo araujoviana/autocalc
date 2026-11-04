@@ -169,10 +169,26 @@ test("a verified recipe service publishes through its recipe controls", async ()
   const { ctx, seen } = await setup({
     form: async input => buildRecipe(String(input.service), input as never).rewriteValue,
   });
+  (ctx as Dict).catalog.productInfo = async () => ({ product: { "er_er.attachment": [{ resourceSpecCode: "c7n.large.2" }] } });
   const id = await draft(ctx, req({ service: "er", billing: "ondemand", options: { downflow_gb: 250, attachments: 2 } }));
+  await run(ctx, "revise_quote", { draft_id: id, decisions: [{ requirement_id: "r1", spec: "c7n.large.2", justification: "test" }] });
   const out = await run(ctx, "publish_quote", { draft_id: id, name: "n" });
   expect(seen.encoded).toEqual(["er"]);
   expect(out.id).toBe("L1");
+});
+
+test("a DES card takes its transfer type, and a DSS card its pool type, from the chosen SKU", async () => {
+  const { buildRecipe } = await import("../../src/core/services/forms.ts");
+  const { ctx, seen } = await setup({ form: async input => { seen.forms.push(input); return buildRecipe(String(input.service), input as never).rewriteValue; } });
+  (ctx as Dict).catalog.productInfo = async (service: string) => ({ product: service === "des" ? { des_des: [{ resourceSpecCode: "c7n.large.2", transferTypeClass: "calc_12_" }] } : { "dss_dss.pool": [{ resourceSpecCode: "c7n.large.2", type: "detail_2_", dssDivision: "13.600 TB" }] } });
+  const des = await draft(ctx, req({ service: "des", billing: "ondemand", options: {} }));
+  await run(ctx, "revise_quote", { draft_id: des, decisions: [{ requirement_id: "r1", spec: "c7n.large.2", justification: "test" }] });
+  await run(ctx, "publish_quote", { draft_id: des, name: "n" });
+  expect(seen.forms.at(-1)).toMatchObject({ service: "des", transfer_type: "calc_12_" });
+  const dss = await draft(ctx, req({ service: "dss", billing: "yearly", options: { capacity: "13.600 TB" } }));
+  await run(ctx, "revise_quote", { draft_id: dss, decisions: [{ requirement_id: "r1", spec: "c7n.large.2", justification: "test" }] });
+  await run(ctx, "publish_quote", { draft_id: dss, name: "n" });
+  expect(seen.forms.at(-1)).toMatchObject({ service: "dss", type: "detail_2_", capacity: "13.600 TB" });
 });
 
 test("a Redis card gets the page controls of the chosen SKU; a spec the region does not sell is refused", async () => {

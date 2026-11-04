@@ -59,7 +59,7 @@ async function specOptions(ctx: ActionContext, service: string, region: string, 
   if (!map) return {};
   const item = ((await ctx.catalog.productInfo(service, region)).product[map.group] ?? []).find(product => product.resourceSpecCode === spec);
   if (!item) throw invalid(`${spec} is not a ${service} SKU sold in ${region}.`, "spec");
-  return Object.fromEntries(map.fields.filter(field => item[field] != null).map(field => [field, item[field]]));
+  return Object.fromEntries(map.fields.map(field => (typeof field === "string" ? [field, field] : field) as [string, string]).filter(([, key]) => item[key] != null).map(([option, key]) => [option, item[key]]));
 }
 
 export function validateListName(name: unknown): void {
