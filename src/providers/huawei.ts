@@ -3,6 +3,8 @@ import { candidate, invalid, type Candidate, type Requirement } from "../core/qu
 import type { Provider } from "../core/quote/provider.ts";
 
 const BILLING = ["ondemand", "monthly", "yearly"];
+/** Same set as USAGE_PRICED in core/services/publication.ts, kept here so the provider does not import the services layer. */
+const USAGE_PRICED = new Set(["obs"]);
 
 export interface CatalogSku { group: string; spec: string; description: string; prices: Record<string, { amount: number }>; offPage?: boolean }
 export interface HuaweiSource {
@@ -39,6 +41,15 @@ export class HuaweiProvider implements Provider {
       if (!plan || (req.group && sku.group !== req.group)) continue;
       const gen = /^[A-Za-z]+(\d+)/.exec(sku.spec);
       out.push(candidate(sku.spec, req.region, req.billing, String(plan.amount), parseCompute(sku.description), gen ? Number(gen[1]) : 0, sku.description));
+    }
+    // usage-priced pay-per-use: the SKUs have no list price, so offer each distinct spec once at price 0 (the real price is the rated usage)
+    if (!out.length && req.billing === "ondemand" && USAGE_PRICED.has(req.service.toLowerCase())) {
+      const specs = new Set<string>();
+      for (const sku of await this.source.skus(req.service, req.region)) {
+        if (sku.offPage || !sku.spec || specs.has(sku.spec) || (req.group && sku.group !== req.group)) continue;
+        specs.add(sku.spec);
+        out.push(candidate(sku.spec, req.region, req.billing, "0", {}, 0, "priced from usage when the list is rated"));
+      }
     }
     return out;
   }

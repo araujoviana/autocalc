@@ -14,6 +14,8 @@ export const VERIFIED = new Set([
 export const SPEC_ARG: Record<string, string> = { apm: "spec", apig: "edition", dline: "port", sfsturbo: "tier", cbr: "vault_spec", rds: "flavor", evs: "type", nat: "size", ecs: "flavor" };
 /** Catalog spec code -> the value the option expects. */
 export const specOption = (service: string, spec: string) => service === "nat" ? spec.replace(/^natgateway_/, "") : spec;
+/** Services whose pay-per-use SKUs carry usage plans with no list price in the catalog (OBS): the card is priced from its usage components when rated, so a plan can only resolve the spec, not price it. */
+export const USAGE_PRICED = new Set(["obs"]);
 /** Recipe services whose page controls are fields of the chosen catalog SKU: the ranked spec becomes these option values. The others have page controls (shards, storage, groups) that no catalog row carries. */
 export const RECIPE_SPEC_FIELDS: Record<string, { group: string; fields: string[] }> = {
   redis: { group: "dcs_dcs3", fields: ["instance_type", "version", "edition", "cpu_storage", "spec"] },

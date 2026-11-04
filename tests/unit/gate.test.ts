@@ -164,3 +164,15 @@ test("an unknown save outcome with no new list says it is safe to retry; two new
   expect(await failure(publishChecked("n", [card()], { lists: new UnknownSave("none") as never, check: passing(), env: {} }))).toMatchObject({ code: "MUTATION_UNKNOWN", hint: "It is safe to run the command again." });
   expect((await failure(publishChecked("n", [card()], { lists: new UnknownSave("twice") as never, check: passing(), env: {} }))).details).toEqual({ created: ["N1", "N2"] });
 });
+
+test("the OBS capacity-reset defect is excused only by its own signature, and still needs stored and rated to agree", async () => {
+  const reason = "the form state differs after Edit: template_RENDER.calculator_multiAZ_radio.UNSET_Stepper_0.measureValue";
+  const edit = (why: string) => async () => [{ index: 0, stored: D(10), edit: null, equal: false, reason: why }];
+  const excused = await verify("abc1", deps([obsCard(10)], edit(reason), async () => D("10.00")));
+  expect(excused.checks[0]!.problems.filter(p => !p.startsWith("["))).toEqual([]);
+  expect(checkToJson(excused.checks[0]!).edit_skipped).toContain("GH-2-OBS-STORAGE-EDIT-DROP");
+  const other = await verify("abc1", deps([obsCard(10)], edit("the form state differs after Edit: template_RENDER.calculator_get.x"), async () => D("10.00")));
+  expect(other.checks[0]!.problems.some(p => p.includes("form state differs"))).toBe(true);
+  const unrated = await verify("abc1", deps([obsCard(10)], edit(reason), async () => D("9.00")));
+  expect(unrated.checks[0]!.problems[0]).toContain("rating engine prices the products at 9.00");
+});

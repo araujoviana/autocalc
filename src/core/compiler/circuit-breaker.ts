@@ -12,6 +12,8 @@ export interface KnownDefectSignature {
   description: string;
   recommendedTier: DegradationTier;
   advisory: string;
+  /** The Edit check's failure reason that identifies this defect when no Edit price was produced. */
+  editReason?: RegExp | undefined;
 }
 
 export const KNOWN_VENDOR_DEFECTS: KnownDefectSignature[] = [
@@ -30,6 +32,7 @@ export const KNOWN_VENDOR_DEFECTS: KnownDefectSignature[] = [
     description: "Pay-per-use OBS cards reset storage line to 0 on Edit when storageType_switch momentarily clears pending state.",
     recommendedTier: "RATING_VERIFIED_EDIT_SKIPPED",
     advisory: "Vendor calculator SPA clears OBS storage line on Edit. Official CBC rating API price was verified and preserved.",
+    editReason: /^the form state differs after Edit: .*calculator_multiAZ_radio/,
   },
 ];
 

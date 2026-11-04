@@ -7,12 +7,13 @@ import { invalid } from "./quote/model.ts";
 import { rank } from "./quote/ranking.ts";
 import { publishQuoteTool } from "./publish.ts";
 import { loadService } from "./schema-model.ts";
-import { legalOptions, modesOf, SPEC_ARG, VERIFIED } from "./services/publication.ts";
+import { legalOptions, modesOf, SPEC_ARG, USAGE_PRICED, VERIFIED } from "./services/publication.ts";
 import { draftQuoteTool } from "./workflow.ts";
 import { compileQuote, detectCatalogPricingAnomalies, buildCanonicalQuoteIR, generateLockfile, stringifyLockfile, sanitizeTitle, type QuoteDocument } from "./compiler/index.ts";
 import type { ActionContext } from "./types.ts";
 import { progress } from "./progress.ts";
-import { ECS_DEFAULT_IMAGE } from "./schemas.ts";
+import { CardInput, ECS_DEFAULT_IMAGE } from "./schemas.ts";
+import { RECIPES } from "./services/forms.ts";
 import { imageLabel, matchImages } from "./services/ecs.ts";
 
 type Dict = Record<string, any>;
@@ -81,6 +82,11 @@ export async function validate(quote: Quote, dir?: string): Promise<Dict[]> {
     if (card.billing && !modes.includes(card.billing)) bad(card, "billing", `${service} does not support '${card.billing}'.`, { allowed: modes });
     if (!card.spec && !card.needs && SPEC_ARG[service]) bad(card, "spec", "Give the size (`needs`) or a specific `spec`.", { hint: "needs: {vcpus: 4, memory_gb: 16}" });
     if (card.options != null && !isObject(card.options)) { bad(card, "options", "options must be a mapping of option name to value.", { allowed: legal }); continue; }
+    if (!(service in RECIPES) && card.region && card.billing && modes.includes(card.billing)) {
+      // builder options are checked offline with the builder's own input schema, so a bad value fails here and not after minutes of browser work
+      const parsed = CardInput.safeParse({ service, region: card.region, billing: card.billing, ...(card.quantity && card.quantity !== 1 ? { quantity: card.quantity } : {}), ...card.options });
+      if (!parsed.success) for (const issue of parsed.error.issues) if (issue.code !== "unrecognized_keys" && issue.path[0] !== "service" && issue.path[0] !== "billing" && issue.path[0] !== SPEC_ARG[service]) bad(card, String(issue.path[0] ?? "options"), `${issue.path.join(".") || "options"}: ${issue.message}.`);
+    }
     const controls = new Map((await loadService(service, dir))?.controls.filter(c => c.option).map(c => [c.option!, c]) ?? []);
     for (const [option, value] of Object.entries(card.options ?? {})) {
       if (!legal.includes(option)) { bad(card, option, `${service} has no option '${option}'.`, { allowed: legal, hint: SCHEMA_HINT }); continue; }
@@ -95,7 +101,9 @@ export async function validate(quote: Quote, dir?: string): Promise<Dict[]> {
 
 /** Options the card sets that no control in the service's schema maps. */
 export async function unmappedOptions(card: Dict, dir?: string): Promise<string[]> {
-  const mapped = new Set((await loadService(String(card.service).toLowerCase(), dir))?.controls.map(c => c.option).filter(Boolean));
+  const service = String(card.service).toLowerCase();
+  // An option is applied when a schema control names it or the service's builder takes it (publish builds the card from the builder's own input, which rejects anything else).
+  const mapped = new Set<string | null | undefined>([...((await loadService(service, dir))?.controls.map(c => c.option).filter(Boolean) ?? []), ...(legalOptions(service) ?? [])]);
   return Object.keys(card.options ?? {}).filter(option => !mapped.has(option)).sort();
 }
 
@@ -141,7 +149,7 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
     const requirement = draft.requirements[index]!, row: Dict = { id: card.id, unmapped_options: await unmappedOptions(card, dir) }, decision = decided.get(requirement.id);
     if (decision) {
       const ranked = rank(requirement, await ctx.provider.candidates(requirement)).find(x => x.candidate.spec === decision.spec);
-      const price = ranked ? formatDecimal(ranked.candidate.price) : null;
+      const price = ranked && !USAGE_PRICED.has(requirement.service.toLowerCase()) ? formatDecimal(ranked.candidate.price) : null;
       Object.assign(row, { spec: decision.spec, price });
       if (requirement.service.toLowerCase() === "ecs") {
         const choices = await ambiguousImages(ctx, requirement.region, decision.spec, requirement.options.image);

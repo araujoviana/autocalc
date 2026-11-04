@@ -114,7 +114,7 @@ export async function verify(listId: string, deps: VerifyDeps, expectedCards?: D
     const selected = cards[check.index]!.selectedProduct, billing = BILLING[selected.chargeModeName as keyof typeof BILLING] ?? "";
     const { tier, defect } = resolveExecutionTier(String(selected.serviceCode ?? ""), billing);
     // A known portal defect re-prices the card wrongly in Edit even though the card is right: the stored and rating-engine prices still must agree.
-    if (!result.equal && result.edit !== null && tier === "RATING_VERIFIED_EDIT_SKIPPED" && defect) { check.edit_skipped = `${defect.advisory} (${defect.defectId})`; continue; }
+    if (!result.equal && tier === "RATING_VERIFIED_EDIT_SKIPPED" && defect && (result.edit !== null || defect.editReason?.test(result.reason ?? ""))) { check.edit_skipped = `${defect.advisory} (${defect.defectId})`; continue; }
     if (!result.equal) check.problems.push(result.reason || `Edit re-prices to ${result.edit === null ? "nothing" : formatCents(result.edit)}, stored ${formatCents(check.stored)}`);
   }
   // validation issues name the card by title in brackets
