@@ -9,6 +9,7 @@ import { publishQuoteTool } from "./publish.ts";
 import { loadService } from "./schema-model.ts";
 import { legalOptions, modesOf, SPEC_ARG, VERIFIED } from "./services/publication.ts";
 import { draftQuoteTool } from "./workflow.ts";
+import { compileQuote, buildCanonicalQuoteIR, generateLockfile, stringifyLockfile, sanitizeTitle, type QuoteDocument } from "./compiler/index.ts";
 import type { ActionContext } from "./types.ts";
 
 type Dict = Record<string, any>;
@@ -16,11 +17,33 @@ const CARD_FIELDS = ["id", "service", "region", "billing", "quantity", "needs", 
 export const SCHEMA_HINT = "Read the autocalc://schema/<service> resource, or run `autocalc schema coverage <service>`.";
 const isObject = (v: unknown): v is Dict => typeof v === "object" && v !== null && !Array.isArray(v);
 
-export interface Quote { customer: string; cards: Dict[]; name?: string | undefined; settlement: string; path?: string | undefined }
+export interface Quote { customer: string; cards: Dict[]; name?: string | undefined; settlement: string; path?: string | undefined; version?: string | undefined; rawDocument?: QuoteDocument | undefined }
 
 export function parse(text: string, path?: string): Quote {
   let doc: unknown;
   try { doc = Bun.YAML.parse(text); } catch (error) { throw invalid(`The quote file is not valid YAML: ${error instanceof Error ? error.message : String(error)}`, "cards"); }
+  if (isObject(doc) && doc.version === "1") {
+    const compiled = compileQuote(text);
+    const cards = compiled.resources.map(r => ({
+      id: r.id,
+      service: r.service,
+      region: r.region,
+      billing: r.billing,
+      quantity: r.quantity,
+      needs: r.needs,
+      spec: r.spec,
+      options: r.options,
+    }));
+    return {
+      customer: compiled.document.metadata.customer,
+      cards,
+      name: compiled.document.metadata.title_prefix,
+      settlement: "total",
+      path,
+      version: "1",
+      rawDocument: compiled.document,
+    };
+  }
   if (!isObject(doc) || !Array.isArray(doc.cards) || !doc.cards.length) throw invalid("A quote file needs a customer and a nonempty list of cards.", "cards");
   const defaults = doc.defaults ?? {};
   if (!isObject(defaults)) throw invalid("defaults must be a mapping.", "defaults");
@@ -117,6 +140,32 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
     rows.push(row);
   }
   if (quote.path && JSON.stringify(next) !== JSON.stringify(lock)) await writeFile(lockPath(quote), JSON.stringify(sortKeys(next), null, 2) + "\n", "utf8");
+  if (quote.version === "1" && quote.path) {
+    try {
+      const text = await readFile(quote.path, "utf8");
+      const compiled = compileQuote(text);
+      const ir = buildCanonicalQuoteIR(compiled.document, compiled.resources);
+      for (const [index, card] of quote.cards.entries()) {
+        const row = rows[index];
+        if (row && ir.resources[index]) {
+          if (row.spec) {
+            ir.resources[index].spec = row.spec;
+            ir.resources[index].skuCode = row.spec;
+          }
+          if (row.price != null) {
+            const p = parseFloat(String(row.price));
+            ir.resources[index].unitPrice = p;
+            ir.resources[index].totalPrice = p * (card.quantity ?? 1);
+          }
+        }
+      }
+      const lockObj = generateLockfile(ir);
+      const lockYamlPath = quote.path.replace(/\.[^./\\]+$/, "") + ".lock.yaml";
+      await writeFile(lockYamlPath, stringifyLockfile(lockObj), "utf8");
+    } catch {
+      // Non-fatal if lockfile write fails
+    }
+  }
   return { draft_id: view.draft_id, cards: rows, pending: view.pending };
 }
 
@@ -130,8 +179,9 @@ export async function apply(ctx: ActionContext, quote: Quote, name?: string, dir
     if (row.unmapped_options.length) throw invalid(`Card '${row.id}' sets options the schema does not map: ${JSON.stringify(row.unmapped_options)}.`, row.unmapped_options[0], undefined, SCHEMA_HINT);
     if (row.lock_drift) throw invalid(`Card '${row.id}' changed price since the lock was written; review and delete its lock entry to accept.`, "spec", [row.lock_drift.price]);
   }
-  const title = name || quote.name;
-  if (!title) throw invalid("A list name is required (`name:` in the file).", "name");
+  const rawTitle = name || quote.name;
+  if (!rawTitle) throw invalid("A list name is required (`name:` in the file).", "name");
+  const title = quote.version === "1" ? sanitizeTitle(rawTitle) : rawTitle;
   if (quote.settlement !== "total" && quote.settlement !== "monthly") throw invalid("settlement must be 'total' or 'monthly'.", "settlement", ["total", "monthly"]);
   return publishQuoteTool(ctx, { draft_id: result.draft_id, name: title, settlement: quote.settlement, currency: "USD" });
 }

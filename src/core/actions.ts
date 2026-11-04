@@ -1,5 +1,7 @@
+import { readFile } from "node:fs/promises";
 import type { z } from "zod";
-import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, PlanQuoteInput, ApplyQuoteInput, ExportQuotesXlsxInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput, PublishQuoteInput } from "./schemas.ts";
+import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, CompileQuoteInput, PlanQuoteInput, ApplyQuoteInput, ExportQuotesXlsxInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput, PublishQuoteInput } from "./schemas.ts";
+import { compileQuote, buildCanonicalQuoteIR } from "./compiler/index.ts";
 import { draftQuoteTool, reviseQuoteTool, listDraftsTool, inspectDraftTool, recoverDraftTool } from "./workflow.ts";
 import { publishQuoteTool } from "./publish.ts";
 import * as quoteFile from "./quote-file.ts";
@@ -134,6 +136,20 @@ export const handlers = {
   draft_quote: handler(DraftQuoteInput, draftQuoteTool),
   revise_quote: handler(ReviseQuoteInput, reviseQuoteTool),
   publish_quote: handler(PublishQuoteInput, publishQuoteTool),
+  compile_quote: handler(CompileQuoteInput, async (_ctx, input) => {
+    const text = await readFile(input.path, "utf8");
+    const compiled = compileQuote(text);
+    const ir = buildCanonicalQuoteIR(compiled.document, compiled.resources);
+    return {
+      ok: true,
+      version: compiled.document.version,
+      customer: compiled.document.metadata.customer,
+      horizon: compiled.document.horizon?.duration ?? "1m",
+      resource_count: compiled.resources.length,
+      input_hash: ir.inputHash,
+      resources: compiled.resources,
+    };
+  }),
   plan_quote: handler(PlanQuoteInput, async (ctx, input) => quoteFile.plan(ctx, await quoteFile.load(input.path))),
   apply_quote: handler(ApplyQuoteInput, async (ctx, input) => quoteFile.apply(ctx, await quoteFile.load(input.path), input.name || undefined)),
   export_quotes_xlsx: handler(ExportQuotesXlsxInput, exportQuotesXlsx),

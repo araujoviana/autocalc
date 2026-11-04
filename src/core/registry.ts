@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, PlanQuoteInput, ApplyQuoteInput, ExportQuotesXlsxInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput, PublishQuoteInput } from "./schemas.ts";
+import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, CompileQuoteInput, PlanQuoteInput, ApplyQuoteInput, ExportQuotesXlsxInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput, PublishQuoteInput } from "./schemas.ts";
 import { CalculatorError } from "./errors.ts";
 
 import type { ActionContext } from "./types.ts";
@@ -32,6 +32,7 @@ export const registry = {
   draft_quote: action("Start a quote from requirements; exact matches are confirmed, others list candidates", DraftQuoteInput, "draft-quote", handlers.draft_quote, false),
   revise_quote: action("Record the user's choices for pending requirements", ReviseQuoteInput, "revise-quote", handlers.revise_quote, false),
   publish_quote: action("Publish a fully decided draft: builds the cards, saves the list, verifies it on the website and returns the link", PublishQuoteInput, "publish-quote", handlers.publish_quote, false),
+  compile_quote: action("Compile a declarative quote file (version: '1') offline in under 50ms into normalized resources", CompileQuoteInput, "compile", handlers.compile_quote),
   plan_quote: action("Plan a quote file (YAML of cards): validate it against the service schemas, resolve each card to a spec, rate it and report options the schema does not map and price changes since the lock file. Saves nothing on the website. Read the schema first: resource autocalc://schema/<service>. Sizes in GB, bandwidth in Mbit/s", PlanQuoteInput, "plan", handlers.plan_quote, false),
   apply_quote: action("Publish a planned quote file through the verified publish gate and return the share link. Needs a login (auth_login). Fails on an unresolved card, an option the schema does not map or a moved price", ApplyQuoteInput, "apply", handlers.apply_quote, false),
   export_quotes_xlsx: action("Write a workbook of price lists, one row per environment, on four sheets: Quotes, Decisions, Resources and Totals", ExportQuotesXlsxInput, "export-quotes-xlsx", handlers.export_quotes_xlsx, false),

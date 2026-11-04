@@ -29,7 +29,7 @@
 
 ## 5. CLI & MCP Integration
 
-- [ ] 5.1 Implement CLI command `autocalc compile-quote <file.yaml>` and verify offline compilation in under 50ms.
-- [ ] 5.2 Implement CLI command `autocalc plan-quote <file.yaml>` generating `quote.lock.yaml` and verify output formatting.
-- [ ] 5.3 Implement CLI command `autocalc apply-quote <file.yaml>` executing publication and verify return of share links.
-- [ ] 5.4 Register `compile_quote`, `plan_quote`, and `apply_quote` on the MCP surface and verify integration tests over stdio.
+- [x] 5.1 Implement CLI command `autocalc compile-quote <file.yaml>` and verify offline compilation in under 50ms.
+- [x] 5.2 Implement CLI command `autocalc plan-quote <file.yaml>` generating `quote.lock.yaml` and verify output formatting.
+- [x] 5.3 Implement CLI command `autocalc apply-quote <file.yaml>` executing publication and verify return of share links.
+- [x] 5.4 Register `compile_quote`, `plan_quote`, and `apply_quote` on the MCP surface and verify integration tests over stdio.
