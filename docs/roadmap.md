@@ -53,15 +53,13 @@ GitHub issues #1, #2, #4, #5 and #6 were written against the Python code or an e
 | # | Item | State | Issue |
 |---|---|---|---|
 | 1 | Known portal defects (OBS pay-per-use, Kafka yearly) no longer fail the gate on a wrong Edit price when stored and rated prices agree; the check is flagged and `apply-quote` warns. **Still open:** the catalog anomaly guard (`detectCatalogPricingAnomalies`) is not called from `plan-quote`, and the lower degradation tiers (cached estimate, export only) are unused | partly done | #2, #4.2, #5.3, #5.4, #6.9 |
-| 2 | OBS schema holes: `unit` required on `size*` lines, `multi_az` rejected with a single-AZ factor, canonical zero-usage lines and order | open, to confirm per item | #4.3, #5.2, #6.2, #6.5 |
 | 3 | Per-field limits (DEW kms api 9,999, DEW secrets 99, OBS requests 9,999, OBS GB 102,400) validated, with splitting that respects tiered fields | open | #6.3, #6.4 |
-| 4 | Recover from `MUTATION_UNKNOWN`: look the list up by name and return it, or say it does not exist | open (the duplicate-name warning is the first half) | #4.1, #5.5 |
 | 5 | Edit verification beyond ECS and OBS (`edit-check-browser.ts` answers `unavailable`), with the known-defect table | open | #5.3 |
 | 6 | Live run of the `version: "1"` path | open | |
 | 7 | Map builder options to schema controls, in batches (coverage today: ecs, eip, redis, sfs 100%; dline 67; evs 57; cbr, nat 50; cce, cci, obs 44; apig, dew 43; kafka 40; rabbitmq 36; function, waf 33; rds 31; apm, lts 30; elb 21; nosql 20) | open | |
 | 7b | Record which configurations per service have passed plan, apply and the gate live, and show that beside coverage. The coverage percentage only counts controls that have an option name | open | |
 | 8 | Billing-mode planning for a whole list, update in place, xlsx export, pay-per-use for one year, yearly package helpers | after 0.9 | #5.1, #5.4, #5.7, #6.7, #6.8 |
 
-Already done in the TypeScript code, so the issue text no longer applies: list-name length is validated (50 characters, `src/core/publish.ts`), HTTP 413 maps to `PAYLOAD_TOO_LARGE`, OBS `quote` picks the SKU by usage factor, and the Python session and MCP bugs of #1.
+Already done in the TypeScript code, so the issue text no longer applies: list-name length is validated (50 characters, `src/core/publish.ts`), HTTP 413 maps to `PAYLOAD_TOO_LARGE`, OBS `quote` picks the SKU by usage factor, the Python session and MCP bugs of #1, the OBS schema holes of #4.3 (`unit` required, `multi_az` checked against the storage factor, per-mode errors in `compare_modes`), and recovery from an unknown save outcome (the gate adopts the one new list of that name and still verifies it; none means safe to retry; several are named).
 
 When an item is done, remove its row in the same commit as the change that closes it.

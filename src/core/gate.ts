@@ -124,9 +124,26 @@ export async function verify(listId: string, deps: VerifyDeps, expectedCards?: D
 
 export interface PublishOptions {
   settlement?: "total" | "monthly"; currency?: string;
-  lists: Pick<ListSession, "create" | "delete">;
+  lists: Pick<ListSession, "create" | "delete"> & Partial<Pick<ListSession, "lists">>;
   check: (listId: string, expectedCards: Dict[]) => Promise<Verified>;
   env?: Record<string, string | undefined>;
+}
+
+const idsNamed = async (lists: PublishOptions["lists"], name: string): Promise<string[] | null> => {
+  if (!lists.lists) return null;
+  try { return ((await lists.lists()) as Dict[]).filter(list => list.name === name).map(list => String(list.key)); } catch { return null; }
+};
+
+/** Create the list. When the save's outcome is unknown, look for a list of that name that was not there before: exactly one is the one we made (the gate still verifies it). */
+async function createOrFind(name: string, payload: Dict, lists: PublishOptions["lists"]): Promise<string> {
+  const before = await idsNamed(lists, name);
+  try { return await lists.create(payload); } catch (error) {
+    if (!(error instanceof CalculatorError) || error.code !== "MUTATION_UNKNOWN" || before === null) throw error;
+    const created = (await idsNamed(lists, name) ?? before).filter(id => !before.includes(id));
+    if (created.length === 1) { progress(`The save reported an unknown outcome; found the new list ${created[0]}`); return created[0]!; }
+    if (created.length === 0) throw new CalculatorError("MUTATION_UNKNOWN", `The save failed and no list named "${name}" was created.`, "It is safe to run the command again.", { created: [] });
+    throw new CalculatorError("MUTATION_UNKNOWN", `The save reported an unknown outcome and ${created.length} new lists named "${name}" exist.`, "Delete the extra lists by hand, then run the command again.", { created });
+  }
 }
 
 /** Save `cards` as a list, verify it, and return its link; on any failure delete it and throw GATE_FAILED. */
@@ -134,7 +151,7 @@ export async function publishChecked(name: string, cards: Dict[], options: Publi
   if (!cards.length) throw new CalculatorError("VALIDATION", "Cannot publish an empty list.", undefined, { field: "cards" });
   const currency = options.currency ?? "USD", payload = sharePayload(name, cards as { selectedProduct: Dict }[], options.settlement);
   progress("Saving the list on your account");
-  const listId = await options.lists.create(payload);
+  const listId = await createOrFind(name, payload, options.lists);
   progress(`Saved list ${listId}; checking stored, rated and Edit prices`);
   let checks: CardCheck[] = [], issues: string[] = [], error: string | null, cause: unknown;
   try {

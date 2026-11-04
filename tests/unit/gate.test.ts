@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { CalculatorError } from "../../src/core/errors.ts";
 import { cardCheck, checkToJson, publishChecked, requestIssues, verify, type CardCheck } from "../../src/core/gate.ts";
 import { cents } from "../../src/core/quote/decimal.ts";
 import type { EditResult } from "../../src/core/page/edit.ts";
@@ -140,4 +141,26 @@ test("an Edit drift on a service with no known defect still fails", async () => 
   const { checks } = await verify("abc1", deps([card(10)], async () => [{ index: 0, stored: D(10), edit: D(4), equal: false }], async () => D("10.00")));
   expect(checks[0]!.problems.some(p => p.includes("Edit re-prices to 4.00"))).toBe(true);
   expect(checkToJson(checks[0]!).edit_skipped).toBeUndefined();
+});
+
+class UnknownSave extends FakeLists {
+  constructor(private readonly outcome: "created" | "none" | "twice", private readonly existing: string[] = []) { super(); }
+  private after: string[] = [];
+  async lists() { return [...this.existing, ...this.after].map(key => ({ key, name: "n" })); }
+  override async create(): Promise<string> {
+    this.after = this.outcome === "created" ? ["NEW"] : this.outcome === "twice" ? ["N1", "N2"] : [];
+    throw Object.assign(new CalculatorError("MUTATION_UNKNOWN", "Saved-list operation outcome is unknown"), {});
+  }
+}
+const passing = (): Parameters<typeof publishChecked>[2]["check"] => async () => ({ checks: [cardCheck(0, "c", D(10), { rated: D(10), edit: D(10) })], issues: [] });
+
+test("a save with an unknown outcome adopts the one new list of that name and still verifies it", async () => {
+  const lists = new UnknownSave("created", ["OLD"]);
+  const result = await publishChecked("n", [card()], { lists: lists as never, check: async id => { expect(id).toBe("NEW"); return passing()(id, []); }, env: {} });
+  expect(result.id).toBe("NEW");
+});
+
+test("an unknown save outcome with no new list says it is safe to retry; two new lists name both", async () => {
+  expect(await failure(publishChecked("n", [card()], { lists: new UnknownSave("none") as never, check: passing(), env: {} }))).toMatchObject({ code: "MUTATION_UNKNOWN", hint: "It is safe to run the command again." });
+  expect((await failure(publishChecked("n", [card()], { lists: new UnknownSave("twice") as never, check: passing(), env: {} }))).details).toEqual({ created: ["N1", "N2"] });
 });
