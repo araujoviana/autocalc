@@ -14,7 +14,7 @@ Hard-coding a token from one region caused an OBS Edit bug in another (see
   `GET /config?urlPath=<service>&language=en-us&sign=common`. The bundle also holds non-obvious
   pricing constants, such as the DMS conversion-rate maps.
 - The frontend bundle is the source of truth for the whole render model. Fetch it with
-  `uv run python scripts/fetch_bundle.py` ([how-to](../../how-to/fetch-bundle.md)); it is never
+  `bun scripts/fetch-bundle.ts` ([how-to](../../how-to/fetch-bundle.md)); it is never
   committed.
 
 ## Services without a known card

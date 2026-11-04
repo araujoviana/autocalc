@@ -12,7 +12,7 @@ live in `openspec/changes/archive/`.
 | 4 | `publish-gate` | Fail-closed verification before a link is returned ([ADR-0003](adr/0003-fail-closed-publish-gate.md)) |
 | 5 | `workflow-surface` | `draft_quote` → `revise_quote` → `publish_quote`, CLI and MCP from one registry ([ADR-0007](adr/0007-workflow-surface-and-one-registry.md)) |
 | 6 | `spa-encoder` | Page-as-encoder for the seven existing services |
-| 7 | `distribution` | `uv tool` install from git tags, `install.sh` / `install.ps1` ([ADR-0013](adr/0013-distribution-uv-tool-from-git-tags.md)) |
+| 7 | `distribution` | One-command install from git tags, `install.sh` / `install.ps1` ([ADR-0019](adr/0019-distribution-bun-from-git-tags.md)) |
 | 8 | `builder-wave-1` | The 13 existing builders verified on the page; 20 of 93 quotable services ([v1 scope](explanation/v1-scope.md)) |
 | 9 | `builder-wave-2` | Databases and storage via form recipes; 33 of 93 quotable services |
 | 10 | `builder-wave-3` | Networking, security and middleware via form recipes; 50 page-accepted services at the time; request fidelity under audit |

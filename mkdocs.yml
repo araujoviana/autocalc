@@ -6,6 +6,8 @@ exclude_docs: |
   /quotes.md
   /reports/
   /private/
+  /research/
+  /design/
 
 theme:
   name: material

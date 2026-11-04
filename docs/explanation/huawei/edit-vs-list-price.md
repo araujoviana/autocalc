@@ -27,6 +27,5 @@ data disks lost.
 
 The golden comparison ignores `rewriteValue` and other volatile keys, so a card with a broken
 form state still "matches". That is why the publish gate includes a headless Edit check per
-card ([ADR-0003](../../adr/0003-fail-closed-publish-gate.md)). Until the gate exists,
-`tests/test_template_render.py` and `uv run python -m tests.support.template_audit` cover the
-form state.
+card ([ADR-0003](../../adr/0003-fail-closed-publish-gate.md)). `bun scripts/template-audit.ts`
+covers the form state against the golden corpus.

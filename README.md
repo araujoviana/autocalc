@@ -27,7 +27,7 @@ autocalc login
 
 The installer adds the MCP server to Claude Code when `claude` is on the path (otherwise:
 `claude mcp add hwc-calculator -- autocalc-mcp`). `autocalc update` moves to the newest release.
-Working on autocalc itself: `uv sync`, then prefix commands with `uv run`.
+Working on autocalc itself: `bun install`, then `bun run src/cli.ts`.
 
 ```bash
 autocalc search ecs "Sao Paulo" linux --vcpus 4 --mem 8
@@ -37,13 +37,13 @@ autocalc doctor                   # health check: endpoints, auth, browser, cach
 
 ## Docs
 
-Start at [`docs/index.md`](docs/index.md) (or `uv run --group docs mkdocs serve`). The
+Start at [`docs/index.md`](docs/index.md) (or `mkdocs serve`). The
 [first-quote tutorial](docs/tutorials/first-quote.md) is the best entry point; the
 [CLI reference](docs/reference/cli.md) and [architecture](docs/explanation/architecture.md) come next.
 
 ## Development
 
-`uv sync --group dev --group docs`, then see [run the tests](docs/how-to/run-tests.md) for the
+`bun install --frozen-lockfile`, then see [run the tests](docs/how-to/run-tests.md) for the
 checks CI runs. Behavior is specified in [`openspec/specs/`](openspec/specs/), and changes go
 through OpenSpec (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`). See [CONTRIBUTING](CONTRIBUTING.md).
 

@@ -4,7 +4,7 @@ Status: proposed ([ADR-0018](../adr/0018-declarative-quotes-and-generated-card-s
 
 ## Card schema
 
-One YAML file per service in `src/autocalc/schema/files/<service>.yaml`, generated from the live
+One YAML file per service in `src/schema/files/<service>.yaml`, generated from the live
 calculator page (anonymous; nothing is saved on the website).
 
 ```bash

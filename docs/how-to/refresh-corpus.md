@@ -5,8 +5,8 @@ Those lists come from **your own account** and are client data, so they live onl
 gitignored `tests/fixtures/corpus/` and never leave your machine.
 
 ```bash
-uv run autocalc login                          # once, if not logged in
-uv run python -m tests.support.pull_corpus
+bun run src/cli.ts login       # once, if not logged in
+bun scripts/pull-corpus.ts
 ```
 
 The script:

@@ -1,10 +1,10 @@
 # Cut a release
 
 The installers and `autocalc update` pick the newest `vX.Y.Z` tag of the repository
-([ADR-0013](../adr/0013-distribution-uv-tool-from-git-tags.md)). A release is a tag.
+([ADR-0019](../adr/0019-distribution-bun-from-git-tags.md)). A release is a tag.
 
-1. On `main`, with the tests green (`uv run pytest -m "not live"`), set `version` in
-   `pyproject.toml` to the new number and commit it.
+1. On `main`, with the tests green (`bun run check && bun run check:boundaries && bun run test:offline`),
+   set `version` in `package.json` to the new number and commit it.
 2. Tag the commit with the same number and push both:
 
     ```bash

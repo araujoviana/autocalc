@@ -16,39 +16,27 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: astral-sh/setup-uv@v10.3.0
-        with:
-          enable-cache: true
-
-      - name: Install (locked, dev + docs groups)
-        run: uv sync --locked --group dev --group docs
-
-      - name: Lint
-        run: uv run ruff check
-
-      - name: Offline tests
-        run: uv run pytest -m "not live"
-
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.4
 
-      - name: Parity gate (registry + test map)
-        run: |
-          uv run python scripts/parity-registry.py
-          uv run python scripts/parity-test-map.py
+      - name: Install (frozen lockfile)
+        run: bun install --frozen-lockfile
 
-      - name: TypeScript offline suite
-        working-directory: experimental/bun
+      - name: Install Chromium for Playwright
+        run: bun --bun x playwright install --with-deps chromium
+
+      - name: Typecheck and boundary check
         run: |
-          bun install --frozen-lockfile
-          bun --bun x playwright install --with-deps chromium
           bun run check
           bun run check:boundaries
-          bun run test:offline
+
+      - name: Offline tests
+        run: bun run test:offline
 
       - name: Docs
-        run: uv run --group docs mkdocs build --strict
+        if: matrix.os == 'ubuntu-latest'
+        run: pipx run --spec mkdocs-material mkdocs build --strict
 
       - uses: actions/setup-node@v4
         with:

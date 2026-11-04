@@ -4,8 +4,8 @@ The calculator's frontend bundle (`framework.js`) is the source of truth for how
 state and labels are built. It is third-party code, so it is never committed.
 
 ```bash
-uv run python scripts/fetch_bundle.py                    # the version the live site serves
-uv run python scripts/fetch_bundle.py --version 11.4.201 # a specific version
+bun scripts/fetch-bundle.ts                    # the version the live site serves
+bun scripts/fetch-bundle.ts --version 11.4.201 # a specific version
 ```
 
 The script prints the path it wrote, `.cache/bundle/framework-<version>.js`, which is

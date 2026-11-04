@@ -16,15 +16,15 @@ Thanks for looking. autocalc is a small, experimental project, so keep changes f
 ## Set up and check
 
 ```bash
-uv sync --group dev --group docs
-uv run ruff check
-uv run pytest -m "not live"
-uv run --group docs mkdocs build --strict
+bun install --frozen-lockfile
+bun run check
+bun run check:boundaries
+bun run test:offline
+mkdocs build --strict
 ```
 
 These are the checks CI runs. [Run the tests](docs/how-to/run-tests.md) also covers the live checks,
-which need network access (and, for `tests.support.render`, a login that creates and deletes a list
-in your account).
+which need network access.
 
 ## Pull requests
 
