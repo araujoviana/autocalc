@@ -30,7 +30,7 @@ Each item is either assigned to the change that will close it or left unschedule
 | Item | Goes to |
 |---|---|
 | `publish_quote` for services beyond the supported verified set | unscheduled |
-| Map ranked catalog specs onto each recipe service's page values (until then publication must reject unapplied specs) | unscheduled |
+| Map ranked catalog specs onto each recipe service's page values. Done for Redis (its page controls are fields of the SKU row, `RECIPE_SPEC_FIELDS`). Open for the other 14 verified recipes (dds, ddm, des, drs, dss, er, gaussdb, hrds, memcached, rdsformariadb, sdrs, sfs, ssa, taurusdb): their controls (shards, storage, groups) are not catalog fields, so each needs its own mapping; until then publication rejects an unapplied spec | partly done |
 | Quotes that span several regions in one saved list | unscheduled (not delivered by archived `quote-core`) |
 | Availability-zone handling for services that price per AZ | unscheduled (not delivered by archived `quote-core`) |
 | Browser setup by the installer (`autocalc doctor` says when `install-browser` is needed) | unscheduled |

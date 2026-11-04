@@ -174,3 +174,20 @@ test("a verified recipe service publishes through its recipe controls", async ()
   expect(seen.encoded).toEqual(["er"]);
   expect(out.id).toBe("L1");
 });
+
+test("a Redis card gets the page controls of the chosen SKU; a spec the region does not sell is refused", async () => {
+  const { buildRecipe } = await import("../../src/core/services/forms.ts");
+  const { ctx, seen } = await setup({ form: async input => { seen.forms.push(input); return buildRecipe(String(input.service), input as never).rewriteValue; } });
+  const item = { resourceSpecCode: "c7n.large.2", instance_type: "single", version: "5.0", edition: "basic", cpu_storage: "x86", spec: "S1", ignored: "no" };
+  (ctx as Dict).catalog.productInfo = async () => ({ product: { dcs_dcs3: [item] } });
+  const id = await draft(ctx, req({ service: "redis", options: {} }));
+  await run(ctx, "revise_quote", { draft_id: id, decisions: [{ requirement_id: "r1", spec: "c7n.large.2", justification: "test" }] });
+  await run(ctx, "publish_quote", { draft_id: id, name: "n" });
+  expect(seen.forms.at(-1)).toMatchObject({ service: "redis", instance_type: "single", version: "5.0", edition: "basic", cpu_storage: "x86", spec: "S1" });
+  expect(seen.forms.at(-1)).not.toHaveProperty("ignored");
+
+  (ctx as Dict).catalog.productInfo = async () => ({ product: { dcs_dcs3: [] } });
+  const id2 = await draft(ctx, req({ service: "redis", options: {} }));
+  await run(ctx, "revise_quote", { draft_id: id2, decisions: [{ requirement_id: "r1", spec: "c7n.large.2", justification: "test" }] });
+  expect((await rejects(run(ctx, "publish_quote", { draft_id: id2, name: "n" }))).message).toContain("not a redis SKU sold in");
+});

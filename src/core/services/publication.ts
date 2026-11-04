@@ -14,6 +14,10 @@ export const VERIFIED = new Set([
 export const SPEC_ARG: Record<string, string> = { apm: "spec", apig: "edition", dline: "port", sfsturbo: "tier", cbr: "vault_spec", rds: "flavor", evs: "type", nat: "size", ecs: "flavor" };
 /** Catalog spec code -> the value the option expects. */
 export const specOption = (service: string, spec: string) => service === "nat" ? spec.replace(/^natgateway_/, "") : spec;
+/** Recipe services whose page controls are fields of the chosen catalog SKU: the ranked spec becomes these option values. The others have page controls (shards, storage, groups) that no catalog row carries. */
+export const RECIPE_SPEC_FIELDS: Record<string, { group: string; fields: string[] }> = {
+  redis: { group: "dcs_dcs3", fields: ["instance_type", "version", "edition", "cpu_storage", "spec"] },
+};
 /** Services whose form cannot express a quantity other than 1. */
 export const SINGLE_QUANTITY = new Set([
   "nat", "obs", "lts", "function", "elb", "cci", "nosql",
