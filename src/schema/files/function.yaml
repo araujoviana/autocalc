@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: not in the recipe; the page default is kept
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -47,12 +49,14 @@ controls:
     unit: hour
   after:
   - global_REGIONINFO_chargeMode
+  option: requests_10k
 - id: calculator_fgs_compute
   kind: common-input
   title: calc_3_
   default: 100.0
   after:
   - calculator_fgs_request_Stepper_0
+  option: compute
 - id: calculator_fgs_memory_Stepper_0
   kind: base-stepper
   title: Amount of memory allocated
@@ -70,3 +74,4 @@ controls:
     unit: GB
   after:
   - calculator_fgs_compute
+  option: memory_mb

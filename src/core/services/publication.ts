@@ -1,5 +1,5 @@
 import { CardInput } from "../schemas.ts";
-import { ACCEPTED_DEFAULT_ONLY, LTS_PAGE_OPTIONS, RECIPES } from "./forms.ts";
+import { ACCEPTED_DEFAULT_ONLY, RECIPES } from "./forms.ts";
 /** What publish_quote needs to know about each builder (ports Python's VERIFIED, spec_arg and spec_option). */
 import { supportedServices } from "./index.ts";
 
@@ -13,7 +13,7 @@ export const VERIFIED = new Set([
 /** The build option that takes the ranked catalog spec; absent when the options alone say what to buy. */
 export const SPEC_ARG: Record<string, string> = { apm: "spec", apig: "edition", dline: "port", sfsturbo: "tier", cbr: "vault_spec", rds: "flavor", evs: "type", nat: "size", ecs: "flavor" };
 /** The catalog group that holds the thing a card's spec names; without it a plan's candidates mix in disks and add-ons of the same service. */
-export const PRIMARY_GROUP: Record<string, string> = { ecs: "ec2_vm", evs: "ebs_volume", rds: "rds_rds.vm", sfs: "sfs_sfs", sdrs: "sdrs_hdrsinst", er: "er_er.attachment", eip: "vpc_bandwidth", vpcep: "vpc_vpcep", hss: "hss_hss", cfw: "cfw_cfw", vpn: "vpc_bandwidth", des: "des_des", dss: "dss_dss.pool", maas: "modelarts_modelarts.tokens", memcached: "dcs_dcs.memcached", drs: "drs_drs.vm", ddm: "ddm_ddm", dds: "dds_dds.vm", gaussdb: "gaussdb_gaussdb.vm", rdsformariadb: "rdsformariadb_rdsformariadb.vm", taurusdb: "taurus_taurus.vm", hrds: "rds_rds.vm" };
+export const PRIMARY_GROUP: Record<string, string> = { ecs: "ec2_vm", evs: "ebs_volume", rds: "rds_rds.vm", sfs: "sfs_sfs", sdrs: "sdrs_hdrsinst", er: "er_er.attachment", eip: "vpc_bandwidth", function: "functionstage_functionstage", lts: "lts_lts.logflow", vpcep: "vpc_vpcep", hss: "hss_hss", cfw: "cfw_cfw", vpn: "vpc_bandwidth", des: "des_des", dss: "dss_dss.pool", maas: "modelarts_modelarts.tokens", memcached: "dcs_dcs.memcached", drs: "drs_drs.vm", ddm: "ddm_ddm", dds: "dds_dds.vm", gaussdb: "gaussdb_gaussdb.vm", rdsformariadb: "rdsformariadb_rdsformariadb.vm", taurusdb: "taurus_taurus.vm", hrds: "rds_rds.vm" };
 /** Catalog spec code -> the value the option expects. */
 export const specOption = (service: string, spec: string) => service === "nat" ? spec.replace(/^natgateway_/, "") : service === "evs" ? spec.replace(/\.storage$/, "") : spec;
 /** Services whose pay-per-use SKUs carry usage plans with no list price in the catalog (OBS) or tiered by capacity (DSS): the card is priced from its usage components when rated, so a plan can only resolve the spec, not price it. */
@@ -23,6 +23,8 @@ export const RECIPE_SPEC_FIELDS: Record<string, { group: string; fields: Array<s
   redis: { group: "dcs_dcs3", fields: ["instance_type", "version", "edition", "cpu_storage", "spec"] },
   sfs: { group: "sfs_sfs", fields: [] }, // one SKU (SFS_SATA) whose price the capacity control scales: the spec only has to exist
   sdrs: { group: "sdrs_hdrsinst", fields: [] }, // one SKU; the protection-group count scales it
+  function: { group: "functionstage_functionstage", fields: [] },
+  lts: { group: "lts_lts.logflow", fields: [] },
   eip: { group: "vpc_bandwidth", fields: [] }, // the dedicated-bandwidth SKU (19_bgp); the bandwidth control scales it
   vpcep: { group: "vpc_vpcep", fields: [] }, // one SKU (vpcep.basic); the hours control scales it
   hss: { group: "hss_hss", fields: [] }, // the edition option picks the page's edition; the spec has to agree, which the gate checks
@@ -54,7 +56,6 @@ export const modesOf = (service: string): string[] => {
 const NOT_OPTIONS = new Set(["service", "region", "billing", "quantity", "periods", "hours"]);
 /** The option names a card of this service may carry: the builder input minus what a requirement has itself. */
 export function legalOptions(service: string): string[] | null {
-  if (service === "lts") return [...LTS_PAGE_OPTIONS].sort();
   if (service in RECIPES) return Object.keys(RECIPES[service]!.controls).sort();
   const entry = (CardInput as unknown as { options: Array<{ shape: Record<string, any> }> }).options.find(option => option.shape.service.def.values[0] === service);
   return entry ? Object.keys(entry.shape).filter(key => !NOT_OPTIONS.has(key) && key !== SPEC_ARG[service]).sort() : null;

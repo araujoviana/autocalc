@@ -121,6 +121,19 @@ export const RECIPES: Record<string, Recipe> = {
     output_mtokens: "calculator_output_stepper_Stepper_0",
     cached_input_mtokens: "calculator_token_cached_input_stepper_Stepper_0",
   }, { modes: OD }),
+  function: recipe("FunctionGraph", {
+    requests_10k: "calculator_fgs_request_Stepper_0",
+    compute: "calculator_fgs_compute",
+    memory_mb: "calculator_fgs_memory_Stepper_0",
+  }, { modes: OD }),
+  lts: recipe("Log Tank Service", {
+    flow_gb_per_day: "calculator_ltsLogFlow_stepper_Stepper_0",
+    retention_days: "calculator_ltsStorage_normal_stepper_Stepper_0",
+    index_percent: "calculator_ltsLogIndexRate_stepper_Stepper_0",
+    transfer_basic_gb_per_day: "calculator_lts_transfer_basic_stepper_Stepper_0",
+    transfer_senior_gb_per_day: "calculator_lts_transfer_senior_stepper_Stepper_0",
+    months: "global_ONDEMANDTIME_Stepper_0",
+  }, { modes: OD }),
   esw: recipe("Enterprise Switch", {}, { modes: PM_OD }),
   vpcep: recipe("VPC Endpoint", {
     duration_hours: "calculator_vpcep_time_Stepper_0",

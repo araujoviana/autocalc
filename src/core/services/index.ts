@@ -33,8 +33,6 @@ export function supportedServices() {
     let reason: string | null = null;
     if (ACCEPTED_DEFAULT_ONLY.has(service)) {
       reason = "Only page defaults have been accepted; requested configuration is unverified.";
-    } else if (service === "function" || service === "lts") {
-      reason = "Incomplete pricing or form mapping; publication remains blocked.";
     } else if (service in RECIPES && !SPEC_ARG[service] && !RECIPE_SPEC_FIELDS[service]) {
       reason = "Selected catalog specs have no verified form mapping.";
     } else if (!VERIFIED.has(service)) {

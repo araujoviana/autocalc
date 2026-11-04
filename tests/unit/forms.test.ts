@@ -27,7 +27,7 @@ test("unknown option is refused before the page opens", () => {
 });
 
 test("every recipe names a control per option", () => {
-  expect(Object.values(RECIPES).every(r => Object.values(r.controls).every(c => c.startsWith("calculator_")))).toBe(true);
+  expect(Object.values(RECIPES).every(r => Object.values(r.controls).every(c => (c.startsWith("calculator_") || c.startsWith("global_"))))).toBe(true);
 });
 
 test("regionless recipe has no region step", () => {

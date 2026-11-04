@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: not in the recipe; the page default is kept
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -42,6 +44,7 @@ controls:
     unit: TB/day
   after:
   - global_REGIONINFO_chargeMode
+  option: flow_gb_per_day
 - id: calculator_lts_cold_switch_UNSET_Switch
   kind: base-radio-group
   title: Intelligent Cold Storage
@@ -50,6 +53,8 @@ controls:
   values: catalog
   after:
   - calculator_ltsLogFlow_stepper_Stepper_0
+  unsupported: true
+  note: not in the recipe; the page default is kept
 - id: calculator_ltsStorage_normal_stepper_Stepper_0
   kind: base-stepper
   title: Log Storage Duration (Days)
@@ -62,6 +67,7 @@ controls:
     default: 30.0
   after:
   - calculator_lts_cold_switch_UNSET_Switch
+  option: retention_days
 - id: calculator_ltsLogIndexRate_stepper_Stepper_0
   kind: base-stepper
   title: Index Field Ratio
@@ -75,6 +81,7 @@ controls:
     unit: '%'
   after:
   - calculator_ltsStorage_normal_stepper_Stepper_0
+  option: index_percent
 - id: calculator_lts_transfer_basic_stepper_Stepper_0
   kind: base-stepper
   title: Daily Basic Transfer Volume
@@ -91,6 +98,7 @@ controls:
     unit: TB/day
   after:
   - calculator_ltsLogIndexRate_stepper_Stepper_0
+  option: transfer_basic_gb_per_day
 - id: calculator_lts_transfer_senior_stepper_Stepper_0
   kind: base-stepper
   title: Daily Advanced Transfer Volume
@@ -107,6 +115,7 @@ controls:
     unit: TB/day
   after:
   - calculator_lts_transfer_basic_stepper_Stepper_0
+  option: transfer_senior_gb_per_day
 - id: global_ONDEMANDTIME_Stepper_0
   kind: base-stepper
   title: Required Duration
@@ -123,4 +132,4 @@ controls:
     unit: day
   after:
   - calculator_lts_transfer_senior_stepper_Stepper_0
-  option: hours
+  option: months

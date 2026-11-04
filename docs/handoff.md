@@ -36,3 +36,6 @@ These services must work as soon as possible, because a real project needs them:
 
 ## Update (after the first handoff)
 Verified live (stored = rated = Edit): VPC Endpoint 1.40, CFW 1485.00, HSS (basic 1.50, premium 13.80, wtp 150.00, container 42.20), VPN 499.00 (spec `19_bgp`, brazil, `eip1_mbps`/`eip2_mbps` 5), EIP 180.00 (spec `19_bgp`, 2 IPs x 10 Mbit/s, monthly). HSS now has a plan-time edition/spec rule. Still blocked: LTS and FunctionGraph. Their old builders no longer fit the page (LTS: no control `calculator_ltsStorage_stepper_Stepper_0`; FunctionGraph: Add to List stays disabled), so they need page-control recipes.
+
+## Final update
+FunctionGraph (0.80, 500 x10k requests, 256 MB) and LTS (558.64, 100 GB/day, 30 days retention) now pass live via page-control recipes (stored = rated = Edit). All 8 priority services (Redis, EIP, LTS, FunctionGraph, CFW, VPN, VPC Endpoint, HSS) are verified. Open: the `[autocalc] n-*` test lists still on the account (check names, delete only those); LTS cold storage and hot retention are not options in the recipe yet; VPN connection groups/mode/edition are not options yet.
