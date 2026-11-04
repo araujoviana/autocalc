@@ -39,3 +39,6 @@ Verified live (stored = rated = Edit): VPC Endpoint 1.40, CFW 1485.00, HSS (basi
 
 ## Final update
 FunctionGraph (0.80, 500 x10k requests, 256 MB) and LTS (558.64, 100 GB/day, 30 days retention) now pass live via page-control recipes (stored = rated = Edit). All 8 priority services (Redis, EIP, LTS, FunctionGraph, CFW, VPN, VPC Endpoint, HSS) are verified. Open: the `[autocalc] n-*` test lists still on the account (check names, delete only those); LTS cold storage and hot retention are not options in the recipe yet; VPN connection groups/mode/edition are not options yet.
+
+## Option coverage update
+Verified live and added: LTS cold storage (`cold_enabled: calc_3_`, `total_retention_days`, `hot_retention_days`; 590.26), VPN gateway `spec` (dataInfo_300_/dataInfo_1000_) and `connection_groups` (671.50 for 1000 / 20 groups). Tried and dropped (not verified): VPN `mode` (dataInfo_21_: failed price inquiry), `network_type` (dataInfo_15_: the page does not hold the form state), `non_fixed_ip` (dataInfo_18_: stored = rated 709.00, but the Edit page never loaded, twice), `shared_bandwidth` (control absent). EIP traffic billing and HSS advanced are still not tested live.

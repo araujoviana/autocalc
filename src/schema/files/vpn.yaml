@@ -105,8 +105,7 @@ controls:
     when: V300||V1G||S2C-VPN-Ent.GM
   after:
   - calculator_evpnGatewaySpec_radio_calNonFixedIP
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: connection_groups
 - id: calculator_evpnShareBandwidth_switch_UNSET_Switch
   kind: base-radio-group
   title: Using Shared Bandwidth

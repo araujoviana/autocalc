@@ -53,8 +53,7 @@ controls:
   values: catalog
   after:
   - calculator_ltsLogFlow_stepper_Stepper_0
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: cold_enabled
 - id: calculator_ltsStorage_normal_stepper_Stepper_0
   kind: base-stepper
   title: Log Storage Duration (Days)
@@ -68,6 +67,32 @@ controls:
   after:
   - calculator_lts_cold_switch_UNSET_Switch
   option: retention_days
+- id: calculator_ltsStorage_stepper_Stepper_0
+  kind: base-stepper
+  title: Log Storage Duration (Days), cold storage on
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 365.0
+    default: 30.0
+  after:
+  - calculator_lts_cold_switch_UNSET_Switch
+  option: total_retention_days
+- id: calculator_ltsHotStorage_stepper_Stepper_0
+  kind: base-stepper
+  title: Hot Storage Duration (Days)
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 365.0
+    default: 30.0
+  after:
+  - calculator_ltsStorage_stepper_Stepper_0
+  option: hot_retention_days
 - id: calculator_ltsLogIndexRate_stepper_Stepper_0
   kind: base-stepper
   title: Index Field Ratio

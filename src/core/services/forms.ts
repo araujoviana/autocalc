@@ -133,6 +133,9 @@ export const RECIPES: Record<string, Recipe> = {
     transfer_basic_gb_per_day: "calculator_lts_transfer_basic_stepper_Stepper_0",
     transfer_senior_gb_per_day: "calculator_lts_transfer_senior_stepper_Stepper_0",
     months: "global_ONDEMANDTIME_Stepper_0",
+    cold_enabled: "calculator_lts_cold_switch_UNSET_Switch",
+    total_retention_days: "calculator_ltsStorage_stepper_Stepper_0",
+    hot_retention_days: "calculator_ltsHotStorage_stepper_Stepper_0",
   }, { modes: OD }),
   esw: recipe("Enterprise Switch", {}, { modes: PM_OD }),
   vpcep: recipe("VPC Endpoint", {
@@ -146,6 +149,7 @@ export const RECIPES: Record<string, Recipe> = {
     eip1_mbps: "calculator_evpnEip1_stepper_Stepper_0",
     eip2_mbps: "calculator_evpnEip2_stepper_Stepper_0",
     spec: "calculator_evpnGatewaySpec_radio_calGatewaySpec",
+    connection_groups: "calculator_evpnGatewaySpec_radio_Stepper_1",
   }, { modes: PM_OD }),
   cfw: recipe("Cloud Firewall", {
     edition: "calculator_cfw_editionRadio_edition",
