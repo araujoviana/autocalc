@@ -109,7 +109,7 @@ export async function publishQuoteTool(ctx: ActionContext, input: { draft_id: st
     draft.requirements.forEach((r, index) => {
       if (SPEC_ARG[r.service.toLowerCase()]) return;
       const actual = new Set((cards[index]!.selectedProduct.productAllInfos ?? []).map((product: Dict) => product.resourceSpecCode));
-      if (!actual.has(spec.get(r.id))) throw invalid(`Encoded ${r.service} card does not contain the selected spec '${spec.get(r.id)}'.`, "spec");
+      if (!actual.has(spec.get(r.id))) throw invalid(`Encoded ${r.service} card does not contain the selected spec '${spec.get(r.id)}'.`, "spec", [...actual].sort(), `The page's card holds: ${[...actual].sort().join(", ") || "no products"}.`);
     });
 
     draft.publishing = true;

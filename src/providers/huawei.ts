@@ -4,7 +4,7 @@ import type { Provider } from "../core/quote/provider.ts";
 
 const BILLING = ["ondemand", "monthly", "yearly"];
 /** Same set as USAGE_PRICED in core/services/publication.ts, kept here so the provider does not import the services layer. */
-const USAGE_PRICED = new Set(["obs", "dss"]);
+const USAGE_PRICED = new Set(["obs", "dss", "memcached"]);
 
 export interface CatalogSku { group: string; spec: string; description: string; prices: Record<string, { amount: number }>; offPage?: boolean }
 export interface HuaweiSource {
@@ -45,10 +45,10 @@ export class HuaweiProvider implements Provider {
       out.push(candidate(sku.spec, req.region, req.billing, String(plan.amount), parseCompute(sku.description), gen ? Number(gen[1]) : 0, sku.description));
     }
     // usage- or capacity-tier-priced (OBS pay-per-use, DSS pools): the SKUs have no flat list price, so offer each distinct spec once at price 0 (the real price is the rated one)
-    if (!out.length && USAGE_PRICED.has(req.service.toLowerCase())) {
+    if ((!out.length || (req.spec && !out.some(c => c.spec === req.spec))) && USAGE_PRICED.has(req.service.toLowerCase())) {
       const specs = new Set<string>();
       for (const sku of await this.source.skus(req.service, req.region)) {
-        if (sku.offPage || !sku.spec || specs.has(sku.spec) || (req.group && sku.group !== req.group)) continue;
+        if (sku.offPage || !sku.spec || specs.has(sku.spec) || out.some(c => c.spec === sku.spec) || (req.spec && sku.spec !== req.spec && out.length) || (req.group && sku.group !== req.group)) continue;
         specs.add(sku.spec);
         out.push(candidate(sku.spec, req.region, req.billing, "0", {}, 0, "priced from usage when the list is rated"));
       }
