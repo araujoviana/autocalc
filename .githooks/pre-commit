@@ -1,36 +1,50 @@
-#!/usr/bin/env python3
-"""Reject common secret files and recognizable credentials in staged blobs."""
-import re
-import subprocess
-import sys
+#!/usr/bin/env bun
+// Reject common secret files and recognizable credentials in staged blobs.
 
+function git(...args: string[]): Uint8Array {
+  const proc = Bun.spawnSync(["git", ...args], { stdout: "pipe", stderr: "pipe" });
+  if (proc.exitCode !== 0) {
+    throw new Error(new TextDecoder().decode(proc.stderr));
+  }
+  return proc.stdout;
+}
 
-def git(*args):
-    return subprocess.check_output(["git", *args])
+const rawPaths = new TextDecoder().decode(git("diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z")).split("\0");
+const blocked = /(^|\/)(\.env(?:\..*)?|\.session\.curl.*|\.aws\/.*|.*\.(?:pem|key|p12|pfx|keystore)|(?:credentials|id_rsa|id_ed25519))(?:$|\/)/i;
+const patterns: Array<[string, RegExp]> = [
+  ["private key", /-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/],
+  ["AWS access key", /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/],
+  ["GitHub token", /\b(?:gh[pousr]_[A-Za-z0-9_]{36,}|github_pat_[A-Za-z0-9_]{20,})\b/],
+  ["authorization header", /authorization\s*:\s*(?:bearer|basic)\s+[A-Za-z0-9._~+/=-]{16,}/i],
+];
 
+const failures: Array<[string, string]> = [];
+for (const path of rawPaths.filter(Boolean)) {
+  if (
+    blocked.test(path) ||
+    path.startsWith("tests/fixtures/corpus/") ||
+    path === "docs/quotes.md" ||
+    path.startsWith("docs/reports/") ||
+    path.startsWith("docs/private/") ||
+    path.startsWith(".codegraph/")
+  ) {
+    failures.push([path, "sensitive or local file"]);
+    continue;
+  }
+  const blob = new TextDecoder("utf-8", { fatal: false }).decode(git("show", `:${path}`));
+  for (const [label, pattern] of patterns) {
+    if (pattern.test(blob)) {
+      failures.push([path, label]);
+      break;
+    }
+  }
+}
 
-paths = git("diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z").split(b"\0")
-blocked = re.compile(r"(^|/)(\.env(?:\..*)?|\.session\.curl.*|\.aws/.*|.*\.(?:pem|key|p12|pfx|keystore)|(?:credentials|id_rsa|id_ed25519))(?:$|/)", re.I)
-patterns = [
-    ("private key", re.compile(rb"-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----")),
-    ("AWS access key", re.compile(rb"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b")),
-    ("GitHub token", re.compile(rb"\b(?:gh[pousr]_[A-Za-z0-9_]{36,}|github_pat_[A-Za-z0-9_]{20,})\b")),
-    ("authorization header", re.compile(rb"(?i)authorization\s*:\s*(?:bearer|basic)\s+[A-Za-z0-9._~+/=-]{16,}")),
-]
-failures = []
-for raw in filter(None, paths):
-    path = raw.decode("utf-8", "surrogateescape")
-    if blocked.search(path) or path.startswith("tests/fixtures/corpus/") or path == "docs/quotes.md" or path.startswith("docs/reports/") or path.startswith("docs/private/") or path.startswith(".codegraph/"):
-        failures.append((path, "sensitive or local file"))
-        continue
-    blob = git("show", ":" + path)
-    for label, pattern in patterns:
-        if pattern.search(blob):
-            failures.append((path, label))
-            break
-if failures:
-    print("Commit blocked: possible sensitive data in staged files:", file=sys.stderr)
-    for path, label in failures:
-        print(f"  {path}: {label}", file=sys.stderr)
-    print("Unstage or remove sensitive content before committing.", file=sys.stderr)
-    sys.exit(1)
+if (failures.length > 0) {
+  console.error("Commit blocked: possible sensitive data in staged files:");
+  for (const [path, label] of failures) {
+    console.error(`  ${path}: ${label}`);
+  }
+  console.error("Unstage or remove sensitive content before committing.");
+  process.exit(1);
+}

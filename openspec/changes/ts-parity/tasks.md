@@ -45,7 +45,7 @@
 ## 8. Cutover
 
 - [x] 8.1 Accept ADR-0017 and mark ADR-0013 superseded in the ADR index. Verify: `docs/adr/index.md` shows the new statuses.
-- [ ] 8.2 Move `experimental/bun/*` to the repo root; delete `src/autocalc`, `pyproject.toml`, `uv.lock`, Python tests and helpers. Verify: `bun run check && bun run test:offline` pass from the root and no Python file remains.
+- [x] 8.2 Move `experimental/bun/*` to the repo root; delete `src/autocalc`, `pyproject.toml`, `uv.lock`, Python tests and helpers. Verify: `bun run check && bun run test:offline` pass from the root and no Python file remains.
 - [ ] 8.3 Update `dev-quality` requirements (offline marker, lint, helpers) and the `mcp-surface` wording that names Python builders to the TypeScript tooling, in one delta. Verify: `openspec validate ts-parity` passes.
 - [ ] 8.4 Update README, CONTRIBUTING, `docs/how-to/*`, `mkdocs.yml`, `.github/workflows/*` for Bun. Verify: `grep -ri "uv \|pytest\|ruff" README.md CONTRIBUTING.md docs` finds none outside historical ADRs, and CI is green.
 - [ ] 8.5 Tag the first TypeScript release. Verify: the installer from the new tag installs and `autocalc doctor` is healthy on both OSes.
