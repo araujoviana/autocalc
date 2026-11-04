@@ -33,9 +33,9 @@
 
 ## 6. Parity gate (dev-quality delta)
 
-- [ ] 6.1 Registry diff (1.2) reports zero differences. Verify: the script exits 0 in CI.
-- [ ] 6.2 Golden-corpus Edit agreement on both implementations, every verified service, four regions. Verify: local run with session and corpus prints zero mismatches for each implementation.
-- [ ] 6.3 CI runs the TypeScript offline suite on `ubuntu-latest` and `windows-latest`. Verify: both jobs green on the PR.
+- [x] 6.1 Registry diff (1.2) reports zero differences. Verify: the script exits 0 in CI.
+- [x] 6.2 Golden-corpus Edit agreement on both implementations, every verified service, four regions. Verify: local run with session and corpus prints zero mismatches for each implementation.
+- [x] 6.3 CI runs the TypeScript offline suite on `ubuntu-latest` and `windows-latest`. Verify: both jobs green on the PR.
 
 ## 7. Distribution
 

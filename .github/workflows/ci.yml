@@ -29,6 +29,24 @@ jobs:
       - name: Offline tests
         run: uv run pytest -m "not live"
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - name: Parity gate (registry + test map)
+        run: |
+          uv run python scripts/parity-registry.py
+          uv run python scripts/parity-test-map.py
+
+      - name: TypeScript offline suite
+        working-directory: experimental/bun
+        run: |
+          bun install --frozen-lockfile
+          bun --bun x playwright install --with-deps chromium
+          bun run check
+          bun run check:boundaries
+          bun run test:offline
+
       - name: Docs
         run: uv run --group docs mkdocs build --strict
 

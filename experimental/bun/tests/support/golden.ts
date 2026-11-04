@@ -45,10 +45,14 @@ export function compareProducts(actual: unknown, expected: unknown): string[] {
   return differences;
 }
 
+import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-export const corpusDirectory = join(import.meta.dir, "../fixtures/corpus");
+export const corpusDirectory = [
+  join(import.meta.dir, "../fixtures/corpus"),
+  join(import.meta.dir, "../../../../tests/fixtures/corpus"),
+].find(p => existsSync(p)) ?? join(import.meta.dir, "../fixtures/corpus");
 export async function loadIndex(directory = corpusDirectory): Promise<unknown> {
   return JSON.parse(await readFile(join(directory, "index.json"), "utf8")) as unknown;
 }
