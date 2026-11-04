@@ -25,5 +25,6 @@ accepted ADR is never edited: a reversal is a new ADR that supersedes it (see
 | [0016](0016-python-canonical-and-publication-support.md) | Python canonical; publication requires request fidelity; supersedes 0014 | accepted (Python-canonical part superseded by 0017 once accepted) |
 | [0017](0017-typescript-on-bun-is-the-target.md) | TypeScript on Bun is the target implementation | proposed |
 | [0018](0018-declarative-quotes-and-generated-card-schema.md) | Declarative quotes: a generated card schema, with plan and apply | proposed |
+| [0019](0019-distribution-bun-from-git-tags.md) | Distribution: `bun add -g` from git tags, with an update notice | accepted |
 
 New ADR: copy the newest file, take the next number, set `status: proposed` until it is agreed.
