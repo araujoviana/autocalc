@@ -92,6 +92,11 @@ resources:
       const lockText = await readFile(lockYamlPath, "utf8");
       expect(lockText).toContain('version: "1"');
       expect(lockText).toContain("worker-1");
+      const lock = Bun.YAML.parse(lockText) as { total_amount: number; resources: Record<string, { total_price: number; physical_cards: Array<{ unit_amount: number; total_amount: number }> }> };
+      const worker = lock.resources["worker-1"]!;
+      expect(worker.total_price).toBeGreaterThan(0);
+      expect(lock.total_amount).toBeCloseTo(worker.total_price, 6);
+      expect(worker.physical_cards[0]!.total_amount).toBeCloseTo(worker.total_price, 6);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }

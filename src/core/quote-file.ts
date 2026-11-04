@@ -175,9 +175,15 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
             const p = parseFloat(String(row.price));
             ir.resources[index].unitPrice = p;
             ir.resources[index].totalPrice = p * (card.quantity ?? 1);
+            for (const physical of ir.resources[index].physicalCards) {
+              physical.unitAmount = p;
+              physical.totalAmount = p * physical.quantity;
+            }
           }
         }
       }
+      // the SKU list prices of the planned resources; disks and other add-ons are priced when the list is published
+      ir.totalAmount = ir.resources.reduce((sum, resource) => sum + (resource.totalPrice ?? 0), 0);
       const lockObj = generateLockfile(ir);
       const lockYamlPath = quote.path.replace(/\.[^./\\]+$/, "") + ".lock.yaml";
       await writeFile(lockYamlPath, stringifyLockfile(lockObj), "utf8");
