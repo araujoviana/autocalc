@@ -100,6 +100,11 @@ export const CardInput = z.discriminatedUnion("service", [ecs, evs, cce, obs, rd
     if (card.service === "ecs" && (card.bandwidth_mbit === undefined || card.bandwidth_mbit === 0) && !["19_bgp", "12_bgp"].includes(card.bandwidth_type)) ctx.addIssue({ code: "custom", path: ["bandwidth_type"], message: "Bandwidth type requires bandwidth" });
     if (card.service === "eip" && !card.ip_reservation && card.traffic_gb === 0) ctx.addIssue({ code: "custom", message: "EIP requires traffic or IP reservation" });
     if (card.service === "sfsturbo" && Math.abs(card.size_gb * 10 / 1024 - Math.round(card.size_gb * 10 / 1024)) > 1e-9) ctx.addIssue({ code: "custom", path: ["size_gb"], message: "SFS Turbo capacity must be representable in 0.1 TB increments" });
+    // The calculator page clamps these fields silently when a card is opened in Edit, so a larger value would re-price differently there (issue #6.3).
+    if (card.service === "dew") {
+      if (card.keys > 99) ctx.addIssue({ code: "custom", path: ["keys"], message: "DEW keys or secrets are limited to 99 per card by the calculator page; split them across cards" });
+      if (card.api_requests > 9999) ctx.addIssue({ code: "custom", path: ["api_requests"], message: "DEW API requests are limited to 9,999 per card by the calculator page; split them across cards" });
+    }
     if (card.service === "obs") {
       if (card.storage_class === "cold" && card.multi_az && !card.package) ctx.addIssue({ code: "custom", path: ["multi_az"], message: "Cold multi-AZ capacity is not supported" });
       const nonSizeFactors = new Set([
@@ -113,6 +118,7 @@ export const CardInput = z.discriminatedUnion("service", [ecs, evs, cce, obs, rd
         seenFactors.add(component.factor);
         if (component.factor.startsWith("size")) {
           if (!component.unit) ctx.addIssue({ code: "custom", path: ["components", index, "unit"], message: "Storage capacity requires GB or TB" });
+          else if (component.value > 102400) ctx.addIssue({ code: "custom", path: ["components", index, "value"], message: "OBS storage is limited to 102,400 (in the chosen unit) per card by the calculator page; split it across cards" });
           const expected = { standard: card.multi_az ? "size_3az" : "size", warm: card.multi_az ? "size_warm_3az" : "size_warm", cold: "size_cold" }[card.storage_class];
           if (component.factor !== expected || (card.storage_class === "cold" && card.multi_az)) ctx.addIssue({ code: "custom", path: ["components", index, "factor"], message: "Storage factor must match storage class and availability zone" });
         } else {

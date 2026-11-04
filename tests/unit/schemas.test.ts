@@ -41,3 +41,15 @@ test("rejects quantities that would be silently ignored", () => {
   expect(CardInput.safeParse({ service: "evs", region: "sa-brazil-1", billing: "monthly", hours: 100 }).success).toBe(false);
   expect(CardInput.safeParse({ service: "evs", region: "sa-brazil-1", billing: "ondemand", periods: 2 }).success).toBe(false);
 });
+
+test("fields the calculator page clamps are rejected above the page's limit instead of mis-pricing on Edit", () => {
+  const dew = (extra: object) => CardInput.safeParse({ service: "dew", region: "x", billing: "ondemand", ...extra }).success;
+  expect(dew({ keys: 99, api_requests: 9999 })).toBe(true);
+  expect(dew({ keys: 100 })).toBe(false);
+  expect(dew({ api_requests: 10000 })).toBe(false);
+  const obs = (value: number, unit: "GB" | "TB") => CardInput.safeParse({ service: "obs", region: "x", billing: "ondemand", components: [{ factor: "size", value, unit }] }).success;
+  expect(obs(102400, "GB")).toBe(true);
+  expect(obs(102401, "GB")).toBe(false);
+  expect(obs(150, "TB")).toBe(true);
+  expect(obs(102401, "TB")).toBe(false);
+});
