@@ -120,7 +120,7 @@ through the publish gate.
 - **THEN** the result has the list id, URL and per-card checks from the gate
 
 ### Requirement: Published cards are encoded by the page
-`publish_quote` SHALL publish the cards the calculator page builds, not the Python builders'
+`publish_quote` SHALL publish the cards the calculator page builds, not the local builders'
 cards, for every service on the verified list (builder or form recipe). The chosen spec is
 taken from the option the service names for it; services priced by usage, and recipe services,
 take none. Any other service SHALL be refused before anything is saved, naming the verified
