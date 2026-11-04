@@ -24,7 +24,7 @@ AWS is v2.
 
 ## Open items
 
-These came out of the retired backlog. They're tracked here rather than in an issue tracker.
+These came out of the retired backlog. The roadmap is the single backlog; GitHub issues are cited from the 0.9 plan below rather than tracked separately.
 Each item is either assigned to the change that will close it or left unscheduled.
 
 | Item | Goes to |
@@ -44,5 +44,23 @@ Each item is either assigned to the change that will close it or left unschedule
 | Update a saved list in place from a quote (`update` was removed in ts-parity 4.3: it saved without the publish gate; needs a gated, rollback-safe design, see [share update](explanation/huawei/share-update.md)) | unscheduled |
 | Map the 19 builder services' options to schema controls (`autocalc schema coverage <service>` is the to-do list); until then `apply_quote` refuses options on them | unscheduled |
 | Live end-to-end check of the `version: "1"` compiler path (`plan-quote` / `apply-quote` on a declarative file) | unscheduled |
+
+
+## 0.9 plan (triaged 2026-11-04 against the TypeScript code)
+
+GitHub issues #1, #2, #4, #5 and #6 were written against the Python code or an early TypeScript snapshot. This table is their current state; the roadmap is the single backlog, and each row cites its issue.
+
+| # | Item | State | Issue |
+|---|---|---|---|
+| 1 | Call the circuit breaker (`resolveExecutionTier`, `detectCatalogPricingAnomalies`) from `plan-quote`, `apply-quote` and the gate. Today a known portal defect (OBS pay-per-use Edit) fails the gate, and the DCS HA yearly anomaly is never flagged | **open: implemented, not wired** | #2, #4.2, #5.3, #5.4, #6.9 |
+| 2 | OBS schema holes: `unit` required on `size*` lines, `multi_az` rejected with a single-AZ factor, canonical zero-usage lines and order | open, to confirm per item | #4.3, #5.2, #6.2, #6.5 |
+| 3 | Per-field limits (DEW kms api 9,999, DEW secrets 99, OBS requests 9,999, OBS GB 102,400) validated, with splitting that respects tiered fields | open | #6.3, #6.4 |
+| 4 | Recover from `MUTATION_UNKNOWN`: look the list up by name and return it, or say it does not exist | open (the duplicate-name warning is the first half) | #4.1, #5.5 |
+| 5 | Edit verification beyond ECS and OBS (`edit-check-browser.ts` answers `unavailable`), with the known-defect table | open | #5.3 |
+| 6 | Live run of the `version: "1"` path | open | |
+| 7 | Map builder options to schema controls, in batches (coverage today: ecs, eip, redis, sfs 100%; dline 67; evs 57; cbr, nat 50; cce, cci, obs 44; apig, dew 43; kafka 40; rabbitmq 36; function, waf 33; rds 31; apm, lts 30; elb 21; nosql 20) | open | |
+| 8 | Billing-mode planning for a whole list, update in place, xlsx export, pay-per-use for one year, yearly package helpers | after 0.9 | #5.1, #5.4, #5.7, #6.7, #6.8 |
+
+Already done in the TypeScript code, so the issue text no longer applies: list-name length is validated (50 characters, `src/core/publish.ts`), HTTP 413 maps to `PAYLOAD_TOO_LARGE`, OBS `quote` picks the SKU by usage factor, and the Python session and MCP bugs of #1.
 
 When an item is done, remove its row in the same commit as the change that closes it.
