@@ -108,7 +108,7 @@ test("coverage_on_a_terminal_ends_with_a_one_line_summary_and_json_flag_keeps_js
   const out = new Tty("utf-8", true);
   expect(await cli.main(["schema", "coverage", "ecs"], out)).toBe(0);
   const text = out.getvalue();
-  expect(text).toContain("Coverage 16/16 mapped (100%), 3 unsupported");
+  expect(text).toContain("Coverage 16/16 controls have an option (100%); 3 set aside as unsupported and not counted.");
   expect(text.trimStart().startsWith("{")).toBe(false);
 
   out.clear();

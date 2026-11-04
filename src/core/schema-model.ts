@@ -266,7 +266,7 @@ export async function runSchemaCommand(
         ...c.mapped.map(i => ui.status("ok", i, options.stream)),
         ...c.unmapped.map(i => ui.status("warn", i, options.stream)),
         ...c.unsupported.map(i => ui.paint(`- ${i} (unsupported)`, "dim", options.stream)),
-        ui.paint(`Coverage ${c.mapped.length}/${c.mapped.length + c.unmapped.length} mapped (${c.mapped_percent}%), ${c.unsupported.length} unsupported`, "bold", options.stream),
+        ui.paint(`Coverage ${c.mapped.length}/${c.mapped.length + c.unmapped.length} controls have an option (${c.mapped_percent}%); ${c.unsupported.length} set aside as unsupported and not counted. Not a test of values or flavors.`, "bold", options.stream),
       ];
       out(lines.join("\n"));
     }

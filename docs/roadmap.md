@@ -59,6 +59,7 @@ GitHub issues #1, #2, #4, #5 and #6 were written against the Python code or an e
 | 5 | Edit verification beyond ECS and OBS (`edit-check-browser.ts` answers `unavailable`), with the known-defect table | open | #5.3 |
 | 6 | Live run of the `version: "1"` path | open | |
 | 7 | Map builder options to schema controls, in batches (coverage today: ecs, eip, redis, sfs 100%; dline 67; evs 57; cbr, nat 50; cce, cci, obs 44; apig, dew 43; kafka 40; rabbitmq 36; function, waf 33; rds 31; apm, lts 30; elb 21; nosql 20) | open | |
+| 7b | Record which configurations per service have passed plan, apply and the gate live, and show that beside coverage. The coverage percentage only counts controls that have an option name | open | |
 | 8 | Billing-mode planning for a whole list, update in place, xlsx export, pay-per-use for one year, yearly package helpers | after 0.9 | #5.1, #5.4, #5.7, #6.7, #6.8 |
 
 Already done in the TypeScript code, so the issue text no longer applies: list-name length is validated (50 characters, `src/core/publish.ts`), HTTP 413 maps to `PAYLOAD_TOO_LARGE`, OBS `quote` picks the SKU by usage factor, and the Python session and MCP bugs of #1.
