@@ -225,6 +225,11 @@ test("capture reports a cart that never grows, a disabled Add to List, and a pri
   const disabled = capturePage(clock); disabled.fns._disabled = { [ADD_TO_LIST]: true };
   const error = await failure(driverFor(disabled, clock).capture());
   expect(error.message).toContain("Add to List is disabled");
+  const late = capturePage(clock); late.fns._disabled = { [ADD_TO_LIST]: true };
+  const enable = late.locator.bind(late);
+  let polls = 0;
+  late.locator = ((selector: string, options?: unknown) => { const box = (enable as (s: string, o?: unknown) => ReturnType<typeof late.locator>)(selector, options); const real = box.isDisabled; box.isDisabled = async () => { if (selector === ADD_TO_LIST && ++polls > 2) (late.fns._disabled as Record<string, boolean>)[ADD_TO_LIST] = false; return real(); }; return box; }) as typeof late.locator;
+  expect(((await driverFor(late, clock).capture()).selectedProduct as { amount: number }).amount).toBeGreaterThan(0);
   const stuck = capturePage(clock), driver = driverFor(stuck, clock);
   stuck.emit("request", request(RATING)); // never answered
   expect((await failure(driver.capture())).details.step).toBe("price");

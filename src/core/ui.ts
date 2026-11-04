@@ -113,7 +113,7 @@ export function quoteView(cmd: string, result: unknown, stream?: StreamLike): st
         notes.push(`price moved from ${c.lock_drift.locked_price}`);
       }
       if ("candidates" in c && Array.isArray(c.candidates)) {
-        notes.push(`${c.candidates.length} candidates: choose a spec`);
+        notes.push(c.spec_not_found ? `spec ${c.spec_not_found} not sold here; ${c.candidates.length} closest: choose a spec` : `${c.candidates.length} candidates: choose a spec`);
       }
       rows.push([String(c.id), String(c.spec ?? "-"), String(c.price || "-"), notes.join("; ")]);
     }

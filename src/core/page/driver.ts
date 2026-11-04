@@ -252,7 +252,7 @@ export class Driver {
     await this.settle();
     await js(this.page, "removeOverlays", OVERLAYS);
     const before: string[] = await js(this.page, "cartKeys");
-    if (await this.page.locator(ADD_TO_LIST).isDisabled()) throw this.fail("The page will not add this card: Add to List is disabled (an incomplete form, or a price of zero such as usage inside a free tier).", { step: "add_to_list" });
+    if (!await this.wait(async () => !await this.page.locator(ADD_TO_LIST).isDisabled())) throw this.fail("The page will not add this card: Add to List is disabled (an incomplete form, or a price of zero such as usage inside a free tier).", { step: "add_to_list" });
     try { await this.page.click(ADD_TO_LIST); } catch { throw this.fail("Could not click Add to List.", { step: "add_to_list" }); }
     const key = await this.wait(async () => newCartKey(before, await js(this.page, "cartKeys")));
     if (!key) throw this.fail("No card appeared in the price list after Add to List.", { step: "add_to_list" });

@@ -1,11 +1,21 @@
 import { assembleCard, stepper } from "../cards.ts";
+import { CalculatorError } from "../errors.ts";
 import type { CardInput } from "../schemas.ts";
 import { selectProduct } from "./common.ts";
 import type { BuilderContext } from "./common.ts";
+/** The engine's plain volume SKU (`rds.mysql.volume.cloudssd`, else `.common`), so a card need not name it. */
+async function defaultVolume(context: BuilderContext, region: string, flavor: string): Promise<string> {
+  const engine = flavor.split(".")[1] ?? "";
+  const specs = ((await context.productInfo("rds", region)).product["rds_rds.volume"] ?? []).map((p: Record<string, unknown>) => String(p.resourceSpecCode));
+  const found = [`rds.${engine}.volume.cloudssd`, `rds.${engine}.volume.common`].find(spec => specs.includes(spec));
+  if (!found) throw new CalculatorError("VALIDATION", `No default volume for engine '${engine}'.`, "Set options.storage_spec; see `autocalc search rds <region> volume`.");
+  return found;
+}
 export async function buildRds(input: Extract<CardInput, { service: "rds" }>, context: BuilderContext) {
+  const storageSpec = input.storage_spec ?? await defaultVolume(context, input.region, input.flavor);
   const [vm, vol] = await Promise.all([
     selectProduct(context, "rds", input.region, "rds_rds.vm", input.flavor, input.billing, input.hours),
-    selectProduct(context, "rds", input.region, "rds_rds.volume", input.storage_spec, input.billing, input.hours),
+    selectProduct(context, "rds", input.region, "rds_rds.volume", storageSpec, input.billing, input.hours),
   ]);
   if (input.db_version) vm.dbVersion = input.db_version;
   const number = (v: unknown) => String(v ?? "").split("BSSUNIT")[0];

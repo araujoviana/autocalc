@@ -78,7 +78,7 @@ carries a base cost (CCE, NAT, ELB). Design: [ADR-0018](../adr/0018-declarative-
 NAT, OBS) that plans and publishes end to end. Notes from building it:
 
 - `spec` is the catalog code, not the console name: an ECS flavor carries its OS (`c7n.large.2.linux`),
-  EVS takes the disk type (`GPSSD2.storage`), RDS needs `options.storage_spec` and `options.storage_gb`.
-- NAT is on-demand only here, and the public gateway is `natgateway_*`; the `privatenat_*` codes are a
-  different product.
+  EVS takes the disk type (`GPSSD2.storage`), RDS picks the engine's Cloud SSD volume unless `options.storage_spec` names another; set `options.storage_gb`.
+- NAT takes monthly, yearly and on-demand billing; the public gateway is `natgateway_*`, and the
+  `privatenat_*` codes are a different product.
 - A usage card (OBS) is priced when the list is rated, so `plan-quote` shows no price for it.

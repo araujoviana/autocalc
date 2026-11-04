@@ -6,11 +6,14 @@ import { buildCbr } from "../../src/core/services/cbr.ts";
 
 test("NAT, CCE and SFS retain their service-specific form state", async () => {
   const context = {
-    productInfo: async (service: string) => ({ product: Object.fromEntries([[{ nat: "natgateway_natgateway", cce: "cce_cce.cluster", sfsturbo: "sfsturbo_sfsturbo" }[service]!, [{ resourceSpecCode: { nat: "natgateway_small", cce: "cce.s2.small", sfsturbo: "sfs.turbo.20MBps" }[service], cloudServiceType: "c", resourceType: "r", planList: ["ONDEMAND", "YEARLY"].map(billingMode => ({ billingMode, productId: "p", amount: 1 })) }]]]) }),
+    productInfo: async (service: string) => ({ product: Object.fromEntries([[{ nat: "natgateway_natgateway", cce: "cce_cce.cluster", sfsturbo: "sfsturbo_sfsturbo" }[service]!, [{ resourceSpecCode: { nat: "natgateway_small", cce: "cce.s2.small", sfsturbo: "sfs.turbo.20MBps" }[service], cloudServiceType: "c", resourceType: "r", planList: ["ONDEMAND", "MONTHLY", "YEARLY"].map(billingMode => ({ billingMode, productId: "p", periodNum: billingMode === "ONDEMAND" ? null : 1, amount: 1 })) }]]]) }),
     rate: async (body: Record<string, unknown>) => ({ productRatingResult: (body.productInfos as Array<{ id: string }>).map(({ id }) => ({ id, amount: 1, originalAmount: 1 })) }),
   };
-  const nat = await buildNat({ service: "nat", region: "r", billing: "ondemand", quantity: 1, hours: 730, size: "small" }, context);
+  const nat = await buildNat({ service: "nat", region: "r", billing: "ondemand", quantity: 1, periods: 1, hours: 730, size: "small" }, context);
   expect(nat.rewriteValue).toMatchObject({ global_ONDEMANDTIME: { UNSET_Stepper_0: { measureId: 0 } } });
+  const monthly = await buildNat({ service: "nat", region: "r", billing: "monthly", quantity: 1, periods: 3, hours: 730, size: "small" }, context);
+  expect(monthly.rewriteValue).toMatchObject({ global_PERIODTIME: { UNSET_PeriodTime: { measureValue: 3 } } });
+  expect(monthly.rewriteValue).not.toHaveProperty("global_ONDEMANDTIME");
   const cce = await buildCce({ service: "cce", region: "r", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "standard", ha: true, scale: "small" }, context);
   expect(cce.rewriteValue).toMatchObject({ global_QUANTITY: { UNSET_Stepper_0: { measureNameBeforeTrans: "" } } });
   expect(cce.selectedProduct.purchaseNum).toMatchObject({ measureNameBeforeTrans: "", measurePluralNameBeforeTrans: "" });

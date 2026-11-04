@@ -163,7 +163,10 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
       const pin = pins(card);
       if (pin && pin.price !== price) row.lock_drift = { locked_price: pin.price, price };
       else if (!lock[card.id]) next[card.id] = { spec: decision.spec, price, needs: card.needs ?? {} };
-    } else row.candidates = view.requirements.find(r => r.id === requirement.id)?.candidates;
+    } else {
+      row.candidates = view.requirements.find(r => r.id === requirement.id)?.candidates;
+      if (requirement.spec) row.spec_not_found = requirement.spec;
+    }
     rows.push(row);
   }
   if (quote.path && JSON.stringify(next) !== JSON.stringify(lock)) await writeFile(lockPath(quote), JSON.stringify(sortKeys(next), null, 2) + "\n", "utf8");

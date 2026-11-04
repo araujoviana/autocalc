@@ -33,12 +33,14 @@ export class HuaweiProvider implements Provider {
     await this.source.checkMode(req.service, req.region, req.billing);
     // an ECS flavor is sold once per OS (.linux, .win, .byol); the image the quote asks for picks one
     const osSuffix = req.service === "ecs" ? (String(req.options.image ?? "").toLowerCase().startsWith("windows") ? ".win" : ".linux") : null;
-    const out: Candidate[] = [];
+    const out: Candidate[] = [], seen = new Set<string>();
     for (const sku of await this.source.skus(req.service, req.region)) {
       if (sku.offPage) continue;
       if (osSuffix && sku.group === "ec2_vm" && /\.(linux|win|byol)$/.test(sku.spec) && !sku.spec.endsWith(osSuffix)) continue;
       const plan = sku.prices[req.billing];
+      if (plan && seen.has(sku.spec)) continue;
       if (!plan || (req.group && sku.group !== req.group)) continue;
+      if (plan) seen.add(sku.spec);
       const gen = /^[A-Za-z]+(\d+)/.exec(sku.spec);
       out.push(candidate(sku.spec, req.region, req.billing, String(plan.amount), parseCompute(sku.description), gen ? Number(gen[1]) : 0, sku.description));
     }

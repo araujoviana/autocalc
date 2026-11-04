@@ -13,8 +13,8 @@ const builderDescriptions: Record<string, string> = {
   dew: "Data Encryption Workshop", lts: "Log Tank Service", cci: "Cloud Container Instance",
   rabbitmq: "DMS (for RabbitMQ)", kafka: "DMS (for Kafka)", nosql: "GeminiDB DynamoDB",
 };
-const onDemand = new Set(["nat", "apig", "apm", "waf", "function", "dew", "lts", "cci"]);
-const onDemandFirst = new Set(["evs", "cce", "obs", "rds", "sfsturbo", "elb", "cbr"]);
+const onDemand = new Set(["apig", "apm", "waf", "function", "dew", "lts", "cci"]);
+const onDemandFirst = new Set(["nat", "evs", "cce", "obs", "rds", "sfsturbo", "elb", "cbr"]);
 
 export function supportedServices() {
   const all = new Set([...Object.keys(builderDescriptions), ...Object.keys(RECIPES)]);
