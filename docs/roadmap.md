@@ -52,7 +52,7 @@ GitHub issues #1, #2, #4, #5 and #6 were written against the Python code or an e
 
 | # | Item | State | Issue |
 |---|---|---|---|
-| 1 | Known portal defects (OBS pay-per-use, Kafka yearly) no longer fail the gate on a wrong Edit price when stored and rated prices agree; the check is flagged and `apply-quote` warns. **Still open:** the catalog anomaly guard (`detectCatalogPricingAnomalies`) is not called from `plan-quote`, and the lower degradation tiers (cached estimate, export only) are unused | partly done | #2, #4.2, #5.3, #5.4, #6.9 |
+| 1 | Known portal defects (OBS pay-per-use, Kafka yearly) no longer fail the gate on a wrong Edit price when stored and rated prices agree; the check is flagged and `apply-quote` warns. The catalog anomaly guard now runs in `plan-quote` for yearly cards (flag on the plan row, warning on apply; it does not block). **Still open:** the lower degradation tiers (cached estimate, export only) are unused | partly done | #2, #4.2, #5.3, #5.4, #6.9 |
 | 3 | Per-field limits: DEW keys 99 and API requests 9,999 and OBS storage 102,400 are now rejected before any request. **Open:** OBS request counts (9,999; unit unclear), OBS traffic, whether the 102,400 clamp applies to GB or to the chosen unit (the looser reading is enforced), and splitting across cards that respects tiered fields | partly done | #6.3, #6.4 |
 | 5 | Edit verification beyond ECS and OBS (`edit-check-browser.ts` answers `unavailable`), with the known-defect table | open | #5.3 |
 | 6 | Live run of the `version: "1"` path | open | |

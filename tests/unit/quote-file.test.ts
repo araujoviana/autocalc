@@ -22,7 +22,7 @@ async function env() {
   const published: Dict[] = [];
   const images: Dict[] = [{ __platform: "AlmaLinux", name: "AlmaLinux 9.0 64bit", type: ["c7n"] }];
   const saved: Dict[] = [];
-  const ctx = { provider, drafts: new DraftStore(join(dir, "drafts")), catalog: { regions: async () => ({ "sa-brazil-1": "Brazil" }), productInfo: async () => ({ product: { "ec2_vm.image.special": images } }) },
+  const ctx = { provider: { ...provider }, drafts: new DraftStore(join(dir, "drafts")), catalog: { regions: async () => ({ "sa-brazil-1": "Brazil" }), productInfo: async () => ({ product: { "ec2_vm.image.special": images } }) },
     publish: { form: async () => ({}), encode: async () => ({ selectedProduct: { productAllInfos: [] } }), liveVersion: async () => "11.4.201",
       publish: async (name: string) => { published.push({ name }); return { id: "L1", url: "u", checks: [] }; } },
     lists: { lists: async () => saved } } as unknown as ActionContext;
@@ -208,4 +208,24 @@ test("apply adds no warning when no list has that name", async () => {
   sized(q);
   saved.push({ name: "something else", key: "OLD2" });
   expect(((await quoteFile.apply(ctx, q)) as Dict).warnings).toBeUndefined();
+});
+
+test("plan flags a yearly price far above twelve months of the monthly price, and apply repeats it as a warning", async () => {
+  const { ctx, q, published } = await env();
+  Object.assign(ctx.provider, { prices: async () => ({ monthly: 10, yearly: 147 }) });
+  sized(q); q.cards[0]!.billing = "yearly";
+  const planned = await quoteFile.plan(ctx, q) as Dict;
+  expect(planned.cards[0].price_anomaly).toContain("14.7x");
+  const applied = await quoteFile.apply(ctx, q) as Dict;
+  expect(published).toHaveLength(1);
+  expect(applied.warnings.some((w: string) => w.includes("Catalog anomaly"))).toBe(true);
+});
+
+test("a normal yearly price, or a SKU with no known prices, raises no anomaly", async () => {
+  const { ctx, q } = await env();
+  sized(q); q.cards[0]!.billing = "yearly";
+  Object.assign(ctx.provider, { prices: async () => ({ monthly: 10, yearly: 68 }) });
+  expect(((await quoteFile.plan(ctx, q)) as Dict).cards[0].price_anomaly).toBeUndefined();
+  Object.assign(ctx.provider, { prices: async () => null });
+  expect(((await quoteFile.plan(ctx, q)) as Dict).cards[0].price_anomaly).toBeUndefined();
 });

@@ -21,6 +21,11 @@ export class HuaweiProvider implements Provider {
   readonly name = "huawei";
   constructor(private readonly source: HuaweiSource) {}
 
+  async prices(req: Requirement, spec: string): Promise<Record<string, number> | null> {
+    const sku = (await this.source.skus(req.service, req.region)).find(item => item.spec === spec);
+    return sku ? Object.fromEntries(Object.entries(sku.prices).map(([mode, plan]) => [mode, Number(plan.amount)])) : null;
+  }
+
   async candidates(req: Requirement): Promise<Candidate[]> {
     if (!BILLING.includes(req.billing)) throw invalid(`Billing '${req.billing}' is not supported here.`, "billing", BILLING);
     await this.source.checkMode(req.service, req.region, req.billing);

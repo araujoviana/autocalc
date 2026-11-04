@@ -9,7 +9,7 @@ import { publishQuoteTool } from "./publish.ts";
 import { loadService } from "./schema-model.ts";
 import { legalOptions, modesOf, SPEC_ARG, VERIFIED } from "./services/publication.ts";
 import { draftQuoteTool } from "./workflow.ts";
-import { compileQuote, buildCanonicalQuoteIR, generateLockfile, stringifyLockfile, sanitizeTitle, type QuoteDocument } from "./compiler/index.ts";
+import { compileQuote, detectCatalogPricingAnomalies, buildCanonicalQuoteIR, generateLockfile, stringifyLockfile, sanitizeTitle, type QuoteDocument } from "./compiler/index.ts";
 import type { ActionContext } from "./types.ts";
 import { progress } from "./progress.ts";
 import { ECS_DEFAULT_IMAGE } from "./schemas.ts";
@@ -147,6 +147,11 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
         const choices = await ambiguousImages(ctx, requirement.region, decision.spec, requirement.options.image);
         if (choices.length) row.image_choices = choices;
       }
+      if (requirement.billing === "yearly" && ctx.provider.prices) {
+        const known = await ctx.provider.prices(requirement, decision.spec), monthly = known?.monthly ?? (known?.ondemand !== undefined ? known.ondemand * 730 : undefined);
+        const [anomaly] = known ? detectCatalogPricingAnomalies([{ id: card.id, service: requirement.service, yearlyAmount: known.yearly, monthlyAmount: monthly }]) : [];
+        if (anomaly) row.price_anomaly = anomaly.warning;
+      }
       const pin = pins(card);
       if (pin && pin.price !== price) row.lock_drift = { locked_price: pin.price, price };
       else if (!lock[card.id]) next[card.id] = { spec: decision.spec, price, needs: card.needs ?? {} };
@@ -206,7 +211,8 @@ export async function apply(ctx: ActionContext, quote: Quote, name?: string, dir
   const same = existing.filter(list => list.name === title);
   const duplicate = same.length ? `A list named "${title}" already exists (id ${String(same[0]!.key)}); this creates another.` : null;
   const published = await publishQuoteTool(ctx, { draft_id: result.draft_id, name: title, settlement: quote.settlement, currency: "USD" });
+  const anomalies = result.cards.filter(row => row.price_anomaly).map(row => `Card "${row.id}": ${row.price_anomaly}`);
   const skipped = (((published as Dict).checks ?? []) as Dict[]).filter(check => check.edit_skipped).map(check => `Card "${check.title}": Edit check skipped for a known portal defect. ${check.edit_skipped}`);
-  const warnings = [...((published as Dict).warnings ?? []), ...(duplicate ? [duplicate] : []), ...skipped];
+  const warnings = [...((published as Dict).warnings ?? []), ...(duplicate ? [duplicate] : []), ...anomalies, ...skipped];
   return warnings.length ? { ...published, warnings } : published;
 }

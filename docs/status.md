@@ -11,7 +11,7 @@ All three layers of the declarative design exist and are covered by the offline 
 
 | Layer | State |
 |---|---|
-| Declarative (`src/core/compiler/`) | Implemented and tested offline: units, templates, expander, canonical IR, lock file, wire budgeting, partitioning. The circuit breaker (`circuit-breaker.ts`) is wired into the gate for known vendor defects; its catalog anomaly guard is not yet called from `plan-quote` |
+| Declarative (`src/core/compiler/`) | Implemented and tested offline: units, templates, expander, canonical IR, lock file, wire budgeting, partitioning. The circuit breaker (`circuit-breaker.ts`) is wired into the gate for known vendor defects; its catalog anomaly guard flags yearly cards in `plan-quote` |
 | Canonical (`src/core/quote/`, `quote-file.ts`) | Implemented: ranking, drafts, run records, plan and apply |
 | Vendor (`src/providers/`, `src/core/page/`, `gate.ts`, `src/schema/`) | Implemented: catalog, rating, page encoder, generated schemas, publish gate |
 
@@ -33,7 +33,7 @@ page that will not open once ([publish gate](explanation/huawei/publish-gate.md)
 
 ## Next to 0.9
 
-See [the roadmap](roadmap.md) for the order. In short: finish wiring the circuit breaker (anomaly guard in plan), close the OBS and save bugs from issues #2, #4 and #6, extend Edit verification past ECS and OBS, run the `version: "1"` path live, then map builder options in batches.
+See [the roadmap](roadmap.md) for the order. In short: finish wiring the circuit breaker (the unused lower tiers), close the OBS and save bugs from issues #2, #4 and #6, extend Edit verification past ECS and OBS, run the `version: "1"` path live, then map builder options in batches.
 
 ### Earlier list
 

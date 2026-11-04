@@ -108,6 +108,7 @@ export function quoteView(cmd: string, result: unknown, stream?: StreamLike): st
       if (Array.isArray(c.image_choices) && c.image_choices.length) {
         notes.push(`image is ambiguous (${c.image_choices.length} match): set options.image`);
       }
+      if (c.price_anomaly) notes.push("yearly price looks wrong: " + String(c.price_anomaly).replace(/^Catalog anomaly: /, ""));
       if (c.lock_drift) {
         notes.push(`price moved from ${c.lock_drift.locked_price}`);
       }
@@ -117,7 +118,7 @@ export function quoteView(cmd: string, result: unknown, stream?: StreamLike): st
       rows.push([String(c.id), String(c.spec ?? "-"), String(c.price || "-"), notes.join("; ")]);
     }
     const problems = r.cards.filter(
-      (c: any) => !("spec" in c) || (Array.isArray(c.unmapped_options) && c.unmapped_options.length) || c.lock_drift || (Array.isArray(c.image_choices) && c.image_choices.length),
+      (c: any) => !("spec" in c) || (Array.isArray(c.unmapped_options) && c.unmapped_options.length) || c.lock_drift || c.price_anomaly || (Array.isArray(c.image_choices) && c.image_choices.length),
     ).length;
     const out = table(rows, ["CARD", "SPEC", "PRICE", "NOTES"], stream);
     return (
