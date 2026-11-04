@@ -122,11 +122,23 @@ export const RECIPES: Record<string, Recipe> = {
     cached_input_mtokens: "calculator_token_cached_input_stepper_Stepper_0",
   }, { modes: OD }),
   esw: recipe("Enterprise Switch", {}, { modes: PM_OD }),
-  vpcep: recipe("VPC Endpoint", {}, { modes: OD }),
+  vpcep: recipe("VPC Endpoint", {
+    duration_hours: "calculator_vpcep_time_Stepper_0",
+  }, { modes: OD }),
   eip: recipe("Elastic IP", {}, { modes: PM_OD }),
-  vpn: recipe("Virtual Private Network", {}, { modes: PM_OD }),
-  cfw: recipe("Cloud Firewall", {}, { modes: PM_OD }),
-  hss: recipe("Host Security Service", {}, { quantity: true, modes: PM_OD }),
+  vpn: recipe("Virtual Private Network", {
+    eip1_mbps: "calculator_evpnEip1_stepper_Stepper_0",
+    eip2_mbps: "calculator_evpnEip2_stepper_Stepper_0",
+    spec: "calculator_evpnGatewaySpec_radio_calGatewaySpec",
+  }, { modes: PM_OD }),
+  cfw: recipe("Cloud Firewall", {
+    edition: "calculator_cfw_editionRadio_edition",
+    bandwidth_mbps: "calculator_cfw_bandwidthStepper_Stepper_0",
+    eips: "calculator_cfw_eipStepper_Stepper_0",
+  }, { modes: PM_OD }),
+  hss: recipe("Host Security Service", {
+    edition: "calculator_hssType_radio_type",
+  }, { quantity: true, modes: PM_OD }),
   dbss: recipe("Database Security Service", {}, { quantity: true, modes: PM }),
   dsc: recipe("Data Security Center", {}, { quantity: true, modes: PM }),
   ga: recipe("Global Accelerator", {}, { regionless: true, modes: OD }),
