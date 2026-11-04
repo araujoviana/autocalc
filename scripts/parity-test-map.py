@@ -38,6 +38,7 @@ MAP: dict[str, list[str]] = {
     "test_quote_file": ["unit/quote-file.test.ts"],
     "test_share_session": ["unit/lists.test.ts", "unit/auth.test.ts"],
     "test_rating_contract": ["unit/pricing.test.ts"],
+    "test_region_sweep": ["unit/region-sweep.test.ts"],
     "test_regions_errors": ["unit/regions.test.ts"],
     "test_registry": ["integration/interfaces.test.ts"],
     "test_server_workers": ["integration/mcp-stdio.test.ts"],
@@ -55,7 +56,6 @@ MISSING: dict[str, str] = {
     "test_frontend": "5.2",
     "test_live": "live marker, kept out of CI", "test_page_live": "live marker",
     "test_public_form_live": "live marker",
-    "test_region_sweep": "4.4",
     "test_schema_live": "live marker",
     "test_ui": "5.3 (CLI output)", "test_update": "5.2"
 }

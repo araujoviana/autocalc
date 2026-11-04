@@ -1,5 +1,7 @@
 import { CalculatorError } from "./errors.ts";
 
+export const PRIMARY_REGIONS = ["sa-brazil-1", "la-south-2", "ap-southeast-3"] as const;
+
 const aliases: Record<string, string> = {
   santiago: "la-south-2", chile: "la-south-2", "la-south-2": "la-south-2",
   "sao paulo": "sa-brazil-1", "sao paulo1": "sa-brazil-1", brazil: "sa-brazil-1", brasil: "sa-brazil-1", "la-sao paulo1": "sa-brazil-1",
