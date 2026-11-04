@@ -44,3 +44,12 @@ test("plan-time rules catch a spec the options cannot go with", async () => {
   expect(SPEC_RULES.hrds!("rds.mysql.x1.xlarge.2", {})).toContain("y1");
   expect(SPEC_RULES.hrds!("rds.mysql.y1.xlarge.2", {})).toBeNull();
 });
+
+test("MaaS is publishable, and a service listed only under regionBeta counts as sold there", async () => {
+  const { supportedServices } = await import("../../src/core/services/index.ts");
+  const { checkAvailability } = await import("../../src/core/availability.ts");
+  expect(supportedServices().find(entry => entry.service === "maas")).toMatchObject({ publication_supported: true, modes: ["ondemand"] });
+  const menu = { menuInfos: [{ subCategoryLists: [{ urlPath: "maas", regionBeta: { regionList: ["ap-southeast-1"], "ap-southeast-1": { common: ["ONDEMAND"] } } }] }] };
+  expect(() => checkAvailability(menu, "maas", "ap-southeast-1", "ondemand")).not.toThrow();
+  expect(() => checkAvailability(menu, "maas", "sa-brazil-1", "ondemand")).toThrow("not sold in sa-brazil-1");
+});

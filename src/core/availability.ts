@@ -7,7 +7,7 @@ export function checkAvailability(menu: unknown, service: string, region: string
   const nodes = categories.flatMap(category => Array.isArray(obj(category).subCategoryLists) ? obj(category).subCategoryLists as unknown[] : []);
   const node = nodes.map(obj).find(item => item.urlPath === vendorServiceCode(service));
   if (!node) throw new CalculatorError("SERVICE_NOT_SOLD", `Unknown service ${service}`, undefined, { service });
-  const online = obj(node.regionOnline), regions = Array.isArray(online.regionList) ? online.regionList : [];
+  const online = Object.keys(obj(node.regionOnline)).length ? obj(node.regionOnline) : obj(node.regionBeta), regions = Array.isArray(online.regionList) ? online.regionList : [];
   if (!regions.includes(region)) throw new CalculatorError("SERVICE_NOT_SOLD", `${service} is not sold in ${region}`, regions.length ? `Available regions: ${regions.slice(0, 8).join(", ")}` : undefined, { service, region });
   const offered = obj(online[region]).common;
   const wanted = billing === "ri" ? "RI" : billing === "ondemand" ? "ONDEMAND" : "PERIOD";

@@ -47,8 +47,8 @@ test("a disabled Add to List and a missing period option are retried", async () 
   expect(calls).toHaveLength(3);
 });
 
-test("MATRIX has 100 verified service/mode entries matching spa_matrix", () => {
-  expect(MATRIX).toHaveLength(100);
+test("MATRIX has 101 verified service/mode entries matching spa_matrix", () => {
+  expect(MATRIX).toHaveLength(101);
   expect(MATRIX[0]?.[0]).toBe("ecs");
   expect(MATRIX.find(([s, b]) => s === "er" && b === "ondemand")?.[2]).toEqual({
     downflow_gb: 100,

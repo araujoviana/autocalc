@@ -4,7 +4,7 @@ import type { Provider } from "../core/quote/provider.ts";
 
 const BILLING = ["ondemand", "monthly", "yearly"];
 /** Same set as USAGE_PRICED in core/services/publication.ts, kept here so the provider does not import the services layer. */
-const USAGE_PRICED = new Set(["obs", "dss", "memcached"]);
+const USAGE_PRICED = new Set(["obs", "dss", "memcached", "maas"]);
 
 export interface CatalogSku { group: string; spec: string; description: string; prices: Record<string, { amount: number }>; offPage?: boolean }
 export interface HuaweiSource {

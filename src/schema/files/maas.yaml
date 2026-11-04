@@ -1,0 +1,117 @@
+service: maas
+frontend: 11.4.201
+controls:
+- id: global_REGIONINFO_region
+  kind: base-region
+  title: Region
+  value_type: Filter
+  option_key: region
+  default: ap-southeast-1
+  values: catalog
+  option: region
+- id: global_REGIONINFO_locationType
+  kind: base-radio-group
+  title: AZ
+  value_type: Filter
+  option_key: locationType
+  values: catalog
+  after:
+  - global_REGIONINFO_region
+  unsupported: true
+  note: not in the recipe; the page default is kept
+- id: global_REGIONINFO_chargeMode
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: chargeMode
+  values: catalog
+  after:
+  - global_REGIONINFO_locationType
+  option: billing
+- id: calculator_ucsType_radio_ondemand_reasoningMode
+  kind: base-radio-group
+  title: Inference Mode
+  value_type: Filter
+  option_key: reasoningMode
+  values: catalog
+  after:
+  - global_REGIONINFO_chargeMode
+  option: reasoning_mode
+- id: calculator_ucsType_radio_ondemand_modelServiceType
+  kind: base-radio-group
+  title: Model Type
+  value_type: Filter
+  option_key: modelServiceType
+  values: catalog
+  after:
+  - calculator_ucsType_radio_ondemand_reasoningMode
+  option: model_service_type
+- id: calculator_ucsType_radio_ondemand_modelSeries
+  kind: base-radio-group
+  title: Models
+  value_type: Filter
+  option_key: modelSeries
+  values: catalog
+  after:
+  - calculator_ucsType_radio_ondemand_modelServiceType
+  option: model_series
+- id: calculator_ucsType_radio_ondemand_modelName
+  kind: base-radio-group
+  title: Model
+  value_type: Filter
+  option_key: modelName
+  values: catalog
+  after:
+  - calculator_ucsType_radio_ondemand_modelSeries
+  option: model_name
+- id: calculator_ucsType_radio_ondemand_billingModeType
+  kind: base-radio-group
+  title: Billing Mode
+  value_type: Filter
+  option_key: billingModeType
+  values: catalog
+  after:
+  - calculator_ucsType_radio_ondemand_modelName
+  option: billing_mode_type
+- id: calculator_Input_stepper_Stepper_0
+  kind: base-stepper
+  title: Input
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 999999999.0
+    default: 1.0
+    unit: million tokens
+  after:
+  - calculator_ucsType_radio_ondemand_billingModeType
+  option: input_mtokens
+- id: calculator_output_stepper_Stepper_0
+  kind: base-stepper
+  title: Output
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 999999999.0
+    default: 1.0
+    unit: million tokens
+  after:
+  - calculator_Input_stepper_Stepper_0
+  option: output_mtokens
+- id: calculator_token_cached_input_stepper_Stepper_0
+  kind: base-stepper
+  title: Cache Hit Input
+  value_type: Stepper_Usage
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 999999999.0
+    default: 1.0
+    unit: million tokens
+  after:
+  - calculator_output_stepper_Stepper_0
+  option: cached_input_mtokens
