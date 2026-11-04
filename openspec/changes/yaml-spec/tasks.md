@@ -23,9 +23,9 @@
 
 ## 4. 4-Tier Circuit Breaker and Vendor Adapter
 
-- [ ] 4.1 Define 4-tier degradation states (`FULL_GATE_VERIFIED`, `RATING_VERIFIED_EDIT_SKIPPED`, `CACHED_CATALOG_ESTIMATE`, `EXPORT_ONLY`) and verify unit tests.
-- [ ] 4.2 Implement known-defect signature table (Kafka yearly Edit bug, OBS storage line drop) and verify tests route matching services to `RATING_VERIFIED_EDIT_SKIPPED`.
-- [ ] 4.3 Implement catalog pricing anomaly guard (flagging yearly $> 11.5 \times$ monthly) and verify tests emit advisory warnings.
+- [x] 4.1 Define 4-tier degradation states (`FULL_GATE_VERIFIED`, `RATING_VERIFIED_EDIT_SKIPPED`, `CACHED_CATALOG_ESTIMATE`, `EXPORT_ONLY`) and verify unit tests.
+- [x] 4.2 Implement known-defect signature table (Kafka yearly Edit bug, OBS storage line drop) and verify tests route matching services to `RATING_VERIFIED_EDIT_SKIPPED`.
+- [x] 4.3 Implement catalog pricing anomaly guard (flagging yearly $> 11.5 \times$ monthly) and verify tests emit advisory warnings.
 
 ## 5. CLI & MCP Integration
 

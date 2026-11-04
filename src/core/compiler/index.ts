@@ -14,6 +14,7 @@ export * from "./anti-split.ts";
 export * from "./ir.ts";
 export * from "./lockfile.ts";
 export * from "./wire.ts";
+export * from "./circuit-breaker.ts";
 
 export interface CompiledQuote {
   document: QuoteDocument;
