@@ -29,7 +29,7 @@
 
 - [x] 5.1 Port `export_quotes_xlsx` with identical sheet layout; settle the zip-writer open question first. Verify: the xlsx scenarios from `test_audit_contracts` and `test_workflow` pass in TypeScript and the produced file opens in a spreadsheet application. Note: uses built-in `node:zlib` (`deflateRawSync`) + `Bun.hash.crc32` with zero external dependencies; XML entries are byte-identical to Python.
 - [x] 5.2 Port `update`, the daily update notice, `doctor`, frontend-drift check and `summary`/`validate`. Verify: ported `test_update`, `test_frontend`, `test_cli_auth` pass; `autocalc doctor` runs on Windows and Linux.
-- [ ] 5.3 Match CLI syntax and exit codes with `docs/reference/cli.md`. Verify: a CLI contract test runs each documented command with `--help` and compares to the reference.
+- [x] 5.3 Match CLI syntax and exit codes with `docs/reference/cli.md`. Verify: a CLI contract test runs each documented command with `--help` and compares to the reference.
 
 ## 6. Parity gate (dev-quality delta)
 

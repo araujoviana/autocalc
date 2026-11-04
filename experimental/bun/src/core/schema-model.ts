@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { z } from "zod";
 import { PAGE } from "./endpoints.ts";
 import { SCHEMA_DIR } from "./schema-files.ts";
+import * as ui from "./ui.ts";
 export { SCHEMA_DIR };
 
 const Range = z.strictObject({
@@ -244,29 +245,55 @@ export async function pull(service: string, options: { dir?: string; headed?: bo
 export async function runSchemaCommand(
   action: string,
   service: string,
-  options: { dir?: string; pullFn?: (service: string) => Promise<ServiceSchema>; write?: (text: string) => void; headed?: boolean } = {},
+  options: { dir?: string; pullFn?: (service: string) => Promise<ServiceSchema>; write?: (text: string) => void; headed?: boolean; asJson?: boolean; stream?: ui.StreamLike } = {},
 ): Promise<number> {
   const dir = options.dir ?? SCHEMA_DIR;
   const out = options.write ?? (() => {});
+  const human = ui.fancy(options.stream) && !options.asJson;
   const pullFn = options.pullFn ?? (svc => pull(svc, { dir, ...(options.headed === undefined ? {} : { headed: options.headed }) }));
   const committed = /^[a-z0-9]+$/i.test(service) ? await loadService(service, dir) : null;
   if (action !== "pull" && committed === null) {
-    out(`No committed schema for ${service}; run \`autocalc schema pull ${service}\`.`);
+    const msg = `No committed schema for ${service}; run \`autocalc schema pull ${service}\`.`;
+    out(human ? ui.status("fail", msg, options.stream) : msg);
     return 1;
   }
   if (action === "coverage") {
-    out(JSON.stringify(coverage(committed!), null, 2));
+    const c = coverage(committed!);
+    if (!human) {
+      out(JSON.stringify(c, null, 2));
+    } else {
+      const lines = [
+        ...c.mapped.map(i => ui.status("ok", i, options.stream)),
+        ...c.unmapped.map(i => ui.status("warn", i, options.stream)),
+        ...c.unsupported.map(i => ui.paint(`- ${i} (unsupported)`, "dim", options.stream)),
+        ui.paint(`Coverage ${c.mapped.length}/${c.mapped.length + c.unmapped.length} mapped (${c.mapped_percent}%), ${c.unsupported.length} unsupported`, "bold", options.stream),
+      ];
+      out(lines.join("\n"));
+    }
     return 0;
   }
   if (action === "diff") {
     const d = diff(committed, await pullFn(service));
-    out(JSON.stringify(d, null, 2));
-    return d.added.length || d.removed.length || d.changed.length ? 1 : 0;
+    const drift = Boolean(d.added.length || d.removed.length || d.changed.length);
+    if (!human) {
+      out(JSON.stringify(d, null, 2));
+    } else {
+      const lines: string[] = [];
+      for (const [key, kind] of [["added", "warn"], ["removed", "fail"], ["changed", "warn"]] as const) {
+        for (const i of d[key]) lines.push(ui.status(kind, `${key}: ${i}`, options.stream));
+      }
+      lines.push(ui.status(drift ? "warn" : "ok", `${service}: ` + (drift
+        ? `${d.added.length} added, ${d.removed.length} removed, ${d.changed.length} changed  -> autocalc schema pull ${service}`
+        : "no drift from the live page"), options.stream));
+      out(lines.join("\n"));
+    }
+    return drift ? 1 : 0;
   }
   if (action === "pull") {
     const schema = await pullFn(service);
     await writeFile(join(dir, `${service}.yaml`), dump(schema), "utf8");
-    out(`Wrote schema for ${service}.`);
+    const msg = `Wrote schema for ${service}.`;
+    out(human ? ui.status("ok", msg, options.stream) : msg);
     return 0;
   }
   throw new Error(`Unknown schema action: ${action}`);
