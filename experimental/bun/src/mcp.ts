@@ -2,9 +2,11 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
+import pkg from "../package.json";
 import { createCore, CalculatorError } from "./core/index.ts";
 import { registry } from "./core/registry.ts";
 import { schemaIndex, schemaOf } from "./core/schema-files.ts";
+import { withNotice } from "./core/update.ts";
 
 export const QUOTE_WORKFLOW = [
   "0. Never read autocalc's source. Read the schema resources (autocalc://schema/index, autocalc://schema/<service>) for legal options and ranges. For a reviewable quote, write a YAML file and call plan_quote(path), then apply_quote(path).",
@@ -17,9 +19,9 @@ export const QUOTE_WORKFLOW = [
 
 export async function main(): Promise<void> {
   const core = createCore();
-  const server = new McpServer({ name: "autocalc", version: "0.1.0" });
+  const server = new McpServer({ name: "autocalc", version: pkg.version });
   const invoke = async (name: string, input: unknown, signal: AbortSignal) => {
-    try { return { content: [{ type: "text" as const, text: JSON.stringify(await core.invoke(name, input, { signal })) }] }; }
+    try { return { content: [{ type: "text" as const, text: JSON.stringify(withNotice(await core.invoke(name, input, { signal }))) }] }; }
     catch (error) { return { isError: true, content: [{ type: "text" as const, text: JSON.stringify(error instanceof CalculatorError ? error.toJSON() : { error: "AUTOCALC", message: "Unexpected error" }) }] }; }
   };
   for (const [name, entry] of Object.entries(registry)) {

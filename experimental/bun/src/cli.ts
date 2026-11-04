@@ -1,8 +1,10 @@
 #!/usr/bin/env bun
 import { Command, CommanderError } from "commander";
+import pkg from "../package.json";
 import { createCore, CalculatorError } from "./core/index.ts";
 import { QuoteItem } from "./core/schemas.ts";
 import { PositiveInteger } from "./core/schemas.ts";
+import { update as runUpdate, withNotice } from "./core/update.ts";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
@@ -24,7 +26,7 @@ export async function quoteWithConversion(quote: Record<string, unknown> & { tot
 
 export async function main(argv: string[]): Promise<number> {
   const program = new Command();
-  program.name("autocalc").description("Huawei Cloud calculator").option("--headed", "Show browser windows").option("--profile <name>", "Authentication profile").option("--json", "Print JSON").exitOverride();
+  program.name("autocalc").description("Huawei Cloud calculator").version(`autocalc ${pkg.version}`, "--version").option("--headed", "Show browser windows").option("--profile <name>", "Authentication profile").option("--json", "Print JSON").exitOverride();
   let core: ReturnType<typeof createCore> | undefined;
   let commandFailed = false;
   let commandExit: number | undefined;
@@ -33,7 +35,7 @@ export async function main(argv: string[]): Promise<number> {
   const onInt = () => interrupt(130), onTerm = () => interrupt(143);
   process.once("SIGINT", onInt); process.once("SIGTERM", onTerm);
   const getCore = () => core ??= createCore({ ...(program.opts<{ profile?: string }>().profile ? { profile: program.opts<{ profile: string }>().profile } : {}), headed: !!program.opts<{ headed?: boolean }>().headed });
-  const print = async (name: string, input: unknown) => process.stdout.write(`${JSON.stringify(await getCore().invoke(name, input), null, 2)}\n`);
+  const print = async (name: string, input: unknown) => process.stdout.write(`${JSON.stringify(withNotice(await getCore().invoke(name, input)), null, 2)}\n`);
   const readItems = async (file: string): Promise<unknown> => { try { return JSON.parse(file === "-" ? await Bun.stdin.text() : await readFile(file, "utf8")) as unknown; } catch { throw new CalculatorError("VALIDATION", "Could not read items JSON"); } };
   program.command("services").description("List calculator services").argument("[query]").action(async (query?: string) => { await print("list_services", { query: query ?? "" }); });
   program.command("regions").description("List calculator regions").argument("[service]").option("--region <name>", "Resolve a region name").action(async (service: string | undefined, options: { region?: string }) => { await print("list_regions", { service: service ?? "", region: options.region ?? "" }); });
@@ -66,6 +68,7 @@ export async function main(argv: string[]): Promise<number> {
   program.command("edit-check").description("Compare saved cards with anonymous Edit pricing").argument("<url_or_id>").option("--limit <count>").option("--screenshots <directory>", "Save a screenshot for each checked card").action(async (urlOrId: string, options: { limit?: string; screenshots?: string }) => { const parsed = options.limit === undefined ? undefined : PositiveInteger.safeParse(options.limit); if (parsed && !parsed.success) throw new CalculatorError("VALIDATION", "Limit must be a positive integer"); const result = await getCore().editCheck(urlOrId, parsed?.data, options.screenshots); process.stdout.write(`${JSON.stringify(result, null, 2)}\n`); if (!result.ok) commandFailed = true; });
   program.command("doctor").description("Check public calculator endpoints and local auth status").action(async () => { const result = await getCore().doctor(); process.stdout.write(`${JSON.stringify(result, null, 2)}\n`); if (!result.ok) commandFailed = true; });
   program.command("install-browser").description("Install the pinned Playwright Chromium revision").action(async () => { const processHandle = Bun.spawn([process.execPath, "--bun", playwrightCliPath(), "install", "chromium"], { stdout: "pipe", stderr: "pipe" }); const [stdout, stderr, status] = await Promise.all([new Response(processHandle.stdout).text(), new Response(processHandle.stderr).text(), processHandle.exited]); if (stdout) process.stderr.write(stdout); if (stderr) process.stderr.write(stderr); if (status !== 0) commandExit = status; });
+  program.command("update").description("move to the newest release").option("--to <tag>", "a release tag, vX.Y.Z (default: the newest)").action(async (options: { to?: string }) => { process.stdout.write(`${runUpdate(options.to)}\n`); });
   program.command("compare-modes").description("Compare billing modes").requiredOption("--items <file>", "JSON quote items or - for stdin").option("--region <region>").option("--modes <modes>", "Comma-separated modes").option("--currency <currency>").option("--hours <hours>").option("--periods <count>").action(async (options: { items: string; region?: string; modes?: string; currency?: string; hours?: string; periods?: string }) => { await print("compare_modes", { items: await readItems(options.items), ...(options.region ? { region: options.region } : {}), ...(options.modes ? { modes: options.modes.split(",") } : {}), ...(options.currency ? { currency: options.currency } : {}), ...(options.hours ? { hours: options.hours } : {}), ...(options.periods ? { periods: options.periods } : {}) }); });
   program.command("compare-regions").description("Compare region prices").requiredOption("--items <file>", "JSON quote items or - for stdin").requiredOption("--regions <regions>", "Comma-separated regions").option("--billing <mode>").action(async (options: { items: string; regions: string; billing?: string }) => { await print("compare_regions", { items: await readItems(options.items), regions: options.regions.split(","), ...(options.billing ? { billing: options.billing } : {}) }); });
   program.command("lists").description("List your saved price lists").action(async () => { await print("list_my_price_lists", {}); });

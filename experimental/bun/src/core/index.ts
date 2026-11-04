@@ -12,18 +12,16 @@ import { AuthManager } from "./auth.ts";
 import { ListSession, shareDetail } from "./lists.ts";
 import { profilePaths, resolveConfig } from "./config.ts";
 import { validateList } from "./validate.ts";
-import { BrowserManager } from "./browser.ts";
+import { BrowserManager, discoverBrowserExecutable } from "./browser.ts";
 import { renderCheck } from "./page.ts";
 import { editCheckCard } from "./edit-check-browser.ts";
 import { allOk } from "./edit-check.ts";
 import { doctor } from "./diagnostics.ts";
 import { request } from "playwright";
-import { endpoints, PAGE } from "./endpoints.ts";
 import { HuaweiProvider } from "../providers/huawei.ts";
 import { DraftStore } from "./quote/store.ts";
 import { checkAvailability } from "./availability.ts";
 import { mkdir } from "node:fs/promises";
-import { ListReference } from "./schemas.ts";
 import { inFormOnlyMode } from "./cards.ts";
 import { buildRecipe, RECIPES } from "./services/forms.ts";
 import { buildCard as buildServiceCard } from "./services/index.ts";
@@ -31,9 +29,13 @@ import { encodeCard } from "./page/encode.ts";
 import { editCheck } from "./page/edit.ts";
 import { publishChecked, verify } from "./gate.ts";
 import type { PublishPorts } from "./publish.ts";
+import { liveVersion, warnings as frontendWarnings } from "./frontend.ts";
+import { VERIFIED } from "./services/publication.ts";
+import { staleNotes } from "./schema-model.ts";
 
 export function createCore(options: { reader?: ActionContext["reader"]; catalogReader?: ConstructorParameters<typeof Catalog>[0]; rating?: ActionContext["rating"]; listSession?: ActionContext["lists"]; cacheDir?: string; profile?: string; headed?: boolean } = {}) {
-  const transport = options.reader && options.catalogReader && options.rating ? undefined : new PublicTransport(new CatalogCache(options.cacheDir ?? process.env.AUTOCALC_CACHE ?? join(homedir(), ".cache", "autocalc")));
+  const cacheDir = options.cacheDir ?? process.env.AUTOCALC_CACHE ?? join(homedir(), ".cache", "autocalc");
+  const transport = options.reader && options.catalogReader && options.rating ? undefined : new PublicTransport(new CatalogCache(cacheDir));
   const config = resolveConfig({ ...(options.profile ? { profile: options.profile } : {}), ...(options.headed === undefined ? {} : { headed: options.headed }) });
   const paths = profilePaths(config.profile!);
   const browser = new BrowserManager({ profilePath: paths.profileDir, headed: config.headed, ...(config.executable ? { executable: config.executable } : {}) });
@@ -49,7 +51,7 @@ export function createCore(options: { reader?: ActionContext["reader"]; catalogR
       : (await inFormOnlyMode(() => buildServiceCard(input as never, { productInfo: (service, region) => catalog.productInfo(service, region), rate: async () => { throw new CalculatorError("AUTOCALC", "A form-only build must not rate."); } }))).rewriteValue as Record<string, unknown>,
     encode: (service, rewriteValue) => encodeCard(browser, service, rewriteValue),
     publish: (name, cards, publishOptions) => publishChecked(name, cards, { ...publishOptions, lists, check: (listId, expected) => verify(listId, { reader, rate: rating, edit: id => editCheck(reader, browser, id) }, expected) }),
-    liveVersion: async () => { try { return /CBC-PortalCalculator\/([0-9.]+)/.exec(await (await fetch(PAGE, { signal: AbortSignal.timeout(20000) })).text())?.[1]; } catch { return undefined; } },
+    liveVersion: () => liveVersion(),
   };
   const context: ActionContext = { publish, provider, drafts: new DraftStore(), reader: options.reader ?? transport!, catalog, rating: options.rating ?? (body => inquiry(value => transport!.post(RATE, value), body)), lists, auth };
   const temporaryAuth = new Set<AuthManager>();
@@ -83,7 +85,8 @@ export function createCore(options: { reader?: ActionContext["reader"]; catalogR
       ensureOpen();
       const http = await request.newContext({ timeout: 15000 });
       try {
-        return await doctor(async name => {
+        let live: string | undefined;
+        const diag = await doctor(async name => {
           if (name === "menu") { await context.catalog.menu(); return { ok: true }; }
           if (name === "product") { await context.catalog.productInfo("ecs", "sa-brazil-1"); return { ok: true }; }
           if (name === "rating") {
@@ -94,8 +97,19 @@ export function createCore(options: { reader?: ActionContext["reader"]; catalogR
             return { ok: response.ok() && (code === undefined || code === "CBC.0000" || code === "200") && Array.isArray(data.productRatingResult) && data.productRatingResult.length > 0 };
           }
           if (name === "exchange") { const value = await context.catalog.exchangePage(1); return { ok: !!value && typeof value === "object" && Array.isArray((value as Record<string, unknown>).data) }; }
-          const response = await http.get(PAGE, { timeout: 20000 }); return { ok: response.ok() };
-        }, await auth.status(), () => auth.call("GET", endpoints.list));
+          live = await liveVersion();
+          return { ok: Boolean(live) };
+        }, await auth.status());
+        const notes = [...frontendWarnings([...VERIFIED].sort(), live), ...(await staleNotes(live))];
+        const executable = discoverBrowserExecutable(config.executable);
+        await mkdir(cacheDir, { recursive: true });
+        return {
+          ...diag,
+          frontend: { version: live ?? null, warnings: notes },
+          browser: executable ?? "bundled (playwright build)",
+          profile_dir: paths.profileDir,
+          cache_dir: cacheDir,
+        };
       } finally { await http.dispose(); }
     },
     close(): Promise<void> {

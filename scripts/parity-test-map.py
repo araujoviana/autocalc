@@ -45,19 +45,20 @@ MAP: dict[str, list[str]] = {
     "test_audit_service_safety": ["unit/service-safety.test.ts"],
     "test_form_only": ["unit/publish.test.ts"],
     "test_forms": ["unit/forms.test.ts"],
+    "test_frontend": ["unit/frontend.test.ts"],
     "test_public_form_fixtures": ["unit/forms.test.ts"],
     "test_schema": ["unit/schema-invariants.test.ts"],
     "test_schema_invariants": ["unit/schema-invariants.test.ts"],
     "test_sfs_capacity": ["unit/sfs.test.ts"],
     "test_template_render": ["integration/render.test.ts"],
+    "test_update": ["unit/update.test.ts"],
 }
 # No TypeScript counterpart yet; the note says where it is planned (tasks.md) or why none is needed.
 MISSING: dict[str, str] = {
-    "test_frontend": "5.2",
     "test_live": "live marker, kept out of CI", "test_page_live": "live marker",
     "test_public_form_live": "live marker",
     "test_schema_live": "live marker",
-    "test_ui": "5.3 (CLI output)", "test_update": "5.2"
+    "test_ui": "5.3 (CLI output)"
 }
 
 

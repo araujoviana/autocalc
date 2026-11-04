@@ -8,7 +8,9 @@ import { CalculatorError } from "./errors.ts";
 import { invalid } from "./quote/model.ts";
 import { CardInput } from "./schemas.ts";
 import { buildRecipe, RECIPES } from "./services/forms.ts";
-import { modesOf, SINGLE_QUANTITY, SPEC_ARG, specOption, VERIFIED, VERIFIED_FRONTEND } from "./services/publication.ts";
+import { warnings as frontendWarnings } from "./frontend.ts";
+import { modesOf, SINGLE_QUANTITY, SPEC_ARG, specOption, VERIFIED } from "./services/publication.ts";
+export { frontendWarnings };
 import type { ActionContext } from "./types.ts";
 
 type Dict = Record<string, any>;
@@ -36,11 +38,6 @@ export function encodeWorkers(env: Record<string, string | undefined> = process.
   return Math.min(3, cpus, Math.max(1, Math.floor((memory - 512 * 1024 ** 2) / (768 * 1024 ** 2))));
 }
 
-export function frontendWarnings(services: string[], live: string | undefined): string[] {
-  if (live === undefined) return ["Could not read the calculator's frontend version; the publish gate still checks every card."];
-  return [...new Set(services)].sort().filter(service => VERIFIED_FRONTEND !== live)
-    .map(service => `${service} was verified on calculator frontend ${VERIFIED_FRONTEND}, the live one is ${live}; the publish gate still checks every card.`);
-}
 
 async function mapLimit<T, R>(items: T[], limit: number, work: (item: T, index: number) => Promise<R>): Promise<R[]> {
   const results: R[] = new Array(items.length);
