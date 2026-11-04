@@ -36,8 +36,7 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: edition
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

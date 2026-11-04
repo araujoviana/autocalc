@@ -51,5 +51,4 @@ controls:
     unit: hour
   after:
   - calculator_vpcep_serviceType_serviceType
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: duration_hours

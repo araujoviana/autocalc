@@ -68,8 +68,7 @@ controls:
   values: catalog
   after:
   - calculator_evpnNetworkType_switch_UNSET_Switch
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: spec
 - id: calculator_evpnGatewaySpec_radio_calNonFixedIP
   kind: base-radio-group
   title: Access via Non-fixed IP Addresses
@@ -132,8 +131,7 @@ controls:
     unit: Mbit/s
   after:
   - calculator_evpnShareBandwidth_switch_UNSET_Switch
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: eip1_mbps
 - id: calculator_evpnEip2_stepper_Stepper_0
   kind: base-stepper
   title: EIP 2 Bandwidth
@@ -147,8 +145,7 @@ controls:
     unit: Mbit/s
   after:
   - calculator_evpnEip1_stepper_Stepper_0
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: eip2_mbps
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

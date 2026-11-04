@@ -36,8 +36,7 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: edition
 - id: calculator_cfw_eipStepper_Stepper_0
   kind: base-stepper
   title: Add EIP Protection Capacity
@@ -51,8 +50,7 @@ controls:
     unit: PCS
   after:
   - calculator_cfw_editionRadio_edition
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: eips
 - id: calculator_cfw_bandwidthStepper_Stepper_0
   kind: base-stepper
   title: Add Internet Border Protection Bandwidth
@@ -67,8 +65,7 @@ controls:
     unit: Mbit/s
   after:
   - calculator_cfw_eipStepper_Stepper_0
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: bandwidth_mbps
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration
