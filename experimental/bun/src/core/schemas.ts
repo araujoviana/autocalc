@@ -146,3 +146,7 @@ export const PublishQuoteInput = z.strictObject({ draft_id: Nonempty.describe("D
 export const RecoverDraftInput = z.strictObject({ draft_id: Nonempty.describe("Draft id"), confirmed_no_remote_list: BooleanInput.describe("True only after checking saved lists"), justification: z.string().describe("How the user reconciled") });
 export const PlanQuoteInput = z.strictObject({ path: Nonempty.describe("Path of the quote YAML file") });
 export const ApplyQuoteInput = z.strictObject({ path: Nonempty.describe("Path of the quote YAML file"), name: z.string().default("").describe("List name; default: name in the file") });
+export const ExportQuotesXlsxInput = z.strictObject({
+  rows: z.array(z.looseObject({ env: z.string().optional(), list: z.string().optional(), draft_id: z.string().optional() })).describe("Rows of {env, list, draft_id?} in display order"),
+  path: z.string().nullish().describe("Output .xlsx path; default creates a unique file in exports directory"),
+});

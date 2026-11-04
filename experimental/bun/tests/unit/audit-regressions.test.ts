@@ -77,3 +77,33 @@ test.each([
   expect((card.selectedProduct.productAllInfos as Record<string, unknown>[])[0]).toMatchObject({ usageFactor: factor, usageValue: 100, usageMeasureId: measure });
   expect(card.rewriteValue).toMatchObject({ template_RENDER: { calculator_multiAZ_radio: { [step]: { measureValue: 100 }, multiAZType: multi_az ? "dataInfo_5_" : "dataInfo_4_" } } });
 });
+
+test.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])("xlsx rejects nonfinite numbers (%s)", async value => {
+  const { Money, Sum, _cell } = await import("../../src/core/xlsx.ts");
+  for (const cell of [value, new Money(value), new Sum(1, 2, value)]) {
+    expect(() => _cell("A1", cell, 0)).toThrow(/finite/);
+  }
+});
+
+test("xlsx columns beyond Z", async () => {
+  const { Sheet, _sheet_xml } = await import("../../src/core/xlsx.ts");
+  const xml = _sheet_xml(new Sheet("test", Array.from({ length: 28 }, (_, i) => String(i)), [], []));
+  expect(xml).toContain('r="AA1"');
+  expect(xml).toContain('r="AB1"');
+});
+
+test("xlsx does not overwrite", async () => {
+  const { mkdtempSync, readFileSync, rmSync, writeFileSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { writeWorkbook } = await import("../../src/core/xlsx.ts");
+  const dir = mkdtempSync(join(tmpdir(), "xlsx-"));
+  try {
+    const path = join(dir, "existing.xlsx");
+    writeFileSync(path, "keep", "utf8");
+    expect(() => writeWorkbook(path, [])).toThrow(/overwrite/);
+    expect(readFileSync(path, "utf8")).toBe("keep");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
