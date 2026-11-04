@@ -1,6 +1,6 @@
 # Quote files and card schemas
 
-Status: proposed ([ADR-0018](../adr/0018-declarative-quotes-and-generated-card-schema.md)).
+Status: accepted ([ADR-0018](../adr/0018-declarative-quotes-and-generated-card-schema.md)).
 
 ## Card schema
 
@@ -43,16 +43,18 @@ cards:
 ```
 
 ```bash
-autocalc plan-quote --path quote.yaml    # validate, resolve, rate; writes quote.lock.json; saves nothing on the website
+autocalc plan-quote --path quote.yaml    # validate, resolve, rate; writes the lock file; saves nothing on the website
 autocalc apply-quote --path quote.yaml   # plan, then publish through the fail-closed gate
 ```
 
 * Validation is offline. An error names the card, the field, and the legal options or range, and
   points to the schema (`autocalc://schema/<service>` over MCP).
 * `plan` shows ranked candidates for an ambiguous card; choose one by writing `spec:`.
-* The lock file (`quote.lock.json`, beside the quote) pins the resolved spec and its price. A moved
+* The lock file (`quote.lock.json` beside a plain quote file, `quote.lock.yaml` for a `version: "1"` file) pins the resolved spec and its price. A moved
   price is reported as `lock_drift` and blocks `apply` until you delete that entry.
-* `apply` refuses unresolved cards and options the schema does not map.
+* `apply` refuses unresolved cards, options the schema does not map, and an ECS image that matches
+  several catalog images (`plan` reports it as `image_choices`; set `options.image` to one exact name).
+* `apply` warns, and still publishes, when a saved list of the same name exists.
 * Do not commit quote or lock files that hold client data.
 
 ## MCP
@@ -60,3 +62,12 @@ autocalc apply-quote --path quote.yaml   # plan, then publish through the fail-c
 Tools `plan_quote(path)` and `apply_quote(path, name)`. Resources `autocalc://schema/index`
 (version and coverage per service) and `autocalc://schema/<service>`; they need no login and no
 browser.
+
+## Declarative files (`version: "1"`)
+
+A file that starts with `version: "1"` is compiled offline before planning: physical units are
+mandatory (`GB`, `TB`, `Mbit/s`, `h`, `mo`), `templates` give DRY machine archetypes, and the
+compiler produces a deterministic canonical IR and `quote.lock.yaml`. Large quotes are budgeted
+against the calculator's request limit and split into several lists, never splitting a card that
+carries a base cost (CCE, NAT, ELB). Design: [ADR-0018](../adr/0018-declarative-quotes-and-generated-card-schema.md) and
+`openspec/specs/core/declarative-compiler/spec.md`.

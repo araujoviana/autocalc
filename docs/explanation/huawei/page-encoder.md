@@ -11,7 +11,7 @@ how the page behaves. Everything here is a vendor observation of frontend
 
 The page loads `https://portal.hc-cdn.com/CBC-PortalCalculator/<version>/framework.js`. The
 version in that script URL is what errors and reports carry. `autocalc doctor` and
-`scripts/fetch_bundle.py` use the same pattern.
+`scripts/fetch-bundle.ts` use the same pattern.
 
 ## Reaching the page's state
 
@@ -79,9 +79,9 @@ explicitly. Form state survives a billing-mode switch.
 
 ### Replaying a builder's form state
 
-`autocalc.page.replay` fills the form for any service from a Python builder's card. The
+`src/core/page/replay.ts` fills the form for any service from a builder's card. The
 builder's `rewriteValue` says which value each control should hold, so the encoder needs no
-per-service recipe: `card_steps` flattens it to `(control id, value)` steps and the form itself
+per-service recipe: `card_steps` flattens it (`cardSteps`) to `(control id, value)` steps and the form itself
 says what each control is (`auto`). A key nested under its parent that starts with the parent's
 id is already a full control id (`calculator_evs_stepper_main`). A `UNSET_Stepper_n` leaf is the
 control `…_Stepper_n`. A row key `…_|addible0|_<n>` is preceded by one click on the add button.
@@ -137,7 +137,7 @@ What the page did differently from the builders, seen on the seven services in `
 
 For ECS in `sa-brazil-1` (on-demand 730 h, monthly, and 1-year no-upfront RI, two data disks
 and 5 Mbit/s), the captured cards had the same `template_RENDER` and the same amounts as the
-Python builder's. One difference showed up: the page's `buyUrl` joins data disks with `;`
+builder's. One difference showed up: the page's `buyUrl` joins data disks with `;`
 where the builder uses `,`.
 
 ## Edit check

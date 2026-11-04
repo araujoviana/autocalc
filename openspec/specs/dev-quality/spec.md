@@ -46,7 +46,7 @@ The typecheck and boundary rule set and settings SHALL live in the project confi
 `package.json` and `bun.lock`, so that a local run and the CI run give the same result for the
 same tree regardless of the contributor's user-level settings.
 
-#### Scenario: Contributor with a personal ruff config
+#### Scenario: Contributor with personal tool settings
 - **WHEN** a contributor runs `bun run check && bun run check:boundaries`
 - **THEN** the result matches the CI result for the same commit
 

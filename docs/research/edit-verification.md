@@ -1,5 +1,10 @@
 # Edit verification: reliable first, fast second
 
+> **Historical.** Written against the Python implementation. File and line references (`edit_check.py`,
+> `gate.py`, `driver.py`, ...) point at code removed in the TypeScript cutover
+> ([ADR-0017](../adr/0017-typescript-on-bun-is-the-target.md)). The equivalents are in `src/core/page/` and
+> `src/core/gate.ts`. The findings and the proposed design still apply.
+
 Research note, 2026-11-02, branch `ts-parity`. Question: how do we make the per-card Edit check
 trustworthy, and only then cheap. Nothing here changes code. Everything marked "not verified"
 at the end was not observed.

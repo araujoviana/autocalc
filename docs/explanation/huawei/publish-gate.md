@@ -26,6 +26,11 @@ cannot price: each of these is a failed card, not a skipped check. A service who
 produces cards the page re-prices differently therefore cannot be published until it is fixed.
 That is intended: the alternative is a link that shows a different price on Edit.
 
+One exception keeps a transient load failure from deleting a good list: if the calculator page
+itself will not open ("The calculator form did not appear."), the Edit check opens it once more.
+No price has been compared at that point, so the retry cannot hide a mismatch. A card that fails
+or differs after the page opened is never retried.
+
 `AUTOCALC_KEEP_ON_FAIL=1` keeps a failed list so you can open it and look. It is an environment
 variable on purpose: no tool argument can turn the gate off.
 

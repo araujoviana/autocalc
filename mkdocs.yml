@@ -7,6 +7,7 @@ exclude_docs: |
   /reports/
   /private/
   /research/
+  /superpowers/
   /design/
 
 theme:
@@ -35,6 +36,7 @@ plugins:
 
 nav:
   - Home: index.md
+  - Project status: status.md
   - Tutorials:
       - Your first quote: tutorials/first-quote.md
   - How-to guides:

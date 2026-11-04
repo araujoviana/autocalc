@@ -13,21 +13,32 @@ autocalc separates the easy, fast part (catalog and rating) from the hard, slow 
 
 ```
 agent / human
-   │  draft_quote → revise_quote → publish_quote      (one tool registry → MCP + CLI)
+   │  plan_quote → apply_quote        (a quote file: YAML of cards)
+   │  draft_quote → revise_quote → publish_quote
+   │  one tool registry → MCP + CLI
    ▼
-provider-neutral core
-   model (requirement, candidate, line item, decision, quote)
-   ranking policy · draft store · run records
+1. declarative layer         src/core/compiler/
+   quote.yaml (version "1": units, templates) → offline compiler → expander
+   │  deterministic, no network
+   ▼
+2. canonical layer           src/core/quote/ · quote-file.ts · quote.lock.yaml
+   provider-neutral model (requirement, candidate, decision, quote)
+   ranking policy · draft store · run records · lock file
    │  Provider protocol: catalog · rank · rate · encode · publish · verify · delete
    ▼
-huawei/  (today)                           aws/  (v2)
+3. vendor layer              src/providers/huawei.ts · src/core/{catalog,pricing,page,gate}
    catalog + rating API (fast, anonymous)
-   page encoder (headless calculator form)
-   saved lists + publish gate
+   page encoder (headless calculator form) · generated card schemas (src/schema/)
+   publish gate: stored = rated = Edit, or the list is deleted
+   wire budgeting, partitioning, circuit breaker
 ```
 
-Today's code is the bottom-left box with no core above it. The core is being introduced as a
-strangler around it ([ADR-0015](../adr/0015-strangler-core-and-aws-second.md)).
+The layers keep intent away from the vendor's page: a change to the calculator's controls is
+absorbed by layer 3 (a regenerated schema), and quote files do not change
+([ADR-0018](../adr/0018-declarative-quotes-and-generated-card-schema.md)). The core is
+provider-neutral so a second provider can be added later
+([ADR-0015](../adr/0015-strangler-core-and-aws-second.md)); AWS is v2. The implementation is
+TypeScript on Bun ([ADR-0017](../adr/0017-typescript-on-bun-is-the-target.md)).
 
 ## Where each kind of knowledge lives
 

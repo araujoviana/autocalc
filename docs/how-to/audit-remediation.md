@@ -10,7 +10,8 @@ The stale cookie backup was deleted. Private notes and the previous private audi
 content was rebuilt with reports, quotes and private directories excluded. Deleting a cookie
 backup does not revoke the remote session; console logout is still needed for revocation.
 
-Python remains canonical (ADR-0016). Existing experimental branches, stashes and worktrees are
+This page records the Python-era audit (ADR-0016). Python was removed in the TypeScript cutover
+([ADR-0017](../adr/0017-typescript-on-bun-is-the-target.md)); the findings below are kept as history. Existing experimental branches, stashes and worktrees are
 retained because deleting them could destroy unpublished work.
 
 ## Second remediation pass

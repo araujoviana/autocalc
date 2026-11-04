@@ -3,7 +3,7 @@
 The core is the part of autocalc that knows nothing about a particular cloud. It turns "4 vCPU /
 16 GB in Santiago, monthly" into a draft that records what was asked, what was offered, who chose
 what and why. A provider supplies the cloud-specific part. Today that is
-`autocalc.providers.huawei.HuaweiProvider`, a thin wrapper over the catalog and availability
+`HuaweiProvider` (`src/providers/huawei.ts`), a thin wrapper over the catalog and availability
 modules ([ADR-0015](../adr/0015-strangler-core-and-aws-second.md)).
 
 ## The pieces

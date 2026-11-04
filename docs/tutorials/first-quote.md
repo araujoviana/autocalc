@@ -5,9 +5,9 @@ today's CLI and MCP server, on Linux or Windows.
 
 ## 1. Install
 
-The installer needs `git`. It installs [uv](https://docs.astral.sh/uv/) if you don't have it,
-then autocalc from the newest release tag, and registers the MCP server when the `claude` CLI
-is present. Fetch and run the script:
+The installer needs `git`. It installs [Bun](https://bun.sh) if you don't have it, then autocalc
+from the newest release tag, and registers the MCP server when the `claude` CLI is present. Fetch
+and run the script:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/araujoviana/autocalc/main/install.sh | sh
@@ -18,7 +18,8 @@ irm https://raw.githubusercontent.com/araujoviana/autocalc/main/install.ps1 | ie
 ```
 
 `AUTOCALC_REF=<tag-or-branch>` installs another ref. Update later with `autocalc update`
-(`--to vX.Y.Z` for a specific release); it never updates on its own.
+(`--to vX.Y.Z` for a specific release); it never updates on its own. If `autocalc` is not found,
+open a new shell: Bun puts it in `~/.bun/bin`.
 
 ## 2. Explore the catalog (no login needed)
 
@@ -54,7 +55,40 @@ A browser window opens (your installed Chrome or Edge when there is one). Sign i
 autocalc never sees your password. The session stays in that browser profile and nowhere else.
 Check the result with `autocalc auth status`.
 
-## 5. Create the share link from your agent
+## 5. Create the share link
+
+### From a quote file (a person at a terminal)
+
+Write the quote as a file, check it, then publish it:
+
+```yaml
+# quote.yaml
+customer: Example Corp
+name: "[autocalc] example"
+settlement: total
+defaults: {region: sa-brazil-1, billing: monthly}
+cards:
+  - id: web
+    service: ecs
+    quantity: 2
+    needs: {vcpus: 4, memory_gb: 8}
+    options: {image: "Ubuntu 22.04 server 64bit"}
+```
+
+```bash
+autocalc plan-quote --path quote.yaml    # validates, picks the spec, prices it; saves nothing on the website
+autocalc apply-quote --path quote.yaml   # saves the list, checks it three ways, prints the link
+```
+
+`plan-quote` shows one row per card. If a card needs attention (an ambiguous image, an option the
+schema does not map, a price that moved since the lock file), it says so before you apply. Name an
+exact image with `options.image`; the default, `AlmaLinux`, matches several catalog versions.
+`apply-quote` prints progress while the headless browser works (about a minute), then a table of
+stored, rated and Edit prices per card, and the link. If a list with the same name already exists
+it warns and creates another. If a check fails, the list is deleted and nothing is left on your
+account. Field reference: [Quote files](../reference/quote-files.md).
+
+### From your agent
 
 The installer registers the MCP server with Claude Code. If it could not (no `claude` on the
 path then), do it by hand:
@@ -64,7 +98,7 @@ claude mcp add hwc-calculator -- autocalc-mcp
 ```
 
 Then ask the agent, for example: *"Quote 3 c7n.large.2 Linux servers with 100 GB SSD each in
-Santiago, monthly. Show me a dry run first."* The agent previews the list and publishes it once
+Santiago, monthly. Show me a dry run first."* The agent plans the quote and publishes it once
 you agree. It then replies with a `calculator.html?shareListId=…` link that anyone can open.
 
 ## 6. Check what you made

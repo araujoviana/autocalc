@@ -22,6 +22,22 @@ and, when known, `hint` (what to do) and `details`. Codes come from `src/core/er
 | `UPSTREAM` | `UpstreamError` | The calculator backend failed (after retries for 5xx and timeouts) | retry; `autocalc doctor` |
 | `UNEXPECTED_RESPONSE` | `UnexpectedResponse` | The backend answered in an unrecognized shape (possible frontend drift) | `autocalc doctor` |
 
+## Writing errors
+
+One rule, so every error reads the same and a change is one edit.
+
+| Field | Rule |
+|---|---|
+| `message` | What failed, as one sentence about the subject: "Image 'AlmaLinux' matches several catalog images." No advice, no JSON, no stack text. |
+| `hint` | What to do next, as an imperative sentence: "Choose an exact name." Omit it when there is nothing useful to say. |
+| `details` | Machine-readable fields (`field`, `allowed`, `cards`, `list_id`). Never prose; the terminal prints them as `key: value` lines. |
+
+`CalculatorError` enforces the sentence form itself (`sentence()` in `src/core/errors.ts`): a capital
+first letter and a final period. A multi-line message keeps its own layout. Write the text as a
+sentence anyway; do not rely on the class to fix it. Code and tests match on `code` and `details`,
+not on message wording. To change how errors look in a terminal, edit `formatError` in
+`src/core/ui.ts`; `--json` and MCP output are not affected by it.
+
 ## Huawei business exceptions
 
 | `exceptionId` | Raised as |

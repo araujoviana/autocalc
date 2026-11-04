@@ -1,6 +1,6 @@
 # Roadmap
 
-Work moves through OpenSpec changes in this order. Each change carries its own spec delta and
+Work moves through OpenSpec changes in this order; every row below is delivered. Each change carries its own spec delta and
 lands when its code does ([ADR-0000](adr/0000-record-architecture-decisions.md)). Archived changes
 live in `openspec/changes/archive/`.
 
@@ -15,7 +15,10 @@ live in `openspec/changes/archive/`.
 | 7 | `distribution` | One-command install from git tags, `install.sh` / `install.ps1` ([ADR-0019](adr/0019-distribution-bun-from-git-tags.md)) |
 | 8 | `builder-wave-1` | The 13 existing builders verified on the page; 20 of 93 quotable services ([v1 scope](explanation/v1-scope.md)) |
 | 9 | `builder-wave-2` | Databases and storage via form recipes; 33 of 93 quotable services |
-| 10 | `builder-wave-3` | Networking, security and middleware via form recipes; 50 page-accepted services at the time; request fidelity under audit |
+| 10 | `builder-wave-3` | Networking, security and middleware via form recipes; 50 page-accepted services at the time |
+| 11 | `card-schema` | Generated card schemas, quote files and `plan_quote` / `apply_quote` ([ADR-0018](adr/0018-declarative-quotes-and-generated-card-schema.md)) |
+| 12 | `ts-parity` | TypeScript on Bun reaches parity and replaces Python; v0.2.0 ([ADR-0017](adr/0017-typescript-on-bun-is-the-target.md)) |
+| 13 | `yaml-spec` | Declarative `version: "1"` quote files: unit-checked YAML, templates, canonical IR, lock file, wire budgeting and partitioning, 4-tier circuit breaker |
 
 AWS is v2.
 
@@ -26,8 +29,6 @@ Each item is either assigned to the change that will close it or left unschedule
 
 | Item | Goes to |
 |---|---|
-| Refresh the two golden tests that query the live catalog: `test_golden_ecs_ri` (the 'AlmaLinux 9.4 64bit' image is gone from `sa-brazil-1`) and `test_ecs_template_render` (21 of 779 corpus cards drift, limit is 2) | unscheduled |
-| Migrate the MCP server from `FastMCP` to `MCPServer` (not in `mcp` 1.x, which is pinned `<2`) | unscheduled, when the SDK ships it |
 | `publish_quote` for services beyond the supported verified set | unscheduled |
 | Map ranked catalog specs onto each recipe service's page values (until then publication must reject unapplied specs) | unscheduled |
 | Quotes that span several regions in one saved list | unscheduled (not delivered by archived `quote-core`) |
@@ -35,11 +36,13 @@ Each item is either assigned to the change that will close it or left unschedule
 | Browser setup by the installer (`autocalc doctor` says when `install-browser` is needed) | unscheduled |
 | Nightly frontend drift check (alert when the calculator version or a service config changes) | unscheduled, after `distribution` |
 | Nightly live and render test jobs on CI (they need a stored session) | unscheduled, after `distribution` |
-| Region sweep (`tests.support.region_sweep`, 2026-10-23): in `eu-west-101` 34 of the 100 verified combinations fail because the builders' default SKUs are not sold there (`CBC.6006` / `SPEC_NOT_FOUND`); `hecs` is not offered there. In the primary regions (São Paulo, Santiago, Singapore) all 300 combinations pass | unscheduled |
-| Implement saved-list naming and prune ([ADR-0014](adr/0014-saved-list-naming-and-prune.md)) | unscheduled |
+| Region sweep (`tests/support/region-sweep.ts`, 2026-10-23): in `eu-west-101` 34 of the 100 verified combinations fail because the builders' default SKUs are not sold there (`CBC.6006` / `SPEC_NOT_FOUND`); `hecs` is not offered there. In the primary regions (São Paulo, Santiago, Singapore) all 300 combinations pass | unscheduled |
+| Saved-list naming and prune (ADR-0014, superseded by ADR-0016): `apply-quote` now warns when a list of the same name exists, but nothing replaces or prunes it | unscheduled |
 | Restore publication for LTS storage/retention, FunctionGraph compute, CCE turbo and the default-only recipes once their control mappings and prices are verified ([audit remediation](how-to/audit-remediation.md)) | unscheduled |
 | Profile browser reuse and memory under concurrent tool calls | unscheduled |
 | The calculator's EU and China sites | unscheduled, after v1 |
-| Update a saved list in place from a quote (TS `update` was removed in ts-parity 4.3: it saved without the publish gate; needs a gated, rollback-safe design and the share-link spike) | unscheduled |
+| Update a saved list in place from a quote (`update` was removed in ts-parity 4.3: it saved without the publish gate; needs a gated, rollback-safe design, see [share update](explanation/huawei/share-update.md)) | unscheduled |
+| Map the 19 builder services' options to schema controls (`autocalc schema coverage <service>` is the to-do list); until then `apply_quote` refuses options on them | unscheduled |
+| Live end-to-end check of the `version: "1"` compiler path (`plan-quote` / `apply-quote` on a declarative file) | unscheduled |
 
 When an item is done, remove its row in the same commit as the change that closes it.
