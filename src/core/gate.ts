@@ -6,6 +6,7 @@
  */
 import { sharePayload, rateProducts } from "./cards.ts";
 import { CalculatorError } from "./errors.ts";
+import { progress } from "./progress.ts";
 import { shareLink } from "./endpoints.ts";
 import { shareDetail } from "./lists.ts";
 import type { ListSession } from "./lists.ts";
@@ -127,7 +128,9 @@ export interface PublishOptions {
 export async function publishChecked(name: string, cards: Dict[], options: PublishOptions) {
   if (!cards.length) throw new CalculatorError("VALIDATION", "Cannot publish an empty list.", undefined, { field: "cards" });
   const currency = options.currency ?? "USD", payload = sharePayload(name, cards as { selectedProduct: Dict }[], options.settlement);
+  progress("Saving the list on your account");
   const listId = await options.lists.create(payload);
+  progress(`Saved list ${listId}; checking stored, rated and Edit prices`);
   let checks: CardCheck[] = [], issues: string[] = [], error: string | null, cause: unknown;
   try {
     ({ checks, issues } = await options.check(listId, cards));

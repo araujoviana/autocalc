@@ -115,6 +115,30 @@ test("a shared list that does not open fails every card with the open reason and
   expect(results.map(result => [result.index, result.equal, result.reason])).toEqual([[0, false, "The calculator page did not load."], [1, false, "The calculator page did not load."]]);
 });
 
+test("a page that will not open is tried twice, and only that; the second attempt's result is returned", async () => {
+  const { editCheck } = await import("../../src/core/page/edit.ts");
+  const { CalculatorError } = await import("../../src/core/errors.ts");
+  const reader = { getUncached: async () => ({ retCode: "200", data: { cartListData: [card()] } }) };
+  const manager = { withAnonymousContext: async (operation: (context: unknown) => Promise<unknown>) => operation({ newPage: async () => ({ on() {}, evaluate: async () => undefined, getByRole: () => ({ click: async () => { throw new Error("no button"); } }) }) }) };
+  let opens = 0;
+  const makeDriver = () => ({ timeout: 0.01, open: async () => { opens += 1; if (opens === 1) throw new CalculatorError("PAGE_ENCODE_FAILED", "The calculator form did not appear."); }, settle: async () => {}, page: {} });
+  const results = await editCheck(reader, manager as never, "abc1", { makeDriver: makeDriver as never });
+  expect(opens).toBe(2);
+  expect(results.map(result => result.reason)).toEqual(["the shared list did not open"]);
+});
+
+test("a page that never opens is retried once, not forever", async () => {
+  const { editCheck } = await import("../../src/core/page/edit.ts");
+  const { CalculatorError } = await import("../../src/core/errors.ts");
+  const reader = { getUncached: async () => ({ retCode: "200", data: { cartListData: [card()] } }) };
+  const manager = { withAnonymousContext: async (operation: (context: unknown) => Promise<unknown>) => operation({ newPage: async () => ({}) }) };
+  let opens = 0;
+  const makeDriver = () => ({ timeout: 0.01, open: async () => { opens += 1; throw new CalculatorError("PAGE_ENCODE_FAILED", "The calculator form did not appear."); }, page: {} });
+  const results = await editCheck(reader, manager as never, "abc1", { makeDriver: makeDriver as never });
+  expect(opens).toBe(2);
+  expect(results[0]).toMatchObject({ equal: false, reason: "The calculator form did not appear." });
+});
+
 test("the page's warning dialog alone does not fail a card; it is reported and closed", async () => {
   const { result, page } = await run({ warning: true });
   expect(result).toMatchObject({ equal: true, warning: true });

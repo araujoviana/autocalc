@@ -5,6 +5,7 @@
  */
 import { availableParallelism, freemem } from "node:os";
 import { CalculatorError } from "./errors.ts";
+import { progress } from "./progress.ts";
 import { invalid } from "./quote/model.ts";
 import { CardInput } from "./schemas.ts";
 import { buildRecipe, RECIPES } from "./services/forms.ts";
@@ -93,7 +94,7 @@ export async function publishQuoteTool(ctx: ActionContext, input: { draft_id: st
       return rewriteValue;
     }));
     // The builders say what to fill in; the page builds the card that is saved (ADR-0001). Each encode has its own browser context (ADR-0010).
-    const cards: Dict[] = await mapLimit(draft.requirements, encodeWorkers(), (r, index) => ports.encode(r.service.toLowerCase(), forms[index]!));
+    const cards: Dict[] = await mapLimit(draft.requirements, encodeWorkers(), async (r, index) => { progress(`Encoding ${r.id} in the calculator page (${index + 1}/${draft.requirements.length})`); return ports.encode(r.service.toLowerCase(), forms[index]!); });
     draft.requirements.forEach((r, index) => { cards[index]!.selectedProduct._customTitle = r.id; }); // the customer sees the requirement's name, not "custom.ecs 1"
     draft.requirements.forEach((r, index) => {
       if (SPEC_ARG[r.service.toLowerCase()]) return;

@@ -145,7 +145,37 @@ test("tool_commands_print_exact_json_through_a_pipe", async () => {
 test("errors_print_the_same_text_without_color_when_stderr_is_a_pipe", () => {
   const pipe = new Tty("utf-8", false);
   expect(cli.printErr(new CalculatorError("VALIDATION", "bad", "try x"), pipe)).toBe(2);
-  expect(pipe.getvalue()).toBe("error[VALIDATION]: bad\n  -> try x\n");
+  expect(pipe.getvalue()).toBe("error[VALIDATION]: Bad.\n  -> Try x.\n");
+});
+
+test("apply-quote shows a per-card check table, the warnings and the link", () => {
+  const tty = new Tty();
+  const out = ui.quoteView("apply-quote", { name: "[autocalc] x", url: "https://example.test/l", checks: [{ title: "web", stored: "140.54", rated: "140.54", edit: "140.54", ok: true }], warnings: ["A list named \"[autocalc] x\" already exists (id A); this creates another."] }, tty)!;
+  expect(out).toContain("CARD");
+  expect(out).toMatch(/web\s+140\.54\s+140\.54\s+140\.54\s+ok/);
+  expect(out).toContain("Published [autocalc] x: 1 card verified");
+  expect(out).toContain("already exists");
+  expect(out.trimEnd().split("\n").at(-1)).toBe("  https://example.test/l");
+});
+
+test("plan-quote notes an ambiguous image and counts the card as needing attention", () => {
+  const out = ui.quoteView("plan-quote", { cards: [{ id: "web", spec: "t6.xlarge.2.linux", price: "63.07", unmapped_options: [], image_choices: ["A", "B"] }], pending: [] }, new Tty())!;
+  expect(out).toContain("image is ambiguous (2 match): set options.image");
+  expect(out).toContain("1 of 1 cards need attention before apply");
+});
+
+test("a failed publish gate reads as one line per card, not a JSON blob", () => {
+  const pipe = new Tty("utf-8", false);
+  const gate = new CalculatorError("GATE_FAILED", "The list did not pass the publish gate.", undefined,
+    { cards: [{ index: 0, title: "web", stored: "140.54", rated: "140.54", edit: null, problems: ["The calculator form did not appear."], ok: false }], list_id: null });
+  expect(ui.formatError(gate, pipe)).toBe([
+    "error[GATE_FAILED]: The list did not pass the publish gate.",
+    "  [FAIL] web  stored 140.54 · rated 140.54 · Edit not checked",
+    "      The calculator form did not appear.",
+    "  Nothing was left saved on your account.",
+    "  -> " + "The saved list is checked three ways (stored, rated, Edit view). Re-run; a page that did not load is usually transient. AUTOCALC_PAGE_HEADED=1 shows the browser.",
+    "",
+  ].join("\n"));
 });
 
 test("every command documented in docs/reference/cli.md runs with --help and matches reference options", async () => {

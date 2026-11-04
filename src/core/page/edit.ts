@@ -104,6 +104,14 @@ export interface EditCheckOptions { driver?: DriverOptions; makeDriver?: (page: 
 /** One result per card of the saved list, in list order. Throws only if the list cannot be read. */
 export async function editCheck(reader: { getUncached(url: string): Promise<unknown> }, manager: BrowserManager, listId: string, options: EditCheckOptions = {}): Promise<EditResult[]> {
   const cards = (await shareDetail(reader, listId)).cartListData as Dict[];
+  // One retry when the page itself would not open: no price was compared yet, so a retry cannot hide a mismatch
+  // (a load timeout is usually transient). A card that fails or differs after the page opened is never retried.
+  let attempt = await editCheckOnce(manager, listId, cards, options);
+  if (attempt.openFailed) attempt = await editCheckOnce(manager, listId, cards, options);
+  return attempt.results;
+}
+
+async function editCheckOnce(manager: BrowserManager, listId: string, cards: Dict[], options: EditCheckOptions): Promise<{ results: EditResult[]; openFailed: boolean }> {
   return manager.withAnonymousContext(async context => {
     const page = asPageLike(await context.newPage() as never), driver = (options.makeDriver ?? ((p, s, o) => new Driver(p, s, o)))(page, "shared-list", options.driver ?? {});
     try {
@@ -113,10 +121,10 @@ export async function editCheck(reader: { getUncached(url: string): Promise<unkn
       await (page as EditPage).getByRole("button", { name: "View Details" }).click({ timeout: driver.timeout * 1000 });
     } catch (error) {
       const reason = error instanceof CalculatorError && error.code === "PAGE_ENCODE_FAILED" ? error.message : "the shared list did not open";
-      return cards.map((card, index): EditResult => ({ index, stored: cents(card.selectedProduct.amount), edit: null, equal: false, reason }));
+      return { results: cards.map((card, index): EditResult => ({ index, stored: cents(card.selectedProduct.amount), edit: null, equal: false, reason })), openFailed: true };
     }
     const results: EditResult[] = [];
     for (const [index, card] of cards.entries()) results.push(await checkCard(driver, index, card));
-    return results;
+    return { results, openFailed: false };
   }, { lean: true });
 }

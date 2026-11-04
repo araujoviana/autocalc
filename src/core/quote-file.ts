@@ -11,6 +11,9 @@ import { legalOptions, modesOf, SPEC_ARG, VERIFIED } from "./services/publicatio
 import { draftQuoteTool } from "./workflow.ts";
 import { compileQuote, buildCanonicalQuoteIR, generateLockfile, stringifyLockfile, sanitizeTitle, type QuoteDocument } from "./compiler/index.ts";
 import type { ActionContext } from "./types.ts";
+import { progress } from "./progress.ts";
+import { ECS_DEFAULT_IMAGE } from "./schemas.ts";
+import { imageLabel, matchImages } from "./services/ecs.ts";
 
 type Dict = Record<string, any>;
 const CARD_FIELDS = ["id", "service", "region", "billing", "quantity", "needs", "spec", "options"];
@@ -118,6 +121,13 @@ async function raiseIfInvalid(quote: Quote, dir?: string) {
 const sameNeeds = (a: unknown, b: unknown) => JSON.stringify(sortKeys(a ?? {})) === JSON.stringify(sortKeys(b ?? {}));
 
 /** Validate, resolve through the ranking, rate. Saves nothing on the website; writes the lock file. */
+/** Catalog images a card's image request cannot tell apart; empty when it names exactly one. */
+async function ambiguousImages(ctx: ActionContext, region: string, spec: string, image: unknown): Promise<string[]> {
+  const info = await ctx.catalog.productInfo("ecs", region);
+  const matched = matchImages(info.product["ec2_vm.image.special"] ?? [], spec.split(".")[0]!, typeof image === "string" && image ? image : ECS_DEFAULT_IMAGE);
+  return matched.length > 1 ? matched.map(imageLabel) : [];
+}
+
 export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
   await raiseIfInvalid(quote, dir);
   const lock = await readLock(quote);
@@ -133,6 +143,10 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
       const ranked = rank(requirement, await ctx.provider.candidates(requirement)).find(x => x.candidate.spec === decision.spec);
       const price = ranked ? formatDecimal(ranked.candidate.price) : null;
       Object.assign(row, { spec: decision.spec, price });
+      if (requirement.service.toLowerCase() === "ecs") {
+        const choices = await ambiguousImages(ctx, requirement.region, decision.spec, requirement.options.image);
+        if (choices.length) row.image_choices = choices;
+      }
       const pin = pins(card);
       if (pin && pin.price !== price) row.lock_drift = { locked_price: pin.price, price };
       else if (!lock[card.id]) next[card.id] = { spec: decision.spec, price, needs: card.needs ?? {} };
@@ -179,9 +193,18 @@ export async function apply(ctx: ActionContext, quote: Quote, name?: string, dir
     if (row.unmapped_options.length) throw invalid(`Card '${row.id}' sets options the schema does not map: ${JSON.stringify(row.unmapped_options)}.`, row.unmapped_options[0], undefined, SCHEMA_HINT);
     if (row.lock_drift) throw invalid(`Card '${row.id}' changed price since the lock was written; review and delete its lock entry to accept.`, "spec", [row.lock_drift.price]);
   }
+  for (const row of result.cards) {
+    if (Array.isArray(row.image_choices) && row.image_choices.length) throw invalid(`Card '${row.id}' matches several images: ${row.image_choices.join("; ")}.`, "image", row.image_choices, "Set options.image to one exact name.");
+  }
   const rawTitle = name || quote.name;
   if (!rawTitle) throw invalid("A list name is required (`name:` in the file).", "name");
   const title = quote.version === "1" ? sanitizeTitle(rawTitle) : rawTitle;
   if (quote.settlement !== "total" && quote.settlement !== "monthly") throw invalid("settlement must be 'total' or 'monthly'.", "settlement", ["total", "monthly"]);
-  return publishQuoteTool(ctx, { draft_id: result.draft_id, name: title, settlement: quote.settlement, currency: "USD" });
+  progress(`Planned ${result.cards.length} card${result.cards.length === 1 ? "" : "s"}`);
+  let existing: Dict[] = [];
+  try { existing = (await ctx.lists.lists()) as Dict[]; } catch { /* the publish path checks the login itself */ }
+  const same = existing.filter(list => list.name === title);
+  const duplicate = same.length ? `A list named "${title}" already exists (id ${String(same[0]!.key)}); this creates another.` : null;
+  const published = await publishQuoteTool(ctx, { draft_id: result.draft_id, name: title, settlement: quote.settlement, currency: "USD" });
+  return duplicate ? { ...published, warnings: [...((published as Dict).warnings ?? []), duplicate] } : published;
 }

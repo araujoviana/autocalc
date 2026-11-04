@@ -27,13 +27,13 @@ test("a load timeout is retried with the short timeout", async () => {
 
 test("a form mismatch is not retried", async () => {
   const { calls, run } = encodeCalls([fail("form"), { ok: 1 }]);
-  await expect(run()).rejects.toThrow("boom");
+  await expect(run()).rejects.toThrow(/boom/i);
   expect(calls).toHaveLength(1);
 });
 
 test("gives up after three tries", async () => {
   const { calls, run } = encodeCalls([fail("open"), fail("open"), fail("open")]);
-  await expect(run()).rejects.toThrow("boom");
+  await expect(run()).rejects.toThrow(/boom/i);
   expect(calls).toHaveLength(3);
 });
 

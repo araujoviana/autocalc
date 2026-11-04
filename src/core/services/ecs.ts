@@ -11,6 +11,18 @@ function imageName(image: Record<string, unknown>): string {
   if (value.startsWith("{")) { try { const parsed: unknown = JSON.parse(value); if (parsed && typeof parsed === "object" && typeof (parsed as Record<string, unknown>)["en-us"] === "string") return (parsed as Record<string, string>)["en-us"]!; } catch { /* preserve raw name */ } }
   return value;
 }
+
+/** The catalog images a requested image names for one flavor family: an exact name or id wins, otherwise every image whose platform and name contain each word. More than one result means the request is ambiguous. */
+export function matchImages(images: Record<string, unknown>[], family: string, image: string): Record<string, unknown>[] {
+  const matches = (candidate: Record<string, unknown>) => image.toLowerCase().split(/\s+/).every(term => `${display(candidate.__platform)} ${imageName(candidate)}`.toLowerCase().includes(term));
+  let matched = images.filter(candidate => matches(candidate) && Array.isArray(candidate.type) && candidate.type.includes(family));
+  if (!matched.length) matched = images.filter(matches);
+  const exact = matched.filter(candidate => imageName(candidate).toLowerCase() === image.toLowerCase() || String(candidate.id) === image);
+  return exact.length === 1 ? exact : matched;
+}
+
+export function imageLabel(candidate: Record<string, unknown>): string { return imageName(candidate); }
+
 export async function buildEcs(input: Extract<CardInput, { service: "ecs" }>, context: BuilderContext) {
   const spec = /\.(linux|win)$/.test(input.flavor) ? input.flavor : `${input.flavor}.linux`;
   const catalog = await context.productInfo("ecs", input.region);
@@ -27,14 +39,8 @@ export async function buildEcs(input: Extract<CardInput, { service: "ecs" }>, co
   } else vm = await selectProduct(context, "ecs", input.region, "ec2_vm", spec, input.billing, input.hours);
   Object.assign(vm, { addToList_title: "calc_2_", addToList_product: ["arch", "vmType", "spec", "cpu", "mem"].map(key => display(vm[key])).join(" | ") });
   if (input.billing === "ri") vm.addToList_product = ["arch", "vmType", "spec", "cpu", "mem", "paymentType", "RITime"].map(key => display(vm[key])).join(" | ");
-  const images = catalog.product["ec2_vm.image.special"] ?? [];
-  const matches = (image: Record<string, unknown>) => input.image.toLowerCase().split(/\s+/).every(term => `${display(image.__platform)} ${imageName(image)}`.toLowerCase().includes(term));
-  const family = display(vm.spec).split(".")[0];
-  let matched = images.filter(image => matches(image) && Array.isArray(image.type) && image.type.includes(family));
-  if (!matched.length) matched = images.filter(matches);
+  const matched = matchImages(catalog.product["ec2_vm.image.special"] ?? [], display(vm.spec).split(".")[0]!, input.image);
   if (!matched.length) throw new CalculatorError("SPEC_NOT_FOUND", `Image ${input.image} not found`);
-  const exact = matched.filter(image => imageName(image).toLowerCase() === input.image.toLowerCase() || String(image.id) === input.image);
-  if (exact.length === 1) matched = exact;
   if (matched.length !== 1) throw new CalculatorError("VALIDATION", `Image '${input.image}' matches multiple catalog images; choose an exact name.`);
   const rawImage = matched[0]!;
   const image = structuredClone(rawImage); image.name = imageName(image);

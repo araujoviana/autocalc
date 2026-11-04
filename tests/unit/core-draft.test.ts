@@ -76,7 +76,7 @@ test("duplicate ids, no requirements, a blank customer and AZs are refused", asy
   const { root, store } = await fresh();
   await expect(draftQuote(fake, "acme", [...reqs(), reqs()[0]!], store)).rejects.toThrow(/unique/);
   await expect(draftQuote(fake, "acme", [], store)).rejects.toThrow(/at least one/);
-  await expect(draftQuote(fake, " ", reqs(), store)).rejects.toThrow(/customer/);
+  await expect(draftQuote(fake, " ", reqs(), store)).rejects.toThrow(/customer/i);
   await expect(draftQuote(fake, "acme", [requirement({ id: "x", service: "ecs", region: "r", billing: "monthly", az: "az1" })], store)).rejects.toThrow(/Availability-zone/);
   await rm(root, { recursive: true });
 });

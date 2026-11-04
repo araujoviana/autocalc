@@ -95,5 +95,5 @@ resources:
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
-  });
+  }, 30_000); // spawns the CLI and reads the live public catalog
 });

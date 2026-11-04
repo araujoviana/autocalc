@@ -20,14 +20,16 @@ async function env() {
   reset();
   const dir = await mkdtemp(join(tmpdir(), "quote-file-"));
   const published: Dict[] = [];
-  const ctx = { provider, drafts: new DraftStore(join(dir, "drafts")), catalog: { regions: async () => ({ "sa-brazil-1": "Brazil" }) },
+  const images: Dict[] = [{ __platform: "AlmaLinux", name: "AlmaLinux 9.0 64bit", type: ["c7n"] }];
+  const saved: Dict[] = [];
+  const ctx = { provider, drafts: new DraftStore(join(dir, "drafts")), catalog: { regions: async () => ({ "sa-brazil-1": "Brazil" }), productInfo: async () => ({ product: { "ec2_vm.image.special": images } }) },
     publish: { form: async () => ({}), encode: async () => ({ selectedProduct: { productAllInfos: [] } }), liveVersion: async () => "11.4.201",
       publish: async (name: string) => { published.push({ name }); return { id: "L1", url: "u", checks: [] }; } },
-    lists: { lists: async () => [] } } as unknown as ActionContext;
+    lists: { lists: async () => saved } } as unknown as ActionContext;
   const file = join(dir, "q.yaml");
   await writeFile(file, await readFile(SAMPLE, "utf8"));
   const q = await quoteFile.load(file);
-  return { dir, ctx, q, published, lock: join(dir, "q.lock.json") };
+  return { dir, ctx, q, published, images, saved, lock: join(dir, "q.lock.json") };
 }
 const sized = (q: quoteFile.Quote, options: Dict = {}) => Object.assign(q.cards[0]!, { needs: { vcpus: 4, memory_gb: 8 }, options });
 const rejects = async (promise: Promise<unknown>) => { try { await promise; } catch (error) { return error as CalculatorError; } throw new Error("expected a rejection"); };
@@ -171,4 +173,39 @@ test("the schema format rejects a control without a kind or an unknown key; ever
   const files = (await readdir(SCHEMA_DIR)).filter(name => name.endsWith(".yaml"));
   expect(files.length).toBeGreaterThan(40);
   for (const file of files) expect(await loadService(file.replace(/\.yaml$/, ""))).not.toBeNull();
+});
+
+test("plan flags an image request that matches several catalog images, and apply refuses before publishing", async () => {
+  const { ctx, q, published, images } = await env();
+  images.push({ __platform: "AlmaLinux", name: "AlmaLinux 8.4 64bit", type: ["c7n"] });
+  sized(q);
+  const planned = await quoteFile.plan(ctx, q) as Dict;
+  expect(planned.cards[0].image_choices).toEqual(["AlmaLinux 9.0 64bit", "AlmaLinux 8.4 64bit"]);
+  const error = await rejects(quoteFile.apply(ctx, q));
+  expect(error).toMatchObject({ code: "VALIDATION", message: expect.stringContaining("matches several images") });
+  expect(published).toEqual([]);
+});
+
+test("an exact image name is not flagged even when a family has several versions", async () => {
+  const { ctx, q, images } = await env();
+  images.push({ __platform: "AlmaLinux", name: "AlmaLinux 8.4 64bit", type: ["c7n"] });
+  sized(q, { image: "AlmaLinux 9.0 64bit" });
+  const planned = await quoteFile.plan(ctx, q) as Dict;
+  expect(planned.cards[0].image_choices).toBeUndefined();
+});
+
+test("apply warns when a list of the same name exists, and still publishes", async () => {
+  const { ctx, q, published, saved } = await env();
+  sized(q);
+  saved.push({ name: "[autocalc] example", key: "OLD1" }); // the account API calls a list's id `key`
+  const out = await quoteFile.apply(ctx, q) as Dict;
+  expect(published).toHaveLength(1);
+  expect(out.warnings).toEqual(['A list named "[autocalc] example" already exists (id OLD1); this creates another.']);
+});
+
+test("apply adds no warning when no list has that name", async () => {
+  const { ctx, q, saved } = await env();
+  sized(q);
+  saved.push({ name: "something else", key: "OLD2" });
+  expect(((await quoteFile.apply(ctx, q)) as Dict).warnings).toBeUndefined();
 });

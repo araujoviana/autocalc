@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+/** The image an ECS card gets when it names none; `plan` checks it the same way the builder does. */
+export const ECS_DEFAULT_IMAGE = "AlmaLinux";
+
 const decimal = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
 export const Numeric = z.union([z.number().finite(), z.string().regex(decimal)])
   .pipe(z.coerce.number<string | number>().finite()).describe("A finite decimal number");
@@ -62,7 +65,7 @@ const count = (value: number, description: string) => PositiveInteger.default(va
 const capacity = (value: number, description: string) => Numeric.pipe(z.number().positive()).default(value).describe(description);
 const serviceCode = <T extends string>(value: T) => z.literal(value).describe(`Calculator service code ${value}`);
 const ecs = z.strictObject({ service: serviceCode("ecs"), ...common, billing: CardBilling.default("monthly"), flavor: Nonempty,
-  image: textDefault("AlmaLinux", "Image name"), system_disk: Disk.default(["GPSSD", 40]), data_disks: z.array(Disk).optional().describe("Data disks in GB"),
+  image: textDefault(ECS_DEFAULT_IMAGE, "Image name"), system_disk: Disk.default(["GPSSD", 40]), data_disks: z.array(Disk).optional().describe("Data disks in GB"),
   bandwidth_mbit: Nonnegative.optional().describe("Public bandwidth in Mbit/s"), bandwidth_type: textDefault("19_bgp", "Bandwidth type"), ri_time: textDefault("1_3", "Reserved instance term") });
 const evs = z.strictObject({ service: serviceCode("evs"), ...common, billing: standardBilling("ondemand"), type: textDefault("GPSSD", "Disk type"), size_gb: count(100, "Disk size in GB"), iops: Nonnegative.optional(), throughput: Nonnegative.optional() });
 const cce = z.strictObject({ service: serviceCode("cce"), ...common, billing: standardBilling("ondemand"), cluster_type: textDefault("standard", "Cluster type"), ha: BooleanInput.default(true), scale: textDefault("small", "Cluster scale") });

@@ -3,15 +3,28 @@ export type ErrorCode = "AUTOCALC" | "VALIDATION" | "SPEC_NOT_FOUND" | "SERVICE_
   "AUTH_EXPIRED" | "AUTH_LOGIN_FAILED" | "UPSTREAM" | "UNEXPECTED_RESPONSE" |
   "PAYLOAD_TOO_LARGE" | "PROFILE_BUSY" | "CANCELLED" | "BROWSER_UNAVAILABLE" | "MUTATION_UNKNOWN" | "GATE_FAILED" | "PAGE_ENCODE_FAILED" | "UPDATE_FAILED";
 
+/**
+ * The one writing rule for error text (docs/reference/errors.md, "Writing errors"): a message or a hint is a sentence.
+ * It starts with a capital letter and ends with a period (or ? or !). A multi-line message keeps its own layout.
+ */
+export function sentence(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed || trimmed.includes("\n")) return trimmed;
+  const capitalized = trimmed[0]!.toUpperCase() + trimmed.slice(1);
+  return /[.!?]$/.test(capitalized) ? capitalized : `${capitalized}.`;
+}
+
 export class CalculatorError extends Error {
+  readonly hint?: string;
   constructor(
     readonly code: ErrorCode,
     message: string,
-    readonly hint?: string,
+    hint?: string,
     readonly details?: Record<string, unknown>,
   ) {
-    super(message);
+    super(sentence(message));
     this.name = "CalculatorError";
+    if (hint !== undefined) this.hint = sentence(hint);
   }
 
   toJSON(): { error: ErrorCode; message: string; hint?: string; details?: Record<string, unknown> } {

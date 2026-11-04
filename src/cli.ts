@@ -2,6 +2,7 @@
 import { Command, CommanderError } from "commander";
 import pkg from "../package.json";
 import { createCore, CalculatorError } from "./core/index.ts";
+import { setProgress } from "./core/progress.ts";
 import { registry } from "./core/registry.ts";
 import { QuoteItem, PositiveInteger } from "./core/schemas.ts";
 import * as ui from "./core/ui.ts";
@@ -61,16 +62,21 @@ export async function main(argv: string[], outStream?: ui.StreamLike & { write?:
   const onInt = () => interrupt(130), onTerm = () => interrupt(143);
   process.once("SIGINT", onInt); process.once("SIGTERM", onTerm);
   const getCore = () => core ??= createCore({ ...(program.opts<{ profile?: string }>().profile ? { profile: program.opts<{ profile: string }>().profile } : {}), headed: !!program.opts<{ headed?: boolean }>().headed });
-  const print = async (name: string, input: unknown) => writeOut(JSON.stringify(withNotice(await getCore().invoke(name, input)), null, 2));
+  /** A terminal gets the readable view for `cmd`; a pipe or --json gets the JSON. */
+  const show = (cmd: string, result: unknown) => {
+    const human = !program.opts<{ json?: boolean }>().json && ui.fancy(outStream) ? ui.quoteView(cmd, result, outStream) : null;
+    writeOut(human ?? JSON.stringify(result, null, 2));
+  };
+  const print = async (name: string, input: unknown, view?: string) => show(view ?? name, withNotice(await getCore().invoke(name, input)));
   program.command("services").description("List calculator services").argument("[query]").action(async (query?: string) => { await print("list_services", { query: query ?? "" }); });
   program.command("regions").description("List calculator regions").argument("[service]").option("--region <name>", "Resolve a region name").action(async (service: string | undefined, options: { region?: string }) => { await print("list_regions", { service: service ?? "", region: options.region ?? "" }); });
-  program.command("search").description("Search SKUs").argument("<service>").argument("<region>").argument("[terms...]").option("--billing <mode>").option("--vcpus <count>").option("--mem <gb>").option("--limit <count>").option("--refresh").action(async (service: string, region: string, terms: string[], options: { billing?: string; vcpus?: string; mem?: string; limit?: string; refresh?: boolean }) => { await print("search_skus", { service, region, query: terms.join(" "), limit: options.limit ?? 20, refresh: options.refresh ?? false, ...(options.billing === undefined ? {} : { billing: options.billing }), ...(options.vcpus === undefined ? {} : { min_vcpus: options.vcpus }), ...(options.mem === undefined ? {} : { min_memory_gb: options.mem }) }); });
+  program.command("search").description("Search SKUs").argument("<service>").argument("<region>").argument("[terms...]").option("--billing <mode>").option("--vcpus <count>").option("--mem <gb>").option("--limit <count>").option("--refresh").action(async (service: string, region: string, terms: string[], options: { billing?: string; vcpus?: string; mem?: string; limit?: string; refresh?: boolean }) => { await print("search_skus", { service, region, query: terms.join(" "), limit: options.limit ?? 20, refresh: options.refresh ?? false, ...(options.billing === undefined ? {} : { billing: options.billing }), ...(options.vcpus === undefined ? {} : { min_vcpus: options.vcpus }), ...(options.mem === undefined ? {} : { min_memory_gb: options.mem }) }, "search"); });
   program.command("quote").description("Quote items in USD").argument("<region>").argument("<items...>").option("--billing <mode>").option("--hours <hours>").option("--periods <count>").option("--currency <code>", "Display a converted total using published FX rates").action(async (region: string, items: string[], options: { billing?: string; hours?: string; periods?: string; currency?: string }) => {
     const result = await getCore().invoke("quote", { region, items: items.map(parseItem), ...(options.billing === undefined ? {} : { billing: options.billing }), ...(options.hours === undefined ? {} : { hours: options.hours }), ...(options.periods === undefined ? {} : { periods: options.periods }) });
     if (options.currency && result && typeof result === "object" && typeof (result as Record<string, unknown>).total === "number") {
       const output = await quoteWithConversion(result as Record<string, unknown> & { total: number }, options.currency, (amount, currency) => getCore().invoke("convert_currency", { amount_usd: amount, currency }));
-      writeOut(JSON.stringify(output, null, 2));
-    } else writeOut(JSON.stringify(result, null, 2));
+      show("quote", output);
+    } else show("quote", result);
   });
   program.command("convert").description("Convert a USD amount").argument("<amount>").argument("<currency>").action(async (amount: string, currency: string) => { await print("convert_currency", { amount_usd: amount, currency }); });
   program.command("page-controls").description("List the controls of a service's calculator page").argument("<service>").action(async (service: string) => {
@@ -94,15 +100,15 @@ export async function main(argv: string[], outStream?: ui.StreamLike & { write?:
   program.command("read").description("Read a shared price list").argument("<url_or_id>").action(async (urlOrId: string) => {
     await print("read_price_list", { url_or_id: urlOrId });
   });
-  program.command("validate").description("Validate a shared price list").argument("<url_or_id>").action(async (urlOrId: string) => { const result = await getCore().validate(urlOrId); writeOut(JSON.stringify(result, null, 2)); if (!result.ok) commandFailed = true; });
+  program.command("validate").description("Validate a shared price list").argument("<url_or_id>").action(async (urlOrId: string) => { const result = await getCore().validate(urlOrId); show("validate", result); if (!result.ok) commandFailed = true; });
   program.command("render-check").description("Check anonymous calculator rendering").argument("<url_or_id>").action(async (urlOrId: string) => { const result = await getCore().renderCheck(urlOrId); writeOut(JSON.stringify(result, null, 2)); if (!result.ok) commandFailed = true; });
-  program.command("edit-check").description("Compare saved cards with anonymous Edit pricing").argument("<url_or_id>").option("--limit <count>").option("--screenshots <directory>", "Save a screenshot for each checked card").action(async (urlOrId: string, options: { limit?: string; screenshots?: string }) => { const parsed = options.limit === undefined ? undefined : PositiveInteger.safeParse(options.limit); if (parsed && !parsed.success) throw new CalculatorError("VALIDATION", "Limit must be a positive integer"); const result = await getCore().editCheck(urlOrId, parsed?.data, options.screenshots); writeOut(JSON.stringify(result, null, 2)); if (!result.ok) commandFailed = true; });
-  program.command("doctor").description("Check public calculator endpoints and local auth status").action(async () => { const result = await getCore().doctor(); writeOut(JSON.stringify(result, null, 2)); if (!result.ok) commandFailed = true; });
+  program.command("edit-check").description("Compare saved cards with anonymous Edit pricing").argument("<url_or_id>").option("--limit <count>").option("--screenshots <directory>", "Save a screenshot for each checked card").action(async (urlOrId: string, options: { limit?: string; screenshots?: string }) => { const parsed = options.limit === undefined ? undefined : PositiveInteger.safeParse(options.limit); if (parsed && !parsed.success) throw new CalculatorError("VALIDATION", "Limit must be a positive integer"); const result = await getCore().editCheck(urlOrId, parsed?.data, options.screenshots); show("edit-check", result); if (!result.ok) commandFailed = true; });
+  program.command("doctor").description("Check public calculator endpoints and local auth status").action(async () => { const result = await getCore().doctor(); show("doctor", result); if (!result.ok) commandFailed = true; });
   program.command("install-browser").description("Install the pinned Playwright Chromium revision").action(async () => { const processHandle = Bun.spawn([process.execPath, "--bun", playwrightCliPath(), "install", "chromium"], { stdout: "pipe", stderr: "pipe" }); const [stdout, stderr, status] = await Promise.all([new Response(processHandle.stdout).text(), new Response(processHandle.stderr).text(), processHandle.exited]); if (stdout) process.stderr.write(stdout); if (stderr) process.stderr.write(stderr); if (status !== 0) commandExit = status; });
   program.command("update").description("move to the newest release").option("--to <tag>", "a release tag, vX.Y.Z (default: the newest)").action(async (options: { to?: string }) => { writeOut(runUpdate(options.to)); });
   program.command("compare-modes").description("Compare billing modes").requiredOption("--items <file>", "JSON quote items or - for stdin").option("--region <region>").option("--modes <modes>", "Comma-separated modes").option("--currency <currency>").option("--hours <hours>").option("--periods <count>").action(async (options: { items: string; region?: string; modes?: string; currency?: string; hours?: string; periods?: string }) => { await print("compare_modes", { items: await readJsonArg(options.items), ...(options.region ? { region: options.region } : {}), ...(options.modes ? { modes: options.modes.split(",") } : {}), ...(options.currency ? { currency: options.currency } : {}), ...(options.hours ? { hours: options.hours } : {}), ...(options.periods ? { periods: options.periods } : {}) }); });
   program.command("compare-regions").description("Compare region prices").requiredOption("--items <file>", "JSON quote items or - for stdin").requiredOption("--regions <regions>", "Comma-separated regions").option("--billing <mode>").action(async (options: { items: string; regions: string; billing?: string }) => { await print("compare_regions", { items: await readJsonArg(options.items), regions: options.regions.split(","), ...(options.billing ? { billing: options.billing } : {}) }); });
-  program.command("lists").description("List your saved price lists").action(async () => { await print("list_my_price_lists", {}); });
+  program.command("lists").description("List your saved price lists").action(async () => { await print("list_my_price_lists", {}, "lists"); });
   program.command("delete").description("Delete a saved price list").argument("<url_or_id>").option("--yes", "Confirm deletion").action(async (urlOrId: string, options: { yes?: boolean }) => { if (!options.yes) throw new CalculatorError("VALIDATION", "Deletion requires --yes"); await print("delete_price_list", { url_or_id: urlOrId }); });
   program.command("rename").description("Rename a saved price list").argument("<url_or_id>").argument("<name>").action(async (urlOrId: string, name: string) => { await print("rename_price_list", { url_or_id: urlOrId, new_name: name }); });
   program.command("duplicate").description("Copy a saved price list").argument("<url_or_id>").option("--name <name>").action(async (urlOrId: string, options: { name?: string }) => { await print("duplicate_price_list", { url_or_id: urlOrId, ...(options.name ? { new_name: options.name } : {}) }); });
@@ -152,12 +158,13 @@ export async function main(argv: string[], outStream?: ui.StreamLike & { write?:
   }
 
   const isUserArgs = argv.length > 0 && !argv[0]!.includes("/") && !argv[0]!.includes("\\") && argv[0] !== "node" && argv[0] !== "bun";
+  if (!argv.includes("--json") && ui.fancy(process.stderr)) setProgress(message => process.stderr.write(`${ui.paint("…", "dim", process.stderr)} ${message}\n`));
   try { await program.parseAsync(argv, isUserArgs ? { from: "user" } : undefined); return signalCode ?? commandExit ?? (commandFailed ? 1 : 0); }
   catch (error) {
     if (signalCode !== undefined) return signalCode;
     if (error instanceof CommanderError) return error.exitCode;
     if (error instanceof CalculatorError) { if (program.opts<{ json?: boolean }>().json) process.stderr.write(`${JSON.stringify(error.toJSON())}\n`); else printErr(error, process.stderr); return 2; }
     process.stderr.write("Unexpected error\n"); return 1;
-  } finally { process.removeListener("SIGINT", onInt); process.removeListener("SIGTERM", onTerm); await core?.close(); }
+  } finally { setProgress(null); process.removeListener("SIGINT", onInt); process.removeListener("SIGTERM", onTerm); await core?.close(); }
 }
 if (import.meta.main) process.exitCode = await main(process.argv);
