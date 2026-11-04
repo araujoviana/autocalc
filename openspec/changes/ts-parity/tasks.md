@@ -40,7 +40,7 @@
 ## 7. Distribution
 
 - [x] 7.1 Write ADR-0019 (distribution of the TypeScript tool; supersedes ADR-0013) and write the `distribution` spec delta in the same step. Verify: `openspec validate ts-parity` passes and the ADR index lists 0019.
-- [ ] 7.2 Update `install.sh`, `install.ps1` and the update path to the chosen method. Verify: a clean Linux and a clean Windows machine install, register the MCP server, run `autocalc doctor` and `autocalc update`.
+- [x] 7.2 Update `install.sh`, `install.ps1` and the update path to the chosen method. Verify: a clean Linux and a clean Windows machine install, register the MCP server, run `autocalc doctor` and `autocalc update`.
 
 ## 8. Cutover
 

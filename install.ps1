@@ -1,4 +1,4 @@
-# Install autocalc from the newest release tag (ADR-0013). $env:AUTOCALC_REF pins another ref.
+# Install autocalc from the newest release tag (ADR-0019). $env:AUTOCALC_REF pins another ref.
 $ErrorActionPreference = 'Stop'
 
 $Repo = if ($env:AUTOCALC_REPO) { $env:AUTOCALC_REPO } else { 'https://github.com/araujoviana/autocalc.git' }
@@ -13,13 +13,13 @@ if (-not $ref) {
     if (-not $ref) { Die "no release tag (vX.Y.Z) found in $Repo. Set `$env:AUTOCALC_REF to install another ref." }
 }
 
-if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
-    Invoke-RestMethod https://astral.sh/uv/install.ps1 | Invoke-Expression
-    $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
+if (-not (Get-Command bun -ErrorAction SilentlyContinue)) {
+    Invoke-RestMethod https://bun.sh/install.ps1 | Invoke-Expression
+    $env:Path = "$env:USERPROFILE\.bun\bin;$env:Path"
 }
 
-uv tool install --force "git+$Repo@$ref"
-if ($LASTEXITCODE) { Die "uv could not install $ref." }
+bun add -g --force "git+$Repo#$ref"
+if ($LASTEXITCODE) { Die "bun could not install $ref." }
 
 if (Get-Command claude -ErrorAction SilentlyContinue) {
     claude mcp add hwc-calculator -- autocalc-mcp

@@ -51,15 +51,15 @@ function runWith(tags = "", gitRc = 0, uvRc = 0): string[][] {
 test("newest_tag_is_compared_by_number_and_installed", () => {
   const calls = runWith("v0.9.0 v0.10.0 v0.2.1 v1.0.0-rc1 nightly");
   const out = update.update();
-  expect(calls.at(-1)).toEqual(["uv", "tool", "install", "--force", "git+file:///repo@v0.10.0"]);
+  expect(calls.at(-1)).toEqual(["bun", "add", "-g", "--force", "git+file:///repo#v0.10.0"]);
   expect(out.endsWith("-> 0.10.0")).toBe(true);
 });
 
 test("pinned_tag_skips_the_listing", () => {
   const calls = runWith("v9.0.0");
   update.update("v0.1.0");
-  expect(calls.map(c => c[0])).toEqual(["uv"]);
-  expect(calls[0]!.at(-1)?.endsWith("@v0.1.0")).toBe(true);
+  expect(calls.map(c => c[0])).toEqual(["bun"]);
+  expect(calls[0]!.at(-1)?.endsWith("#v0.1.0")).toBe(true);
 });
 
 test("not_a_release_tag_runs_nothing", () => {

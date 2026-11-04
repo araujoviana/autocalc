@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install autocalc from the newest release tag (ADR-0013). AUTOCALC_REF pins another ref.
+# Install autocalc from the newest release tag (ADR-0019). AUTOCALC_REF pins another ref.
 set -eu
 
 REPO="${AUTOCALC_REPO:-https://github.com/araujoviana/autocalc.git}"
@@ -13,13 +13,13 @@ if [ -z "$ref" ]; then
   [ -n "$ref" ] || die "no release tag (vX.Y.Z) found in $REPO. Set AUTOCALC_REF to install another ref."
 fi
 
-if ! command -v uv >/dev/null 2>&1; then
-  command -v curl >/dev/null 2>&1 || die "curl is required to install uv."
-  curl -LsSf https://astral.sh/uv/install.sh | sh || die "could not install uv."
-  PATH="$HOME/.local/bin:$PATH"
+if ! command -v bun >/dev/null 2>&1; then
+  command -v curl >/dev/null 2>&1 || die "curl is required to install bun."
+  curl -fsSL https://bun.sh/install | bash || die "could not install bun."
+  PATH="$HOME/.bun/bin:$PATH"
 fi
 
-uv tool install --force "git+$REPO@$ref" || die "uv could not install $ref."
+bun add -g --force "git+$REPO#$ref" || die "bun could not install $ref."
 
 if command -v claude >/dev/null 2>&1; then
   claude mcp add hwc-calculator -- autocalc-mcp || echo "Could not register the MCP server; run: claude mcp add hwc-calculator -- autocalc-mcp"
@@ -28,4 +28,4 @@ else
 fi
 
 echo "Installed autocalc $ref. Next: autocalc doctor, then autocalc login."
-echo "If 'autocalc' is not found, open a new shell (uv puts it in $(uv tool dir --bin))."
+echo "If 'autocalc' is not found, open a new shell (bun puts it in ${BUN_INSTALL:-$HOME/.bun}/bin)."

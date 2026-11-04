@@ -1,4 +1,4 @@
-/** `autocalc update`: reinstall the tool from a release tag (ADR-0013). Never runs on its own (`src/autocalc/update.py`). */
+/** `autocalc update`: reinstall the tool from a release tag (ADR-0019). Never runs on its own. */
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -125,17 +125,17 @@ export function update(to?: string | null): string {
   const tag = to || latestTag(repo);
   let done: CmdResult;
   try {
-    done = hooks.run(["uv", "tool", "install", "--force", `git+${repo}@${tag}`]);
+    done = hooks.run(["bun", "add", "-g", "--force", `git+${repo}#${tag}`]);
   } catch (exc) {
     throw new CalculatorError(
       "UPDATE_FAILED",
-      `Could not run uv: ${exc instanceof Error ? exc.message : String(exc)}`,
-      "Install uv (https://docs.astral.sh/uv/) or run the installer.",
+      `Could not run bun: ${exc instanceof Error ? exc.message : String(exc)}`,
+      "Install bun (https://bun.sh/) or run the installer.",
     );
   }
   if (done.returncode !== 0) {
     const hint = done.stderr.trim().slice(-300) || undefined;
-    throw new CalculatorError("UPDATE_FAILED", `uv could not install ${tag}.`, hint);
+    throw new CalculatorError("UPDATE_FAILED", `bun could not install ${tag}.`, hint);
   }
   return `autocalc ${old} -> ${tag.replace(/^v/, "")}`;
 }
