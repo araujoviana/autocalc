@@ -32,7 +32,9 @@ export class HuaweiProvider implements Provider {
     if (!BILLING.includes(req.billing)) throw invalid(`Billing '${req.billing}' is not supported here.`, "billing", BILLING);
     await this.source.checkMode(req.service, req.region, req.billing);
     // an ECS flavor is sold once per OS (.linux, .win, .byol); the image the quote asks for picks one
-    const osSuffix = req.service === "ecs" ? (String(req.options.image ?? "").toLowerCase().startsWith("windows") ? ".win" : ".linux") : null;
+    // a spec that names its own OS (t7.large.05.byol) wins over the image
+    const named = /\.(linux|win|byol)$/.exec(req.spec ?? "")?.[0];
+    const osSuffix = req.service === "ecs" ? (named ?? (String(req.options.image ?? "").toLowerCase().startsWith("windows") ? ".win" : ".linux")) : null;
     const out: Candidate[] = [], seen = new Set<string>();
     for (const sku of await this.source.skus(req.service, req.region)) {
       if (sku.offPage) continue;

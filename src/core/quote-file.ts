@@ -151,6 +151,7 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
       const ranked = rank(requirement, await ctx.provider.candidates(requirement)).find(x => x.candidate.spec === decision.spec);
       const price = ranked && !USAGE_PRICED.has(requirement.service.toLowerCase()) ? formatDecimal(ranked.candidate.price) : null;
       Object.assign(row, { spec: decision.spec, price });
+      if (USAGE_PRICED.has(requirement.service.toLowerCase())) row.price_note = "priced by usage: no list price at plan time, so the total is incomplete until the list is rated (apply-quote)";
       const conflict = SPEC_RULES[requirement.service.toLowerCase()]?.(decision.spec, requirement.options);
       if (conflict) row.spec_problem = conflict;
       if (requirement.service.toLowerCase() === "ecs") {
@@ -168,6 +169,10 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
     } else {
       row.candidates = view.requirements.find(r => r.id === requirement.id)?.candidates;
       if (requirement.spec) row.spec_not_found = requirement.spec;
+      const options = (row.candidates as Dict[] | undefined ?? []).slice(0, 5).map(c => c.spec).join(", ");
+      row.message = requirement.spec
+        ? `spec '${requirement.spec}' is not sold for ${requirement.service} in ${requirement.region} (${requirement.billing}); closest: ${options || "none"}`
+        : `${requirement.service} needs an explicit spec: add \`spec:\` to the card${options ? ` (candidates: ${options})` : ""}`;
     }
     rows.push(row);
   }

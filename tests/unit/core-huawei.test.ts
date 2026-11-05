@@ -49,6 +49,13 @@ test("ECS flavors are offered for the OS of the requested image", async () => {
   expect((await p.candidates(req({ options: { image: "Windows Server 2022" } }))).map(x => x.spec)).toEqual(["c7n.xlarge.4.win"]);
 });
 
+test("a spec that names its own OS is offered whatever the image", async () => {
+  const flavors = ["byol", "linux", "win"].map(os => sku(`c7n.xlarge.4.${os}`, { monthly: { amount: 1 } }));
+  const p = new HuaweiProvider(source(flavors));
+  expect((await p.candidates(req({ spec: "c7n.xlarge.4.byol" }))).map(x => x.spec)).toContain("c7n.xlarge.4.byol");
+  expect((await p.candidates(req({ spec: "c7n.xlarge.4.win" }))).map(x => x.spec)).toContain("c7n.xlarge.4.win");
+});
+
 test("flavors the page does not list are not offered", async () => {
   const p = new HuaweiProvider(source([sku("t7.xlarge.2.linux", { monthly: { amount: 1 } }, { offPage: true }), sku("t6.xlarge.2.linux", { monthly: { amount: 2 } })]));
   expect((await p.candidates(req())).map(x => x.spec)).toEqual(["t6.xlarge.2.linux"]);
