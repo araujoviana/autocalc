@@ -1,7 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import {
+  assertCanSplitObsFactor,
   assertCanSplitResource,
   isFixedBaseCostService,
+  isTieredObsFactor,
 } from "../../../src/core/compiler/anti-split.ts";
 import { CalculatorError } from "../../../src/core/errors.ts";
 
@@ -11,6 +13,7 @@ describe("Anti-Splitting Invariant Enforcement", () => {
     expect(isFixedBaseCostService("nat")).toBe(true);
     expect(isFixedBaseCostService("elb")).toBe(true);
     expect(isFixedBaseCostService("dc")).toBe(true);
+    expect(isFixedBaseCostService("dline")).toBe(true);
     expect(isFixedBaseCostService("vpn")).toBe(true);
 
     expect(isFixedBaseCostService("ecs")).toBe(false);
@@ -35,5 +38,17 @@ describe("Anti-Splitting Invariant Enforcement", () => {
     expect(() => assertCanSplitResource("obs", "bulk-storage")).not.toThrow();
     expect(() => assertCanSplitResource("dew", "kms-key-ops")).not.toThrow();
     expect(() => assertCanSplitResource("ecs", "worker-nodes")).not.toThrow();
+  });
+
+  it("identifies tiered OBS traffic factors and blocks arbitrary splitting", () => {
+    expect(isTieredObsFactor("download.external")).toBe(true);
+    expect(isTieredObsFactor("download_warm.external")).toBe(true);
+    expect(isTieredObsFactor("download_cold.external")).toBe(true);
+    expect(isTieredObsFactor("download.cdn")).toBe(true);
+    expect(isTieredObsFactor("size")).toBe(false);
+    expect(isTieredObsFactor("get")).toBe(false);
+
+    expect(() => assertCanSplitObsFactor("download.external", "prod-obs")).toThrow(CalculatorError);
+    expect(() => assertCanSplitObsFactor("size", "prod-obs")).not.toThrow();
   });
 });

@@ -141,9 +141,150 @@ function pickNearestRedisMem(gb: number): number {
   return sizes.find(s => s >= gb) ?? 64;
 }
 
+function splitIntoChunks(total: number, maxPerCard: number): number[] {
+  if (total <= 0) return [];
+  const chunks: number[] = [];
+  let remaining = total;
+  while (remaining > 0) {
+    const take = Math.min(remaining, maxPerCard);
+    chunks.push(take);
+    remaining -= take;
+  }
+  return chunks;
+}
+
+function obsFactorMaxPerCard(factor: string): number {
+  if (factor === "download_crr") return 9_999_999;
+  if (
+    factor.startsWith("size") ||
+    factor.startsWith("download") ||
+    factor.startsWith("retrieval_size") ||
+    factor.startsWith("restore_size")
+  ) {
+    return 102_400;
+  }
+  return 9_999;
+}
+
 export function normalizeServiceAlias(service: string): string {
   const clean = service.trim().toLowerCase();
   return SERVICE_ALIASES[clean] ?? clean;
+}
+
+/** Expands a single NormalizedResource into 1 or more physical quote cards when
+ * variable metrics (DEW keys/API calls, OBS capacity/requests/traffic) exceed per-card UI stepper limits.
+ * Tiered OBS traffic lines are greedy max-packed (never evenly split across cards) to preserve tier brackets. */
+export function normalizeResourceToCards(r: NormalizedResource, docBillingPolicy?: string): Dict[] {
+  const baseCard = normalizeResourceToCard(r, docBillingPolicy);
+  const service = String(baseCard.service);
+  const rawOpts: Dict = { ...(r.options ?? {}) };
+  const rawNeeds: Dict = { ...(r.needs ?? {}) };
+
+  if (service === "dew") {
+    const rawQty = r.quantity ?? 1;
+    const totalKeys = Math.max(1, Math.round(Number(rawOpts.keys ?? rawOpts.custom_keys ?? (rawQty > 1 ? rawQty : 1))));
+    const rawApi = rawOpts.api_requests ?? rawOpts.kms_api_requests ?? rawOpts.requests;
+    let totalApiUnits = 10;
+    if (typeof rawApi === "number" && Number.isFinite(rawApi)) {
+      totalApiUnits = Math.max(1, Math.round(rawApi));
+    } else if (typeof rawApi === "string" && rawApi.trim()) {
+      const parsed = parseRequestRate(rawApi, `${r.id}.api_requests`);
+      totalApiUnits = parsed.perMonth >= 10000 ? Math.max(1, Math.round(parsed.perMonth / 10000)) : Math.max(1, Math.round(parsed.perMonth));
+    }
+
+    const keyChunks = splitIntoChunks(totalKeys, 99);
+    const apiChunks = splitIntoChunks(totalApiUnits, 9999);
+    const cardCount = Math.max(keyChunks.length, apiChunks.length, 1);
+    if (cardCount === 1) return [baseCard];
+
+    return Array.from({ length: cardCount }, (_, idx) => ({
+      ...baseCard,
+      id: `${r.id}-${idx + 1}`,
+      options: {
+        ...baseCard.options,
+        keys: keyChunks[idx] ?? 0,
+        api_requests: apiChunks[idx] ?? 0,
+      },
+    }));
+  }
+
+  if (service === "obs" && !rawOpts.package) {
+    const storageClass: "standard" | "warm" | "cold" = baseCard.options.storage_class ?? "standard";
+    const multiAz = Boolean(baseCard.options.multi_az);
+    const sizeFactor = { standard: multiAz ? "size_3az" : "size", warm: multiAz ? "size_warm_3az" : "size_warm", cold: "size_cold" }[storageClass];
+
+    const rawComps: Dict[] = [];
+    if (Array.isArray(rawOpts.components)) {
+      rawComps.push(...rawOpts.components);
+    } else {
+      const capGb = toGB(rawOpts.capacity ?? rawOpts.size ?? rawOpts.storage ?? rawOpts.size_gb ?? rawNeeds.capacity ?? rawNeeds.storage, `${r.id}.capacity`);
+      if (capGb !== undefined && capGb > 0) {
+        if (capGb > 102400) {
+          rawComps.push({ factor: sizeFactor, value: Math.max(1, Math.round(capGb / 1024)), unit: "TB" });
+        } else {
+          rawComps.push({ factor: sizeFactor, value: Math.max(1, Math.round(capGb)), unit: "GB" });
+        }
+      } else {
+        rawComps.push({ factor: sizeFactor, value: 100, unit: "GB" });
+      }
+
+      const trafficGb = toTrafficGB(rawOpts.traffic ?? rawOpts.outbound ?? rawOpts.egress ?? rawOpts.egress_traffic ?? rawOpts.traffic_gb, `${r.id}.traffic`);
+      if (trafficGb !== undefined && trafficGb > 0) {
+        const dlFactor = { standard: "download.external", warm: "download_warm.external", cold: "download_cold.external" }[storageClass];
+        rawComps.push({ factor: dlFactor, value: Math.max(1, Math.round(trafficGb)) });
+      }
+
+      const cdnGb = toTrafficGB(rawOpts.cdn_traffic ?? rawOpts.download_cdn, `${r.id}.cdn_traffic`);
+      if (cdnGb !== undefined && cdnGb > 0) {
+        rawComps.push({ factor: "download.cdn", value: Math.max(1, Math.round(cdnGb)) });
+      }
+
+      const getReqs = toRequestsPerMonth(rawOpts.requests_get ?? rawOpts.get_requests ?? rawOpts.read_requests ?? rawOpts.get);
+      if (getReqs !== undefined && getReqs > 0) {
+        const getFactor = { standard: "get", warm: "get_warm", cold: "get_cold" }[storageClass];
+        const unitDiv = storageClass === "standard" ? 10000 : 1000;
+        const units = getReqs >= unitDiv ? Math.round(getReqs / unitDiv) : Math.round(getReqs);
+        rawComps.push({ factor: getFactor, value: Math.max(1, units) });
+      }
+
+      const putReqs = toRequestsPerMonth(rawOpts.requests_put ?? rawOpts.put_requests ?? rawOpts.write_requests ?? rawOpts.put);
+      if (putReqs !== undefined && putReqs > 0) {
+        const putFactor = { standard: "put", warm: "put_warm", cold: "put_cold" }[storageClass];
+        const unitDiv = storageClass === "standard" ? 10000 : 1000;
+        const units = putReqs >= unitDiv ? Math.round(putReqs / unitDiv) : Math.round(putReqs);
+        rawComps.push({ factor: putFactor, value: Math.max(1, units) });
+      }
+    }
+
+    const chunkedByComp = rawComps.map(comp => {
+      const maxVal = obsFactorMaxPerCard(String(comp.factor));
+      const chunks = splitIntoChunks(Number(comp.value ?? 0), maxVal);
+      return (chunks.length ? chunks : [0]).map(val => ({
+        factor: comp.factor,
+        value: val,
+        ...(comp.unit ? { unit: comp.unit } : {}),
+      }));
+    });
+
+    const cardCount = Math.max(1, ...chunkedByComp.map(c => c.length));
+    if (cardCount === 1) return [baseCard];
+
+    return Array.from({ length: cardCount }, (_, idx) => {
+      const compsForCard = chunkedByComp
+        .map(chunks => chunks[idx])
+        .filter((c): c is NonNullable<typeof c> => c !== undefined && c.value > 0);
+      return {
+        ...baseCard,
+        id: `${r.id}-${idx + 1}`,
+        options: {
+          ...baseCard.options,
+          components: compsForCard,
+        },
+      };
+    });
+  }
+
+  return [baseCard];
 }
 
 export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?: string): Dict {

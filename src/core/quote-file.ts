@@ -9,7 +9,7 @@ import { publishQuoteTool } from "./publish.ts";
 import { loadService } from "./schema-model.ts";
 import { legalOptions, modesOf, PRIMARY_GROUP, SPEC_ARG, SPEC_RULES, USAGE_PRICED, VERIFIED } from "./services/publication.ts";
 import { draftQuoteTool } from "./workflow.ts";
-import { compileQuote, detectCatalogPricingAnomalies, buildCanonicalQuoteIR, generateLockfile, stringifyLockfile, sanitizeTitle, normalizeResourceToCard, type QuoteDocument } from "./compiler/index.ts";
+import { compileQuote, detectCatalogPricingAnomalies, buildCanonicalQuoteIR, generateLockfile, stringifyLockfile, sanitizeTitle, normalizeResourceToCards, type QuoteDocument } from "./compiler/index.ts";
 import type { ActionContext } from "./types.ts";
 import { progress } from "./progress.ts";
 import { CardInput, ECS_DEFAULT_IMAGE } from "./schemas.ts";
@@ -28,8 +28,8 @@ export function parse(text: string, path?: string): Quote {
   try { doc = Bun.YAML.parse(text); } catch (error) { throw invalid(`The quote file is not valid YAML: ${error instanceof Error ? error.message : String(error)}`, "cards"); }
   if (isObject(doc) && doc.version === "1") {
     const compiled = compileQuote(text);
-    const cards = compiled.resources.map(r =>
-      normalizeResourceToCard(r, compiled.document.horizon?.billing_policy)
+    const cards = compiled.resources.flatMap(r =>
+      normalizeResourceToCards(r, compiled.document.horizon?.billing_policy)
     );
     return {
       customer: compiled.document.metadata.customer,
@@ -177,23 +177,26 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
       const text = await readFile(quote.path, "utf8");
       const compiled = compileQuote(text);
       const ir = buildCanonicalQuoteIR(compiled.document, compiled.resources);
-      for (const [index, card] of quote.cards.entries()) {
-        const row = rows[index];
-        if (row && ir.resources[index]) {
-          if (row.spec) {
-            ir.resources[index].spec = row.spec;
-            ir.resources[index].skuCode = row.spec;
+      const rowById = new Map(rows.map((r, idx) => [String(r.id), { row: r, card: quote.cards[idx]! }]));
+      for (const irRes of ir.resources) {
+        let resTotal = 0;
+        for (const physical of irRes.physicalCards) {
+          const matched = rowById.get(physical.title);
+          if (!matched) continue;
+          const { row, card } = matched;
+          if (row.spec && !irRes.skuCode) {
+            irRes.spec = row.spec;
+            irRes.skuCode = row.spec;
           }
           if (row.price != null) {
             const p = parseFloat(String(row.price));
-            ir.resources[index].unitPrice = p;
-            ir.resources[index].totalPrice = p * (card.quantity ?? 1);
-            for (const physical of ir.resources[index].physicalCards) {
-              physical.unitAmount = p;
-              physical.totalAmount = p * physical.quantity;
-            }
+            if (!irRes.unitPrice) irRes.unitPrice = p;
+            physical.unitAmount = p;
+            physical.totalAmount = p * (card.quantity ?? physical.quantity ?? 1);
+            resTotal += physical.totalAmount;
           }
         }
+        irRes.totalPrice = resTotal;
       }
       // the SKU list prices of the planned resources; disks and other add-ons are priced when the list is published
       ir.totalAmount = ir.resources.reduce((sum, resource) => sum + (resource.totalPrice ?? 0), 0);

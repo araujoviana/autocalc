@@ -3,6 +3,7 @@
  * independent of unstable vendor UI control bindings. */
 import type { NormalizedResource } from "./horizon.ts";
 import type { QuoteDocument } from "./ast.ts";
+import { normalizeResourceToCards } from "./normalizer.ts";
 
 export interface PhysicalCardMapping {
   cardIndex: number;
@@ -63,23 +64,35 @@ export function buildCanonicalQuoteIR(doc: QuoteDocument, resources: NormalizedR
 
   let grandTotal = 0;
   const canonicalResources: CanonicalResourceIR[] = resources.map((res, index) => {
-    // By default 1:1 logical to physical card mapping
+    // By default 1:1 logical to physical card mapping; expands to N physical cards when variable metrics exceed per-card stepper clamps
     const title = res.id;
     const unitPrice = 0;
     const totalPrice = 0;
     grandTotal += totalPrice;
 
-    const physicalCards: PhysicalCardMapping[] = [
-      {
-        cardIndex: index,
-        cardId: `${res.id}-0`,
-        title,
-        options: { ...(res.options ?? {}) },
-        quantity: res.quantity,
-        unitAmount: unitPrice,
-        totalAmount: totalPrice,
-      },
-    ];
+    const splitCards = normalizeResourceToCards(res, doc.horizon?.billing_policy);
+    const physicalCards: PhysicalCardMapping[] =
+      splitCards.length > 1
+        ? splitCards.map((card, splitIdx) => ({
+            cardIndex: splitIdx,
+            cardId: `${res.id}-${splitIdx}`,
+            title: String(card.id),
+            options: { ...(card.options ?? {}) },
+            quantity: Number(card.quantity ?? 1),
+            unitAmount: unitPrice,
+            totalAmount: totalPrice,
+          }))
+        : [
+            {
+              cardIndex: index,
+              cardId: `${res.id}-0`,
+              title,
+              options: { ...(res.options ?? {}) },
+              quantity: res.quantity,
+              unitAmount: unitPrice,
+              totalAmount: totalPrice,
+            },
+          ];
 
     return {
       id: res.id,

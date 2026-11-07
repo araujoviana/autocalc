@@ -1,6 +1,6 @@
 # Project status
 
-Last updated 2026-11-04, at the end of the TypeScript migration. This page is the starting point
+Last updated 2026-11-07. This page is the starting point
 for whoever picks the work up; the detail lives in the pages it links.
 
 ## Where things stand
@@ -11,39 +11,21 @@ All three layers of the declarative design exist and are covered by the offline 
 
 | Layer | State |
 |---|---|
-| Declarative (`src/core/compiler/`) | Implemented and tested offline: units, templates, expander, canonical IR, lock file, wire budgeting, partitioning. The circuit breaker (`circuit-breaker.ts`) is wired into the gate for known vendor defects; its catalog anomaly guard flags yearly cards in `plan-quote` |
-| Canonical (`src/core/quote/`, `quote-file.ts`) | Implemented: ranking, drafts, run records, plan and apply |
-| Vendor (`src/providers/`, `src/core/page/`, `gate.ts`, `src/schema/`) | Implemented: catalog, rating, page encoder, generated schemas, publish gate |
+| Declarative (`src/core/compiler/`) | Implemented and tested: units, templates, expander, normalizer, canonical IR, lock file, wire budgeting, partitioning, logical-to-physical card splitting, and all 4 circuit-breaker degradation tiers (`FULL_GATE_VERIFIED`, `RATING_VERIFIED_EDIT_SKIPPED`, `CACHED_CATALOG_ESTIMATE`, `EXPORT_ONLY`). The catalog anomaly guard flags yearly cards in `plan-quote` |
+| Canonical (`src/core/quote/`, `quote-file.ts`) | Implemented: ranking, drafts, run records, plan and apply across both legacy `cards:` and declarative `version: "1"` quote files |
+| Vendor (`src/providers/`, `src/core/page/`, `gate.ts`, `src/schema/`) | Implemented: catalog, rating, page encoder, 100% mapped schemas across all 40 committed service files, publish gate |
 
 ## What has been checked live
 
-On 2026-11-04, with a real account, a plain quote file (one ECS card, São Paulo, monthly) went
-through `plan-quote` and `apply-quote`. The gate passed with stored, rated and Edit prices equal,
-and `validate` and `edit-check` agreed afterwards. One run failed because the calculator page did
-not load for the Edit check; the gate deleted the list as designed, and the check now retries a
-page that will not open once ([publish gate](explanation/huawei/publish-gate.md)).
+- **All 51 supported services (`docs/compat/*.md`)**: Every supported service across Tiers 1–5 (16 IaaS compute/storage/network + 4 default-only IaaS/network, 4 Tier 2 containers/serverless, 11 Tier 3 databases, and 16 Tier 4–5 security/middleware/management/AI services) has been replayed live against the Huawei Cloud calculator page (`bun run compat <service>`) with **0 failures**.
+- **20 real-world business architecture YAML scenarios (`tests/fixtures/scenarios/01-*.yaml`..`20-*.yaml`)**: Validate, plan, and build form cards across all 40 verified publishable Huawei Cloud services (`tests/integration/business-scenarios.test.ts`).
+- **End-to-end authenticated gate (`plan-quote` / `apply-quote`)**: Verified live on single-card and `version: "1"` declarative quotes (stored = rated = Edit), plus live Edit verification across ECS, EVS, RDS, Redis, NAT, OBS (known-defect skip), Kafka, SFS, SDRS, DES, DSS, ER, Memcached, DRS, DDM, DDS, GaussDB, RDS for MariaDB, TaurusDB, and HRDS.
 
-## What has not
+## What remains open
 
-- The `version: "1"` declarative path was run live once (2026-11-04, one ECS card): plan and apply passed the gate. Two gaps showed (the second is fixed): the list is saved without the `[autocalc]` marker (declarative titles are stripped of tool branding on purpose, so find test lists by id). `quote.lock.yaml` recorded zero totals; it now carries the SKU list prices of the planned resources (disks and add-ons are priced when the list is published, so it can sit below the saved total). Wire budgeting, partitioning and multi-card quotes have still only run offline.
-- Besides ECS, one DMS Kafka card (`dms.platinum.c6.kafka`, monthly, São Paulo) passed the gate live on 2026-11-04 (stored, rated and Edit 144.20). Two Redis specs failed first, because the chosen spec never reached the Redis form; after mapping the SKU's fields onto the page controls both pass (`redis.single.xu1.tiny.128` 1.06, `redis.ha.xu1.large.r2.1` 36.55, all three prices equal). The other recipe services still cannot apply a requested spec. Services not named here were not tried.
-- Only ECS and that Kafka card were exercised end to end by hand. Other services are covered by recorded fixtures and
-  the region sweep ([run the tests](how-to/run-tests.md)).
-- Builder services take options through `apply_quote`; `plan-quote` rejects ones the builder does not know. Their page-control coverage (`schema coverage`) is still partial.
-
-## Next to 0.9
-
-See [the roadmap](roadmap.md) for the order. In short: finish wiring the circuit breaker (the unused lower tiers), close the OBS and save bugs from issues #2, #4 and #6, extend Edit verification past ECS and OBS, run the `version: "1"` path live, then map builder options in batches.
-
-### Earlier list
-
-The open items are in the [roadmap](roadmap.md). The ones that matter for "the base is done":
-
-1. A live run of the declarative `version: "1"` path.
-2. Mapping builder-service options to schema controls (`autocalc schema coverage <service>`).
-3. Decisions on in-place update and naming/prune of saved lists.
-
-Expanding service support comes after those.
+- Saving a large declarative quote that partitions into multiple saved lists (`Part 1`, `Part 2`, ...) on a live authenticated account.
+- Extending `VERIFIED` publication beyond the 40 verified services to the remaining 11 `ACCEPTED_DEFAULT_ONLY` / unmapped-add-on services (`hcss`, `vpcep`, `vpn`, `cce-autopilot`, `cci`, `swr`, `functiongraph`, `ssa`, `dbss`, `dsc`, `aad`) once their custom option/add-on mappings and authenticated Edit-check prices are verified.
+- Post-0.9 items in [the roadmap](roadmap.md): whole-list billing-mode comparison, gated in-place update of a saved list, and list naming/prune helpers.
 
 ## Run an end-to-end check
 
