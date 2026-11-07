@@ -4,7 +4,7 @@ import { CardInput } from "../../../src/core/schemas.ts";
 import { buildCard } from "../../../src/core/services/index.ts";
 import { diffProducts, type Diff } from "./harness.ts";
 
-export interface Scenario { name: string; input: Record<string, unknown> }
+export interface Scenario { name: string; input: Record<string, unknown>; region?: string }
 export interface Result { name: string; ok: boolean; stage: "schema" | "build" | "page" | "diff" | "ok"; message?: string; diff?: Diff[] }
 export type Catalog = { product: Record<string, Record<string, unknown>[]> };
 

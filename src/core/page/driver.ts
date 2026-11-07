@@ -154,6 +154,7 @@ export class Driver {
       if (step.kind === "auto") { resolved = await this.resolve(step); if (!resolved) return; } // let the form say what the control is
       if (resolved.kind === "add") await this.add(resolved);
       else if (resolved.kind === "stepper") await this.stepper(resolved);
+      else if (resolved.kind === "checkbox") await this.checkboxes(resolved);
       else await this.choose(resolved);
       this.touch();
     } finally { this.stepDeadline = undefined; }
@@ -178,7 +179,7 @@ export class Driver {
     ctl = ctl ?? await this.wait(describe);
     if (!ctl) throw this.fail(`The form has no control ${step.componentId}.`, { field: step.componentId });
     if (ctl.kind === "base-radio-stepper") ctl = (await js(this.page, "radioStepper", step.componentId, step.value)) ?? ctl;
-    const kind = ({ "base-radio-group": "radio", "base-select": "select", "base-stepper": "stepper", "base-radio-stepper": "stepper", "common-input": "stepper" } as Record<string, Step["kind"]>)[ctl.kind];
+    const kind = ({ "base-radio-group": "radio", "base-select": "select", "base-stepper": "stepper", "base-radio-stepper": "stepper", "common-input": "stepper", "base-checkbox-group": "checkbox" } as Record<string, Step["kind"]>)[ctl.kind];
     if (!kind) {
       if (await this.wait(() => this.held(step))) return undefined; // the page fills it in; e.g. OBS's one, disabled, already ticked package type
       throw this.fail(`${step.componentId} is a ${ctl.kind}, which the encoder cannot fill.`, { field: step.componentId });
@@ -213,6 +214,16 @@ export class Driver {
     if (!await this.wait(async () => labels.includes(String(await js(this.page, "readBack", step.componentId)).trim()))) {
       throw this.fail(`${step.componentId} shows ${JSON.stringify(await js(this.page, "readBack", step.componentId))} after choosing ${JSON.stringify(step.value)}.`, { field: step.componentId });
     }
+  }
+
+  /** Make exactly the wanted boxes ticked (a group the page keeps disabled and already right is skipped before this). */
+  private async checkboxes(step: Step) {
+    if (await this.held(step)) return;
+    const values = Array.isArray(step.value) ? step.value : [step.value];
+    let result = await js(this.page, "setChecks", step.componentId, values);
+    for (let clicks = 0; result === "clicked" && clicks < 8; clicks++) { await this.page.waitForTimeout(400); result = await js(this.page, "setChecks", step.componentId, values); }
+    if (result !== "ok") throw this.fail(`Could not set ${step.componentId} to ${JSON.stringify(step.value)} (${String(result)}).`, { field: step.componentId });
+    if (!await this.wait(() => this.held(step))) throw this.fail(`${step.componentId} holds ${JSON.stringify(await this.formValue(step))} after choosing ${JSON.stringify(step.value)}.`, { field: step.componentId });
   }
 
   private async stepper(step: Step) {

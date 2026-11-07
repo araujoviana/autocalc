@@ -8,12 +8,13 @@ const [service, only] = [process.argv[2], process.argv[3]?.split(",")];
 if (!service) throw new Error("usage: run.ts <service> [scenario,...]");
 const region = process.env.AUTOCALC_REGION ?? "sa-brazil-1";
 const { scenarios } = await import(`./scenarios/${service}.ts`) as { scenarios: Scenario[] };
-const catalog = await (await fetch(endpoints.cdnProduct(service, region))).json() as Catalog;
+const catalogs = new Map<string, Catalog>();
+const catalogOf = async (r: string) => catalogs.get(r) ?? catalogs.set(r, await (await fetch(endpoints.cdnProduct(service, r))).json() as Catalog).get(r)!;
 const manager = new BrowserManager({ headed: false });
 const results: Result[] = [];
 try {
   for (const scenario of scenarios.filter(s => !only || only.includes(s.name))) { // one at a time: parallel publishes overload the page
-    const result = await runScenario(manager, service, region, catalog, scenario);
+    const r = scenario.region ?? region, result = await runScenario(manager, service, r, await catalogOf(r), scenario);
     results.push(result); console.log(JSON.stringify(result));
   }
 } finally { await manager.close(); }

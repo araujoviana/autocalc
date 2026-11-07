@@ -94,6 +94,21 @@ const FNS = {
     }
     return 'not-a-radio';
   },
+  // One click toward exactly the wanted boxes; the page re-renders between clicks (it also unticks boxes
+  // by itself), so the caller asks again. Ticks come first: the page keeps at least one box ticked.
+  setChecks(cfg, values) {
+    const i = control(cfg);
+    if (!i) return 'missing';
+    const want = new Set(values.map(String));
+    const boxes = [...i.subTree.el.querySelectorAll('label.tiny-checkbox')];
+    if (!boxes.length) return 'no-boxes';
+    const todo = (b) => want.has(b.querySelector('input').value) !== b.classList.contains('is-checked');
+    const b = boxes.find((x) => todo(x) && want.has(x.querySelector('input').value)) || boxes.find(todo);
+    if (!b) return 'ok';
+    if (b.classList.contains('is-disabled')) return 'disabled';
+    b.click();
+    return 'clicked';
+  },
   openSelect(cfg) {
     const i = control(cfg);
     if (!i) return 'missing';

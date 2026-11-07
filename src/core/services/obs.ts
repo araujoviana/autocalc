@@ -19,14 +19,19 @@ export async function buildObs(input: Extract<CardInput, { service: "obs" }>, co
   const az = input.multi_az ? "dataInfo_5_" : "dataInfo_4_", catalog = await context.productInfo("obs", input.region), items = catalog.product.obs_obs ?? [];
   const products: Record<string, unknown>[] = [];
   if (input.package) {
-    const raw = items.find(item => item.resourceSpecCode === `obs.storage.${input.package}`);
+    const wantCode = `${input.multi_az ? "obs.storage_3AZ" : "obs.storage"}.${input.package}`.toLowerCase();
+    const raw = items.find(item => String(item.resourceSpecCode).toLowerCase() === wantCode);
     if (!raw) throw new CalculatorError("SPEC_NOT_FOUND", "OBS package not found");
     const p = productFromCatalog(raw, input.billing, input.hours);
-    Object.assign(p, { resourceSpecType: "DEFAULT", obsStorageSize: raw.obsStorageSize, packageType: raw.packageType ?? "dataInfo_9_", productType: raw.productType ?? "calc_29_", storageType: raw.storageType ?? "dataInfo_2_", addToList_title: "calc_1_", addToList_product: raw.obsStorageSize, productNum: 1, inquiryTag: "normal", selfProductNum: 1, cpqPurchaseDuration: 1, cpqPeriodType: 3, cpqPeriodNum: 1 });
+    Object.assign(p, { resourceSpecType: "DEFAULT", obsStorageSize: raw.obsStorageSize, packageType: raw.packageType ?? (input.multi_az ? "dataInfo_10_" : "dataInfo_9_"), productType: raw.productType ?? "calc_29_", storageType: raw.storageType ?? "dataInfo_2_", addToList_title: "calc_1_", addToList_product: raw.obsStorageSize, productNum: 1, inquiryTag: "normal", selfProductNum: 1, cpqPurchaseDuration: 1, cpqPeriodType: 3, cpqPeriodNum: 1 });
     products.push(p);
     const packageTypes = [p.packageType];
-    const render: Record<string, unknown> = { calculator_productType_switch: { productType: p.productType }, calculator_storagePack_radio: { obsStorageSize: raw.obsStorageSize } };
-    const traffic = items.find(item => item.resourceSpecCode === "obs.down.traffic.50gb");
+    // The package type box must be ticked before the multi-AZ size radio appears, so it comes first.
+    const render: Record<string, unknown> = { calculator_productType_switch: { productType: p.productType }, calculator_Pack_checkboxGroup: {}, [input.multi_az ? "calculator_multiAZPack_radio" : "calculator_storagePack_radio"]: { obsStorageSize: raw.obsStorageSize } };
+    // The page ticks the 50 GB outbound package by default where the region sells it; "none" leaves it out.
+    const trafficSize = input.traffic_package ?? "50gb";
+    const traffic = trafficSize === "none" ? undefined : items.find(item => item.resourceSpecCode === `obs.down.traffic.${trafficSize}`);
+    if (!traffic && input.traffic_package && input.traffic_package !== "none") throw new CalculatorError("SPEC_NOT_FOUND", `OBS traffic package ${input.traffic_package} is not sold in ${input.region}`);
     if (traffic) {
       const t = productFromCatalog(traffic, input.billing, input.hours);
       Object.assign(t, { resourceSpecType: "DEFAULT", obsDownTrafficSize: traffic.obsDownTrafficSize, packageType: traffic.packageType ?? "dataInfo_11_", productType: traffic.productType ?? "calc_29_", storageType: traffic.storageType ?? "dataInfo_2_", addToList_title: "calc_3_", addToList_product: traffic.obsDownTrafficSize, productNum: 1, inquiryTag: "normal", selfProductNum: 1, cpqPurchaseDuration: 1, cpqPeriodType: 3, cpqPeriodNum: 1 });

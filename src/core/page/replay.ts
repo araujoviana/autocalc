@@ -4,7 +4,7 @@
  * compared afterwards, so a form state the page cannot reproduce fails instead of shipping the
  * original card. Port of autocalc/page/replay.py.
  */
-export type Kind = "radio" | "select" | "region" | "stepper" | "add" | "auto";
+export type Kind = "radio" | "select" | "region" | "stepper" | "add" | "checkbox" | "auto";
 /** Set one form control. `componentId` is the control's config id (viewConfig.id); for `add` it is the addible's id. */
 export interface Step { componentId: string; kind: Kind; value?: unknown }
 

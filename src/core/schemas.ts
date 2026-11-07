@@ -69,8 +69,15 @@ const ecs = z.strictObject({ service: serviceCode("ecs"), ...common, billing: Ca
   bandwidth_mbit: Nonnegative.optional().describe("Public bandwidth in Mbit/s"), bandwidth_type: textDefault("19_bgp", "Bandwidth type"), ri_time: textDefault("1_3", "Reserved instance term") });
 const evs = z.strictObject({ service: serviceCode("evs"), ...common, billing: standardBilling("ondemand"), type: textDefault("GPSSD", "Disk type"), size_gb: count(100, "Disk size in GB"), iops: Nonnegative.optional(), throughput: Nonnegative.optional() });
 const cce = z.strictObject({ service: serviceCode("cce"), ...common, billing: standardBilling("ondemand"), cluster_type: textDefault("standard", "Cluster type"), ha: BooleanInput.default(true), scale: textDefault("small", "Cluster scale") });
+const OBS_PACKAGE_SIZES = ["40gb", "100gb", "500gb", "1tb", "2tb", "5tb", "10tb", "20tb", "50tb", "100tb", "200tb", "300tb", "400tb", "500tb", "1pb", "10pb"] as const;
+const OBS_TRAFFIC_SIZES = ["50gb", "100gb", "1tb", "10tb", "30tb", "50tb", "100tb", "200tb", "300tb"] as const;
+/** Request lines are typed in the page's own unit (requests per step), 0 to 9,999. */
+const OBS_REQUEST_UNIT: Record<string, number> = {
+  get: 10000, put: 10000, delete: 1000, transition_warm: 10000, transition_cold: 10000,
+  get_warm: 1000, put_warm: 1000, delete_warm: 1000, get_cold: 1000, put_cold: 1000, delete_cold: 1000,
+};
 const obsComponent = z.strictObject({ factor: Nonempty, value: volume(0, "Usage volume"), unit: z.enum(["GB", "TB"]).optional().describe("Required for storage capacity") });
-const obs = z.strictObject({ service: serviceCode("obs"), ...common, billing: standardBilling("ondemand"), components: z.array(obsComponent).optional().describe("OBS usage components; storage uses a 720-hour multiplier"), storage_class: z.enum(["standard", "warm", "cold"]).default("standard").describe("Storage class"), multi_az: BooleanInput.default(false), package: Nonempty.optional() });
+const obs = z.strictObject({ service: serviceCode("obs"), ...common, billing: standardBilling("ondemand"), components: z.array(obsComponent).optional().describe("OBS usage components; storage uses a 720-hour multiplier"), storage_class: z.enum(["standard", "warm", "cold"]).default("standard").describe("Storage class"), multi_az: BooleanInput.default(false), package: z.enum(OBS_PACKAGE_SIZES).optional().describe("Prepaid storage package size; with multi_az it is the multi-AZ package"), traffic_package: z.enum([...OBS_TRAFFIC_SIZES, "none"]).optional().describe("Outbound traffic package; default 50gb where the region sells it, none to leave it out") });
 const rds = z.strictObject({ service: serviceCode("rds"), ...common, billing: standardBilling("ondemand"), flavor: Nonempty, storage_spec: Nonempty.optional().describe("Volume SKU; defaults to the engine's Cloud SSD (or common) volume"), storage_gb: capacity(40, "Storage size in GB"), db_version: Nonempty.optional() });
 const sfs = z.strictObject({ service: serviceCode("sfsturbo"), ...common, billing: standardBilling("yearly"), tier: textDefault("20MBps", "Throughput tier"), size_gb: capacity(512, "Storage size in GB") });
 const elb = z.strictObject({ service: serviceCode("elb"), ...common, quantity: PositiveInteger.pipe(z.literal(1)).default(1), billing: standardBilling("ondemand"), public_ip_count: volume(2, "Public IP count") });
@@ -123,6 +130,10 @@ export const CardInput = z.discriminatedUnion("service", [ecs, evs, cce, obs, rd
           if (component.factor !== expected || (card.storage_class === "cold" && card.multi_az)) ctx.addIssue({ code: "custom", path: ["components", index, "factor"], message: "Storage factor must match storage class and availability zone" });
         } else {
           if (!nonSizeFactors.has(component.factor)) ctx.addIssue({ code: "custom", path: ["components", index, "factor"], message: "Unknown or incompatible OBS usage factor" });
+          const requestUnit = OBS_REQUEST_UNIT[component.factor];
+          if (requestUnit) {
+            if (!Number.isInteger(component.value) || component.value > 9999) ctx.addIssue({ code: "custom", path: ["components", index, "value"], message: `OBS ${component.factor} is counted in units of ${requestUnit.toLocaleString("en-US")} requests, a whole number up to 9,999` });
+          } else if (component.factor === "download_crr" ? component.value > 9_999_999 : component.value > 102_400) ctx.addIssue({ code: "custom", path: ["components", index, "value"], message: `OBS ${component.factor} is limited to ${component.factor === "download_crr" ? "9,999,999" : "102,400"} GB per card by the calculator page; split it across cards` });
           const expectedClass = component.factor.includes("warm") ? "warm" : component.factor.includes("cold") || component.factor === "restore_size_ex" ? "cold" : "standard";
           if (!["download.cdn", "download_crr"].includes(component.factor) && card.storage_class !== expectedClass) {
             ctx.addIssue({ code: "custom", path: ["components", index, "factor"], message: "OBS usage factor does not match storage_class" });
@@ -130,6 +141,8 @@ export const CardInput = z.discriminatedUnion("service", [ecs, evs, cce, obs, rd
         }
       }
       if (!card.package && !card.components?.length) ctx.addIssue({ code: "custom", message: "OBS requires a package or at least one component" });
+      if (card.package && card.storage_class !== "standard") ctx.addIssue({ code: "custom", path: ["storage_class"], message: "OBS packages are sold for Standard storage only" });
+      if (card.traffic_package && !card.package) ctx.addIssue({ code: "custom", path: ["traffic_package"], message: "traffic_package needs a storage package" });
       if (card.package && card.billing === "ondemand") ctx.addIssue({ code: "custom", message: "OBS packages require monthly or yearly billing" });
       if (card.package && card.components?.length) ctx.addIssue({ code: "custom", message: "OBS package and usage components cannot be combined" });
     }

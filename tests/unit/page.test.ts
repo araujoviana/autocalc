@@ -127,6 +127,13 @@ test("a radio step clicks and reads back", async () => {
   expect(page.calls).toContainEqual(["clickOption", "calculator_ecs_radio_generation", "C7n"]);
 });
 
+test("a checkbox group is ticked until the form holds exactly the wanted boxes", async () => {
+  const clock = new Clock(); let held: string[] = ["dataInfo_9_", "dataInfo_11_"];
+  const page = new FakePage(clock, { describe: { kind: "base-checkbox-group", id: "g", options: [] }, formState: () => ({ template_RENDER: { value: { calculator_Pack_checkboxGroup: { packageType: held } } } }), setChecks: (_cfg: string, values: string[]) => { if (held.join() === values.join()) return "ok"; held = values; return "clicked"; } });
+  await driverFor(page, clock).apply({ componentId: "calculator_Pack_checkboxGroup_packageType", kind: "auto", value: ["dataInfo_9_"] });
+  expect(page.calls).toContainEqual(["setChecks", "calculator_Pack_checkboxGroup_packageType", ["dataInfo_9_"]]);
+});
+
 test("a read-back mismatch names the field", async () => {
   const clock = new Clock();
   const error = await failure(driverFor(new FakePage(clock, { describe: RADIO, clickOption: "ok", readBack: "aC8" }), clock).apply({ componentId: "calculator_ecs_radio_generation", kind: "radio", value: "C7n" }));

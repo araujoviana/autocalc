@@ -82,3 +82,12 @@ NAT, OBS) that plans and publishes end to end. Notes from building it:
 - NAT takes monthly, yearly and on-demand billing; the public gateway is `natgateway_*`, and the
   `privatenat_*` codes are a different product.
 - A usage card (OBS) is priced when the list is rated, so `plan-quote` shows no price for it.
+
+## OBS options
+
+- `package` (`40gb` to `10pb`, as sold in the region) buys a prepaid storage package, monthly or yearly, Standard storage only.
+  With `multi_az: true` it is the multi-AZ package. `traffic_package` picks the outbound-traffic package (`50gb` to `300tb`);
+  the default is the page's own 50 GB where the region sells it, `none` leaves it out, and a size the region does not sell is an error.
+- Usage lines (`components`, pay-per-use) take the **page's own unit**, a whole number up to 9,999: `get` and `put` count
+  10,000 requests per step, `delete` and every warm or cold request line count 1,000, and `transition_*` count 10,000.
+  Traffic lines are in GB (up to 102,400 per card, replication up to 9,999,999). Storage is `GB` or `TB`, up to 102,400 per card.
