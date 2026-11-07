@@ -56,7 +56,9 @@ export async function buildEcs(input: Extract<CardInput, { service: "ecs" }>, co
   const hasBandwidth = (input.bandwidth_mbit ?? 0) > 0 || input.bandwidth_type === "12_bgp";
   const traffic = input.bandwidth_type === "12_bgp", eipToken = traffic ? "dataInfo_19_" : "dataInfo_18_", measure = traffic ? 10 : 15, size = traffic ? 1 : input.bandwidth_mbit ?? 0;
   if (hasBandwidth) {
-    const bw = await selectProduct(context, "ecs", input.region, "vpc_bandwidth", input.bandwidth_type, input.billing === "ri" ? "ondemand" : input.billing, input.billing === "ri" ? 730 : input.hours);
+    const bw = await selectProduct(context, "ecs", input.region, "vpc_bandwidth", input.bandwidth_type, input.billing === "ri" ? "ondemand" : input.billing, input.billing === "ri" ? 730 : input.hours, traffic ? plan => plan.usageFactor === "upflow" : undefined);
+    // Pay-per-traffic is priced on the page's outbound (upflow) line, one GB per card, not on the hour counter.
+    if (traffic && input.billing === "ondemand") Object.assign(bw, { usageValue: 1, usageMeasureId: 10 });
     Object.assign(bw, { eipSpec: "dataInfo_14_", shareType: "dataInfo_16_", eipType: eipToken, name: "dataInfo_14_", resourceSize: input.bandwidth_mbit ?? null, resouceSizeMeasureId: measure, resourceMeasureName: "", resourceMeasurePluralName: "", addToList_title: "calc_5_", addToList_product: `dataInfo_14_ | dataInfo_16_ | ${eipToken} | ${size}BSSUNIT.${size > 1 ? "pluralUnit" : "unit"}.${measure}`, ...(input.billing === "ri" ? { inquiryTag: "combine" } : {}) }); products.push(bw);
   }
   for (const p of products) {

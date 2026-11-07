@@ -101,6 +101,8 @@ export const CardInput = z.discriminatedUnion("service", [ecs, evs, cce, obs, rd
     if (["obs", "apm", "waf", "eip"].includes(card.service) && "quantity" in card && card.quantity !== 1) ctx.addIssue({ code: "custom", path: ["quantity"], message: "This service cannot apply quantity; use separate cards or its service-specific count" });
     if ("periods" in card && (card.billing === "ondemand" || card.billing === "ri") && card.periods !== 1) ctx.addIssue({ code: "custom", path: ["periods"], message: "This billing mode does not use billing periods" });
     if ("hours" in card && card.billing !== "ondemand" && card.hours !== 730) ctx.addIssue({ code: "custom", path: ["hours"], message: "Hours apply only to on-demand billing" });
+    // The page's duration selector offers 1 to 9 months or 1 year (verified live on ECS, 2026-11-07).
+    if (card.service === "ecs" && ((card.billing === "monthly" && card.periods > 9) || (card.billing === "yearly" && card.periods > 1))) ctx.addIssue({ code: "custom", path: ["periods"], message: "ECS monthly billing allows 1 to 9 periods and yearly billing 1" });
     if (card.service === "eip" && !card.ip_reservation && card.eip_count !== 1) ctx.addIssue({ code: "custom", path: ["eip_count"], message: "EIP count requires IP reservation" });
     if (card.service === "evs" && (card.iops !== undefined || card.throughput !== undefined) && (card.billing !== "ondemand" || !["GPSSD2", "ESSD2"].includes(card.type))) ctx.addIssue({ code: "custom", message: "IOPS and throughput apply only to on-demand GPSSD2 or ESSD2 volumes" });
     if (card.service === "ecs" && card.billing !== "ri" && card.ri_time !== "1_3") ctx.addIssue({ code: "custom", path: ["ri_time"], message: "RI term requires reserved-instance billing" });
