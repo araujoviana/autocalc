@@ -6,11 +6,17 @@ const context = { productInfo: async () => ({ product: { sfsturbo_sfsturbo: ["20
 
 test("SFS rejects capacity rounded by the calculator form", () => {
   expect(CardInput.safeParse({ service: "sfsturbo", region: "r", size_gb: 500 }).success).toBe(false);
-  expect(CardInput.parse({ service: "sfsturbo", region: "r" })).toMatchObject({ size_gb: 512 });
+  expect(CardInput.parse({ service: "sfsturbo", region: "r" })).toMatchObject({ size_gb: 3686.4 });
 });
 
 test.each([["20MBps", "calculator_sfsPeriod_36input"], ["40MBps", "calculator_sfsPeriod_12input"]])("SFS tier %s uses its own capacity control", async (tier, control) => {
-  const input = CardInput.parse({ service: "sfsturbo", region: "r", size_gb: 1024, tier });
+  const input = CardInput.parse({ service: "sfsturbo", region: "r", size_gb: 3686.4, tier });
   if (input.service !== "sfsturbo") throw new Error();
-  expect((await buildSfs(input, context)).rewriteValue).toMatchObject({ template_RENDER: { [control]: 1 } });
+  expect((await buildSfs(input, context)).rewriteValue).toMatchObject({ template_RENDER: { [control]: 3.6 } });
+});
+
+test("capacity below the page minimum is refused", async () => {
+  const input = CardInput.parse({ service: "sfsturbo", region: "r", size_gb: 1228.8, tier: "20MBps" });
+  if (input.service !== "sfsturbo") throw new Error();
+  await expect(buildSfs(input, context)).rejects.toThrow(/at least 3.6 TB/);
 });

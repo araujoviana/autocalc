@@ -2,7 +2,7 @@ export type Product = Record<string, any>;
 export type Tuple = [number | null, number | null, number | null];
 export interface Diff { key: string; builder?: Tuple; page?: Tuple }
 
-const key = (p: Product) => String(p.usageFactor ?? p.resourceSpecCode);
+const key = (p: Product) => `${p.resourceSpecCode ?? ""}:${p.usageFactor ?? ""}`;
 const n = (v: unknown): number | null => v === undefined || v === null || v === "" ? null : Number(v);
 const tuple = (p: Product): Tuple => [n(p.usageValue), n(p.usageMeasureId), n(p.productNum)];
 

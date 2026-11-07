@@ -5,9 +5,11 @@ import { selectProduct } from "./common.ts";
 import type { BuilderContext } from "./common.ts";
 export async function buildEip(input: Extract<CardInput, { service: "eip" }>, context: BuilderContext) {
   const products: Record<string, unknown>[] = [];
-  if (input.traffic_gb > 0) {
+  const traffic = Math.max(1, input.traffic_gb); // the page's traffic stepper starts at 1 GB
+  {
     const p = await selectProduct(context, "eip", input.region, "vpc_bandwidth", "12_bgp", "ondemand", input.hours, plan => plan.usageFactor === "upflow");
-    Object.assign(p, { resourceSpecType: "DEFAULT", type: "dataInfo_9_", eipSpec: "dataInfo_1_", shareType: "dataInfo_3_", eipType: "dataInfo_6_", name: "dataInfo_1_", usageFactor1: "upflow", addToList_title: "calc_25_", addToList_product: `dataInfo_3_ | dataInfo_1_ | dataInfo_6_ | ${input.traffic_gb}BSSUNIT.${input.traffic_gb > 1 ? "pluralUnit" : "unit"}.10`, usageValue: input.traffic_gb, usageMeasureId: 10, usageFactor: "upflow", durationNum: input.hours, addToList_purchaseNum: false, cpqPurchaseDuration: 1, cpqPurchaseQuantity: 1 });
+    Object.assign(p, { resourceSpecType: "DEFAULT", type: "dataInfo_9_", eipSpec: "dataInfo_1_", shareType: "dataInfo_3_", eipType: "dataInfo_6_", name: "dataInfo_1_", usageFactor1: "upflow", addToList_title: "calc_25_", addToList_product: `dataInfo_3_ | dataInfo_1_ | dataInfo_6_ | ${traffic}BSSUNIT.${traffic > 1 ? "pluralUnit" : "unit"}.10`, usageValue: traffic, usageMeasureId: 10, usageFactor: "upflow", durationNum: input.hours, addToList_purchaseNum: false, cpqPurchaseDuration: 1, cpqPurchaseQuantity: 1 });
+    p.productNum = input.eip_count; // the page bills outbound traffic per address
     products.push(p);
   }
   if (input.ip_reservation) {
@@ -16,7 +18,7 @@ export async function buildEip(input: Extract<CardInput, { service: "eip" }>, co
     products.push(p);
   }
   if (!products.length) throw new CalculatorError("VALIDATION", "EIP requires traffic or IP reservation");
-  const card = await assembleCard({ ...input, periods: 1, products, description: "Elastic IP", rewrite: { calculator_eip_radio_type: { shareType: "dataInfo_3_", eipSpec: "dataInfo_1_" }, calculator_eip_radio: { eipType: "dataInfo_6_", UNSET_Stepper_3: stepper(10, input.traffic_gb) }, calculator_ipQuantity_stepper: { UNSET_Stepper_0: stepper(41, input.eip_count, "calc_29_", "") } }, includeQuantity: false }, context.rate);
+  const card = await assembleCard({ ...input, periods: 1, products, description: "Elastic IP", rewrite: { calculator_eip_radio_type: { shareType: "dataInfo_3_", eipSpec: "dataInfo_1_" }, calculator_eip_radio: { eipType: "dataInfo_6_", UNSET_Stepper_3: stepper(10, traffic) }, calculator_ipQuantity_stepper: { UNSET_Stepper_0: stepper(41, input.eip_count, "calc_29_", "") } }, includeQuantity: false }, context.rate);
   const time = card.rewriteValue.global_ONDEMANDTIME as { UNSET_Stepper_0: { measurePluralNameBeforeTrans: string } };
   time.UNSET_Stepper_0.measurePluralNameBeforeTrans = "calc_27_";
   return card;

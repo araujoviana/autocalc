@@ -1,5 +1,6 @@
 import { assembleCard, stepper } from "../cards.ts";
 import { CONSOLE } from "../endpoints.ts";
+import { CalculatorError } from "../errors.ts";
 import type { CardInput } from "../schemas.ts";
 import { selectProduct } from "./common.ts";
 import type { BuilderContext } from "./common.ts";
@@ -12,12 +13,16 @@ export async function buildEvs(input: Extract<CardInput, { service: "evs" }>, co
   const render: Record<string, unknown> = { calculator_product_stepper: { UNSET_Stepper_0: stepper(17, input.size_gb, "detail_42_", "detail_42_"), productType: labels[input.type] ?? "calc_7_" } };
   if (extra && input.billing === "ondemand") {
     const iops = input.iops ?? 3000, throughput = input.throughput ?? 125;
-    const [iop, tp] = await Promise.all([selectProduct(context, "evs", input.region, "ebs_volume", `${input.type}.iops`, input.billing, input.hours), selectProduct(context, "evs", input.region, "ebs_volume", `${input.type}.throughput`, input.billing, input.hours)]);
+    // ESSD2 is sold with an IOPS line only; its throughput is fixed.
+    const hasThroughput = (await context.productInfo("evs", input.region)).product.ebs_volume?.some(p => p.resourceSpecCode === `${input.type}.throughput`) ?? false;
+    if (!hasThroughput && input.throughput !== undefined) throw new CalculatorError("VALIDATION", `${input.type} throughput is not configurable in ${input.region}`);
+    const iop = await selectProduct(context, "evs", input.region, "ebs_volume", `${input.type}.iops`, input.billing, input.hours);
+    const tp = hasThroughput ? await selectProduct(context, "evs", input.region, "ebs_volume", `${input.type}.throughput`, input.billing, input.hours) : undefined;
     Object.assign(iop, { usageValue: Math.max(0, iops - 3000), usageMeasureId: iop.measureUnit, usageMeasureName: "detail_36_", usageMeasurePluralName: "detail_36_", addToList_title: "detail_28_", addToList_product: `${iops}detail_36_`, productNum: Math.trunc(input.quantity * input.hours), durationNum: input.hours });
-    Object.assign(tp, { usageValue: Math.max(0, throughput - 125), usageMeasureId: tp.measureUnit, usageMeasureName: "detail_35_", usageMeasurePluralName: "detail_35_", addToList_title: "detail_29_", addToList_product: `${throughput}detail_35_`, productNum: Math.trunc(input.quantity * input.hours), durationNum: input.hours });
-    products.push(iop, tp);
+    if (tp) Object.assign(tp, { usageValue: Math.max(0, throughput - 125), usageMeasureId: tp.measureUnit, usageMeasureName: "detail_35_", usageMeasurePluralName: "detail_35_", addToList_title: "detail_29_", addToList_product: `${throughput}detail_35_`, productNum: Math.trunc(input.quantity * input.hours), durationNum: input.hours });
+    products.push(iop); if (tp) products.push(tp);
     render.calculator_evs_iops = { UNSET_Stepper_0: stepper(75, iops, "detail_36_", "detail_36_") };
-    render.calculator_evs_throughput = { UNSET_Stepper_0: stepper(77, throughput, "detail_35_", "detail_35_") };
+    if (tp) render.calculator_evs_throughput = { UNSET_Stepper_0: stepper(77, throughput, "detail_35_", "detail_35_") };
   }
   const period = input.billing === "ondemand" ? "" : `${input.periods}${input.billing === "monthly" ? "m" : "y"}`;
   const buyUrl = `${CONSOLE}?region=${input.region}&locale=en-us&charging=${input.billing === "ondemand" ? 0 : 1}&type=${input.type}&capacity=${input.size_gb}&count=${input.quantity}&iops=${input.billing === "ondemand" ? input.iops ?? "" : ""}&throughput=${input.billing === "ondemand" ? input.throughput ?? "" : ""}&period=${period}#/evs/createvolume`;

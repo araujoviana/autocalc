@@ -9,7 +9,7 @@ if (!service) throw new Error("usage: run.ts <service> [scenario,...]");
 const region = process.env.AUTOCALC_REGION ?? "sa-brazil-1";
 const { scenarios, notes = [] } = await import(`./scenarios/${service}.ts`) as { scenarios: Scenario[]; notes?: string[] };
 const catalogs = new Map<string, Catalog>();
-const catalogOf = async (r: string) => catalogs.get(r) ?? catalogs.set(r, await (await fetch(endpoints.cdnProduct(service, r))).json() as Catalog).get(r)!;
+const catalogOf = async (r: string) => catalogs.get(r) ?? catalogs.set(r, await fetch(endpoints.cdnProduct(service, r)).then(x => x.json() as Promise<Catalog>).catch(() => ({ product: {} }))).get(r)!; // recipe services need no catalog
 const manager = new BrowserManager({ headed: false });
 const results: Result[] = [];
 try {

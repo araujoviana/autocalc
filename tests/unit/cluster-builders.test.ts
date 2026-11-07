@@ -17,8 +17,8 @@ test("NAT, CCE and SFS retain their service-specific form state", async () => {
   const cce = await buildCce({ service: "cce", region: "r", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "standard", ha: true, scale: "small" }, context);
   expect(cce.rewriteValue).toMatchObject({ global_QUANTITY: { UNSET_Stepper_0: { measureNameBeforeTrans: "" } } });
   expect(cce.selectedProduct.purchaseNum).toMatchObject({ measureNameBeforeTrans: "", measurePluralNameBeforeTrans: "" });
-  const sfs = await buildSfs({ service: "sfsturbo", region: "r", billing: "yearly", quantity: 1, periods: 1, hours: 730, tier: "20MBps", size_gb: 500 }, context);
-  expect(sfs.rewriteValue).toMatchObject({ template_RENDER: { calculator_sfsPeriod_36input: 0.5 } });
+  const sfs = await buildSfs({ service: "sfsturbo", region: "r", billing: "yearly", quantity: 1, periods: 1, hours: 730, tier: "20MBps", size_gb: 3686.4 }, context);
+  expect(sfs.rewriteValue).toMatchObject({ template_RENDER: { calculator_sfsPeriod_36input: 3.6 } });
 });
 
 test("CCE preserves an explicitly null catalog usage factor", async () => {
