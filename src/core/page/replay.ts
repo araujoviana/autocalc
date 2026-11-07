@@ -79,6 +79,11 @@ export function cardSteps(rewriteValue: Dict): Step[] {
 // (observed on SFS Turbo: the "Demand" controls replace the "Period" ones in on-demand billing).
 const ALIASES: Record<string, Record<string, string>> = {
   "sfsturbo|ONDEMAND": { calculator_sfsType_radio: "calculator_sfsDemand_radio", calculator_sfsPeriod_36input: "calculator_sfsDemand_36input", calculator_sfsPeriod_12input: "calculator_sfsDemand_12input" },
+  "vpn|ONDEMAND": {
+    calculator_evpnEip1_stepper_Stepper_0: "calculator_eip_charge_mode_radio_Stepper_0",
+    calculator_evpnEip2_stepper_Stepper_0: "calculator_evpnEip2_ondemand_stepper_Stepper_0",
+    calculator_evpnGatewaySpec_radio_Stepper_1: "calculator_evpnGatewaySpec_radio_Stepper_3",
+  },
 };
 // builder key -> the calculator's own service key, where they differ in case
 export const PAGE_SERVICE: Record<string, string> = { rabbitmq: "rabbitMQ" };

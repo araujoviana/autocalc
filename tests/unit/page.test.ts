@@ -120,6 +120,22 @@ test("SFS Turbo on-demand cards use the page's Demand control ids", () => {
   expect(Object.keys(renamed.template_RENDER)).toEqual(["calculator_sfsDemand_36input", "other"]);
 });
 
+test("VPN on-demand cards map EIP and connection-group controls to on-demand IDs", () => {
+  const renamed = forPage("vpn", {
+    global_REGIONINFO: { chargeMode: "ONDEMAND" },
+    template_RENDER: {
+      calculator_evpnEip1_stepper_Stepper_0: 20,
+      calculator_evpnEip2_stepper_Stepper_0: 30,
+      calculator_evpnGatewaySpec_radio_Stepper_1: 40,
+    },
+  }) as { template_RENDER: Record<string, unknown> };
+  expect(Object.keys(renamed.template_RENDER)).toEqual([
+    "calculator_eip_charge_mode_radio_Stepper_0",
+    "calculator_evpnEip2_ondemand_stepper_Stepper_0",
+    "calculator_evpnGatewaySpec_radio_Stepper_3",
+  ]);
+});
+
 test("a radio step clicks and reads back", async () => {
   const clock = new Clock(); let shown = "aC8";
   const page = new FakePage(clock, { describe: RADIO, clickOption: (_cfg: string, value: string) => { shown = value; return "ok"; }, readBack: () => shown });
