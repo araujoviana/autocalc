@@ -66,10 +66,10 @@ export function cardSteps(rewriteValue: Dict): Step[] {
   if (region.chargeMode) steps.push(step("global_REGIONINFO_chargeMode", "radio", region.chargeMode));
   const period = (rewriteValue.global_PERIODTIME as Dict | undefined)?.UNSET_PeriodTime as Dict | undefined;
   if (period) steps.push(step("global_PERIODTIME_UNSET_PeriodTime", "radio", `${period.measureValue}_${period.measureId}`));
-  const hours = rewriteValue.global_ONDEMANDTIME as Dict | undefined;
-  if (hours) steps.push(step(GLOBAL_STEPPER.global_ONDEMANDTIME!, "auto", measure(hours.UNSET_Stepper_0)));
   const added = new Set<string>();
   for (const [group, value] of Object.entries((rewriteValue.template_RENDER ?? {}) as Dict)) leaves(group, value, steps, added);
+  const hours = rewriteValue.global_ONDEMANDTIME as Dict | undefined;
+  if (hours) steps.push(step(GLOBAL_STEPPER.global_ONDEMANDTIME!, "auto", measure(hours.UNSET_Stepper_0)));
   const quantity = rewriteValue.global_QUANTITY as Dict | undefined;
   if (quantity) steps.push(step(GLOBAL_STEPPER.global_QUANTITY!, "auto", measure(quantity.UNSET_Stepper_0)));
   return steps;

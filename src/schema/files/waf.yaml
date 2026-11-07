@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -34,6 +36,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
+  unsupported: true
+  note: fixed to cloud WAF mode by the builder
 - id: calculator_waf_editionRadio_edition
   kind: base-radio-group
   title: Edition
@@ -42,6 +46,8 @@ controls:
   values: catalog
   after:
   - calculator_waf_wafModeRadio_wafMode
+  unsupported: true
+  note: builder prices pay-per-use WAF domains, rules, and requests
 - id: calculator_waf_domainStepper_Stepper_0
   kind: base-stepper
   title: Domain Expansion Package
@@ -55,6 +61,8 @@ controls:
     unit: PCS
   after:
   - calculator_waf_editionRadio_edition
+  unsupported: true
+  note: period package stepper not used by pay-per-use WAF builder
 - id: calculator_waf_bandwidthStepper_Stepper_0
   kind: base-stepper
   title: QPS Extension Package
@@ -68,6 +76,8 @@ controls:
     unit: PCS
   after:
   - calculator_waf_domainStepper_Stepper_0
+  unsupported: true
+  note: period package stepper not used by pay-per-use WAF builder
 - id: calculator_waf_ruleStepper_Stepper_0
   kind: base-stepper
   title: Rule Expansion Package
@@ -81,6 +91,8 @@ controls:
     unit: PCS
   after:
   - calculator_waf_bandwidthStepper_Stepper_0
+  unsupported: true
+  note: period package stepper not used by pay-per-use WAF builder
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -34,6 +36,7 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
+  option: edition
 - id: calculator_bandwidth_switch_UNSET_Switch
   kind: base-radio-group
   title: Public Outbound Access
@@ -42,6 +45,8 @@ controls:
   values: catalog
   after:
   - calculator_spec_radioGroups_type
+  unsupported: true
+  note: fixed to no public outbound bandwidth by the builder
 - id: calculator_bandwidth_stepper_Stepper_0
   kind: base-stepper
   title: Bandwidth
@@ -55,6 +60,8 @@ controls:
     unit: Mbit/s
   after:
   - calculator_bandwidth_switch_UNSET_Switch
+  unsupported: true
+  note: outbound bandwidth add-on is not configured by the builder
 - id: global_ONDEMANDTIME_Stepper_0
   kind: base-stepper
   title: Required Duration

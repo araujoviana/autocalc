@@ -76,7 +76,7 @@ export class Driver {
     if (url.includes(CATALOG_PATH)) this.catalogs.add(request);
     if (url.includes(RATING_PATH)) { this.inflight++; this.lastActivity = this.clock(); this.sent.set(request, this.gen); }
   }
-  private onCatalogDone(request: any) { if (this.catalogs.delete(request)) this.lastActivity = this.clock(); } // fully loaded: the page re-prices after reading it
+  private onCatalogDone(request: any) { if (this.catalogs.delete(request)) { this.gen++; this.lastActivity = this.clock(); } } // fully loaded: the page re-prices after reading it
   private recordLoadFailure(request: any, status?: number) {
     const kind = request.resourceType?.() ?? "";
     if (!["document", "script", "xhr", "fetch"].includes(kind)) return;
@@ -214,6 +214,7 @@ export class Driver {
     if (!await this.wait(async () => labels.includes(String(await js(this.page, "readBack", step.componentId)).trim()))) {
       throw this.fail(`${step.componentId} shows ${JSON.stringify(await js(this.page, "readBack", step.componentId))} after choosing ${JSON.stringify(step.value)}.`, { field: step.componentId });
     }
+    if (step.kind === "region" && this.catalogs.size > 0) await this.wait(() => this.catalogs.size === 0);
   }
 
   /** Make exactly the wanted boxes ticked (a group the page keeps disabled and already right is skipped before this). */

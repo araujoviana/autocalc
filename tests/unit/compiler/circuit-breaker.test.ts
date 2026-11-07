@@ -29,6 +29,12 @@ describe("Vendor Circuit Breaker and Anomaly Guard", () => {
 
       const rdsRes = resolveExecutionTier("rds", "yearly");
       expect(rdsRes.tier).toBe("FULL_GATE_VERIFIED");
+
+      const cachedRes = resolveExecutionTier("ecs", "monthly", true, { ratingAvailable: false });
+      expect(cachedRes.tier).toBe("CACHED_CATALOG_ESTIMATE");
+
+      const exportRes = resolveExecutionTier("ecs", "monthly", true, { publishAvailable: false });
+      expect(exportRes.tier).toBe("EXPORT_ONLY");
     });
   });
 

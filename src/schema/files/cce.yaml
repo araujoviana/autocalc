@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -34,6 +36,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
+  unsupported: true
+  note: fixed to standard CCE cluster category by the builder
 - id: calculator_clustertype_radio_clusterType
   kind: base-radio-group
   title: Cluster Type
@@ -42,6 +46,7 @@ controls:
   values: catalog
   after:
   - calculator_clustertype_radio_productType
+  option: cluster_type
 - id: calculator_clustertype_radio_clusterNodeScale
   kind: base-radio-group
   title: Cluster Scale
@@ -50,6 +55,7 @@ controls:
   values: catalog
   after:
   - calculator_clustertype_radio_clusterType
+  option: scale
 - id: calculator_clustertype_radio_clusterMasterScale
   kind: base-radio-group
   title: Master Nodes
@@ -58,6 +64,7 @@ controls:
   values: catalog
   after:
   - calculator_clustertype_radio_clusterNodeScale
+  option: ha
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

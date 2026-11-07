@@ -6,8 +6,13 @@ import type { BuilderContext } from "./common.ts";
 /** The engine's plain volume SKU (`rds.mysql.volume.cloudssd`, else `.common`), so a card need not name it. */
 async function defaultVolume(context: BuilderContext, region: string, flavor: string): Promise<string> {
   const engine = flavor.split(".")[1] ?? "";
+  const suffix = flavor.endsWith(".rha.rr") ? ".rha.rr" : flavor.endsWith(".ha") ? ".ha" : flavor.endsWith(".rr") ? ".rr" : "";
   const specs = ((await context.productInfo("rds", region)).product["rds_rds.volume"] ?? []).map((p: Record<string, unknown>) => String(p.resourceSpecCode));
-  const found = [`rds.${engine}.volume.cloudssd`, `rds.${engine}.volume.common`].find(spec => specs.includes(spec));
+  const found = [
+    ...(suffix ? [`rds.${engine}.volume.cloudssd${suffix}`, `rds.${engine}.volume.common${suffix}`] : []),
+    `rds.${engine}.volume.cloudssd`,
+    `rds.${engine}.volume.common`,
+  ].find(spec => specs.includes(spec));
   if (!found) throw new CalculatorError("VALIDATION", `No default volume for engine '${engine}'.`, "Set options.storage_spec; see `autocalc search rds <region> volume`.");
   return found;
 }

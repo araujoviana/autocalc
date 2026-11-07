@@ -12,7 +12,7 @@ export async function buildRedis(input: Extract<CardInput, { service: "redis" }>
     products.push(bw);
   }
   const keys = ["edition", "version", "instance_type", "cpu_storage", "repl_spec", "spec"];
-  const render: Record<string, unknown> = { calculator_redis_version: Object.fromEntries(keys.map(key => [key, instance[key] ?? null])), calculator_redis_quantity: { UNSET_Stepper_0: stepper(14, input.quantity, "calc_33_", "calc_34_") }, calculator_redis_bandwidth_switch: { UNSET_Stepper_0: stepper(14, bandwidth ? 1 : 2, "dataInfo_1_", "dataInfo_2_") } };
+  const render: Record<string, unknown> = { calculator_redis_version: Object.fromEntries(keys.map(key => [key, instance[key] ?? null])), calculator_redis_quantity: { UNSET_Stepper_0: stepper(14, input.quantity, "calc_33_", "calc_34_") }, ...(input.billing === "ondemand" || bandwidth ? { calculator_redis_bandwidth_switch: { UNSET_Stepper_0: stepper(14, bandwidth ? 1 : 2, "dataInfo_1_", "dataInfo_2_") } } : {}) };
   if (bandwidth) render.calculator_redis_bandwidth = { UNSET_Stepper_0: stepper(36, bandwidth) };
   return assembleCard({ ...input, products, description: "DCS (for Redis)", rewrite: render, includeQuantity: false }, context.rate);
 }

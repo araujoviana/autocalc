@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -35,6 +37,7 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
+  option: type
 - id: calculator_product_stepper_Stepper_0
   kind: base-stepper
   value_type: Stepper_Resource
@@ -48,6 +51,7 @@ controls:
     unit: detail_42_
   after:
   - calculator_product_stepper_productType
+  option: size_gb
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

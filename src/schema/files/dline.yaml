@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -34,6 +36,7 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
+  option: port
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

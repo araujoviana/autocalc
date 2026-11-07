@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -34,6 +36,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
+  unsupported: true
+  note: fixed to object storage by the builder
 - id: calculator_Pack_checkboxGroup_packageType
   kind: base-checkbox-group
   title: Package Type
@@ -42,6 +46,7 @@ controls:
   values: catalog
   after:
   - calculator_productType_switch_productType
+  option: package
 - id: calculator_storagePack_radio_obsStorageSize
   kind: base-radio-group
   title: Storage Space
@@ -51,6 +56,7 @@ controls:
   values: catalog
   after:
   - calculator_Pack_checkboxGroup_packageType
+  option: package
 - id: calculator_Outbound_radio_obsDownTrafficSize
   kind: base-radio-group
   title: Internet Outbound Traffic
@@ -59,6 +65,7 @@ controls:
   values: catalog
   after:
   - calculator_storagePack_radio_obsStorageSize
+  option: traffic_package
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

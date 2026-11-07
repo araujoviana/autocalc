@@ -72,13 +72,14 @@ test("all schemas share one frontend version", async () => {
   expect(versions.size).toBe(1);
 });
 
-test("recipe services leave no control unaccounted for", async () => {
-  for (const svc of Object.keys(RECIPES)) {
+test("every committed service schema leaves no control unaccounted for", async () => {
+  for (const svc of IDS) {
     const schema = await loadService(svc);
     expect(schema).not.toBeNull();
     for (const c of schema!.controls) {
       expect(Boolean(c.option || c.unsupported)).toBe(true);
     }
+    expect(coverage(schema!).mapped_percent).toBe(100);
   }
 });
 

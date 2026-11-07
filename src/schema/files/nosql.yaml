@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -34,6 +36,7 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
+  option: engine
 - id: calculator_nosql_versionType_group_deploymentModal
   kind: base-radio-group
   title: Storage Type
@@ -42,6 +45,8 @@ controls:
   values: catalog
   after:
   - calculator_nosql_versionType_group_versionType
+  unsupported: true
+  note: fixed to cloud-native storage deployment by the builder
 - id: calculator_nosql_redis_modal_productModal
   kind: base-radio-group
   title: Product Type
@@ -50,6 +55,8 @@ controls:
   values: catalog
   after:
   - calculator_nosql_versionType_group_deploymentModal
+  unsupported: true
+  note: Redis-compatible GeminiDB control not used by DynamoDB builder
 - id: calculator_nosql_redis_type_type
   kind: base-radio-group
   title: DB Instance Type
@@ -58,6 +65,8 @@ controls:
   values: catalog
   after:
   - calculator_nosql_redis_modal_productModal
+  unsupported: true
+  note: Redis-compatible GeminiDB control not used by DynamoDB builder
 - id: calculator_nosql_redis_version_radio_version
   kind: base-radio-group
   title: Compatible Version
@@ -66,6 +75,8 @@ controls:
   values: catalog
   after:
   - calculator_nosql_redis_type_type
+  unsupported: true
+  note: Redis-compatible GeminiDB control not used by DynamoDB builder
 - id: calculator_nosql_redis_radio_cpuType
   kind: base-radio-group
   title: CPU Type
@@ -74,6 +85,8 @@ controls:
   values: catalog
   after:
   - calculator_nosql_redis_version_radio_version
+  unsupported: true
+  note: Redis-compatible GeminiDB control not used by DynamoDB builder
 - id: calculator_nosql_redis_switch_UNSET_Switch
   kind: base-radio-group
   title: Instance Creation Method
@@ -82,6 +95,8 @@ controls:
   values: catalog
   after:
   - calculator_nosql_redis_radio_cpuType
+  unsupported: true
+  note: Redis-compatible GeminiDB control not used by DynamoDB builder
 - id: calculator_nosql_redis_public_publicType
   kind: base-radio-group
   title: Node Specifications
@@ -90,6 +105,8 @@ controls:
   values: catalog
   after:
   - calculator_nosql_redis_switch_UNSET_Switch
+  unsupported: true
+  note: Redis-compatible GeminiDB control not used by DynamoDB builder
 - id: calculator_nosql_redis_vm_select_spec
   kind: base-select
   value_type: Filter
@@ -97,6 +114,8 @@ controls:
   values: catalog
   after:
   - calculator_nosql_redis_public_publicType
+  unsupported: true
+  note: Redis-compatible GeminiDB control not used by DynamoDB builder
 - id: calculator_nosql_redis_colony_node_stepper_Stepper_0
   kind: base-stepper
   title: Nodes
@@ -110,6 +129,8 @@ controls:
     unit: ' '
   after:
   - calculator_nosql_redis_vm_select_spec
+  unsupported: true
+  note: Redis-compatible GeminiDB control not used by DynamoDB builder
 - id: calculator_nosql_redis_rs_stepper_Stepper_0
   kind: base-stepper
   title: Total Storage Space
@@ -123,6 +144,8 @@ controls:
     unit: GB
   after:
   - calculator_nosql_redis_colony_node_stepper_Stepper_0
+  unsupported: true
+  note: Redis-compatible GeminiDB control not used by DynamoDB builder
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

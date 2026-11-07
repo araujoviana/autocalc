@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -34,6 +36,7 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
+  option: spec_id
 - id: calculator_kafka_specType_switch_specName
   kind: base-radio-group
   title: Flavor
@@ -42,6 +45,7 @@ controls:
   values: catalog
   after:
   - calculator_kafka_architecture_switch_architectureName
+  option: spec_id
 - id: calculator_kafka_node_num_stepper_Stepper_0
   kind: base-stepper
   title: Brokers
@@ -55,6 +59,7 @@ controls:
     unit: PCS
   after:
   - calculator_kafka_specType_switch_specName
+  option: brokers
 - id: calculator_kafka_new_storage_stepper_storageType
   kind: base-select
   title: Storage Space per Broker
@@ -64,6 +69,8 @@ controls:
   values: catalog
   after:
   - calculator_kafka_node_num_stepper_Stepper_0
+  unsupported: true
+  note: fixed to ultra-high I/O storage by the builder
 - id: calculator_kafka_new_storage_stepper_Stepper_0
   kind: base-stepper
   value_type: Stepper_Resource
@@ -76,6 +83,7 @@ controls:
     default: 100.0
   after:
   - calculator_kafka_new_storage_stepper_storageType
+  option: storage_gb
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

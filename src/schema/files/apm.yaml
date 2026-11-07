@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -38,6 +40,8 @@ controls:
     default: 1.0
   after:
   - global_REGIONINFO_chargeMode
+  unsupported: true
+  note: builder prices pay-per-use APM 2.0 instances
 - id: calculator_apm2Enterprise1200_stepper_Stepper_0
   kind: base-stepper
   title: Medium Packages
@@ -50,6 +54,8 @@ controls:
     default: 0.0
   after:
   - calculator_apm2Enterprise150_stepper_Stepper_0
+  unsupported: true
+  note: builder prices pay-per-use APM 2.0 instances
 - id: calculator_apm2Enterprise9600_stepper_Stepper_0
   kind: base-stepper
   title: Advanced Packages
@@ -62,6 +68,8 @@ controls:
     default: 0.0
   after:
   - calculator_apm2Enterprise1200_stepper_Stepper_0
+  unsupported: true
+  note: builder prices pay-per-use APM 2.0 instances
 - id: calculator_apm2Enterprise36500_stepper_Stepper_0
   kind: base-stepper
   title: Golden Packages
@@ -74,6 +82,8 @@ controls:
     default: 0.0
   after:
   - calculator_apm2Enterprise9600_stepper_Stepper_0
+  unsupported: true
+  note: builder prices pay-per-use APM 2.0 instances
 - id: calculator_apm2Enterprise109500_stepper_Stepper_0
   kind: base-stepper
   title: Platinum Packages
@@ -86,6 +96,8 @@ controls:
     default: 0.0
   after:
   - calculator_apm2Enterprise36500_stepper_Stepper_0
+  unsupported: true
+  note: builder prices pay-per-use APM 2.0 instances
 - id: calculator_apm2Enterprise182500_stepper_Stepper_0
   kind: base-stepper
   title: Top Packages
@@ -98,6 +110,8 @@ controls:
     default: 0.0
   after:
   - calculator_apm2Enterprise109500_stepper_Stepper_0
+  unsupported: true
+  note: builder prices pay-per-use APM 2.0 instances
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

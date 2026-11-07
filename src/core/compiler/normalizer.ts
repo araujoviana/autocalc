@@ -748,6 +748,7 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
       const edRaw = String(spec ?? rawOpts.edition ?? "").toLowerCase();
       const isProf = billing === "ondemand" || edRaw.includes("prof");
       spec = isProf ? "cfw.professional" : "cfw.standard";
+      options.edition = isProf ? "detail_11_" : "detail_3_";
       const bw = toMbps(rawOpts.bandwidth_mbps ?? rawOpts.bandwidth_mbit ?? rawOpts.bandwidth ?? rawOpts.bandwidth_Add, `${r.id}.bandwidth`);
       if (bw !== undefined && bw > 0) options.bandwidth_mbps = Math.max(5, Math.round(bw / 5) * 5);
       const eips = rawOpts.eips ?? rawOpts.eip_Add;
@@ -777,6 +778,7 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
       const [hssSpec, token] = map[edRaw] ?? ["hss.version.premium", "dataInfo_4_"];
       spec = billing === "ondemand" && (hssSpec === "hss.version.basic" || hssSpec === "hss.version.wtp") ? "hss.version.premium" : hssSpec;
       options.edition = spec === "hss.version.premium" ? "dataInfo_4_" : token;
+      if (billing === "ondemand") quantity = 1;
       needs = undefined;
       break;
     }

@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -34,6 +36,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
+  unsupported: true
+  note: builder prices on-demand container CPU and memory
 - id: calculator_cciSpec_radio_productType
   kind: base-radio-group
   title: Type
@@ -42,6 +46,8 @@ controls:
   values: catalog
   after:
   - calculator_cciSpec_radio_arch
+  unsupported: true
+  note: builder prices on-demand container CPU and memory
 - id: calculator_cciSpec_radio_specType
   kind: base-radio-group
   title: Package
@@ -50,6 +56,8 @@ controls:
   values: catalog
   after:
   - calculator_cciSpec_radio_productType
+  unsupported: true
+  note: resource packages are not used by the on-demand builder
 - id: calculator_cciSpec_radio_gpu
   kind: base-radio-group
   value_type: Filter
@@ -57,6 +65,8 @@ controls:
   values: catalog
   after:
   - calculator_cciSpec_radio_specType
+  unsupported: true
+  note: GPU pods are not used by the CPU/memory builder
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

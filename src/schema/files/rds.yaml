@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -34,6 +36,7 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
+  option: flavor
 - id: calculator_rdsvm_radio_dbVersion
   kind: base-radio-group
   title: DB Engine Version
@@ -42,6 +45,7 @@ controls:
   values: catalog
   after:
   - calculator_rdsvm_radio_dbType
+  option: flavor
 - id: calculator_rdsvm_radio_instanceType
   kind: base-radio-group
   title: DB Instance Type
@@ -50,6 +54,7 @@ controls:
   values: catalog
   after:
   - calculator_rdsvm_radio_dbVersion
+  option: flavor
 - id: calculator_rdsvm_radio_azMode
   kind: base-radio-group
   title: Sub-AZ
@@ -58,6 +63,8 @@ controls:
   values: catalog
   after:
   - calculator_rdsvm_radio_instanceType
+  unsupported: true
+  note: sub-AZ mode is left at the page default
 - id: calculator_rdsvm_radio_publicType
   kind: base-radio-group
   title: DB Instance Class
@@ -66,6 +73,7 @@ controls:
   values: catalog
   after:
   - calculator_rdsvm_radio_azMode
+  option: flavor
 - id: calculator_rdsvm_radio2_spec
   kind: base-select
   value_type: Filter
@@ -73,6 +81,7 @@ controls:
   values: catalog
   after:
   - calculator_rdsvm_radio_publicType
+  option: flavor
 - id: calculator_rdsvolume_stepper_type
   kind: base-select
   title: Storage
@@ -81,6 +90,7 @@ controls:
   values: catalog
   after:
   - calculator_rdsvm_radio2_spec
+  option: volume_type
 - id: calculator_rdsvolume_stepper_Stepper_0
   kind: base-stepper
   value_type: Stepper_Resource
@@ -93,6 +103,7 @@ controls:
     default: 40.0
   after:
   - calculator_rdsvolume_stepper_type
+  option: storage_gb
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

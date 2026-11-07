@@ -58,4 +58,4 @@ See [Your first quote](tutorials/first-quote.md) for the file format.
 
 ## Compatibility
 
-Per-service live replay results are in `docs/compat/` (`bun run compat <service>`). OBS: 16 scenarios pass (usage by class and AZ, packages incl. multi-AZ and traffic, Archive restore types, storage months). Parallel file system is not quotable (the page drops its capacity line). Other services: not yet replayed; see the roadmap item 7b.
+Per-service live replay results are in `docs/compat/` (`bun run compat <service>`). All 51 supported services across Tiers 1–5 (IaaS compute/storage/network, containers/serverless, databases, security, middleware, management, and AI) have been replayed live and pass (`ok`) across all scenarios. All 40 committed service schemas (`src/schema/files/*.yaml`) are at 100% control coverage, and 20 multi-service business architecture YAML scenarios (`tests/fixtures/scenarios/01-*.yaml`..`20-*.yaml`) validate, plan, and build form cards across all 40 publishable services.

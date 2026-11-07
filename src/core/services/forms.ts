@@ -160,7 +160,7 @@ export const RECIPES: Record<string, Recipe> = {
     edition: "calculator_hssType_radio_type",
   }, { quantity: true, modes: PM_OD }),
   dbss: recipe("Database Security Service", {}, { quantity: true, modes: PM }),
-  dsc: recipe("Data Security Center", {}, { quantity: true, modes: PM }),
+  dsc: recipe("Data Security Center", {}, { modes: PM }),
   ga: recipe("Global Accelerator", {}, { regionless: true, modes: OD }),
   cc: recipe("Cloud Connect", {}, { quantity: true, regionless: true, modes: PM }),
   aad: recipe("Anti-DDoS Advanced", {}, { quantity: true, regionless: true, modes: PM }),
@@ -209,6 +209,7 @@ export function buildRecipe(
   const [mode, measure] = CHARGE[billing];
   const render: Record<string, unknown> = {};
   for (const [k, controlId] of Object.entries(r.controls)) {
+    if (service === "taurusdb" && billing === "ondemand" && k === "storage_gb") continue;
     if (k in options) render[controlId] = options[k];
   }
   const form: Record<string, any> = {
@@ -220,7 +221,7 @@ export function buildRecipe(
   } else {
     form.global_PERIODTIME = { UNSET_PeriodTime: { measureValue: periods, measureId: measure } };
   }
-  if (r.quantity) {
+  if (r.quantity && !(service === "hss" && billing === "ondemand")) {
     form.global_QUANTITY = { UNSET_Stepper_0: stepper(41, quantity) };
   }
   return { rewriteValue: form };

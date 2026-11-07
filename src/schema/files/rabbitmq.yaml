@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -34,6 +36,7 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
+  option: version
 - id: calculator_rabbitMQ_instanceType_switch_instanceType
   kind: base-radio-group
   title: Instance Type
@@ -42,6 +45,8 @@ controls:
   values: catalog
   after:
   - calculator_rabbitMQ_version_switch_UNSET_Switch
+  unsupported: true
+  note: fixed to professional edition by the builder
 - id: calculator_rabbitMQ_architecture_switch_architectureName
   kind: base-radio-group
   title: Architecture
@@ -50,6 +55,7 @@ controls:
   values: catalog
   after:
   - calculator_rabbitMQ_instanceType_switch_instanceType
+  option: spec_id
 - id: calculator_rabbitMQ_specType_switch_specName
   kind: base-radio-group
   title: Flavor
@@ -58,6 +64,7 @@ controls:
   values: catalog
   after:
   - calculator_rabbitMQ_architecture_switch_architectureName
+  option: spec_id
 - id: calculator_rabbitMQ_new_storage_stepper_storageType
   kind: base-select
   title: Storage Space
@@ -67,6 +74,8 @@ controls:
   values: catalog
   after:
   - calculator_rabbitMQ_specType_switch_specName
+  unsupported: true
+  note: fixed to ultra-high I/O storage by the builder
 - id: calculator_rabbitMQ_new_storage_stepper_Stepper_0
   kind: base-stepper
   value_type: Stepper_Resource
@@ -79,6 +88,7 @@ controls:
     default: 100.0
   after:
   - calculator_rabbitMQ_new_storage_stepper_storageType
+  option: storage_gb
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

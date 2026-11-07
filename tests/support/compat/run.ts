@@ -1,7 +1,7 @@
 /** Live compatibility run: `bun tests/support/compat/run.ts <service> [scenario,...]`. Anonymous; saves nothing. */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { BrowserManager } from "../../../src/core/browser.ts";
-import { endpoints } from "../../../src/core/endpoints.ts";
+import { endpoints, vendorServiceCode } from "../../../src/core/endpoints.ts";
 import { runScenario, type Catalog, type Result, type Scenario } from "./replay.ts";
 
 const [service, only] = [process.argv[2], process.argv[3]?.split(",")];
@@ -9,7 +9,7 @@ if (!service) throw new Error("usage: run.ts <service> [scenario,...]");
 const region = process.env.AUTOCALC_REGION ?? "sa-brazil-1";
 const { scenarios, notes = [] } = await import(`./scenarios/${service}.ts`) as { scenarios: Scenario[]; notes?: string[] };
 const catalogs = new Map<string, Catalog>();
-const catalogOf = async (r: string) => catalogs.get(r) ?? catalogs.set(r, await fetch(endpoints.cdnProduct(service, r)).then(x => x.json() as Promise<Catalog>).catch(() => ({ product: {} }))).get(r)!; // recipe services need no catalog
+const catalogOf = async (r: string) => catalogs.get(r) ?? catalogs.set(r, await fetch(endpoints.cdnProduct(vendorServiceCode(service), r)).then(x => x.json() as Promise<Catalog>).catch(() => ({ product: {} }))).get(r)!; // recipe services need no catalog
 const manager = new BrowserManager({ headed: false });
 const results: Result[] = [];
 try {

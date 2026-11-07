@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -34,6 +36,7 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
+  option: tier
 - id: calculator_sfsType_radio_sellingStatus
   kind: base-radio-group
   value_type: Filter
@@ -42,6 +45,7 @@ controls:
   values: catalog
   after:
   - calculator_sfsType_radio_fileType
+  option: tier
 - id: calculator_sfsType_radio_sfsType
   kind: base-radio-group
   title: Type
@@ -50,12 +54,14 @@ controls:
   values: catalog
   after:
   - calculator_sfsType_radio_sellingStatus
+  option: tier
 - id: calculator_sfsPeriod_36input
   kind: common-input
   title: detail_31_
   default: 3.6
   after:
   - calculator_sfsType_radio_sfsType
+  option: size_gb
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

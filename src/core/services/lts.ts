@@ -13,9 +13,9 @@ export async function buildLts(input: Extract<CardInput, { service: "lts" }>, co
   const card = await assembleCard({ ...input, periods: 1, products, description: "Log Tank Service", rewrite: {
     calculator_ltsLogFlow_stepper: { UNSET_Stepper_0: stepper(10, knobs.flow, "detail_24_", "detail_24_") },
     calculator_ltsLogIndexRate_stepper: { UNSET_Stepper_0: stepper(17, knobs.index_rate, "calc_20_", "calc_20_") },
+    calculator_lts_cold_switch: { UNSET_Switch: "calc_3_" },
     calculator_ltsStorage_stepper: { UNSET_Stepper_0: stepper(17, knobs.storage, "detail_26_", "detail_26_") },
     calculator_ltsHotStorage_stepper: { UNSET_Stepper_0: stepper(17, knobs.hot, "detail_26_", "detail_26_") },
-    calculator_lts_cold_switch: { UNSET_Switch: "calc_3_" },
     calculator_lts_transfer_basic_stepper: { UNSET_Stepper_0: stepper(10, knobs.basic, "detail_24_", "detail_24_") },
     calculator_lts_transfer_senior_stepper: { UNSET_Stepper_0: stepper(10, knobs.senior, "detail_24_", "detail_24_") },
   }, includeTime: false, includeQuantity: false }, context.rate);

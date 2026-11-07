@@ -47,11 +47,22 @@ export function lookupKnownDefect(service: string, billing: string): KnownDefect
 }
 
 /** Determines the appropriate execution tier for a card based on vendor stability. */
-export function resolveExecutionTier(service: string, billing: string, allowEditCheck = true): {
+export function resolveExecutionTier(
+  service: string,
+  billing: string,
+  allowEditCheck = true,
+  opts: { ratingAvailable?: boolean; publishAvailable?: boolean } = {},
+): {
   tier: DegradationTier;
   defect?: KnownDefectSignature | undefined;
 } {
   const defect = lookupKnownDefect(service, billing);
+  if (opts.publishAvailable === false) {
+    return { tier: "EXPORT_ONLY", ...(defect ? { defect } : {}) };
+  }
+  if (opts.ratingAvailable === false) {
+    return { tier: "CACHED_CATALOG_ESTIMATE", ...(defect ? { defect } : {}) };
+  }
   if (defect) {
     return {
       tier: defect.recommendedTier,

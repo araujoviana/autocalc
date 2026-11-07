@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -34,6 +36,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
+  unsupported: true
+  note: builder prices KMS and CSMS on-demand usage
 - id: calculator_hsmType_radio_hsmType
   kind: base-radio-group
   title: Edition
@@ -42,6 +46,8 @@ controls:
   values: catalog
   after:
   - calculator_hsmType_radio_hsmName
+  unsupported: true
+  note: builder prices KMS and CSMS on-demand usage
 - id: calculator_hsmType_radio_Stepper_0
   kind: base-stepper
   title: Quantity
@@ -55,6 +61,8 @@ controls:
     unit: detail_118_
   after:
   - calculator_hsmType_radio_hsmType
+  unsupported: true
+  note: builder prices KMS and CSMS on-demand usage
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

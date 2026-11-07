@@ -17,6 +17,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_region
+  unsupported: true
+  note: AZ is left at the page default
 - id: global_REGIONINFO_chargeMode
   kind: base-radio-group
   title: Billing Mode
@@ -36,6 +38,8 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
+  unsupported: true
+  note: fixed to shared load balancer by the builder
 - id: calculator_elb_type_spec_azType
   kind: base-radio-group
   title: Sub-AZ
@@ -44,6 +48,8 @@ controls:
   values: catalog
   after:
   - calculator_elb_type_elbType
+  unsupported: true
+  note: dedicated ELB control not used by shared ELB builder
 - id: calculator_elb_type_spec_flavorCatagory
   kind: base-radio-group
   title: Specifications
@@ -53,6 +59,8 @@ controls:
   values: catalog
   after:
   - calculator_elb_type_spec_azType
+  unsupported: true
+  note: dedicated ELB control not used by shared ELB builder
 - id: calculator_flavor_checkboxGroup_flavorType
   kind: base-checkbox-group
   title: Load Balancing Type
@@ -61,6 +69,8 @@ controls:
   values: catalog
   after:
   - calculator_elb_type_spec_flavorCatagory
+  unsupported: true
+  note: dedicated ELB control not used by shared ELB builder
 - id: calculator_tcp_new_connections_Stepper_0
   kind: base-stepper
   title: New Connections
@@ -73,6 +83,8 @@ controls:
     default: 0.0
   after:
   - calculator_flavor_checkboxGroup_flavorType
+  unsupported: true
+  note: dedicated ELB LCU metric not used by shared ELB builder
 - id: calculator_tcp_max_concurrent_connections_Stepper_0
   kind: base-stepper
   title: Maximum Concurrent Connections
@@ -85,6 +97,8 @@ controls:
     default: 0.0
   after:
   - calculator_tcp_new_connections_Stepper_0
+  unsupported: true
+  note: dedicated ELB LCU metric not used by shared ELB builder
 - id: calculator_tcp_data_switch_UNSET_Switch
   kind: base-radio-group
   value_type: Filter
@@ -92,6 +106,8 @@ controls:
   values: catalog
   after:
   - calculator_tcp_max_concurrent_connections_Stepper_0
+  unsupported: true
+  note: dedicated ELB LCU metric not used by shared ELB builder
 - id: calculator_tcp_flow_Stepper_0
   kind: base-stepper
   title: Processed Bytes
@@ -113,6 +129,8 @@ controls:
     unit: GB/month
   after:
   - calculator_tcp_data_switch_UNSET_Switch
+  unsupported: true
+  note: dedicated ELB LCU metric not used by shared ELB builder
 - id: calculator_lcu_network_Stepper_0
   kind: base-stepper
   title: LCUs (Network Load Balancing)
@@ -126,6 +144,8 @@ controls:
     unit: LCU
   after:
   - calculator_tcp_flow_Stepper_0
+  unsupported: true
+  note: dedicated ELB LCU metric not used by shared ELB builder
 - id: calculator_ip_Stepper_0
   kind: base-radio-stepper
   title: Network Type
@@ -139,6 +159,7 @@ controls:
     unit: PCS
   after:
   - calculator_lcu_network_Stepper_0
+  option: public_ip_count
 - id: global_ONDEMANDTIME_Stepper_0
   kind: base-stepper
   title: Required Duration
