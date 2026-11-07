@@ -3,20 +3,25 @@ import { CalculatorError } from "../errors.ts";
 import type { CardInput } from "../schemas.ts";
 import type { BuilderContext } from "./common.ts";
 const components: Record<string, [string, string, number, string]> = {
-  "download.external": ["obs.001", "calc_8_", 10, "unit"], "download_warm.external": ["obs.001", "calc_8_", 10, "unit"], "download_cold.external": ["obs.001", "calc_8_", 10, "unit"], get: ["obs.001", "calc_13_", 54, "plain12"], put: ["obs.001", "calc_14_", 54, "plain12"], get_warm: ["obs.001", "calc_13_", 31, "plain16"], put_warm: ["obs.001", "calc_14_", 31, "plain16"], delete_warm: ["obs.001", "calc_15_", 31, "plain16"], get_cold: ["obs.001", "calc_13_", 31, "plain16"], put_cold: ["obs.001", "calc_14_", 31, "plain16"], delete_cold: ["obs.001", "calc_15_", 31, "plain16"], delete: ["obs.001", "calc_15_", 31, "plain16"], "download.cdn": ["obs", "calc_10_", 10, "unit"], download_crr: ["obs.001", "calc_11_", 17, "unit"], retrieval_size_warm: ["obs.001", "calc_18_", 10, "retrieval"], restore_size_ex: ["obs.001", "calc_18_", 10, "retrieval"], transition_warm: ["obs.001", "detail_145_", 14, "plain12"], transition_cold: ["obs.001", "detail_145_", 14, "plain12"],
+  "download.external": ["obs.001", "calc_8_", 10, "unit"], "download_warm.external": ["obs.001", "calc_8_", 10, "unit"], "download_cold.external": ["obs.001", "calc_8_", 10, "unit"], get: ["obs.001", "calc_13_", 54, "plain12"], put: ["obs.001", "calc_14_", 54, "plain12"], get_warm: ["obs.001", "calc_13_", 31, "plain16"], put_warm: ["obs.001", "calc_14_", 31, "plain16"], delete_warm: ["obs.001", "calc_15_", 31, "plain16"], get_cold: ["obs.001", "calc_13_", 31, "plain16"], put_cold: ["obs.001", "calc_14_", 31, "plain16"], delete_cold: ["obs.001", "calc_15_", 31, "plain16"], delete: ["obs.001", "calc_15_", 31, "plain16"], "download.cdn": ["obs", "calc_10_", 10, "unit"], download_crr: ["obs.001", "calc_11_", 17, "unit"], retrieval_size_warm: ["obs.001", "calc_18_", 10, "retrieval"], restore_size_ex: ["obs.001", "calc_18_", 10, "retrieval"], restore_size_sd: ["obs.001", "calc_18_", 10, "retrieval"], retrieval_size_cold: ["obs.001", "calc_18_", 10, "retrieval"], transition_warm: ["obs.001", "detail_145_", 14, "plain12"], transition_cold: ["obs.001", "detail_145_", 14, "plain12"],
 };
 export function obsUsageMeasure(factor: string): number | undefined {
   return factor.startsWith("size") ? (factor.endsWith("_3az") ? 17 : 10) : components[factor]?.[2];
 }
 const steps: Record<string, [string, number, string]> = {
   transition_warm: ["calculator_Request_stepper5", 14, "calc_12_"], transition_cold: ["calculator_Request_stepper5", 14, "calc_12_"],
-  "download.external": ["calculator_Outbound_stepper", 10, ""], "download_warm.external": ["calculator_Outbound_stepper", 10, ""], "download_cold.external": ["calculator_Outbound_stepper", 10, ""], download_crr: ["calculator_Replication_stepper", 17, ""], "download.cdn": ["calculator_Traffic_stepper", 10, ""], get: ["calculator_Request_wan_stepper2", 54, "calc_12_"], put: ["calculator_Request_wan_stepper3", 54, "calc_12_"], get_warm: ["calculator_Request_stepper2", 31, "calc_16_"], get_cold: ["calculator_Request_stepper2", 31, "calc_16_"], put_warm: ["calculator_Request_stepper3", 31, "calc_16_"], put_cold: ["calculator_Request_stepper3", 31, "calc_16_"], delete_warm: ["calculator_Request_stepper4", 31, "calc_16_"], delete_cold: ["calculator_Request_stepper4", 31, "calc_16_"], delete: ["calculator_Request_stepper4", 31, "calc_16_"], retrieval_size_warm: ["calculator_Traffic_Read_radio", 10, ""], restore_size_ex: ["calculator_Traffic_Read_radio", 10, ""],
+  "download.external": ["calculator_Outbound_stepper", 10, ""], "download_warm.external": ["calculator_Outbound_stepper", 10, ""], "download_cold.external": ["calculator_Outbound_stepper", 10, ""], download_crr: ["calculator_Replication_stepper", 17, ""], "download.cdn": ["calculator_Traffic_stepper", 10, ""], get: ["calculator_Request_wan_stepper2", 54, "calc_12_"], put: ["calculator_Request_wan_stepper3", 54, "calc_12_"], get_warm: ["calculator_Request_stepper2", 31, "calc_16_"], get_cold: ["calculator_Request_stepper2", 31, "calc_16_"], put_warm: ["calculator_Request_stepper3", 31, "calc_16_"], put_cold: ["calculator_Request_stepper3", 31, "calc_16_"], delete_warm: ["calculator_Request_stepper4", 31, "calc_16_"], delete_cold: ["calculator_Request_stepper4", 31, "calc_16_"], delete: ["calculator_Request_stepper4", 31, "calc_16_"], retrieval_size_warm: ["calculator_Traffic_Read_radio", 10, ""], restore_size_ex: ["calculator_Traffic_Read_radio", 10, ""], restore_size_sd: ["calculator_Traffic_Read_radio", 10, ""], retrieval_size_cold: ["calculator_Traffic_Read_radio", 10, ""],
 };
+/** Archive restore line -> the page's restore type (Expedited, Standard, Direct reading). */
+export const RESTORE_TYPE: Record<string, string> = { restore_size_ex: "dataInfo_6_", restore_size_sd: "dataInfo_7_", retrieval_size_cold: "dataInfo_8_", retrieval_size_warm: "dataInfo_6_" };
 const unit = (value: number, measure: number) => `${value}BSSUNIT.${value > 1 ? "pluralUnit" : "unit"}.${measure}`;
 export async function buildObs(input: Extract<CardInput, { service: "obs" }>, context: BuilderContext) {
-  const classToken = ({ standard: "dataInfo_2_", warm: "dataInfo_3_", cold: "dataInfo_1_" } as Record<string, string>)[input.storage_class];
-  if (!classToken) throw new CalculatorError("VALIDATION", "Unknown OBS storage class");
   const az = input.multi_az ? "dataInfo_5_" : "dataInfo_4_", catalog = await context.productInfo("obs", input.region), items = catalog.product.obs_obs ?? [];
+  const sizeFactor = { standard: input.multi_az ? "size_3az" : "size", warm: input.multi_az ? "size_warm_3az" : "size_warm", cold: "size_cold" }[input.storage_class];
+  // Regions name the classes differently (ru-moscow-1 sells Warm and Cold, not Infrequent Access and Archive): the class token is the one on the size SKU.
+  const fixed = ({ standard: "dataInfo_2_", warm: "dataInfo_3_", cold: "dataInfo_1_" } as Record<string, string>)[input.storage_class];
+  const classToken = (items.find(p => p.resourceSpecCode === "obs.001" && typeof p.storageType === "string" && Array.isArray(p.planList) && p.planList.some(plan => (plan as Record<string, unknown>)?.usageFactor === sizeFactor))?.storageType as string | undefined) ?? fixed;
+  if (!classToken) throw new CalculatorError("VALIDATION", "Unknown OBS storage class");
   const products: Record<string, unknown>[] = [];
   if (input.package) {
     const wantCode = `${input.multi_az ? "obs.storage_3AZ" : "obs.storage"}.${input.package}`.toLowerCase();
@@ -45,13 +50,16 @@ export async function buildObs(input: Extract<CardInput, { service: "obs" }>, co
   const render: Record<string, Record<string, unknown>> = {
     calculator_productType_switch: { productType: "calc_29_" }, calculator_storageType_switch: { storageType: classToken }, calculator_multiAZ_radio: { multiAZType: az },
   };
-  const factors = {
-    standard: [input.multi_az ? "size_3az" : "size", "download.external", "download.cdn", "download_crr", "get", "put", "delete"],
-    warm: [input.multi_az ? "size_warm_3az" : "size_warm", "download_warm.external", "download.cdn", "download_crr", "get_warm", "put_warm", "delete_warm", "retrieval_size_warm", "transition_warm"],
-    cold: ["size_cold", "download_cold.external", "download.cdn", "get_cold", "put_cold", "delete_cold", "restore_size_ex", "transition_cold"],
-  }[input.storage_class];
   const supplied = input.components ?? [];
-  const full = factors.map(factor => supplied.find(component => component.factor === factor) ?? { factor, value: 0, ...(factor.startsWith("size") ? { unit: "GB" as const } : {}) });
+  const restore = supplied.find(c => c.factor === "restore_size_sd" || c.factor === "retrieval_size_cold")?.factor ?? "restore_size_ex"; // one restore line, whose type the page's radio shows
+  const factors = {
+    standard: [sizeFactor, "download.external", "download.cdn", "download_crr", "get", "put", "delete"],
+    warm: [sizeFactor, "download_warm.external", "download.cdn", "download_crr", "get_warm", "put_warm", "delete_warm", "retrieval_size_warm", "transition_warm"],
+    cold: [sizeFactor, "download_cold.external", "download.cdn", "get_cold", "put_cold", "delete_cold", restore, "transition_cold"],
+  }[input.storage_class];
+  const sold = (factor: string) => items.some(p => Array.isArray(p.planList) && p.planList.some(plan => (plan as Record<string, unknown>)?.usageFactor === factor));
+  // A default zero line the region does not sell (ru-moscow-1 has no CDN line) is left out; a line the quote asks for must exist.
+  const full = factors.filter(factor => factor === sizeFactor || supplied.some(c => c.factor === factor) || sold(factor)).map(factor => supplied.find(component => component.factor === factor) ?? { factor, value: 0, ...(factor.startsWith("size") ? { unit: "GB" as const } : {}) });
   const combined = [...full, ...supplied.filter(component => !factors.includes(component.factor))];
   for (const item of combined) {
     const factor = item.factor, size = factor.startsWith("size"), [spec, title, defaultMeasure, kind] = size ? ["obs.001", "calc_7_", 9, "size"] as const : components[factor] ?? ["obs.001", "calc_8_", 10, "unit"];
@@ -59,15 +67,15 @@ export async function buildObs(input: Extract<CardInput, { service: "obs" }>, co
     if (!raw) throw new CalculatorError("SPEC_NOT_FOUND", `OBS usage line ${factor} not found`);
     const p = productFromCatalog(raw, "ondemand", input.hours, plan => plan.usageFactor === factor);
     const measure = size ? item.unit === "TB" ? 9 : 10 : defaultMeasure, transition = factor.startsWith("transition");
-    if (size) Object.assign(p, { productNum: 720, usageValue: input.multi_az ? item.value * (item.unit === "TB" ? 1024 : 1) : item.value, usageMeasureId: input.multi_az ? 17 : measure, addToList_product: `${classToken} | ${item.value}${item.unit} | ${az} | ${input.storage_class === "cold" ? "calc_30_" : "calc_29_"} | calc_45_:1calc_46_` });
+    if (size) Object.assign(p, { productNum: 720 * input.months, usageValue: input.multi_az ? item.value * (item.unit === "TB" ? 1024 : 1) : item.value, usageMeasureId: input.multi_az ? 17 : measure, addToList_product: `${classToken} | ${item.value}${item.unit} | ${az} | ${input.storage_class === "cold" ? "calc_30_" : "calc_29_"} | calc_45_:${input.months}calc_46_` });
     else {
-      const label = transition ? `${item.value}calc_12_` : kind === "unit" ? unit(item.value, measure) : kind === "retrieval" ? `dataInfo_6_ | ${unit(item.value, measure)}` : `${item.value}${kind === "plain12" ? "calc_12_" : "calc_16_"}`;
+      const label = transition ? `${item.value}calc_12_` : kind === "unit" ? unit(item.value, measure) : kind === "retrieval" ? `${RESTORE_TYPE[factor] ?? "dataInfo_6_"} | ${unit(item.value, measure)}` : `${item.value}${kind === "plain12" ? "calc_12_" : "calc_16_"}`;
       Object.assign(p, { usageValue: transition ? item.value * 10000 : item.value, usageMeasureId: measure, productNum: 1, addToList_product: label, ...(!transition && kind !== "retrieval" ? { resourceSize: 1, resouceSizeMeasureId: measure, resourceMeasureName: "", resourceMeasurePluralName: "" } : {}) });
     }
     Object.assign(p, { addToList_title: title, inquiryTag: "normal", selfProductNum: 1 }); products.push(p);
     if (size) (render.calculator_multiAZ_radio ??= {})[input.multi_az ? "UNSET_Stepper_1" : "UNSET_Stepper_0"] = stepper(measure, item.value);
-    else if (steps[factor]) { const [key, mid, label] = steps[factor]; const control = render[key] ??= {}; control.UNSET_Stepper_0 = stepper(mid, item.value, label, label); if (key === "calculator_Traffic_Read_radio") control.restorationType = "dataInfo_6_"; }
+    else if (steps[factor]) { const [key, mid, label] = steps[factor]; const control = render[key] ??= {}; control.UNSET_Stepper_0 = stepper(mid, item.value, label, label); if (key === "calculator_Traffic_Read_radio") control.restorationType = RESTORE_TYPE[factor] ?? "dataInfo_6_"; }
   }
-  render.calculator_multiAZ_radio!.UNSET_Stepper_2 = stepper(20, 1);
+  render.calculator_multiAZ_radio!.UNSET_Stepper_2 = stepper(20, input.months);
   return assembleCard({ ...input, billing: "ondemand", products, description: "Object Storage Service", rewrite: render, includeTime: false, includeQuantity: false }, context.rate);
 }
