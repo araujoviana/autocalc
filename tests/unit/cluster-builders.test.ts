@@ -14,9 +14,11 @@ test("NAT, CCE and SFS retain their service-specific form state", async () => {
   const monthly = await buildNat({ service: "nat", region: "r", billing: "monthly", quantity: 1, periods: 3, hours: 730, size: "small" }, context);
   expect(monthly.rewriteValue).toMatchObject({ global_PERIODTIME: { UNSET_PeriodTime: { measureValue: 3 } } });
   expect(monthly.rewriteValue).not.toHaveProperty("global_ONDEMANDTIME");
-  const cce = await buildCce({ service: "cce", region: "r", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "standard", ha: true, scale: "small" }, context);
+  const cce = await buildCce({ service: "cce", region: "r", billing: "monthly", quantity: 1, periods: 1, hours: 730, cluster_type: "standard", ha: true, scale: "small" }, context);
   expect(cce.rewriteValue).toMatchObject({ global_QUANTITY: { UNSET_Stepper_0: { measureNameBeforeTrans: "" } } });
   expect(cce.selectedProduct.purchaseNum).toMatchObject({ measureNameBeforeTrans: "", measurePluralNameBeforeTrans: "" });
+  const cceOndemand = await buildCce({ service: "cce", region: "r", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "standard", ha: true, scale: "small" }, context);
+  expect(cceOndemand.rewriteValue).not.toHaveProperty("global_QUANTITY");
   const sfs = await buildSfs({ service: "sfsturbo", region: "r", billing: "yearly", quantity: 1, periods: 1, hours: 730, tier: "20MBps", size_gb: 3686.4 }, context);
   expect(sfs.rewriteValue).toMatchObject({ template_RENDER: { calculator_sfsPeriod_36input: 3.6 } });
 });

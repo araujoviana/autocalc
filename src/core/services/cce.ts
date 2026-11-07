@@ -12,9 +12,13 @@ export async function buildCce(input: Extract<CardInput, { service: "cce" }>, co
   const keys = ["productType", "clusterType", "clusterNodeScale", "clusterMasterScale"];
   Object.assign(p, { addToList_title: "dataInfo_15_", addToList_product: keys.map(key => String(p[key] ?? "None")).join(" | ") });
   const render = Object.fromEntries(keys.map(key => [key, p[key] ?? null]));
-  const card = await assembleCard({ ...input, products: [p], description: "Cloud Container Engine", rewrite: { calculator_clustertype_radio: render } }, context.rate);
-  const quantity = card.rewriteValue.global_QUANTITY as { UNSET_Stepper_0: { measureNameBeforeTrans: string; measurePluralNameBeforeTrans: string } };
-  quantity.UNSET_Stepper_0.measureNameBeforeTrans = ""; quantity.UNSET_Stepper_0.measurePluralNameBeforeTrans = "";
-  Object.assign(card.selectedProduct.purchaseNum as Record<string, unknown>, { measureNameBeforeTrans: "", measurePluralNameBeforeTrans: "" });
+  const card = await assembleCard({ ...input, products: [p], description: "Cloud Container Engine", rewrite: { calculator_clustertype_radio: render }, includeQuantity: input.billing !== "ondemand" }, context.rate);
+  const quantity = card.rewriteValue.global_QUANTITY as { UNSET_Stepper_0: { measureNameBeforeTrans: string; measurePluralNameBeforeTrans: string } } | undefined;
+  if (quantity) {
+    quantity.UNSET_Stepper_0.measureNameBeforeTrans = ""; quantity.UNSET_Stepper_0.measurePluralNameBeforeTrans = "";
+  }
+  if (card.selectedProduct.purchaseNum) {
+    Object.assign(card.selectedProduct.purchaseNum as Record<string, unknown>, { measureNameBeforeTrans: "", measurePluralNameBeforeTrans: "" });
+  }
   return card;
 }
