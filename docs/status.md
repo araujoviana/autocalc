@@ -55,3 +55,7 @@ autocalc apply-quote --path quote.yaml          # saves one list; delete test li
 
 Use a list name that starts with `[autocalc]` so test lists are easy to find in `autocalc lists`.
 See [Your first quote](tutorials/first-quote.md) for the file format.
+
+## Compatibility
+
+Per-service live replay results are in `docs/compat/` (`bun run compat <service>`). OBS: 16 scenarios pass (usage by class and AZ, packages incl. multi-AZ and traffic, Archive restore types, storage months). Parallel file system is not quotable (the page drops its capacity line). Other services: not yet replayed; see the roadmap item 7b.

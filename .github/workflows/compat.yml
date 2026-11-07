@@ -1,0 +1,26 @@
+name: Compatibility replay
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: Service to replay against the live calculator page (scenarios in tests/support/compat/scenarios)
+        required: true
+        default: obs
+permissions:
+  contents: read
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - run: bun --bun x playwright install --with-deps chromium
+      - run: bun run compat ${{ inputs.service }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compat-${{ inputs.service }}
+          path: docs/compat/${{ inputs.service }}.md

@@ -9,6 +9,7 @@
     "check": "bun --bun tsc --noEmit",
     "test:offline": "bun test tests/unit tests/integration",
     "test:live": "bun test tests/live",
+    "compat": "bun tests/support/compat/run.ts",
     "check:boundaries": "bun scripts/check-boundaries.ts"
   },
   "dependencies": {
