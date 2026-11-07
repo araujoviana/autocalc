@@ -1,0 +1,110 @@
+version: "1"
+
+metadata:
+  id: dasa-pacs-telemedicine
+  customer: "Diagnosticos da America S.A."
+  title_prefix: "DICOM Medical Imaging & EHR"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  dicom_gateway:
+    service: ecs
+    needs:
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      os: rocky-9.6
+      system_disk:
+        type: ultra-high-io
+        size: "100 GiB"
+
+environments:
+  prod:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: dicom-ingestion-nodes
+    environment: prod
+    use: dicom_gateway
+    quantity: 3
+    billing: yearly
+
+  - id: ehr-postgres-rds
+    environment: prod
+    service: rds
+    billing: yearly
+    needs:
+      engine: postgresql
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      version: "15"
+      type: primary-standby
+      storage_type: cloud-ssd
+      storage_gb: "1000 GB"
+
+  - id: dicom-hot-share-sfs
+    environment: prod
+    service: sfs
+    billing: ondemand
+    options:
+      storage_space_gb: "5000 GB"
+
+  - id: pacs-longterm-obs
+    environment: prod
+    service: obs
+    billing: ondemand
+    options:
+      storage_class: warm
+      capacity: "50 TB"
+      read_traffic: "1 TB"
+      read_requests: "500k"
+      write_requests: "200k"
+
+  - id: hospital-vault-cbr
+    environment: prod
+    service: cbr
+    billing: monthly
+    options:
+      vault_type: Server
+      vault_spec: server.backup
+      capacity_gb: "4000 GB"
+
+  - id: hipaa-host-security-hss
+    environment: prod
+    service: hss
+    billing: monthly
+    options:
+      edition: Enterprise
+      quantity: 3
+
+  - id: hospital-perimeter-cfw
+    environment: prod
+    service: cfw
+    billing: monthly
+    options:
+      edition: Standard
+      eips: 5
+      bandwidth_mbps: "20 Mbps"
+
+  - id: clinic-site-vpn
+    environment: prod
+    service: vpn
+    billing: monthly
+    options:
+      mode: Vpn
+      network_type: "Public network"
+      spec: Professional2
+      shared_bandwidth_mbps: "50 Mbps"
+      connection_groups: 10

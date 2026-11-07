@@ -1,0 +1,97 @@
+version: "1"
+
+metadata:
+  id: wildlife-studios-battle-royale
+  customer: "Wildlife Studios"
+  title_prefix: "Global Matchmaking & Game Ticks"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: ondemand
+
+templates:
+  dedicated_tick_host:
+    service: ecs
+    needs:
+      vcpus: 16
+      memory: "32 GiB"
+    options:
+      os: ubuntu-22.04
+      system_disk:
+        type: ultra-high-io
+        size: "80 GiB"
+
+environments:
+  latam_south:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: game-tick-cce-cluster
+    environment: latam_south
+    service: cce
+    billing: ondemand
+    options:
+      scale: 200nodes
+      master_az: 3AZ
+
+  - id: game-tick-worker-nodes
+    environment: latam_south
+    use: dedicated_tick_host
+    quantity: 12
+    billing: monthly
+
+  - id: tournament-burst-cci
+    environment: latam_south
+    service: cci
+    billing: ondemand
+    options:
+      vcpus: 32
+      memory_gb: "64 GB"
+
+  - id: leaderboard-redis-cluster
+    environment: latam_south
+    service: redis
+    billing: ondemand
+    options:
+      version: "6.0"
+      instance_type: Cluster
+      architecture: x86
+      replicas: 2
+      capacity_gb: "32 GB"
+
+  - id: player-profile-dds
+    environment: latam_south
+    service: dds
+    billing: monthly
+    needs:
+      vcpus: 4
+      memory: "16 GiB"
+    options:
+      version: "4.4"
+      type: replica-set
+      storage_gb: "500 GB"
+
+  - id: udp-ingress-elb
+    environment: latam_south
+    service: elb
+    billing: ondemand
+    options:
+      network_type: "Public network"
+      billing_mode: bandwidth
+      bandwidth_mbps: "300 Mbps"
+      public_ip_count: 1
+
+  - id: game-telemetry-apm
+    environment: latam_south
+    service: apm
+    billing: ondemand
+    options:
+      probe_days: 500

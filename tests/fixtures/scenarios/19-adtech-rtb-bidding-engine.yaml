@@ -1,0 +1,102 @@
+version: "1"
+
+metadata:
+  id: rtw-programmatic-ad-bidding
+  customer: "RTB House Latam"
+  title_prefix: "Sub-10ms Real-Time Ad Exchange Bidder"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: ondemand
+
+templates:
+  rtb_bidder_node:
+    service: ecs
+    needs:
+      vcpus: 16
+      memory: "32 GiB"
+    options:
+      os: ubuntu-22.04
+      system_disk:
+        type: ultra-high-io
+        size: "80 GiB"
+
+environments:
+  rtb_prod:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: rtb-bidder-fleet
+    environment: rtb_prod
+    use: rtb_bidder_node
+    quantity: 12
+    billing: monthly
+
+  - id: user-audience-redis
+    environment: rtb_prod
+    service: redis
+    billing: ondemand
+    options:
+      version: "6.0"
+      instance_type: Cluster
+      architecture: x86
+      replicas: 2
+      capacity_gb: "32 GB"
+
+  - id: bid-floor-cache-memcached
+    environment: rtb_prod
+    service: memcached
+    billing: ondemand
+    options:
+      instance_type: Master/Standby
+      capacity_gb: "16 GB"
+
+  - id: impression-click-kafka
+    environment: rtb_prod
+    service: kafka
+    billing: ondemand
+    options:
+      flavor: kafka.2u4g.cluster.small
+      brokers: 6
+      storage_type: ultra-high-io
+      storage_gb: "900 GB"
+
+  - id: attribution-burst-cci
+    environment: rtb_prod
+    service: cci
+    billing: ondemand
+    options:
+      vcpus: 32
+      memory_gb: "64 GB"
+
+  - id: exchange-ingress-elb
+    environment: rtb_prod
+    service: elb
+    billing: ondemand
+    options:
+      network_type: "Public network"
+      billing_mode: bandwidth
+      bandwidth_mbps: "500 Mbps"
+      public_ip_count: 2
+
+  - id: bidder-egress-nat
+    environment: rtb_prod
+    service: nat
+    billing: ondemand
+    options:
+      size: XL
+
+  - id: bidder-latency-apm
+    environment: rtb_prod
+    service: apm
+    billing: ondemand
+    options:
+      probe_days: 600

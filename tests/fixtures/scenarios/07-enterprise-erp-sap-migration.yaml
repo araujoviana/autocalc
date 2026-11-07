@@ -1,0 +1,114 @@
+version: "1"
+
+metadata:
+  id: totvs-erp-migration-factory
+  customer: "TOTVS Cloud Enterprise"
+  title_prefix: "SAP & Protheus Cloud Migration"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  erp_app_server:
+    service: ecs
+    needs:
+      vcpus: 16
+      memory: "64 GiB"
+    options:
+      os: suse-15
+      system_disk:
+        type: ultra-high-io
+        size: "120 GiB"
+      data_disks:
+        - type: extreme-ssd
+          size: "500 GiB"
+
+environments:
+  prod:
+    region: sa-brazil-1
+    availability: multi-az
+  dr:
+    region: sa-brazil-1
+    availability: single-az
+
+resources:
+  - id: erp-dialog-instances
+    environment: prod
+    use: erp_app_server
+    quantity: 4
+    billing: yearly
+
+  - id: erp-sqlserver-rds
+    environment: prod
+    service: rds
+    billing: yearly
+    needs:
+      engine: sqlserver
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      version: "2019_SE"
+      type: primary-standby
+      storage_type: ultra-high-io
+      storage_gb: "1000 GB"
+
+  - id: db-replication-drs
+    environment: prod
+    service: drs
+    billing: ondemand
+    options:
+      direction: up
+      task_type: sync-single
+      spec: medium
+
+  - id: storage-disaster-recovery-sdrs
+    environment: dr
+    service: sdrs
+    billing: ondemand
+    options:
+      quantity: 2
+
+  - id: erp-dedicated-hrds
+    environment: prod
+    service: hrds
+    billing: monthly
+    needs:
+      engine: mysql
+      vcpus: 4
+      memory: "8 GiB"
+    options:
+      storage_gb: "300 GB"
+
+  - id: offline-seed-des
+    environment: prod
+    service: des
+    billing: ondemand
+    options:
+      media: disk
+      devices: 2
+
+  - id: dedicated-san-dss
+    environment: prod
+    service: dss
+    billing: monthly
+    options:
+      type: ultra-high-io
+      size_tb: "43.35 TB"
+
+  - id: sap-hana-log-evs
+    environment: prod
+    service: evs
+    billing: monthly
+    quantity: 4
+    options:
+      type: extreme-ssd
+      size: "500 GiB"
+

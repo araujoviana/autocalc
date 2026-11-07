@@ -1,0 +1,99 @@
+version: "1"
+
+metadata:
+  id: xp-inc-zero-trust-soc
+  customer: "XP Investimentos"
+  title_prefix: "Zero-Trust Perimeter & Financial SOC"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  siem_collector:
+    service: ecs
+    needs:
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      os: almalinux-9.4
+      system_disk:
+        type: ultra-high-io
+        size: "100 GiB"
+
+environments:
+  secops:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: siem-collector-nodes
+    environment: secops
+    use: siem_collector
+    quantity: 3
+    billing: yearly
+
+  - id: border-cloud-firewall-cfw
+    environment: secops
+    service: cfw
+    billing: monthly
+    options:
+      edition: Standard
+      eip_Add: 10
+      bandwidth_Add: 20
+      vpc_Add: 2
+
+  - id: perimeter-waf-enterprise
+    environment: secops
+    service: waf
+    billing: monthly
+    options:
+      edition: Enterprise
+      domain_expansion: 2
+      rule_expansion: 2
+
+  - id: workload-protection-hss
+    environment: secops
+    service: hss
+    billing: monthly
+    options:
+      edition: WTP
+      quantity: 10
+
+  - id: soc-trace-apm
+    environment: secops
+    service: apm
+    billing: ondemand
+    options:
+      probe_days: 300
+
+  - id: security-audit-logs-lts
+    environment: secops
+    service: lts
+    billing: ondemand
+    options:
+      raw_log_size_gb: "600 GB"
+      retention_days: 90
+
+  - id: envelope-kms-hsm-dew
+    environment: secops
+    service: dew
+    billing: ondemand
+    options:
+      custom_keys: 25
+      hsm_edition: standard
+      hsm_instances: 2
+
+  - id: private-service-vpcep
+    environment: secops
+    service: vpcep
+    billing: ondemand
+    options:
+      traffic_gb: "1000 GB"

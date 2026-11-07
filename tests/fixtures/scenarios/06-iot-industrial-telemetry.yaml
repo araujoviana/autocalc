@@ -1,0 +1,104 @@
+version: "1"
+
+metadata:
+  id: vale-smart-mine-iot
+  customer: "Vale S.A. Digital Mining"
+  title_prefix: "Autonomous Haulage & Sensor Telemetry"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  mqtt_broker_node:
+    service: ecs
+    needs:
+      vcpus: 4
+      memory: "16 GiB"
+    options:
+      os: ubuntu-22.04
+      system_disk:
+        type: high-io
+        size: "80 GiB"
+
+environments:
+  carajas_hub:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: mqtt-edge-collector-nodes
+    environment: carajas_hub
+    use: mqtt_broker_node
+    quantity: 4
+    billing: yearly
+
+  - id: telemetry-kafka-bus
+    environment: carajas_hub
+    service: kafka
+    billing: ondemand
+    options:
+      flavor: kafka.2u4g.cluster.small
+      brokers: 3
+      storage_type: ultra-high-io
+      storage_gb: "600 GB"
+
+  - id: command-dispatch-rabbitmq
+    environment: carajas_hub
+    service: rabbitmq
+    billing: monthly
+    options:
+      flavor: rabbitmq.2u4g.cluster
+      brokers: 3
+      storage_type: ultra-high-io
+      storage_gb: "300 GB"
+
+  - id: sensor-timeseries-nosql
+    environment: carajas_hub
+    service: nosql
+    billing: ondemand
+    needs:
+      vcpus: 4
+      memory: "16 GiB"
+    options:
+      engine: InfluxDB
+      nodes: 2
+      storage_gb: "400 GB"
+
+  - id: anomaly-detector-fn
+    environment: carajas_hub
+    service: function
+    billing: ondemand
+    options:
+      requests_ten_thousands: 800
+      execution_seconds: 400000
+      memory_mb: "512 MB"
+
+  - id: mine-site-ipsec-vpn
+    environment: carajas_hub
+    service: vpn
+    billing: ondemand
+    options:
+      mode: Eip2
+      network_type: "Public network"
+      spec: "1000"
+      eip1_bandwidth_mbps: "50 Mbps"
+      eip2_bandwidth_mbps: "50 Mbps"
+      connection_groups: 2
+
+  - id: raw-telemetry-obs
+    environment: carajas_hub
+    service: obs
+    billing: ondemand
+    options:
+      storage_class: standard
+      capacity: "25 TB"
+      write_requests: "2000k"
+      read_requests: "500k"

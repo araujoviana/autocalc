@@ -1,0 +1,109 @@
+version: "1"
+
+metadata:
+  id: ifood-realtime-dispatch-routing
+  customer: "iFood.com Agencia de Restaurantes"
+  title_prefix: "Real-Time Courier Routing & Dispatch"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  dispatch_engine_node:
+    service: ecs
+    needs:
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      os: ubuntu-22.04
+      system_disk:
+        type: ultra-high-io
+        size: "80 GiB"
+
+environments:
+  dispatch_prod:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: dispatch-cce-control
+    environment: dispatch_prod
+    service: cce
+    billing: ondemand
+    options:
+      scale: 200nodes
+      master_az: 3AZ
+
+  - id: dispatch-worker-fleet
+    environment: dispatch_prod
+    use: dispatch_engine_node
+    quantity: 10
+    billing: yearly
+
+  - id: gps-location-stream-kafka
+    environment: dispatch_prod
+    service: kafka
+    billing: ondemand
+    options:
+      flavor: kafka.2u4g.cluster.small
+      brokers: 6
+      storage_type: ultra-high-io
+      storage_gb: "600 GB"
+
+  - id: order-matching-rabbitmq
+    environment: dispatch_prod
+    service: rabbitmq
+    billing: ondemand
+    options:
+      flavor: rabbitmq.2u4g.cluster
+      brokers: 3
+      storage_type: ultra-high-io
+      storage_gb: "300 GB"
+
+  - id: courier-geofence-redis
+    environment: dispatch_prod
+    service: redis
+    billing: ondemand
+    options:
+      version: "6.0"
+      instance_type: Cluster
+      architecture: x86
+      replicas: 2
+      capacity_gb: "16 GB"
+
+  - id: delivery-history-dds
+    environment: dispatch_prod
+    service: dds
+    billing: monthly
+    needs:
+      vcpus: 4
+      memory: "16 GiB"
+    options:
+      version: "4.4"
+      type: cluster
+      shards: 2
+      storage_gb: "400 GB"
+
+  - id: eta-webhook-fn
+    environment: dispatch_prod
+    service: function
+    billing: ondemand
+    options:
+      requests_ten_thousands: 1500
+      execution_seconds: 600000
+      memory_mb: "512 MB"
+
+  - id: partner-egress-nat
+    environment: dispatch_prod
+    service: nat
+    billing: ondemand
+    options:
+      size: M

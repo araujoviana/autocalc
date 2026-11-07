@@ -1,0 +1,99 @@
+version: "1"
+
+metadata:
+  id: creditas-auto-home-underwriting
+  customer: "Creditas Solucoes Financeiras"
+  title_prefix: "Automated Credit Scoring & Policy Engine"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  underwriting_service_node:
+    service: ecs
+    needs:
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      os: ubuntu-22.04
+      system_disk:
+        type: ultra-high-io
+        size: "100 GiB"
+
+environments:
+  risk_prod:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: underwriting-workers
+    environment: risk_prod
+    use: underwriting_service_node
+    quantity: 4
+    billing: yearly
+
+  - id: claims-dedicated-hrds
+    environment: risk_prod
+    service: hrds
+    billing: monthly
+    needs:
+      engine: postgresql
+      vcpus: 4
+      memory: "8 GiB"
+    options:
+      storage_gb: "240 GB"
+
+  - id: credit-scoring-burst-cci
+    environment: risk_prod
+    service: cci
+    billing: ondemand
+    options:
+      vcpus: 16
+      memory_gb: "32 GB"
+
+  - id: document-extraction-maas
+    environment: risk_prod
+    service: maas
+    billing: ondemand
+    options:
+      model: qwen3-32b
+      tokens_thousands: 30000
+
+  - id: policy-contract-rds
+    environment: risk_prod
+    service: rds
+    billing: yearly
+    needs:
+      engine: mysql
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      version: "8.0"
+      type: primary-standby
+      storage_type: cloud-ssd
+      storage_gb: "600 GB"
+
+  - id: bureau-replication-drs
+    environment: risk_prod
+    service: drs
+    billing: ondemand
+    options:
+      direction: up
+      task_type: sync-single
+      spec: medium
+
+  - id: risk-api-gateway
+    environment: risk_prod
+    service: apig
+    billing: ondemand
+    options:
+      edition: Basic
+      public_outbound_bandwidth_mbps: "10 Mbps"

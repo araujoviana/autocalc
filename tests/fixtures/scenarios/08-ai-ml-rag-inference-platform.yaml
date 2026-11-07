@@ -1,0 +1,96 @@
+version: "1"
+
+metadata:
+  id: itau-genai-rag-platform
+  customer: "Banco Itau Unibanco"
+  title_prefix: "Corporate LLM Inference & RAG Search"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: ondemand
+
+templates:
+  rag_orchestrator:
+    service: ecs
+    needs:
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      os: ubuntu-22.04
+      system_disk:
+        type: ultra-high-io
+        size: "100 GiB"
+
+environments:
+  ai_prod:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: rag-orchestrator-nodes
+    environment: ai_prod
+    use: rag_orchestrator
+    quantity: 4
+    billing: monthly
+
+  - id: rag-embedding-burst-cci
+    environment: ai_prod
+    service: cci
+    billing: ondemand
+    options:
+      vcpus: 32
+      memory_gb: "64 GB"
+
+  - id: maas-deepseek-tokens
+    environment: ai_prod
+    service: maas
+    billing: ondemand
+    options:
+      model: deepseek-v3-671b
+      tokens_thousands: 50000
+
+  - id: vector-metadata-dds
+    environment: ai_prod
+    service: dds
+    billing: monthly
+    needs:
+      vcpus: 4
+      memory: "16 GiB"
+    options:
+      storage_gb: "400 GB"
+
+  - id: prompt-cache-redis
+    environment: ai_prod
+    service: redis
+    billing: monthly
+    options:
+      version: "6.0"
+      instance_type: Master/Standby
+      architecture: x86
+      replicas: 2
+      capacity_gb: "16 GB"
+
+  - id: corpus-lake-obs
+    environment: ai_prod
+    service: obs
+    billing: ondemand
+    options:
+      storage_class: standard
+      capacity: "15 TB"
+      read_requests: "2000k"
+      write_requests: "500k"
+
+  - id: ai-gateway-apig
+    environment: ai_prod
+    service: apig
+    billing: ondemand
+    options:
+      edition: Basic
+      public_outbound_bandwidth_mbps: "20 Mbps"

@@ -3,6 +3,7 @@
  * into fully resolved concrete resource definitions with deterministic overrides. */
 import { CalculatorError } from "../errors.ts";
 import type { QuoteDocument, ResourceDeclaration, ResourceTemplate } from "./ast.ts";
+import { normalizeServiceAlias } from "./normalizer.ts";
 
 export interface ExpandedResource {
   id: string;
@@ -59,13 +60,14 @@ export function expandResources(doc: QuoteDocument): ExpandedResource[] {
       }
     }
 
-    const service = (res.service ?? tmpl?.service)?.toLowerCase().trim();
-    if (!service) {
+    const rawService = (res.service ?? tmpl?.service)?.toLowerCase().trim();
+    if (!rawService) {
       throw new CalculatorError(
         "VALIDATION",
         `Resource '${res.id}' has no service specified and does not inherit one from template '${res.use}'.`
       );
     }
+    const service = normalizeServiceAlias(rawService);
 
     // Resolve environment
     let envRegion: string | undefined;

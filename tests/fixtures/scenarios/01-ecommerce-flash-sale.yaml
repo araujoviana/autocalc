@@ -1,0 +1,121 @@
+version: "1"
+
+metadata:
+  id: mercadolivre-flash-sale-ecommerce
+  customer: "MercadoLivre Latam"
+  title_prefix: "Black Friday Flash Sale Core"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  storefront_node:
+    service: ecs
+    needs:
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      os: ubuntu-22.04
+      system_disk:
+        type: high-io
+        size: "100 GiB"
+
+environments:
+  prod:
+    region: sa-brazil-1
+    availability: multi-az
+  edge:
+    region: sa-brazil-1
+    availability: single-az
+
+resources:
+  - id: storefront-api-nodes
+    environment: prod
+    use: storefront_node
+    quantity: 6
+    billing: yearly
+
+  - id: checkout-worker-nodes
+    environment: prod
+    use: storefront_node
+    quantity: 4
+    billing: monthly
+    needs:
+      vcpus: 16
+      memory: "64 GiB"
+
+  - id: public-ingress-elb
+    environment: prod
+    service: elb
+    billing: ondemand
+    options:
+      network_type: "Public network"
+      billing_mode: traffic
+      public_ip_count: 1
+
+  - id: egress-nat-gateway
+    environment: prod
+    service: nat
+    billing: ondemand
+    options:
+      size: L
+
+  - id: nat-public-eip
+    environment: prod
+    service: eip
+    billing: ondemand
+    options:
+      traffic_gb: "500 GB"
+
+  - id: order-primary-rds
+    environment: prod
+    service: rds
+    billing: yearly
+    needs:
+      engine: mysql
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      version: "8.0"
+      type: primary-standby
+      storage_type: cloud-ssd
+      storage_gb: "500 GB"
+
+  - id: cart-session-redis
+    environment: prod
+    service: redis
+    billing: monthly
+    options:
+      version: "6.0"
+      instance_type: Master/Standby
+      architecture: x86
+      replicas: 2
+      capacity_gb: "16 GB"
+
+  - id: product-media-obs
+    environment: edge
+    service: obs
+    billing: ondemand
+    options:
+      storage_class: standard
+      capacity: "10 TB"
+      traffic: "5 TB/mo"
+      read_requests: "5000k"
+      write_requests: "500k"
+
+  - id: edge-waf-protection
+    environment: edge
+    service: waf
+    billing: monthly
+    options:
+      edition: Professional
+      domain_expansion: 1
+      rule_expansion: 1

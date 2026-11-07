@@ -9,7 +9,7 @@ import { publishQuoteTool } from "./publish.ts";
 import { loadService } from "./schema-model.ts";
 import { legalOptions, modesOf, PRIMARY_GROUP, SPEC_ARG, SPEC_RULES, USAGE_PRICED, VERIFIED } from "./services/publication.ts";
 import { draftQuoteTool } from "./workflow.ts";
-import { compileQuote, detectCatalogPricingAnomalies, buildCanonicalQuoteIR, generateLockfile, stringifyLockfile, sanitizeTitle, type QuoteDocument } from "./compiler/index.ts";
+import { compileQuote, detectCatalogPricingAnomalies, buildCanonicalQuoteIR, generateLockfile, stringifyLockfile, sanitizeTitle, normalizeResourceToCard, type QuoteDocument } from "./compiler/index.ts";
 import type { ActionContext } from "./types.ts";
 import { progress } from "./progress.ts";
 import { CardInput, ECS_DEFAULT_IMAGE } from "./schemas.ts";
@@ -28,16 +28,9 @@ export function parse(text: string, path?: string): Quote {
   try { doc = Bun.YAML.parse(text); } catch (error) { throw invalid(`The quote file is not valid YAML: ${error instanceof Error ? error.message : String(error)}`, "cards"); }
   if (isObject(doc) && doc.version === "1") {
     const compiled = compileQuote(text);
-    const cards = compiled.resources.map(r => ({
-      id: r.id,
-      service: r.service,
-      region: r.region,
-      billing: r.billing,
-      quantity: r.quantity,
-      needs: r.needs,
-      spec: r.spec,
-      options: r.options,
-    }));
+    const cards = compiled.resources.map(r =>
+      normalizeResourceToCard(r, compiled.document.horizon?.billing_policy)
+    );
     return {
       customer: compiled.document.metadata.customer,
       cards,
@@ -91,9 +84,11 @@ export async function validate(quote: Quote, dir?: string): Promise<Dict[]> {
     for (const [option, value] of Object.entries(card.options ?? {})) {
       if (!legal.includes(option)) { bad(card, option, `${service} has no option '${option}'.`, { allowed: legal, hint: SCHEMA_HINT }); continue; }
       if (typeof value !== "number") continue;
-      for (const r of (controls.get(option)?.ranges.some(range => range.when != null) ? [] : controls.get(option)?.ranges.filter(range => range.min !== range.max)) /* a control whose ranges depend on page state has no single limit */ /* min = max is the page default of a state-dependent control, not a limit */ ?? [])
-        if ((r.min != null && value < r.min) || (r.max != null && value > r.max))
-          bad(card, option, `${value} is outside the range ${g(r.min)}..${g(r.max)} ${r.unit ?? ""}`.trim(), { range: { min: r.min ?? null, max: r.max ?? null, step: r.step }, hint: SCHEMA_HINT });
+      const unconditionalRanges = (controls.get(option)?.ranges.some(range => range.when != null) ? [] : controls.get(option)?.ranges.filter(range => range.min !== range.max)) /* a control whose ranges depend on page state has no single limit */ /* min = max is the page default of a state-dependent control, not a limit */ ?? [];
+      if (unconditionalRanges.length && unconditionalRanges.every(r => (r.min != null && value < r.min) || (r.max != null && value > r.max))) {
+        const r = unconditionalRanges[0]!;
+        bad(card, option, `${value} is outside the range ${g(r.min)}..${g(r.max)} ${r.unit ?? ""}`.trim(), { range: { min: r.min ?? null, max: r.max ?? null, step: r.step }, hint: SCHEMA_HINT });
+      }
     }
   }
   return errors;

@@ -1,0 +1,94 @@
+version: "1"
+
+metadata:
+  id: b3-market-surveillance-lakehouse
+  customer: "B3 Brasil Bolsa Balcao"
+  title_prefix: "Tick-by-Tick Market Surveillance Lakehouse"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  airflow_scheduler:
+    service: ecs
+    needs:
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      os: debian-12
+      system_disk:
+        type: high-io
+        size: "100 GiB"
+
+environments:
+  analytics:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: airflow-orchestration-nodes
+    environment: analytics
+    use: airflow_scheduler
+    quantity: 2
+    billing: yearly
+
+  - id: surveillance-mpp-gaussdb
+    environment: analytics
+    service: gaussdb
+    billing: monthly
+    needs:
+      vcpus: 16
+      memory: "64 GiB"
+    options:
+      storage_gb: "500 GB"
+
+  - id: spark-streaming-cce
+    environment: analytics
+    service: cce
+    billing: ondemand
+    options:
+      scale: 200nodes
+      master_az: 3AZ
+
+  - id: lakehouse-cdc-drs
+    environment: analytics
+    service: drs
+    billing: ondemand
+    options:
+      task_type: sync-single
+
+  - id: order-book-kafka
+    environment: analytics
+    service: kafka
+    billing: monthly
+    options:
+      flavor: kafka.2u4g.cluster.small
+      brokers: 3
+      storage_type: ultra-high-io
+      storage_gb: "900 GB"
+
+  - id: parquet-lake-obs
+    environment: analytics
+    service: obs
+    billing: ondemand
+    options:
+      storage_class: standard
+      capacity: "80 TB"
+      read_requests: "8000k"
+      write_requests: "2000k"
+
+  - id: bi-query-cache-memcached
+    environment: analytics
+    service: memcached
+    billing: ondemand
+    options:
+      instance_type: Master/Standby
+      capacity_gb: "8 GB"

@@ -1,0 +1,103 @@
+version: "1"
+
+metadata:
+  id: descomplica-enem-exam-platform
+  customer: "Descomplica Educacao Digital"
+  title_prefix: "National Mock Exam & Video LMS"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  lms_backend_node:
+    service: ecs
+    needs:
+      vcpus: 4
+      memory: "16 GiB"
+    options:
+      os: ubuntu-22.04
+      system_disk:
+        type: high-io
+        size: "80 GiB"
+
+environments:
+  lms_prod:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: lms-api-servers
+    environment: lms_prod
+    use: lms_backend_node
+    quantity: 4
+    billing: yearly
+
+  - id: exam-day-burst-cci
+    environment: lms_prod
+    service: cci
+    billing: ondemand
+    options:
+      vcpus: 64
+      memory_gb: "128 GB"
+
+  - id: auto-grader-fn
+    environment: lms_prod
+    service: function
+    billing: ondemand
+    options:
+      requests_ten_thousands: 2000
+      execution_seconds: 800000
+      memory_mb: "1024 MB"
+
+  - id: student-records-rds
+    environment: lms_prod
+    service: rds
+    billing: yearly
+    needs:
+      engine: postgresql
+      vcpus: 4
+      memory: "16 GiB"
+    options:
+      version: "15"
+      type: primary-standby
+      storage_type: cloud-ssd
+      storage_gb: "400 GB"
+
+  - id: exam-timer-redis
+    environment: lms_prod
+    service: redis
+    billing: monthly
+    options:
+      version: "6.0"
+      instance_type: Master/Standby
+      architecture: x86
+      replicas: 2
+      capacity_gb: "8 GB"
+
+  - id: lecture-videos-obs
+    environment: lms_prod
+    service: obs
+    billing: ondemand
+    options:
+      storage_class: standard
+      capacity: "30 TB"
+      traffic: "8 TB/mo"
+      read_requests: "4000k"
+      write_requests: "300k"
+
+  - id: lms-public-elb
+    environment: lms_prod
+    service: elb
+    billing: ondemand
+    options:
+      network_type: "Public network"
+      billing_mode: traffic
+      public_ip_count: 1

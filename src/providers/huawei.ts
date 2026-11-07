@@ -15,8 +15,13 @@ export interface HuaweiSource {
 
 /** Python's _parse_compute: vCPU count and memory in GB from the catalog description. */
 export function parseCompute(description: string): { vcpus?: number; memory_gb?: number } {
-  const v = /vCPUs:\s*([\d.]+)/.exec(description), m = /Memory:\s*([\d.]+)\s*MB/.exec(description);
-  return { ...(v ? { vcpus: Number(v[1]) } : {}), ...(m ? { memory_gb: Number(m[1]) / 1024 } : {}) };
+  const v = /\b(?:vCPUs?|CPU|cpu):\s*([\d.]+)/.exec(description);
+  const mMb = /\b(?:Memory|mem|memery|capacity):\s*([\d.]+)\s*MB\b/i.exec(description);
+  const mGb = !mMb ? /\b(?:Memory|mem|memery|capacity):\s*([\d.]+)\s*GB\b/i.exec(description) : null;
+  return {
+    ...(v ? { vcpus: Number(v[1]) } : {}),
+    ...(mMb ? { memory_gb: Number(mMb[1]) / 1024 } : mGb ? { memory_gb: Number(mGb[1]) } : {}),
+  };
 }
 
 export class HuaweiProvider implements Provider {

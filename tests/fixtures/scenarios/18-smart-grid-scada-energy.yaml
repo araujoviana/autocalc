@@ -1,0 +1,104 @@
+version: "1"
+
+metadata:
+  id: Neoenergia-smart-grid-scada
+  customer: "Neoenergia S.A."
+  title_prefix: "Smart Grid AMI Metering & SCADA Historian"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  scada_gateway_node:
+    service: ecs
+    needs:
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      os: rocky-9.6
+      system_disk:
+        type: ultra-high-io
+        size: "100 GiB"
+
+environments:
+  grid_prod:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: scada-protocol-gateways
+    environment: grid_prod
+    use: scada_gateway_node
+    quantity: 4
+    billing: yearly
+
+  - id: ami-meter-historian-nosql
+    environment: grid_prod
+    service: nosql
+    billing: ondemand
+    needs:
+      vcpus: 4
+      memory: "16 GiB"
+    options:
+      engine: InfluxDB
+      nodes: 2
+      storage_gb: "800 GB"
+
+  - id: grid-load-forecast-taurusdb
+    environment: grid_prod
+    service: taurusdb
+    billing: monthly
+    needs:
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      storage_gb: "600 GB"
+
+  - id: meter-reading-bus-kafka
+    environment: grid_prod
+    service: kafka
+    billing: ondemand
+    options:
+      flavor: kafka.2u4g.cluster.small
+      brokers: 3
+      storage_type: ultra-high-io
+      storage_gb: "600 GB"
+
+  - id: substation-redundant-vpn
+    environment: grid_prod
+    service: vpn
+    billing: monthly
+    options:
+      mode: Eip2
+      network_type: "Public network"
+      spec: "1000"
+      eip1_bandwidth_mbps: "20 Mbps"
+      eip2_bandwidth_mbps: "20 Mbps"
+      connection_groups: 5
+
+  - id: scada-perimeter-cfw
+    environment: grid_prod
+    service: cfw
+    billing: monthly
+    options:
+      edition: Standard
+      eip_Add: 5
+      bandwidth_Add: 10
+      vpc_Add: 1
+
+  - id: historian-backup-cbr
+    environment: grid_prod
+    service: cbr
+    billing: monthly
+    options:
+      vault_type: Disk
+      vault_spec: disk.backup
+      capacity_gb: "3000 GB"

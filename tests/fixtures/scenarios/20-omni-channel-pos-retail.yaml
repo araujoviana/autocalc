@@ -1,0 +1,104 @@
+version: "1"
+
+metadata:
+  id: magalu-omnichannel-pos-core
+  customer: "Magazine Luiza S.A."
+  title_prefix: "Omni-Channel Store POS & Inventory Core"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  pos_sync_node:
+    service: ecs
+    needs:
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      os: ubuntu-22.04
+      system_disk:
+        type: ultra-high-io
+        size: "100 GiB"
+
+environments:
+  retail_prod:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: pos-sync-gateway-nodes
+    environment: retail_prod
+    use: pos_sync_node
+    quantity: 6
+    billing: yearly
+
+  - id: store-inventory-ddm
+    environment: retail_prod
+    service: ddm
+    billing: ondemand
+    options:
+      flavor: ddm.4u8g.node
+      nodes: 2
+
+  - id: inventory-shard-mariadb
+    environment: retail_prod
+    service: rdsformariadb
+    billing: monthly
+    needs:
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      type: primary-standby
+      storage_type: ultra-high-io
+      storage_gb: "800 GB"
+
+  - id: catalog-document-dds
+    environment: retail_prod
+    service: dds
+    billing: monthly
+    needs:
+      vcpus: 4
+      memory: "16 GiB"
+    options:
+      storage_gb: "400 GB"
+
+  - id: fiscal-nfce-queue-rabbitmq
+    environment: retail_prod
+    service: rabbitmq
+    billing: monthly
+    options:
+      flavor: rabbitmq.2u4g.cluster
+      brokers: 3
+      storage_type: ultra-high-io
+      storage_gb: "300 GB"
+
+  - id: store-pos-shared-sfs
+    environment: retail_prod
+    service: sfs
+    billing: ondemand
+    options:
+      storage_space_gb: "2000 GB"
+
+  - id: retail-backup-vault-cbr
+    environment: retail_prod
+    service: cbr
+    billing: monthly
+    options:
+      vault_type: Server
+      vault_spec: server.backup
+      capacity_gb: "5000 GB"
+
+  - id: private-pos-vpcep
+    environment: retail_prod
+    service: vpcep
+    billing: ondemand
+    options:
+      traffic_gb: "1500 GB"

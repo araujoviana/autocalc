@@ -1,0 +1,99 @@
+version: "1"
+
+metadata:
+  id: serpro-govbr-citizen-portal
+  customer: "SERPRO Digital Government"
+  title_prefix: "National Citizen Identity & Document Portal"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  identity_portal_node:
+    service: ecs
+    needs:
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      os: debian-12
+      system_disk:
+        type: ultra-high-io
+        size: "100 GiB"
+
+environments:
+  gov_prod:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: citizen-portal-nodes
+    environment: gov_prod
+    use: identity_portal_node
+    quantity: 8
+    billing: yearly
+
+  - id: national-registry-gaussdb
+    environment: gov_prod
+    service: gaussdb
+    billing: monthly
+    needs:
+      vcpus: 8
+      memory: "64 GiB"
+    options:
+      edition: primary-standby
+      replicas: 3
+      storage_gb: "800 GB"
+      backup_storage_gb: "800 GB"
+
+  - id: document-catalog-dds
+    environment: gov_prod
+    service: dds
+    billing: monthly
+    needs:
+      vcpus: 4
+      memory: "16 GiB"
+    options:
+      storage_gb: "500 GB"
+
+  - id: citizen-api-gateway
+    environment: gov_prod
+    service: apig
+    billing: ondemand
+    options:
+      edition: Professional
+      public_outbound_bandwidth_mbps: "100 Mbps"
+
+  - id: portal-waf-shield
+    environment: gov_prod
+    service: waf
+    billing: monthly
+    options:
+      edition: Standard
+
+  - id: signed-documents-obs
+    environment: gov_prod
+    service: obs
+    billing: ondemand
+    options:
+      storage_class: standard
+      capacity: "60 TB"
+      traffic: "10 TB/mo"
+      read_requests: "6000k"
+      write_requests: "1000k"
+
+  - id: gov-vault-backup-cbr
+    environment: gov_prod
+    service: cbr
+    billing: monthly
+    options:
+      vault_type: Server
+      vault_spec: server.backup
+      capacity_gb: "8000 GB"

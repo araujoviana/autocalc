@@ -42,7 +42,7 @@ export class Catalog {
       const prices: Record<string, { amount: number; currency: string; per: string; usage_factor?: unknown }> = {};
       for (const raw of Array.isArray(item.planList) ? item.planList : []) {
         const plan = asObject(raw), mode = asString(plan.billingMode).toLowerCase();
-        if ((plan.planType !== undefined && plan.planType !== "PRICEPLAN") || typeof plan.amount !== "number" || !Number.isFinite(plan.amount) || !mode || prices[mode]) continue;
+        if ((plan.planType !== undefined && plan.planType !== "PRICEPLAN") || typeof plan.amount !== "number" || !Number.isFinite(plan.amount) || !mode || (prices[mode] && (prices[mode].amount > 0 || plan.amount === 0))) continue;
         const onetime = asString(plan.billingEvent).endsWith("onetime");
         const unit = asObject(units[String(plan.measureUnit)]);
         const per = onetime ? `${String(plan.periodNum || 1)} ${mode === "monthly" ? "month" : "year"}` : `${String(plan.measureUnitStep || 1)} ${asString(unit.unit) || String(plan.measureUnit ?? "")}`;
@@ -57,8 +57,11 @@ export class Catalog {
     return skus.filter(sku => {
       const haystack = `${sku.group} ${sku.spec} ${sku.description}`.toLowerCase();
       if (!terms.every(term => haystack.includes(term)) || (options.billing && !sku.prices[options.billing])) return false;
-      const cpu = /vCPUs:\s*([\d.]+)/.exec(sku.description), memory = /Memory:\s*([\d.]+)\s*MB/.exec(sku.description);
-      return (options.min_vcpus === undefined || (!!cpu && Number(cpu[1]) >= options.min_vcpus)) && (options.min_memory_gb === undefined || (!!memory && Number(memory[1]) / 1024 >= options.min_memory_gb));
+      const cpu = /\b(?:vCPUs?|CPU|cpu):\s*([\d.]+)/.exec(sku.description);
+      const mMb = /\b(?:Memory|mem|memery|capacity):\s*([\d.]+)\s*MB\b/i.exec(sku.description);
+      const mGb = !mMb ? /\b(?:Memory|mem|memery|capacity):\s*([\d.]+)\s*GB\b/i.exec(sku.description) : null;
+      const memVal = mMb ? Number(mMb[1]) / 1024 : mGb ? Number(mGb[1]) : undefined;
+      return (options.min_vcpus === undefined || (!!cpu && Number(cpu[1]) >= options.min_vcpus)) && (options.min_memory_gb === undefined || (memVal !== undefined && memVal >= options.min_memory_gb));
     }).sort((a, b) => (a.prices[options.billing ?? "ondemand"]?.amount ?? Infinity) - (b.prices[options.billing ?? "ondemand"]?.amount ?? Infinity)).slice(0, options.limit ?? 30).map(({ cloudServiceType: _cloudServiceType, resourceType: _resourceType, offPage: _offPage, ...sku }) => sku);
   }
   async productInfo(service: string, region: string, refresh = false): Promise<z.output<typeof productSchema>> {

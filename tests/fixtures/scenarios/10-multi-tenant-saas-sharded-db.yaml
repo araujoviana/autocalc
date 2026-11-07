@@ -1,0 +1,100 @@
+version: "1"
+
+metadata:
+  id: stoneco-sharded-merchant-saas
+  customer: "StoneCo Pagamentos"
+  title_prefix: "Multi-Tenant Sharded Merchant Portal"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  tenant_api_pod_host:
+    service: ecs
+    needs:
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      os: ubuntu-22.04
+      system_disk:
+        type: ultra-high-io
+        size: "100 GiB"
+
+environments:
+  prod:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: tenant-api-nodes
+    environment: prod
+    use: tenant_api_pod_host
+    quantity: 6
+    billing: yearly
+
+  - id: sharding-middleware-ddm
+    environment: prod
+    service: ddm
+    billing: ondemand
+    options:
+      flavor: ddm.4u8g.node
+      nodes: 2
+
+  - id: merchant-ledger-taurusdb
+    environment: prod
+    service: taurusdb
+    billing: monthly
+    needs:
+      vcpus: 4
+      memory: "16 GiB"
+    options:
+      replicas: 2
+      storage_gb: "500 GB"
+      backup_storage_gb: "500 GB"
+
+  - id: legacy-billing-mariadb
+    environment: prod
+    service: rdsformariadb
+    billing: monthly
+    needs:
+      vcpus: 4
+      memory: "16 GiB"
+    options:
+      type: primary-standby
+      storage_type: ultra-high-io
+      storage_gb: "400 GB"
+
+  - id: microservice-gateway-apig
+    environment: prod
+    service: apig
+    billing: ondemand
+    options:
+      edition: Professional
+
+  - id: tenant-session-redis
+    environment: prod
+    service: redis
+    billing: monthly
+    options:
+      version: "6.0"
+      instance_type: Master/Standby
+      architecture: x86
+      replicas: 2
+      capacity_gb: "8 GB"
+
+  - id: saas-public-elb
+    environment: prod
+    service: elb
+    billing: ondemand
+    options:
+      network_type: "Public network"
+      billing_mode: traffic
+      public_ip_count: 1

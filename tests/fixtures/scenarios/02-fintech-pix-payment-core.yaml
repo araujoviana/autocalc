@@ -1,0 +1,106 @@
+version: "1"
+
+metadata:
+  id: nubank-pix-instant-payment
+  customer: "Nu Pagamentos S.A."
+  title_prefix: "PIX Core Ledger & Settlement"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  iso20022_gateway:
+    service: ecs
+    needs:
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      os: almalinux-9.4
+      system_disk:
+        type: ultra-high-io
+        size: "120 GiB"
+
+environments:
+  prod:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: pix-gateway-nodes
+    environment: prod
+    use: iso20022_gateway
+    quantity: 4
+    billing: yearly
+
+  - id: settlement-gaussdb
+    environment: prod
+    service: gaussdb
+    billing: monthly
+    needs:
+      vcpus: 8
+      memory: "64 GiB"
+    options:
+      edition: distributed
+      replicas: 3
+      sharding_nodes: 3
+      coordinator_nodes: 3
+      storage_gb: "400 GB"
+      backup_storage_gb: "400 GB"
+
+  - id: payment-event-kafka
+    environment: prod
+    service: kafka
+    billing: ondemand
+    options:
+      flavor: kafka.2u4g.cluster.small
+      brokers: 3
+      storage_type: ultra-high-io
+      storage_gb: "300 GB"
+
+  - id: bacen-api-gateway
+    environment: prod
+    service: apig
+    billing: ondemand
+    options:
+      edition: Pro
+      public_outbound_bandwidth_mbps: "50 Mbps"
+
+  - id: rsfn-direct-connect
+    environment: prod
+    service: dline
+    billing: monthly
+    options:
+      port: 1G
+
+  - id: inter-vpc-enterprise-router
+    environment: prod
+    service: er
+    billing: ondemand
+    options:
+      attachments: 4
+      traffic_gb: "2000 GB"
+
+  - id: payment-signing-hsm
+    environment: prod
+    service: dew
+    billing: ondemand
+    options:
+      custom_keys: 10
+      hsm_edition: standard
+      hsm_instances: 1
+
+  - id: compliance-host-security-hss
+    environment: prod
+    service: hss
+    billing: monthly
+    quantity: 4
+    options:
+      edition: Enterprise

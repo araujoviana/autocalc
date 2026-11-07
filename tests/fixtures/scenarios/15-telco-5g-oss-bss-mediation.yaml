@@ -1,0 +1,98 @@
+version: "1"
+
+metadata:
+  id: vivo-telefonica-5g-oss-bss
+  customer: "Telefonica Brasil (Vivo)"
+  title_prefix: "5G Core OSS/BSS Mediation & CDR Rating"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  cdr_mediation_node:
+    service: ecs
+    needs:
+      vcpus: 16
+      memory: "64 GiB"
+    options:
+      os: euleros-2.9
+      system_disk:
+        type: ultra-high-io
+        size: "120 GiB"
+
+environments:
+  telco_core:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: cdr-mediation-cluster
+    environment: telco_core
+    use: cdr_mediation_node
+    quantity: 6
+    billing: yearly
+
+  - id: subscriber-rating-taurusdb
+    environment: telco_core
+    service: taurusdb
+    billing: monthly
+    needs:
+      vcpus: 8
+      memory: "32 GiB"
+    options:
+      replicas: 3
+      storage_gb: "1000 GB"
+      backup_storage_gb: "1000 GB"
+
+  - id: radio-kpi-nosql
+    environment: telco_core
+    service: nosql
+    billing: ondemand
+    needs:
+      vcpus: 4
+      memory: "16 GiB"
+    options:
+      engine: Cassandra
+      nodes: 3
+      storage_gb: "600 GB"
+
+  - id: core-mpls-direct-connect
+    environment: telco_core
+    service: dline
+    billing: monthly
+    options:
+      port: 10G
+
+  - id: telco-vpc-hub-er
+    environment: telco_core
+    service: er
+    billing: ondemand
+    options:
+      attachments: 8
+      traffic_gb: "10000 GB"
+
+  - id: cdr-spool-sfsturbo
+    environment: telco_core
+    service: sfsturbo
+    billing: ondemand
+    options:
+      tier: 40MBps
+      capacity: "4 TB"
+
+  - id: signaling-trace-lts
+    environment: telco_core
+    service: lts
+    billing: ondemand
+    options:
+      raw_log_size_gb: "1000 GB"
+      index_traffic_gb: "500 GB"
+      log_storage_gb: "2000 GB"
+      retention_days: 30

@@ -1,0 +1,102 @@
+version: "1"
+
+metadata:
+  id: globoplay-live-ott-streaming
+  customer: "Globo Comunicacao e Participacoes"
+  title_prefix: "Live Sports & VOD Origin"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: ondemand
+
+templates:
+  transcoder_worker:
+    service: ecs
+    needs:
+      vcpus: 16
+      memory: "32 GiB"
+    options:
+      os: ubuntu-22.04
+      system_disk:
+        type: ultra-high-io
+        size: "100 GiB"
+      data_disks:
+        - type: ultra-high-io
+          size: "500 GiB"
+
+environments:
+  origin:
+    region: sa-brazil-1
+    availability: multi-az
+
+resources:
+  - id: live-transcoder-fleet
+    environment: origin
+    use: transcoder_worker
+    quantity: 6
+    billing: ondemand
+
+  - id: origin-vod-obs
+    environment: origin
+    service: obs
+    billing: ondemand
+    options:
+      storage_class: standard
+      capacity: "100 TB"
+      traffic: "20 TB/mo"
+      read_requests: "10000k"
+      write_requests: "1000k"
+
+  - id: archive-masters-obs
+    environment: origin
+    service: obs
+    billing: ondemand
+    options:
+      storage_class: cold
+      capacity: "200 TB"
+      retrieval_speed: standard
+      read_traffic: "2 TB"
+
+  - id: shared-segment-sfsturbo
+    environment: origin
+    service: sfsturbo
+    billing: monthly
+    options:
+      tier: 40MBps
+      capacity: "4 TB"
+
+  - id: origin-shield-elb
+    environment: origin
+    service: elb
+    billing: ondemand
+    options:
+      network_type: "Public network"
+      billing_mode: bandwidth
+      bandwidth_mbps: "500 Mbps"
+      public_ip_count: 2
+
+  - id: manifest-generator-fn
+    environment: origin
+    service: function
+    billing: ondemand
+    options:
+      requests_ten_thousands: 1000
+      execution_seconds: 500000
+      memory_mb: "512 MB"
+
+  - id: playback-telemetry-lts
+    environment: origin
+    service: lts
+    billing: ondemand
+    options:
+      raw_log_size_gb: "500 GB"
+      index_traffic_gb: "250 GB"
+      log_storage_gb: "1000 GB"
+      retention_days: 30

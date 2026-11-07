@@ -1,0 +1,99 @@
+version: "1"
+
+metadata:
+  id: latam-airlines-hybrid-mesh
+  customer: "LATAM Airlines Group"
+  title_prefix: "Multi-Region Hybrid Cloud & Fleet Mesh"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  mesh_ingress_node:
+    service: ecs
+    needs:
+      vcpus: 4
+      memory: "16 GiB"
+    options:
+      os: ubuntu-22.04
+      system_disk:
+        type: high-io
+        size: "80 GiB"
+
+environments:
+  gru_hub:
+    region: sa-brazil-1
+    availability: multi-az
+  scl_hub:
+    region: la-south-2
+    availability: multi-az
+
+resources:
+  - id: fleet-control-plane-vpcep
+    environment: gru_hub
+    service: vpcep
+    billing: ondemand
+    options:
+      duration_hours: "730h"
+
+  - id: gru-workload-cce
+    environment: gru_hub
+    service: cce
+    billing: monthly
+    options:
+      scale: 50nodes
+      master_az: 3AZ
+
+  - id: scl-workload-cce
+    environment: scl_hub
+    service: cce
+    billing: monthly
+    options:
+      scale: 50nodes
+      master_az: 1AZ
+
+  - id: gru-worker-nodes
+    environment: gru_hub
+    use: mesh_ingress_node
+    quantity: 6
+    billing: yearly
+
+  - id: scl-worker-nodes
+    environment: scl_hub
+    use: mesh_ingress_node
+    quantity: 4
+    billing: yearly
+
+  - id: gru-airport-direct-connect
+    environment: gru_hub
+    service: dline
+    billing: monthly
+    options:
+      port: 10G
+
+  - id: backbone-enterprise-router
+    environment: gru_hub
+    service: er
+    billing: ondemand
+    options:
+      attachments: 6
+      traffic_gb: "5000 GB"
+
+  - id: outstation-backup-vpn
+    environment: gru_hub
+    service: vpn
+    billing: monthly
+    options:
+      mode: Vpn
+      network_type: "Public network"
+      spec: Basic
+      shared_bandwidth_mbps: "20 Mbps"
+      connection_groups: 10
