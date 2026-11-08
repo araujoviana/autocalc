@@ -10,6 +10,7 @@ import * as update from "../../src/core/update.ts";
 const savedRepo = process.env.AUTOCALC_REPO;
 const savedConfig = process.env.AUTOCALC_CONFIG;
 const savedNoCheck = process.env.AUTOCALC_NO_UPDATE_CHECK;
+const savedBunInstall = process.env.BUN_INSTALL;
 let tempDirs: string[] = [];
 
 afterEach(() => {
@@ -20,6 +21,8 @@ afterEach(() => {
   else process.env.AUTOCALC_CONFIG = savedConfig;
   if (savedNoCheck === undefined) delete process.env.AUTOCALC_NO_UPDATE_CHECK;
   else process.env.AUTOCALC_NO_UPDATE_CHECK = savedNoCheck;
+  if (savedBunInstall === undefined) delete process.env.BUN_INSTALL;
+  else process.env.BUN_INSTALL = savedBunInstall;
   for (const dir of tempDirs) rmSync(dir, { recursive: true, force: true });
   tempDirs = [];
 });
@@ -53,6 +56,25 @@ test("newest_tag_is_compared_by_number_and_installed", () => {
   const out = update.update();
   expect(calls.at(-1)).toEqual(["bun", "add", "-g", "--force", "git+file:///repo#v0.10.0"]);
   expect(out.endsWith("-> 0.10.0")).toBe(true);
+});
+
+test("update_removes_stale_global_bins_before_bun_add", () => {
+  const fakeBunDir = makeTmpDir();
+  const binDir = join(fakeBunDir, "bin");
+  mkdtempSync; // imported
+  const fs = require("node:fs");
+  fs.mkdirSync(binDir, { recursive: true });
+  const staleCli = join(binDir, "autocalc");
+  const staleMcp = join(binDir, "autocalc-mcp");
+  fs.writeFileSync(staleCli, "old");
+  fs.writeFileSync(staleMcp, "old");
+  process.env.BUN_INSTALL = fakeBunDir;
+
+  runWith("v1.0.0");
+  update.update("v1.0.0");
+
+  expect(fs.existsSync(staleCli)).toBe(false);
+  expect(fs.existsSync(staleMcp)).toBe(false);
 });
 
 test("pinned_tag_skips_the_listing", () => {

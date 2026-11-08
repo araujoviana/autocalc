@@ -1,6 +1,6 @@
 /** `autocalc update`: reinstall the tool from a release tag (ADR-0019). Never runs on its own. */
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import pkg from "../../package.json";
@@ -123,6 +123,15 @@ export function update(to?: string | null): string {
   const repo = repoUrl();
   const old = hooks.version("autocalc");
   const tag = to || latestTag(repo);
+  const bunBin = process.env.BUN_INSTALL
+    ? join(process.env.BUN_INSTALL, "bin")
+    : join(homedir(), ".bun", "bin");
+  try {
+    unlinkSync(join(bunBin, "autocalc"));
+  } catch {}
+  try {
+    unlinkSync(join(bunBin, "autocalc-mcp"));
+  } catch {}
   let done: CmdResult;
   try {
     done = hooks.run(["bun", "add", "-g", "--force", `git+${repo}#${tag}`]);

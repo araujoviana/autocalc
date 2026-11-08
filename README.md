@@ -1,23 +1,8 @@
 # autocalc
 
-Generate verified price quotes and share links for the [Huawei Cloud Pricing Calculator](https://www.huaweicloud.com/intl/en-us/pricing/calculator.html) from your terminal (CLI) or AI coding agents (MCP server).
+CLI and MCP server for pricing, validating, and publishing verified quotes on the Huawei Cloud Pricing Calculator.
 
-> **Disclaimer**: `autocalc` is an unofficial, community-driven tool and is not affiliated with or endorsed by Huawei Cloud. It interfaces directly with public calculator endpoints and rating engines. Always inspect generated links and verify prices on the official portal before presenting formal quotes.
-
----
-
-## Highlights
-
-- **No login needed** for catalog queries, flavor search, and price calculations.
-- **One-time browser login** only when saving quote lists and generating share links.
-- **CLI & MCP server** out of the box (`autocalc` CLI and `autocalc-mcp` for Claude Code, Antigravity, etc.).
-- **Built on TypeScript & Bun** with Playwright for browser interactions. Zero external runtime dependencies for core rating & schema operations.
-
----
-
-## Quick Start
-
-### Installation
+## Installation & Update
 
 **Linux / macOS:**
 ```bash
@@ -29,60 +14,140 @@ curl -fsSL https://raw.githubusercontent.com/araujoviana/autocalc/main/install.s
 irm https://raw.githubusercontent.com/araujoviana/autocalc/main/install.ps1 | iex
 ```
 
-*Requires [Bun](https://bun.sh).* To update anytime, run `autocalc update`.
+Update to the latest release at any time:
+```bash
+autocalc update
+```
 
-### Basic Usage
+*(From a local git clone, run `./install.sh` directly)*.
+
+Browser automation uses system Chrome/Edge by default. On headless servers without a browser: `autocalc install-browser`.
+
+---
+
+## Quick Reference
+
+### 1. Catalog & Pricing (No auth required)
 
 ```bash
-# 1. Health check: verify connectivity and calculator frontend version
+# Verify environment and calculator endpoint reachability
 autocalc doctor
 
-# 2. Search for available flavors and pricing
-autocalc search ecs "Sao Paulo" linux --vcpus 4 --mem 8
+# Query available regions and flavors
+autocalc regions ecs
+autocalc search ecs "Sao Paulo" linux --vcpus 4 --mem 8 --billing monthly
 
-# 3. Calculate a quote (standalone rating, no login needed)
+# Price resources directly
 autocalc quote Santiago 'ecs:c7n.large.2.linux*3' 'ecs:SSD*3@100' --billing monthly
+```
 
-# 4. (Optional) Sign in to save lists and generate shareable links
+### 2. Declarative Quotes (`quote.yaml`)
+
+```yaml
+customer: Example Corp
+name: "[autocalc] web-tier"
+defaults: { region: sa-brazil-1, billing: monthly }
+cards:
+  - id: web
+    service: ecs
+    quantity: 2
+    needs: { vcpus: 4, memory_gb: 8 }
+    options: { image: "Ubuntu 22.04 server 64bit" }
+```
+
+```bash
+# Validate schema, resolve SKUs, write quote.lock.yaml
+autocalc plan quote.yaml
+
+# One-time browser login (required only for saving/publishing quotes)
 autocalc login
+
+# Encode cards in headless browser, verify price integrity, and output share link
+autocalc apply quote.yaml
+```
+
+### 3. Inspect & Export
+
+```bash
+# Verify stored vs. rated prices for an existing quote link
+autocalc validate <shareListId_or_URL>
+
+# Export shared lists to Excel
+autocalc export --rows '[{"env":"prod","list":"<url_or_id>"}]' --path quotes.xlsx
 ```
 
 ---
 
-## MCP Server (AI Agents)
+## MCP Server (`autocalc-mcp`)
 
-If Claude Code is installed, the installer automatically registers `hwc-calculator`. You can also configure it manually:
+Connect AI agents via stdio:
 
 ```bash
 claude mcp add hwc-calculator -- autocalc-mcp
 ```
 
-For configuration with other MCP clients, point to the `autocalc-mcp` binary or run `bun run src/mcp/index.ts`.
+Or configure manually in `mcp.json`:
+```json
+{
+  "mcpServers": {
+    "hwc-calculator": {
+      "command": "autocalc-mcp"
+    }
+  }
+}
+```
+
+---
+
+## CLI Commands
+
+| Command | Description | Auth Required |
+| :--- | :--- | :--- |
+| `autocalc services [query]` | List calculator services, optionally filtered by keyword | No |
+| `autocalc regions [service]` | List all regions or regions where a service is sold | No |
+| `autocalc describe <service>` | Show available billing modes and catalog groups | No |
+| `autocalc search <service> <region> [terms...]` | Search SKUs with filters (`--billing`, `--vcpus`, `--mem`) | No |
+| `autocalc quote <region> <items...>` | Price items directly in USD (`--currency` for FX) | No |
+| `autocalc compare-modes --items <json\|@file>` | Compare on-demand, monthly, and yearly pricing | No |
+| `autocalc compare-regions --items <json\|@file>` | Compare item pricing across multiple regions | No |
+| `autocalc plan [file]` | Validate quote YAML against schemas and write lockfile | No |
+| `autocalc apply [file]` | Encode cards, verify publish gate, and return share link | **Yes** |
+| `autocalc export --rows <json\|@file>` | Generate `.xlsx` summary workbook from shared lists | No |
+| `autocalc validate <url_or_id>` | Check shared list for arithmetic or schema discrepancies | No |
+| `autocalc edit-check <url_or_id>` | Compare stored card prices against headless Edit view | No |
+| `autocalc login` / `logout` / `auth status` | Manage browser authentication profiles | — |
+| `autocalc lists` / `rename` / `delete` | Manage saved price lists in your account | **Yes** |
+| `autocalc doctor` | Check endpoints, version drift, browser, and cache | No |
+
+Full reference: [CLI Reference](docs/reference/cli.md).
+
+---
+
+## Configuration
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `AUTOCALC_PROFILE` | `default` | Named authentication profile for browser sessions |
+| `AUTOCALC_CONFIG` | `~/.config/autocalc` | Directory for drafts, run records, and profiles |
+| `AUTOCALC_CACHE` | `~/.cache/autocalc` | Directory for 24h catalog cache |
+| `AUTOCALC_BROWSER` | *Auto-detected* | Custom path to Chrome/Chromium binary |
+| `AUTOCALC_ENCODE_WORKERS` | `6` | Concurrency for headless browser encoding |
+| `AUTOCALC_NO_UPDATE_CHECK` | `0` | Set to `1` to disable daily update notices |
 
 ---
 
 ## Development
 
 ```bash
-git clone https://github.com/araujoviana/autocalc.git
-cd autocalc
 bun install --frozen-lockfile
-
-# Run checks and tests
-bun run check
-bun run check:boundaries
-bun run test:offline
+bun run check            # Typecheck (tsc --noEmit)
+bun run check:boundaries # Verify architecture layer boundaries
+bun run test:offline     # Unit and integration tests (deterministic, offline)
+bun run test:live        # Live tests against calculator endpoints
 ```
 
-For contributing guidelines, specs, and architecture, see:
-- [Tutorial: Your First Quote](docs/tutorials/first-quote.md)
-- [CLI Reference](docs/reference/cli.md)
-- [Architecture & Design](docs/explanation/architecture.md)
-- [Contributing Guide](CONTRIBUTING.md)
-- [OpenSpec Specifications](openspec/specs/)
-
----
+Detailed documentation: [docs/](docs/index.md) · [CLI Reference](docs/reference/cli.md) · [ADRs](docs/adr/index.md).
 
 ## License
 
-[Apache License 2.0](LICENSE)
+[Apache 2.0](LICENSE)
