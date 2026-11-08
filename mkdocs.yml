@@ -1,5 +1,9 @@
 site_name: autocalc
 site_description: Verified share links from cloud pricing calculators, for AI agents and the people who use them.
+site_url: https://araujoviana.github.io/autocalc/
+repo_name: araujoviana/autocalc
+repo_url: https://github.com/araujoviana/autocalc
+edit_uri: edit/main/docs/
 docs_dir: docs
 strict: true
 exclude_docs: |
@@ -14,34 +18,86 @@ exclude_docs: |
 
 theme:
   name: material
-  features:
-    - navigation.sections
-    - navigation.indexes
-    - navigation.top
-    - search.suggest
-    - search.highlight
-    - content.code.copy
+  font:
+    text: Inter
+    code: JetBrains Mono
+  icon:
+    logo: material/calculator-variant-outline
+    repo: fontawesome/brands/github
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      toggle: {icon: material/brightness-7, name: Dark mode}
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      toggle: {icon: material/brightness-4, name: Light mode}
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Light mode
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.indexes
+    - navigation.path
+    - navigation.prune
+    - navigation.top
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.select
+    - content.tabs.link
+    - content.action.edit
+    - content.action.view
+
+extra_css:
+  - assets/stylesheets/extra.css
 
 markdown_extensions:
   - admonition
+  - attr_list
+  - md_in_html
   - tables
-  - toc: {permalink: true}
-  - pymdownx.superfences
-  - pymdownx.tabbed: {alternate_style: true}
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 plugins:
   - search
+  - tags
+  - git-revision-date-localized
+  - redirects
 
 nav:
-  - Home: index.md
-  - Project status: status.md
+  - Overview:
+      - Home: index.md
+      - Project status: status.md
+      - Roadmap: roadmap.md
   - Tutorials:
       - Your first quote: tutorials/first-quote.md
   - Huawei Cloud Provider:
@@ -132,5 +188,25 @@ nav:
           - Concurrency: explanation/huawei/concurrency.md
           - Page encoder: explanation/huawei/page-encoder.md
           - Publish gate: explanation/huawei/publish-gate.md
-  - Roadmap: roadmap.md
-  - Decisions (ADRs): adr/index.md
+  - Decisions (ADRs):
+      - Overview: adr/index.md
+      - "0000: Record architecture decisions": adr/0000-record-architecture-decisions.md
+      - "0001: Page as encoder": adr/0001-page-as-encoder.md
+      - "0002: Share link is the deliverable": adr/0002-share-link-is-the-deliverable.md
+      - "0003: Fail-closed publish gate": adr/0003-fail-closed-publish-gate.md
+      - "0004: USD list prices only": adr/0004-usd-list-prices-only.md
+      - "0005: Candidate ranking and confirmation": adr/0005-candidate-ranking-and-confirmation.md
+      - "0006: Refuse unsupported requests": adr/0006-refuse-unsupported-requests.md
+      - "0007: Workflow surface and one registry": adr/0007-workflow-surface-and-one-registry.md
+      - "0008: MCP output format": adr/0008-mcp-output-format.md
+      - "0009: Traceability run records": adr/0009-traceability-run-records.md
+      - "0010: Concurrency by state": adr/0010-concurrency-by-state.md
+      - "0011: Auth: persistent browser profile": adr/0011-auth-browser-profile-is-the-credential.md
+      - "0012: Windows and Linux": adr/0012-windows-and-linux.md
+      - "0013: Distribution via uv tool": adr/0013-distribution-uv-tool-from-git-tags.md
+      - "0014: Saved list naming and prune": adr/0014-saved-list-naming-and-prune.md
+      - "0015: Strangler core and AWS second": adr/0015-strangler-core-and-aws-second.md
+      - "0016: Python canonical and publication support": adr/0016-python-canonical-and-publication-support.md
+      - "0017: TypeScript on Bun target": adr/0017-typescript-on-bun-is-the-target.md
+      - "0018: Declarative quotes and card schema": adr/0018-declarative-quotes-and-generated-card-schema.md
+      - "0019: Distribution via bun": adr/0019-distribution-bun-from-git-tags.md
