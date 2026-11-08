@@ -16,7 +16,9 @@
     "check:boundaries": "bun scripts/check-boundaries.ts",
     "docs:generate": "bun scripts/generate-service-docs.ts",
     "docs:serve": "bun run docs:generate && uv run --with mkdocs-material --with mkdocs-git-revision-date-localized-plugin --with mkdocs-redirects mkdocs serve",
-    "docs:build": "bun run docs:generate && uv run --with mkdocs-material --with mkdocs-git-revision-date-localized-plugin --with mkdocs-redirects mkdocs build --strict"
+    "docs:build": "bun run docs:generate && uv run --with mkdocs-material --with mkdocs-git-revision-date-localized-plugin --with mkdocs-redirects mkdocs build --strict",
+    "version:bump": "bun scripts/bump-version.ts",
+    "bump": "bun scripts/bump-version.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.26.0",
