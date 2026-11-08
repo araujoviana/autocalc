@@ -1,8 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { VERIFIED, ACCEPTED_DEFAULT_ONLY } from "../../src/core/services/publication";
-import { parseYaml } from "../../src/schema/yaml";
+import { VERIFIED } from "../../src/core/services/publication.ts";
 
 describe("Documentation & Codebase Synchronization Contract", () => {
   test("every schema file has a generated doc page and is in mkdocs.yml navigation", async () => {
@@ -53,7 +52,7 @@ describe("Documentation & Codebase Synchronization Contract", () => {
       const content = await readFile(file, "utf-8");
       const matches = content.matchAll(/process\.env\.(AUTOCALC_[A-Z0-9_]+)/g);
       for (const m of matches) {
-        envVarsInCode.add(m[1]);
+        if (m[1]) envVarsInCode.add(m[1]);
       }
     }
 
@@ -71,7 +70,7 @@ describe("Documentation & Codebase Synchronization Contract", () => {
     const commandMatches = cliSrc.matchAll(/\.command\("([a-z0-9_-]+)/g);
     const commands = new Set<string>();
     for (const m of commandMatches) {
-      commands.add(m[1]);
+      if (m[1]) commands.add(m[1]);
     }
 
     for (const cmd of commands) {

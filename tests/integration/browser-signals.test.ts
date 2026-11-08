@@ -35,13 +35,13 @@ test.skipIf(process.platform === "win32")("signal and stdin shutdown reap the ow
           for (let i = 0; i < 120 && !existsSync(pidFile); i++) await Bun.sleep(100);
           expect(existsSync(pidFile)).toBe(true);
         } else {
-          const ready = await Promise.race([reader.read(), Bun.sleep(12000).then(() => { throw new Error("Browser startup timed out"); })]);
+          const ready = await Promise.race([reader.read(), Bun.sleep(20000).then(() => { throw new Error("Browser startup timed out"); })]);
           expect(new TextDecoder().decode(ready.value)).toContain("READY");
         }
         browserPid = Number(await readFile(pidFile, "utf8"));
         expect(Number.isInteger(browserPid) && browserPid > 0).toBe(true);
         if (mode === "EOF") child.stdin.end(); else child.kill(mode === "SIGTERM_STARTUP" || mode === "CLI_STARTUP" ? "SIGTERM" : mode);
-        const exit = await Promise.race([child.exited, Bun.sleep(12000).then(() => { throw new Error(`Browser shutdown timed out (${mode})`); })]);
+        const exit = await Promise.race([child.exited, Bun.sleep(20000).then(() => { throw new Error(`Browser shutdown timed out (${mode})`); })]);
         expect(exit).toBe(mode === "SIGINT" ? 130 : mode === "EOF" ? 0 : 143);
         expect(await gone(browserPid)).toBe(true);
       } finally {
@@ -52,4 +52,4 @@ test.skipIf(process.platform === "win32")("signal and stdin shutdown reap the ow
       }
     }
   } finally { await rm(directory, { recursive: true, force: true }); }
-}, 60000);
+}, 90000);

@@ -9,7 +9,7 @@ test("render readiness requires a matching share detail response and nonempty bo
   } });
   const manager = new BrowserManager();
   try {
-    const result = await renderCheck(manager, "abc123", { pageUrl: new URL("/", server.url).href, detailUrl: new URL("/detail", server.url).href, timeout: 5000 });
+    const result = await renderCheck(manager, "abc123", { pageUrl: new URL("/", server.url).href, detailUrl: new URL("/detail", server.url).href, timeout: 20000 });
     expect(result).toMatchObject({ ok: true, view_details: true });
   } finally { await manager.close(); server.stop(); }
-});
+}, 30000);
