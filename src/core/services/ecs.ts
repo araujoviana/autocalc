@@ -40,12 +40,15 @@ export function matchImages(images: Record<string, unknown>[], family: string, i
     if (brand && brand.length > 2) {
       const brandMatch = (candidate: Record<string, unknown>) => {
         const text = `${display(candidate.__platform)} ${display(candidate.__os_type)} ${imageName(candidate)}`.toLowerCase();
-        return text.includes(brand);
+        return text.includes(brand) || (brand.includes("euler") && text.includes("euler"));
       };
       let brandMatched = images.filter(candidate => brandMatch(candidate) && Array.isArray(candidate.type) && candidate.type.includes(family));
       if (!brandMatched.length) brandMatched = images.filter(brandMatch);
       if (brandMatched.length > 0) return [brandMatched[0]!];
     }
+    const familyFallback = images.filter(candidate => Array.isArray(candidate.type) && candidate.type.includes(family));
+    if (familyFallback.length > 0) return [familyFallback[0]!];
+    if (images.length > 0) return [images[0]!];
   }
   return exact.length === 1 ? exact : matched;
 }

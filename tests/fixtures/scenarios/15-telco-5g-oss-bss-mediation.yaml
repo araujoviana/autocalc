@@ -23,7 +23,7 @@ templates:
       vcpus: 16
       memory: "64 GiB"
     options:
-      os: euleros-2.9
+      os: ubuntu-22.04
       system_disk:
         type: ultra-high-io
         size: "120 GiB"
