@@ -127,4 +127,4 @@ export function createCore(options: { reader?: ActionContext["reader"]; catalogR
     },
   };
 }
-export { CalculatorError } from "./errors.ts";
+export { CalculatorError, normalizeError } from "./errors.ts";

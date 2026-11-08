@@ -139,7 +139,17 @@ export const handlers = {
   revise_quote: handler(ReviseQuoteInput, reviseQuoteTool),
   publish_quote: handler(PublishQuoteInput, publishQuoteTool),
   compile_quote: handler(CompileQuoteInput, async (_ctx, input) => {
-    const text = await readFile(input.path, "utf8");
+    let text: string;
+    try {
+      text = await readFile(input.path, "utf8");
+    } catch {
+      throw new CalculatorError(
+        "VALIDATION",
+        `Cannot read the quote file '${input.path}'`,
+        "Verify that the file path is correct and the file exists, or create a quote.yaml file.",
+        { path: input.path },
+      );
+    }
     const compiled = compileQuote(text);
     const ir = buildCanonicalQuoteIR(compiled.document, compiled.resources);
     return {

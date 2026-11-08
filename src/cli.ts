@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { Command, CommanderError } from "commander";
 import pkg from "../package.json";
-import { createCore, CalculatorError } from "./core/index.ts";
+import { createCore, CalculatorError, normalizeError } from "./core/index.ts";
 import { setProgress } from "./core/progress.ts";
 import { registry } from "./core/registry.ts";
 import { QuoteItem, PositiveInteger } from "./core/schemas.ts";
@@ -308,11 +308,20 @@ export async function main(argv: string[], outStream?: ui.StreamLike & { write?:
   const isUserArgs = argv.length > 0 && !argv[0]!.includes("/") && !argv[0]!.includes("\\") && argv[0] !== "node" && argv[0] !== "bun";
   if (!argv.includes("--json") && ui.fancy(process.stderr)) setProgress(message => process.stderr.write(`${ui.paint("…", "dim", process.stderr)} ${message}\n`));
   try { await program.parseAsync(argv, isUserArgs ? { from: "user" } : undefined); return signalCode ?? commandExit ?? (commandFailed ? 1 : 0); }
-  catch (error) {
+  catch (rawError) {
     if (signalCode !== undefined) return signalCode;
-    if (error instanceof CommanderError) return error.exitCode;
-    if (error instanceof CalculatorError) { if (program.opts<{ json?: boolean }>().json) process.stderr.write(`${JSON.stringify(error.toJSON())}\n`); else printErr(error, process.stderr); return 2; }
-    process.stderr.write("Unexpected error\n"); return 1;
+    if (rawError instanceof CommanderError) {
+      if (rawError.code === "commander.helpDisplayed" || rawError.code === "commander.version") {
+        return rawError.exitCode;
+      }
+    }
+    const error = rawError instanceof CommanderError
+      ? new CalculatorError("VALIDATION", rawError.message.replace(/^error:\s*/i, "").trim(), "Run 'autocalc --help' to see valid arguments and options.", { commanderCode: rawError.code })
+      : normalizeError(rawError);
+
+    if (program.opts<{ json?: boolean }>().json) process.stderr.write(`${JSON.stringify(error.toJSON())}\n`);
+    else printErr(error, process.stderr);
+    return 2;
   } finally { setProgress(null); process.removeListener("SIGINT", onInt); process.removeListener("SIGTERM", onTerm); await core?.close(); }
 }
 if (import.meta.main) process.exitCode = await main(process.argv);

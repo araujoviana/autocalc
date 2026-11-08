@@ -25,13 +25,17 @@ export class CatalogCache {
     }
   }
   async set(url: string, data: unknown): Promise<void> {
-    const directory = join(this.directory, "v1");
-    await mkdir(directory, { recursive: true });
-    const target = this.pathFor(url);
-    const temporary = `${target}.${randomUUID()}.tmp`;
     try {
-      await writeFile(temporary, JSON.stringify({ timestamp: Date.now(), data }), { mode: 0o600 });
-      await rename(temporary, target);
-    } finally { await unlink(temporary).catch(() => undefined); }
+      const directory = join(this.directory, "v1");
+      await mkdir(directory, { recursive: true });
+      const target = this.pathFor(url);
+      const temporary = `${target}.${randomUUID()}.tmp`;
+      try {
+        await writeFile(temporary, JSON.stringify({ timestamp: Date.now(), data }), { mode: 0o600 });
+        await rename(temporary, target);
+      } finally { await unlink(temporary).catch(() => undefined); }
+    } catch {
+      logError("Failed to write catalog cache entry");
+    }
   }
 }

@@ -37,7 +37,10 @@ export async function inquiry(post: PostRating, body: Record<string, unknown>, o
       await wait(500 * (attempt + 1), options.signal);
       continue;
     }
-    if (response.status >= 500 && attempt < 2) { await wait(500 * (attempt + 1), options.signal); continue; }
+    if (response.status >= 500) {
+      if (attempt < 2) { await wait(500 * (attempt + 1), options.signal); continue; }
+      throw new CalculatorError("UPSTREAM", `Rating request failed with HTTP ${response.status}`, "Huawei Cloud rating service is temporarily unavailable. Check connectivity or retry shortly.");
+    }
     if (response.body === null || typeof response.body !== "object" || Array.isArray(response.body)) throw new CalculatorError("UNEXPECTED_RESPONSE", `Rating returned invalid JSON (HTTP ${response.status})`);
     const result = response.body as Record<string, unknown>;
     const exceptionId = result.exceptionId ?? result.error_code;

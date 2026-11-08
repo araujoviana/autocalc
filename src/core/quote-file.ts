@@ -53,7 +53,7 @@ export function parse(text: string, path?: string): Quote {
 
 export async function load(path: string): Promise<Quote> {
   let text: string;
-  try { text = await readFile(path, "utf8"); } catch { throw invalid(`Cannot read the quote file '${path}'.`, "path"); }
+  try { text = await readFile(path, "utf8"); } catch { throw invalid(`Cannot read the quote file '${path}'.`, "path", undefined, "Verify that the file path is correct and the file exists, or create a quote.yaml file."); }
   return parse(text, path);
 }
 

@@ -3,7 +3,7 @@ import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mc
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import pkg from "../package.json";
-import { createCore, CalculatorError } from "./core/index.ts";
+import { createCore, CalculatorError, normalizeError } from "./core/index.ts";
 import { registry } from "./core/registry.ts";
 import { schemaIndex, schemaOf } from "./core/schema-files.ts";
 import { withNotice } from "./core/update.ts";
@@ -22,7 +22,7 @@ export async function main(): Promise<void> {
   const server = new McpServer({ name: "autocalc", version: pkg.version });
   const invoke = async (name: string, input: unknown, signal: AbortSignal) => {
     try { return { content: [{ type: "text" as const, text: JSON.stringify(withNotice(await core.invoke(name, input, { signal }))) }] }; }
-    catch (error) { return { isError: true, content: [{ type: "text" as const, text: JSON.stringify(error instanceof CalculatorError ? error.toJSON() : { error: "AUTOCALC", message: "Unexpected error" }) }] }; }
+    catch (error) { const norm = normalizeError(error); return { isError: true, content: [{ type: "text" as const, text: JSON.stringify(norm.toJSON()) }] }; }
   };
   for (const [name, entry] of Object.entries(registry)) {
     server.registerTool(name, { description: entry.description, inputSchema: entry.schema, annotations: entry.annotations }, async () => { throw new Error("unreachable: calls are dispatched by the CallTool handler below"); });

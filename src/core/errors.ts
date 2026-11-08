@@ -52,3 +52,121 @@ export function pageEncodeFailed(message: string, info: { service: string; step?
   if (info.frontendVersion) details.frontend_version = info.frontendVersion;
   return new CalculatorError("PAGE_ENCODE_FAILED", message, info.hint ?? "Re-run with AUTOCALC_PAGE_HEADED=1 to watch the calculator page.", details);
 }
+
+function isZodError(err: unknown): err is { issues: Array<{ path: (string | number)[]; message: string }> } {
+  return typeof err === "object" && err !== null && (err as { name?: string }).name === "ZodError" && Array.isArray((err as { issues?: unknown }).issues);
+}
+
+function isSystemError(err: unknown): err is NodeJS.ErrnoException {
+  return typeof err === "object" && err !== null && typeof (err as { code?: unknown }).code === "string";
+}
+
+export function normalizeError(err: unknown): CalculatorError {
+  if (err instanceof CalculatorError) return err;
+
+  if (isZodError(err)) {
+    const first = err.issues[0];
+    const path = first?.path.length ? first.path.join(".") : undefined;
+    const msg = first ? `${path ? `${path}: ` : ""}${first.message}` : "Validation failed";
+    return new CalculatorError(
+      "VALIDATION",
+      msg,
+      "Check option names, argument types, and required fields.",
+      { issues: err.issues },
+    );
+  }
+
+  if (isSystemError(err)) {
+    const code = err.code;
+    if (code === "ECONNREFUSED" || code === "ETIMEDOUT" || code === "ENOTFOUND" || code === "EAI_AGAIN") {
+      return new CalculatorError(
+        "UPSTREAM",
+        "Could not connect to remote service",
+        "Check internet connectivity, DNS, and proxy/firewall settings.",
+        { code },
+      );
+    }
+    const target = err.path ? `'${err.path}'` : "File or path";
+    if (err.code === "ENOENT") {
+      return new CalculatorError(
+        "VALIDATION",
+        `${target} not found`,
+        "Verify that the file path is correct and the file exists, or create a quote.yaml file.",
+        { code: "ENOENT", path: err.path, syscall: err.syscall },
+      );
+    }
+    if (err.code === "EACCES" || err.code === "EPERM") {
+      return new CalculatorError(
+        "AUTOCALC",
+        `Permission denied accessing ${target}`,
+        "Check filesystem permissions and try again.",
+        { code: err.code, path: err.path },
+      );
+    }
+    if (err.code === "ENOSPC") {
+      return new CalculatorError(
+        "AUTOCALC",
+        "No disk space left on device",
+        "Free up disk space and try again.",
+        { code: "ENOSPC" },
+      );
+    }
+    return new CalculatorError(
+      "AUTOCALC",
+      `System I/O error (${err.code}): ${err.message}`,
+      undefined,
+      { code: err.code, path: err.path },
+    );
+  }
+
+  if (err instanceof Error) {
+    const msg = err.message || "";
+    if (msg.includes("Executable doesn't exist") || msg.includes("browserType.launch")) {
+      return new CalculatorError(
+        "BROWSER_UNAVAILABLE",
+        "Chromium browser binary was not found or failed to start",
+        "Run 'autocalc install-browser' to download the pinned Chromium browser build.",
+      );
+    }
+    if (err.name === "TargetClosedError" || msg.includes("Target page, context or browser has been closed")) {
+      return new CalculatorError(
+        "CANCELLED",
+        "Browser window or page was closed",
+        "Keep the browser window open while automation is running.",
+      );
+    }
+    if (err.name === "TimeoutError" || msg.includes("Timeout")) {
+      return new CalculatorError(
+        "UPSTREAM",
+        "Browser operation timed out",
+        "Check network connectivity or re-run with --headed to observe browser behavior.",
+      );
+    }
+
+    const code = (err as { code?: string }).code;
+    if (code === "ECONNREFUSED" || code === "ETIMEDOUT" || code === "ENOTFOUND" || code === "EAI_AGAIN" || msg.includes("fetch failed")) {
+      return new CalculatorError(
+        "UPSTREAM",
+        "Could not connect to remote service",
+        "Check internet connectivity, DNS, and proxy/firewall settings.",
+        { code },
+      );
+    }
+
+    if (err instanceof SyntaxError || err.name === "YAMLParseError") {
+      return new CalculatorError(
+        "VALIDATION",
+        `Syntax parsing failed: ${err.message}`,
+        "Ensure the input or file contains valid YAML or JSON formatting.",
+      );
+    }
+
+    return new CalculatorError(
+      "AUTOCALC",
+      err.message || "An unhandled error occurred",
+      "Run 'autocalc doctor' or re-run with --headed to inspect.",
+    );
+  }
+
+  return new CalculatorError("AUTOCALC", String(err) || "Unknown error");
+}
