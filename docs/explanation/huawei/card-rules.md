@@ -42,8 +42,7 @@ ms, and Memory in MB.
 
 ## No quantity control ⇒ one card per unit
 
-ELB, CCI and APIG cards have no quantity stepper. Saving `productNum > 1` makes Edit collapse it
-to 1, so N units are N cards with quantity 1.
+Services whose forms lack a quantity stepper or cannot express quantities other than 1 are tracked in `SINGLE_QUANTITY` (`src/core/services/publication.ts`): `nat`, `obs`, `lts`, `function`, `elb`, `cci`, `nosql` (along with any recipe without a quantity control). Saving `productNum > 1` on these services causes the calculator's Edit view to collapse the count to 1, so N units must be emitted as N separate cards with quantity 1.
 
 ## ECS public IP is opt-in
 

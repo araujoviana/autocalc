@@ -58,8 +58,6 @@ price" (`billingModeMonth`). Both lists passed, with equal stored, rated and Edi
 (69.22, 18.00 and 21.00 per card), in about 27 seconds. The monthly settlement re-prices the same.
 The test lists were deleted.
 
-## Cost
+## Cost & Concurrency
 
-Publishing now opens a browser: about 15 seconds per card, run one card after another. Rating
-runs up to four at a time. Parallel browser contexts
-([ADR-0010](../../adr/0010-concurrency-by-state.md)) are a later optimization.
+Card encoding and verification leverage parallel browser contexts ([ADR-0010](../../adr/0010-concurrency-by-state.md)). In `src/core/publish.ts`, cards are encoded concurrently using `mapLimit` bounded by `AUTOCALC_ENCODE_WORKERS` (defaulting to 3 workers, or dynamically scaled based on available CPU cores and memory budget). Rating inquiries also run concurrently (up to 4 at a time). This concurrency substantially reduces overall publish turnaround time on multi-card quotes.

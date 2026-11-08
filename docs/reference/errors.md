@@ -40,18 +40,15 @@ not on message wording. To change how errors look in a terminal, edit `formatErr
 
 ## Huawei business exceptions
 
-| `exceptionId` | Raised as |
-|---|---|
-| `CBC.0101` | `AuthExpired` |
-| `CBC.0102`, `CBC.6006`, `CBC.6008` | `SpecNotFound` |
-| `CBC.6001` | `ValidationError` |
-| anything else | `UpstreamError` |
+| `exceptionId` | Raised as | Code |
+|---|---|---|
+| `CBC.0101` | `AuthExpired` | `AUTH_EXPIRED` |
+| `CBC.0102`, `CBC.6006`, `CBC.6008` | `SpecNotFound` | `SPEC_NOT_FOUND` |
+| `CBC.6001` | `ValidationError` | `VALIDATION` |
+| `CBC.6050` | `UpstreamError` | `UPSTREAM` |
+| anything else | `UpstreamError` | `UPSTREAM` |
 
-!!! warning "Known discrepancy"
-    For these mapped exceptions the payload's `error` field currently carries the Huawei id
-    (for example `CBC.6006`) instead of the class code (`SPEC_NOT_FOUND`) that the
-    `huawei/rating` spec requires. The id is also in `details.exceptionId`. Agents should
-    match on both until this is fixed.
+All mapped upstream exceptions return normalized error codes in the payload's `error` field (`SPEC_NOT_FOUND`, `AUTH_EXPIRED`, etc.) via `CalculatorError.toJSON()`. The original Huawei error code is always retained under `details.exceptionId`.
 
 ## Troubleshooting
 

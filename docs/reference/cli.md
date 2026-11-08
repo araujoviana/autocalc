@@ -6,6 +6,25 @@ Regions accept either a **Region ID** (`sa-brazil-1`, `la-south-2`) or a **Geogr
 
 ---
 
+## Global Options
+
+The following flags apply to all `autocalc` commands:
+
+| Option | Description |
+|---|---|
+| `-h, --help` | Display help for command (or root command list) |
+| `--version` | Display version number |
+| `--headed` | Show browser windows during execution |
+| `--profile <name>` | Named authentication profile (default: `default`) |
+| `--json` | Force output formatted as structured JSON |
+
+## Standard Streams Contract
+
+- **`stdout`**: Normal command output (human-readable tables or formatted JSON when `--json` or piped).
+- **`stderr`**: Error messages, warnings, and interactive progress/status indicators.
+
+---
+
 ## 1. Catalog & Pricing (No Login Required)
 
 | Command | Purpose | Needs login |
@@ -57,7 +76,7 @@ You can pass the quote file path as a positional argument (`autocalc plan quote.
 | Command | Purpose | Needs login |
 |---|---|---|
 | `autocalc doctor` | Check endpoints, frontend version, browser detection, profile presence, and cache | no |
-| `autocalc completion [SHELL]` | Generate shell completion script for `bash`, `zsh`, or `fish` (defaults to `$SHELL`) | no |
+| `autocalc completion [shell] [target] [--install]` | Generate or install shell completion script (`bash`, `zsh`, `fish`). Use `--install` (or `autocalc completion install [target]`) to configure automatically | no |
 | `autocalc schema <pull\|coverage\|diff> SERVICE` | Inspect or refresh service page schemas (`--json`) | no |
 | `autocalc update [--to vX.Y.Z]` | Reinstall from the newest release tag, or the one named; prints `old -> new` (`AUTOCALC_NO_UPDATE_CHECK=1` disables daily check notices) | no |
 | `autocalc install-browser` | Install Playwright's pinned Chromium (only needed without a system Chrome/Edge/Chromium) | no |
@@ -81,9 +100,24 @@ autocalc publish-quote --draft-id d-1a2b3c4d --name "acme web tier"
 | Variable | Effect |
 |---|---|
 | `AUTOCALC_PROFILE` | Named login profile (default `default`) |
-| `AUTOCALC_CONFIG` | Session, drafts, and config directory (default `~/.config/autocalc`) |
+| `AUTOCALC_CONFIG` | Session credentials and update check cache directory (default `~/.config/autocalc`) |
+| `AUTOCALC_DATA` | Drafts, run records, and browser profiles directory (default `~/.local/share/autocalc`) |
 | `AUTOCALC_CACHE` | Catalog cache directory (default `~/.cache/autocalc`) |
 | `AUTOCALC_BROWSER` | Path of the Chromium-family browser to drive; overrides auto-detection |
-| `AUTOCALC_ENCODE_WORKERS` | Concurrent anonymous browser contexts used during card encoding (default `6`) |
+| `AUTOCALC_ENCODE_WORKERS` | Concurrent anonymous browser contexts used during card encoding (default `3 (or CPU/RAM budget)`) |
+| `AUTOCALC_PAGE_HEADED` | Set to `1` to show browser windows during card encoding and gate checks |
+| `AUTOCALC_SCHEMA_DIR` | Override directory path for service page schema definitions |
 | `AUTOCALC_KEEP_ON_FAIL` | Set to `1` to keep a remote list that failed the publish gate for inspection |
 | `AUTOCALC_NO_UPDATE_CHECK` | Set to `1` to disable the daily release update check notice |
+
+---
+
+## Exit Codes
+
+| Exit Code | Meaning | Context / Triggers |
+|---|---|---|
+| `0` | Success | All requested operations and checks passed cleanly |
+| `1` | Check / verification failure | Verification commands failed (`validate`, `edit-check`, `render-check`, or `doctor` with `ok: false`) |
+| `2` | Validation error, syntax error, or CLI exception | Invalid arguments, schema validation failures, or runtime `CalculatorError` |
+| `130` | Interrupted via `SIGINT` | Process terminated via `Ctrl+C` |
+| `143` | Terminated via `SIGTERM` | Process killed by standard termination signal |

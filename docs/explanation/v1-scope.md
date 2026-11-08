@@ -13,7 +13,7 @@ listed per row: no priced SKU, a one-time purchase, a support contract, a profes
 Checked live on 2026-10-17: the catalog lists 97 services;
 4 are not counted, so **93 count and the v1 target is 47**.
 
-As of 2026-11-07 ([Project status](../status.md)), **40 services are `VERIFIED`** (100% control mapping coverage in `src/schema/files/*.yaml` and validated across 20 multi-service business scenarios) and **all 51 supported services** pass live anonymous replay (`bun run compat <service>`). See the [**Huawei Cloud Service Catalog**](../reference/services/index.md) for the per-service argument and schema reference.
+As of 2026-11-08 ([Project status](../status.md)), **41 services are `VERIFIED`** (100% control mapping coverage across 51 schema files in `src/schema/files/*.yaml` and validated across 20 multi-service business scenarios) and **all 51 supported services** pass live anonymous replay (`bun run compat <service>`). See the [**Huawei Cloud Service Catalog**](../reference/services/index.md) for the per-service argument and schema reference.
 
 Publication requires an eligible builder, supported billing, representable quantity/options,
 a mapped chosen specification, and matching requested/page/global values before price checks.
@@ -26,7 +26,7 @@ Default-only recipes (`aad`, `cc`, `dbss`, `dsc`, `edgesec`, `esw`, `ga`, `hecs`
 | AI | `cbs` | Conversational Bot Service | later |
 | AI | `ges` | Graph Engine Service | later |
 | AI | `image` | Images Recognition | later |
-| AI | `maas` | MaaS | not counted: no priced SKU in the catalog |
+| AI | `maas` | MaaS | verified publishable |
 | AI | `modelarts` | ModelArts | later |
 | AI | `moderation` | Content Moderation | later |
 | AI | `ocr` | Optical Character Recognition | later |
@@ -49,7 +49,7 @@ Default-only recipes (`aad`, `cc`, `dbss`, `dsc`, `edgesec`, `esw`, `ga`, `hecs`
 | Compute | `dcc` | Dedicated Computing Cluster | later |
 | Compute | `deh` | Dedicated Host | later |
 | Compute | `ecs` | Elastic Cloud Server | eligible |
-| Compute | `function` | FunctionGraph | blocked pending verification |
+| Compute | `function` | FunctionGraph | verified publishable |
 | Compute | `hcss` | Flexus L Instance | later |
 | Compute | `hecs` | Flexus X Instance | blocked pending verification |
 | Containers | `cce` | Cloud Container Engine | eligible |
@@ -76,7 +76,7 @@ Default-only recipes (`aad`, `cc`, `dbss`, `dsc`, `edgesec`, `esw`, `ga`, `hecs`
 | MacroVerse aPaaS | `koomessage` | KooMessage | later |
 | Management & Governance | `aom` | Application Operations Management | later |
 | Management & Governance | `apm` | Application Performance Management | eligible |
-| Management & Governance | `lts` | Log Tank Service | blocked pending verification |
+| Management & Governance | `lts` | Log Tank Service | verified publishable |
 | Media Services | `cloudrtc` | Huawei Cloud Real-Time Communication | later |
 | Media Services | `live` | Live | later |
 | Media Services | `mpc` | Media Processing Center | later |
@@ -91,24 +91,24 @@ Default-only recipes (`aad`, `cc`, `dbss`, `dsc`, `edgesec`, `esw`, `ga`, `hecs`
 | Migration | `cdm` | Cloud Data Migration | later |
 | Networking | `cc` | Cloud Connect | blocked pending verification |
 | Networking | `dline` | Direct Connect As A Service | eligible |
-| Networking | `eip` | Elastic IP | blocked pending verification |
+| Networking | `eip` | Elastic IP | verified publishable |
 | Networking | `elb` | Elastic Load Balance | eligible |
 | Networking | `er` | Enterprise Router | eligible (spec mapping required) |
 | Networking | `esw` | Enterprise Switch | blocked pending verification |
 | Networking | `ga` | Global Accelerator | blocked pending verification |
 | Networking | `nat` | NAT Gateway | eligible |
-| Networking | `vpcep` | VPC Endpoint | blocked pending verification |
-| Networking | `vpn` | Virtual Private Network | blocked pending verification |
+| Networking | `vpcep` | VPC Endpoint | verified publishable |
+| Networking | `vpn` | Virtual Private Network | verified publishable |
 | Professional Services | `hcoms` | HUAWEI CLOUD O&M Service | not counted: a professional service, not a resource |
 | Security & Compliance | `aad` | Anti-DDoS Service | blocked pending verification |
 | Security & Compliance | `cbh` | Cloud Bastion Host | later |
 | Security & Compliance | `ccm` | Cloud Certificate & Manager | later |
-| Security & Compliance | `cfw` | Cloud Firewall | blocked pending verification |
+| Security & Compliance | `cfw` | Cloud Firewall | verified publishable |
 | Security & Compliance | `dbss` | Database Security Service | blocked pending verification |
 | Security & Compliance | `dew` | Data Encryption Workshop | eligible |
 | Security & Compliance | `dsc` | Data Security Center | blocked pending verification |
 | Security & Compliance | `edgesec` | Edge Security | blocked pending verification |
-| Security & Compliance | `hss` | Host Security Service | blocked pending verification |
+| Security & Compliance | `hss` | Host Security Service | verified publishable |
 | Security & Compliance | `ssa` | Situation Awareness | eligible (spec mapping required) |
 | Security & Compliance | `waf` | Web Application Firewall | eligible |
 | Storage | `cbr` | Cloud Backup and Recovery | eligible |
