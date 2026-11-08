@@ -12,7 +12,6 @@ exclude_docs: |
   /compat/
   /reports/
   /private/
-  /research/
   /superpowers/
   /design/
 
@@ -167,6 +166,7 @@ nav:
       - Errors: reference/errors.md
       - Huawei calculator backend: reference/huawei-backend.md
   - How-to guides:
+      - Agent & MCP-first workflow: how-to/agent-mcp-workflow.md
       - Run the tests: how-to/run-tests.md
       - Refresh the golden corpus: how-to/refresh-corpus.md
       - Fetch the calculator bundle: how-to/fetch-bundle.md
@@ -210,3 +210,13 @@ nav:
       - "0017: TypeScript on Bun target": adr/0017-typescript-on-bun-is-the-target.md
       - "0018: Declarative quotes and card schema": adr/0018-declarative-quotes-and-generated-card-schema.md
       - "0019: Distribution via bun": adr/0019-distribution-bun-from-git-tags.md
+  - Research:
+      - Overview: research/index.md
+      - General Architecture & Quirks: research/general.md
+      - Huawei Cloud:
+          - Object Storage (OBS): research/huawei/obs.md
+          - DMS for Kafka: research/huawei/kafka.md
+      - In-Depth Audits:
+          - Audit & Migration Review (2026-11-02): research/audit-review.md
+          - Edit Verification Design (2026-11-02): research/edit-verification.md
+          - Compatibility Audit (2026-11-07): research/compat-audit-2026-11-07.md

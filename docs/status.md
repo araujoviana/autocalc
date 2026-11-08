@@ -5,7 +5,7 @@ for whoever picks the work up; the detail lives in the pages it links.
 
 ## Where things stand
 
-The implementation is TypeScript on Bun (v0.3.0, [ADR-0017](adr/0017-typescript-on-bun-is-the-target.md)).
+The implementation is TypeScript on Bun (v0.4.0, [ADR-0017](adr/0017-typescript-on-bun-is-the-target.md)).
 All three layers of the declarative design exist and are covered by the offline suite
 ([architecture](explanation/architecture.md)):
 

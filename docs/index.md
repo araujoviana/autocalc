@@ -20,6 +20,7 @@ not a cosmetic one ([ADR-0002](adr/0002-share-link-is-the-deliverable.md)).
 | look up a CLI command, an error code or an endpoint | [CLI Reference](reference/cli.md) |
 | do a specific job (run tests, refresh fixtures) | [How-to guides](how-to/run-tests.md) |
 | understand why the calculator is hard to drive | [Explanation](explanation/architecture.md) |
+| explore vendor SPA quirks & discoveries | [Research & Discoveries](research/index.md) |
 | know why a decision was made | [Decisions (ADRs)](adr/index.md) |
 | see what comes next and what is still open | [Roadmap](roadmap.md) |
 

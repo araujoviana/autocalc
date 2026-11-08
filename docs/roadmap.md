@@ -19,6 +19,7 @@ live in `openspec/changes/archive/`.
 | 11 | `card-schema` | Generated card schemas, quote files and `plan_quote` / `apply_quote` ([ADR-0018](adr/0018-declarative-quotes-and-generated-card-schema.md)) |
 | 12 | `ts-parity` | TypeScript on Bun reaches parity and replaces Python; v0.2.0 ([ADR-0017](adr/0017-typescript-on-bun-is-the-target.md)) |
 | 13 | `yaml-spec` | Declarative `version: "1"` quote files: unit-checked YAML, templates, canonical IR, lock file, wire budgeting and partitioning, 4-tier circuit breaker |
+| 14 | `research-knowledge-and-mcp-workflow` | Searchable research section, Huawei SPA discoveries (OBS, Kafka, Vue 3 reactivity, timeTag), and MCP-first workflow guidance |
 
 AWS is v2.
 

@@ -134,6 +134,8 @@ Then ask the agent, for example: *"Quote 3 c7n.large.2 Linux servers with 100 GB
 Santiago, monthly. Show me a dry run first."* The agent plans the quote and publishes it once
 you agree. It then replies with a `calculator.html?shareListId=…` link that anyone can open.
 
+For a detailed walkthrough of tool discovery, draft/revise/publish lifecycle, and warning inspection, see the [Agent & MCP-First Workflow Guide](../how-to/agent-mcp-workflow.md).
+
 ## 6. Check what you made
 
 ```bash
