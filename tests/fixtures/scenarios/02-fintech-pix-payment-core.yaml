@@ -23,7 +23,7 @@ templates:
       vcpus: 8
       memory: "32 GiB"
     options:
-      os: almalinux-9.4
+      os: ubuntu-22.04
       system_disk:
         type: ultra-high-io
         size: "120 GiB"

@@ -59,7 +59,7 @@ const OS_MAP: Record<string, string> = {
   "almalinux-9.3": "AlmaLinux 9.3 64bit",
   "almalinux-9.0": "AlmaLinux 9.0 64bit",
   "almalinux-8": "AlmaLinux 8.8 64bit",
-  linux: "AlmaLinux 9.4 64bit",
+  linux: "Ubuntu 22.04 server 64bit",
   debian: "Debian 12.0.0 64bit",
   "debian-12": "Debian 12.0.0 64bit",
   "debian-11": "Debian 11.7.0 64bit",
@@ -354,7 +354,7 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
 
   switch (service) {
     case "ecs": {
-      const osRaw = String(rawOpts.os ?? rawOpts.image ?? "almalinux-9.4").trim();
+      const osRaw = String(rawOpts.os ?? rawOpts.image ?? "ubuntu-22.04").trim();
       options.image = OS_MAP[osRaw.toLowerCase()] ?? (osRaw === "AlmaLinux" ? "AlmaLinux 9.4 64bit" : osRaw);
       if (rawOpts.system_disk !== undefined) {
         options.system_disk = normalizeDisk(rawOpts.system_disk, 40);
@@ -1113,7 +1113,7 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
     }
 
     case "hecs": {
-      const osRaw = String(rawOpts.os ?? rawOpts.image ?? "almalinux-9.4").trim();
+      const osRaw = String(rawOpts.os ?? rawOpts.image ?? "ubuntu-22.04").trim();
       options.image = OS_MAP[osRaw.toLowerCase()] ?? osRaw;
       if (rawOpts.system_disk !== undefined) {
         options.system_disk = normalizeDisk(rawOpts.system_disk, 40);

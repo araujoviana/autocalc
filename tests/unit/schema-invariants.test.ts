@@ -48,7 +48,7 @@ test.each(IDS)("schema file is well-formed, canonical, and order chain has no cy
       expect(r.step).toBeGreaterThan(0);
     }
   }
-  expect(dump(schema)).toBe(text);
+  expect(dump(schema).replace(/\r\n/g, "\n")).toBe(text.replace(/\r\n/g, "\n"));
   const roots = schema.controls.filter(c => c.after.length === 0 && c.modes.length === 0);
   expect(roots).toHaveLength(1);
   const byId = new Map(schema.controls.map(c => [c.id, c]));

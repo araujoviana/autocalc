@@ -34,6 +34,17 @@ export function matchImages(images: Record<string, unknown>[], family: string, i
       let relaxedMatched = images.filter(candidate => relaxedMatch(candidate) && Array.isArray(candidate.type) && candidate.type.includes(family));
       if (!relaxedMatched.length) relaxedMatched = images.filter(relaxedMatch);
       if (relaxedMatched.length === 1) return relaxedMatched;
+      if (relaxedMatched.length > 1) return [relaxedMatched[0]!];
+    }
+    const brand = image.toLowerCase().replace(/[^a-z]/g, " ").trim().split(/\s+/)[0];
+    if (brand && brand.length > 2) {
+      const brandMatch = (candidate: Record<string, unknown>) => {
+        const text = `${display(candidate.__platform)} ${display(candidate.__os_type)} ${imageName(candidate)}`.toLowerCase();
+        return text.includes(brand);
+      };
+      let brandMatched = images.filter(candidate => brandMatch(candidate) && Array.isArray(candidate.type) && candidate.type.includes(family));
+      if (!brandMatched.length) brandMatched = images.filter(brandMatch);
+      if (brandMatched.length > 0) return [brandMatched[0]!];
     }
   }
   return exact.length === 1 ? exact : matched;

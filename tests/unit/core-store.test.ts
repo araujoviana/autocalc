@@ -42,7 +42,7 @@ test("list is newest first and empty for a missing store", async () => {
 
 test("the default root follows AUTOCALC_DATA", () => {
   expect(dataDir({ AUTOCALC_DATA: "/somewhere" })).toBe("/somewhere");
-  expect(dataDir({})).toMatch(/\.local\/share\/autocalc$/);
+  expect(dataDir({})).toMatch(/[/\\]\.local[/\\]share[/\\]autocalc$/);
 });
 
 test("a lock excludes concurrent work on the same draft, and is released on failure", async () => {

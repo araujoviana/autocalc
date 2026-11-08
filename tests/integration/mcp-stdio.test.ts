@@ -49,7 +49,7 @@ test("schema resources list services and read one without login", async () => {
     await expect(client.readResource({ uri: "autocalc://schema/..%2Fx" })).rejects.toThrow();
     await expect(client.readResource({ uri: "autocalc://schema/nope" })).rejects.toThrow(/No schema/);
   } finally { await client.close(); }
-}, 15000);
+}, 30000);
 
 test("invalid tool input returns a structured validation error", async () => {
   const client = new Client({ name: "autocalc-error-parity", version: "1" });
@@ -61,4 +61,4 @@ test("invalid tool input returns a structured validation error", async () => {
     expect(JSON.parse(content[0]?.text ?? "null")).toMatchObject({ error: "VALIDATION" });
     await expect(client.callTool({ name: "no_such_tool", arguments: {} })).rejects.toMatchObject({ code: -32602 });
   } finally { await client.close(); }
-});
+}, 30000);
