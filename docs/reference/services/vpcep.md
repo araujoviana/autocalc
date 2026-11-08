@@ -34,6 +34,21 @@ resources:
       traffic_gb: 1000 GB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example VPCEP"
+settlement: total
+cards:
+  - id: service-endpoint
+    service: vpcep
+    region: sa-brazil-1
+    billing: ondemand
+    options:
+      duration_hours: 730
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -43,7 +58,7 @@ Top-level card fields: `id` (required), `service: vpcep`, `region`, `billing` (`
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `vpc_vpcep`. |
-| `options.duration_hours` | `number / unit` | `1..999999 hour` (step 1) | **Purchase Duration**. Maps to portal control `calculator_vpcep_time_Stepper_0`. |
+| `options.duration_hours` | `number / unit` | `1..999999 hour` (step 1) | VPC endpoint instance operating duration in hours (default: 730). In declarative quotes, write `hours: 730` or `endpoints: 2`. *(Portal controls: `calculator_vpcep_time_Stepper_0`)* |
 
 ---
 

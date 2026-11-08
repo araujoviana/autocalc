@@ -36,6 +36,24 @@ resources:
       spec: medium
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example DRS"
+settlement: total
+cards:
+  - id: db-sync
+    service: drs
+    region: sa-brazil-1
+    billing: ondemand
+    spec: drs.xlg.sync
+    options:
+      type: sync
+      flow: into_cloud
+      specification: large
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -45,9 +63,9 @@ Top-level card fields: `id` (required), `service: drs`, `region`, `billing` (`mo
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `drs_drs.vm`. |
-| `options.type` | `string` | Catalog / Enum | **Task Type**. Maps to portal control `calculator_drsvm_radio_drsType`. |
-| `options.flow` | `string` | Catalog / Enum | **Data Flow**. Maps to portal control `calculator_drsvm_radio_flowInout`. |
-| `options.specification` | `string` | Catalog / Enum | **Specifications**. Maps to portal control `calculator_drsvm_radio_specificationType`. |
+| `options.type` | `string` | Catalog / Enum | Replication task category: `migration` (Real-time Migration), `sync` (Real-time Sync), or `dr` (Disaster Recovery). *(Portal controls: `calculator_drsvm_radio_drsType`)* |
+| `options.flow` | `string` | Catalog / Enum | Data movement direction: `into_cloud` (inbound), `out_of_cloud` (egress), or `in_cloud` (inter-VPC). Alias: `direction`. *(Portal controls: `calculator_drsvm_radio_flowInout`)* |
+| `options.specification` | `string` | Catalog / Enum | Task worker scale: `micro`, `small`, `medium`, `large`, or `xlarge`. Alias: `scale`. *(Portal controls: `calculator_drsvm_radio_specificationType`)* |
 
 ---
 

@@ -34,6 +34,20 @@ resources:
       probe_days: 500
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example APM"
+settlement: total
+cards:
+  - id: apm-monitors
+    service: apm
+    region: sa-brazil-1
+    billing: ondemand
+    spec: apm2.instance.normal
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)

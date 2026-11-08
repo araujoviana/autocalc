@@ -39,6 +39,24 @@ resources:
       backup_storage_gb: 500 GB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example TAURUSDB"
+settlement: total
+cards:
+  - id: distributed-mysql
+    service: taurusdb
+    region: sa-brazil-1
+    billing: monthly
+    spec: gaussdb.mysql.large.x86.4
+    options:
+      enterprise_instance: standard
+      nodes: 2
+      storage_gb: 100
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -48,11 +66,11 @@ Top-level card fields: `id` (required), `service: taurusdb`, `region`, `billing`
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `taurus_taurus.vm`. |
-| `options.enterprise_instance` | `string` | Catalog / Enum | **DB Instance Type**. Maps to portal control `calculator_gaussdb_radio_enterpriseInstance`. |
-| `options.public_type` | `string` | Catalog / Enum | **Instance Specifications**. Maps to portal control `calculator_gaussdb_publicType_switch_publicGaussdbType`. |
-| `options.spec` | `string` | Catalog / Enum | ** **. Maps to portal control `calculator_gaussdb_publicType_switch_spec`. |
-| `options.nodes` | `number / unit` | `2..10` (step 1) | **Nodes**. Maps to portal control `calculator_gaussdb_publicType_switch_Stepper_0`. |
-| `options.storage_gb` | `number / unit` | `10..128000` (step 10) | Maps to portal control `calculator_gaussdb_volume_stepper_Stepper_0`. |
+| `options.enterprise_instance` | `string` | Catalog / Enum | TaurusDB topology: `standard` (Primary/Standby) or `multi-master`. In declarative quotes, write `topology: standard`. *(Portal controls: `calculator_gaussdb_radio_enterpriseInstance`)* |
+| `options.public_type` | `string` | Catalog / Enum | Instance specification class (`x86.4`). *(Portal controls: `calculator_gaussdb_publicType_switch_publicGaussdbType`)* |
+| `options.spec` | `string` | Catalog / Enum | TaurusDB compute SKU (e.g. `gaussdb.mysql.large.x86.4`). *(Portal controls: `calculator_gaussdb_publicType_switch_spec`)* |
+| `options.nodes` | `number / unit` | `2..10` (step 1) | Total cluster node count including primary and read replicas (2–10 nodes). Alias: `replicas` (node count = replicas + 1). *(Portal controls: `calculator_gaussdb_publicType_switch_Stepper_0`)* |
+| `options.storage_gb` | `number / unit` | `10..128000` (step 10) | Cluster storage capacity in GB (10–128,000 GB, in 10 GB increments). *(Portal controls: `calculator_gaussdb_volume_stepper_Stepper_0`)* |
 
 ---
 

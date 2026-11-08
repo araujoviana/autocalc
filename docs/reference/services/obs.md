@@ -69,9 +69,9 @@ Top-level card fields: `id` (required), `service: obs`, `region`, `billing` (`on
 | :--- | :--- | :--- | :--- |
 | `options.package` | `string` | Catalog / Enum | Prepaid Standard storage package (`40gb` to `10pb`). Requires `monthly` or `yearly` billing. *(Portal controls: `calculator_Pack_checkboxGroup_packageType`, `calculator_storagePack_radio_obsStorageSize`)* |
 | `options.traffic_package` | `string` | Catalog / Enum | Prepaid outbound traffic package (`50gb` to `300tb`, or `none`). Requires `package`. *(Portal controls: `calculator_Outbound_radio_obsDownTrafficSize`)* |
-| `options.components` | `any` | Builder-validated | Explicit usage lines (`size`, `size_3az`, `download.external`, `get`, `put`, etc.). In `version: "1"`, high-level options (`capacity`, `traffic`, `read_requests`, `write_requests`) compile into `components` automatically. |
+| `options.components` | `any` | Builder-validated | Explicit usage lines (`size`, `size_3az`, `download.external`, `get`, `put`, etc.). In `version: "1"`, high-level human options (`capacity: "10 TB"`, `traffic: "5 TB/mo"`, `read_requests: "5000k/mo"`, `write_requests: "500k/mo"`) compile into `components` automatically. |
 | `options.months` | `any` | Builder-validated | Duration in months (1–12) for pay-per-use usage cards. |
-| `options.multi_az` | `any` | Builder-validated | Enable 3-AZ redundancy (`true` or `false`). Not supported on `cold` pay-per-use storage. |
+| `options.multi_az` | `any` | Builder-validated | Enable 3-AZ redundancy (`true` or `false`). In declarative quotes, write `redundancy: multi-az` or `availability: multi-az`. Not supported on `cold` pay-per-use storage. |
 | `options.storage_class` | `any` | Builder-validated | Storage tier: `standard`, `warm` (Infrequent Access), or `cold` (Archive). Default: `standard`. |
 
 ---

@@ -2,7 +2,7 @@
 
 | Property | Value |
 | :--- | :--- |
-| **Service Code** | `dew` (aliases: `kms`) |
+| **Service Code** | `dew` (aliases: `csms`, `kms`) |
 | **Category** | Security & Compliance |
 | **Publish Gate Status** | `VERIFIED` (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
@@ -36,6 +36,22 @@ resources:
       hsm_instances: 1
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example DEW"
+settlement: total
+cards:
+  - id: kms-keys
+    service: dew
+    region: sa-brazil-1
+    billing: ondemand
+    options:
+      keys: 5
+      api_requests: 10
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -44,11 +60,11 @@ Top-level card fields: `id` (required), `service: dew`, `region`, `billing` (`on
 
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
-| `options.api_requests` | `any` | Builder-validated | API request units (1–9,999 per physical card, in units of 10,000 requests; automatically split across cards in `version: "1"`). |
-| `options.api_spec` | `any` | Builder-validated | API call SKU (`kms.api` or `csms.secret.api`). |
+| `options.api_requests` | `any` | Builder-validated | API request units (1–9,999 per physical card, in units of 10,000 requests; automatically split across cards in `version: "1"`). In declarative quotes, write `requests: 100,000` or `10 units`. |
+| `options.api_spec` | `any` | Builder-validated | API call SKU (`kms.api` or `csms.secret.api`). Automatically set when `type: csms`. |
 | `options.days` | `any` | Builder-validated | On-demand duration in days (default: `30`). |
-| `options.keys` | `any` | Builder-validated | Number of KMS custom keys or CSMS secrets (1–99 per physical card; automatically split across cards in `version: "1"`). |
-| `options.storage_spec` | `any` | Builder-validated | Key/secret storage SKU (`kms.ud.customer` or `csms.secret.storage`). |
+| `options.keys` | `any` | Builder-validated | Number of KMS custom keys or CSMS secrets (1–99 per physical card; automatically split across cards in `version: "1"`). Alias: `secrets`, `custom_keys`. |
+| `options.storage_spec` | `any` | Builder-validated | Key/secret storage SKU (`kms.ud.customer` for KMS keys or `csms.secret.storage` for CSMS secrets). Automatically set when `type: csms`. |
 
 ---
 

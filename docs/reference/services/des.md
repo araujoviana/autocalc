@@ -35,6 +35,23 @@ resources:
       devices: 2
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example DES"
+settlement: total
+cards:
+  - id: data-express
+    service: des
+    region: sa-brazil-1
+    billing: ondemand
+    spec: des.teleport.60TB
+    options:
+      transfer_type: teleport
+      devices: 5
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -44,8 +61,8 @@ Top-level card fields: `id` (required), `service: des`, `region`, `billing` (`on
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `des_des`. |
-| `options.transfer_type` | `string` | Catalog / Enum | **Transmission Mode**. Maps to portal control `calculator_product_select_transferTypeClass`. |
-| `options.devices` | `number / unit` | `1..99 day` (step 1) | **Teleport Onsite Duration**. Maps to portal control `calculator_product_stepper_Stepper_0`. |
+| `options.transfer_type` | `string` | Catalog / Enum | Transmission mode: `teleport` (Huawei Teleport device) or `disk` (customer physical hard drives). Alias: `mode`. *(Portal controls: `calculator_product_select_transferTypeClass`)* |
+| `options.devices` | `number / unit` | `1..99 day` (step 1) | Teleport onsite usage duration in days (1–99 days; Teleport mode only). In declarative quotes, write `onsite_days: 5` (deprecating the confusing option name `devices`). *(Portal controls: `calculator_product_stepper_Stepper_0`)* |
 
 ---
 

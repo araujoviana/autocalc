@@ -35,6 +35,23 @@ resources:
       size_tb: 43.35 TB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example DSS"
+settlement: total
+cards:
+  - id: dedicated-storage-pool
+    service: dss
+    region: sa-brazil-1
+    billing: yearly
+    spec: DSS.SAS
+    options:
+      type: SAS
+      capacity: 43.350 TB
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -44,8 +61,8 @@ Top-level card fields: `id` (required), `service: dss`, `region`, `billing` (`ye
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `dss_dss.pool`. |
-| `options.type` | `string` | Catalog / Enum | **Type**. Maps to portal control `calculator_dssDemand_radio_type`. |
-| `options.capacity` | `string` | Catalog / Enum | **Capacity**. Maps to portal control `calculator_dssDemand_radio_dssDivision`. |
+| `options.type` | `string` | Catalog / Enum | Dedicated storage pool media type: `SAS` (High I/O) or `SSD` (Ultra-high I/O). *(Portal controls: `calculator_dssDemand_radio_type`)* |
+| `options.capacity` | `string` | Catalog / Enum | Discrete dedicated pool division size (e.g. `43.350 TB` for SAS, `13.600 TB` for SSD). *(Portal controls: `calculator_dssDemand_radio_dssDivision`)* |
 
 ---
 

@@ -43,8 +43,8 @@ Top-level card fields: `id` (required), `service: cci`, `region`, `billing` (`on
 
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
-| `options.mem_gb` | `any` | Builder-validated | Container memory allocation in GB (1–512 GB). |
-| `options.vcpu` | `any` | Builder-validated | Container vCPU allocation (1–512). |
+| `options.mem_gb` | `any` | Builder-validated | Container memory allocation in GB (1–512 GB). In declarative `version: "1"`, write `memory_gb: "8 GiB"` or `needs: { memory: "8 GiB" }`. |
+| `options.vcpu` | `any` | Builder-validated | Container vCPU allocation (1–512). In declarative `version: "1"`, write `vcpus: 4` or `needs: { vcpus: 4 }`. |
 
 ---
 

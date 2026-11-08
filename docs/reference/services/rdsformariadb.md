@@ -39,6 +39,23 @@ resources:
       storage_gb: 400 GB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example RDSFORMARIADB"
+settlement: total
+cards:
+  - id: mariadb-ha
+    service: rdsformariadb
+    region: sa-brazil-1
+    billing: monthly
+    spec: mariadb.x1.large.4.ha
+    options:
+      instance_type: Ha
+      storage_gb: 100
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -48,11 +65,11 @@ Top-level card fields: `id` (required), `service: rdsformariadb`, `region`, `bil
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `rdsformariadb_rdsformariadb.vm`. |
-| `options.db_version` | `string` | Catalog / Enum | **DB Engine Version**. Maps to portal control `calculator_rdsvm_radio_dbVersion`. |
-| `options.instance_type` | `string` | Catalog / Enum | **DB Instance Type**. Maps to portal control `calculator_rdsvm_radio_instanceType`. |
-| `options.public_type` | `string` | Catalog / Enum | **DB Instance Class**. Maps to portal control `calculator_rdsvm_radio_publicType`. |
-| `options.spec` | `string` | Catalog / Enum | Maps to portal control `calculator_rdsvm_radio2_spec`. |
-| `options.storage_gb` | `number / unit` | `40..4000` (step 10) | Maps to portal control `calculator_rdsvolume_stepper_Stepper_0`. |
+| `options.db_version` | `string` | Catalog / Enum | MariaDB engine release version (e.g. `10.5`, `10.4`). Alias: `version`. *(Portal controls: `calculator_rdsvm_radio_dbVersion`)* |
+| `options.instance_type` | `string` | Catalog / Enum | MariaDB topology: `Ha` (Primary/Standby) or `Single`. In declarative quotes, write `topology: primary-standby`. *(Portal controls: `calculator_rdsvm_radio_instanceType`)* |
+| `options.public_type` | `string` | Catalog / Enum | Instance class: `general` (General-purpose) or `dedicated` (Dedicated). *(Portal controls: `calculator_rdsvm_radio_publicType`)* |
+| `options.spec` | `string` | Catalog / Enum | MariaDB compute SKU (e.g. `mariadb.x1.large.4.ha`). *(Portal controls: `calculator_rdsvm_radio2_spec`)* |
+| `options.storage_gb` | `number / unit` | `40..4000` (step 10) | Database storage capacity in GB (40–4,000 GB, in 10 GB increments). *(Portal controls: `calculator_rdsvolume_stepper_Stepper_0`)* |
 
 ---
 

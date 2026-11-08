@@ -35,6 +35,23 @@ resources:
       tokens_thousands: 50000
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example MAAS"
+settlement: total
+cards:
+  - id: maas-deepseek-tokens
+    service: maas
+    region: ap-southeast-1
+    billing: ondemand
+    spec: modelarts.tokens.deepseek.v4.1.flash
+    options:
+      input_mtokens: 50
+      output_mtokens: 10
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -44,14 +61,14 @@ Top-level card fields: `id` (required), `service: maas`, `region`, `billing` (`o
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `modelarts_modelarts.tokens`. |
-| `options.reasoning_mode` | `string` | Catalog / Enum | **Inference Mode**. Maps to portal control `calculator_ucsType_radio_ondemand_reasoningMode`. |
-| `options.model_service_type` | `string` | Catalog / Enum | **Model Type**. Maps to portal control `calculator_ucsType_radio_ondemand_modelServiceType`. |
-| `options.model_series` | `string` | Catalog / Enum | **Models**. Maps to portal control `calculator_ucsType_radio_ondemand_modelSeries`. |
-| `options.model_name` | `string` | Catalog / Enum | **Model**. Maps to portal control `calculator_ucsType_radio_ondemand_modelName`. |
-| `options.billing_mode_type` | `string` | Catalog / Enum | **Billing Mode**. Maps to portal control `calculator_ucsType_radio_ondemand_billingModeType`. |
-| `options.input_mtokens` | `number / unit` | `1..999999999 million tokens` (step 1) | **Input**. Maps to portal control `calculator_Input_stepper_Stepper_0`. |
-| `options.output_mtokens` | `number / unit` | `1..999999999 million tokens` (step 1) | **Output**. Maps to portal control `calculator_output_stepper_Stepper_0`. |
-| `options.cached_input_mtokens` | `number / unit` | `1..999999999 million tokens` (step 1) | **Cache Hit Input**. Maps to portal control `calculator_token_cached_input_stepper_Stepper_0`. |
+| `options.reasoning_mode` | `string` | Catalog / Enum | Inference mode (`standard`). Automatically populated from the catalog model SKU. *(Portal controls: `calculator_ucsType_radio_ondemand_reasoningMode`)* |
+| `options.model_service_type` | `string` | Catalog / Enum | Model service class (`system`). Automatically populated from the catalog model SKU. *(Portal controls: `calculator_ucsType_radio_ondemand_modelServiceType`)* |
+| `options.model_series` | `string` | Catalog / Enum | Model family series (`deepseek`, `glm`). Automatically populated from the catalog model SKU. *(Portal controls: `calculator_ucsType_radio_ondemand_modelSeries`)* |
+| `options.model_name` | `string` | Catalog / Enum | Catalog model name (e.g. `deepseek-v3`, `deepseek-r1`). In declarative quotes, select via `options.model: deepseek-v3` or `spec`. *(Portal controls: `calculator_ucsType_radio_ondemand_modelName`)* |
+| `options.billing_mode_type` | `string` | Catalog / Enum | Pricing dimension (`tokens`). Automatically populated from the catalog model SKU. *(Portal controls: `calculator_ucsType_radio_ondemand_billingModeType`)* |
+| `options.input_mtokens` | `number / unit` | `1..999999999 million tokens` (step 1) | Monthly input tokens in units of million tokens (e.g. `50` for 50 million tokens). In declarative quotes, write `input_tokens: 50M` or `tokens_thousands: 50000`. *(Portal controls: `calculator_Input_stepper_Stepper_0`)* |
+| `options.output_mtokens` | `number / unit` | `1..999999999 million tokens` (step 1) | Monthly generated output tokens in units of million tokens (e.g. `10` for 10 million tokens). In declarative quotes, write `output_tokens: 10M`. *(Portal controls: `calculator_output_stepper_Stepper_0`)* |
+| `options.cached_input_mtokens` | `number / unit` | `1..999999999 million tokens` (step 1) | Monthly prompt cache hit input tokens in units of million tokens (e.g. `20` for 20 million tokens). Billed at a discounted cache rate. *(Portal controls: `calculator_token_cached_input_stepper_Stepper_0`)* |
 
 ---
 

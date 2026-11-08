@@ -1,0 +1,32 @@
+{
+  "cache": {
+    "needs": {},
+    "price": "36.55",
+    "spec": "redis.ha.xu1.large.r2.1"
+  },
+  "db": {
+    "needs": {},
+    "price": "74.685",
+    "spec": "rds.mysql.n1.large.4"
+  },
+  "files": {
+    "needs": {},
+    "price": null,
+    "spec": "obs.001"
+  },
+  "nat": {
+    "needs": {},
+    "price": "57.3",
+    "spec": "natgateway_small"
+  },
+  "web": {
+    "needs": {},
+    "price": "62.02",
+    "spec": "c7n.large.2.linux"
+  },
+  "web-disk": {
+    "needs": {},
+    "price": "0.144",
+    "spec": "GPSSD2.storage"
+  }
+}

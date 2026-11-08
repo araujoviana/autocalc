@@ -36,6 +36,23 @@ resources:
       bandwidth_mbps: 20 Mbps
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example CFW"
+settlement: total
+cards:
+  - id: edge-firewall
+    service: cfw
+    region: sa-brazil-1
+    billing: monthly
+    options:
+      edition: detail_3_
+      bandwidth_mbps: 10
+      eips: 1
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -45,9 +62,9 @@ Top-level card fields: `id` (required), `service: cfw`, `region`, `billing` (`mo
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `cfw_cfw`. |
-| `options.edition` | `string` | Catalog / Enum | **Edition**. Maps to portal control `calculator_cfw_editionRadio_edition`. |
-| `options.eips` | `number / unit` | `0..2000 PCS` (step 1) | **Add EIP Protection Capacity**. Maps to portal control `calculator_cfw_eipStepper_Stepper_0`. |
-| `options.bandwidth_mbps` | `number / unit` | `0..20000 Mbit/s` (step 5) | **Add Internet Border Protection Bandwidth**. Maps to portal control `calculator_cfw_bandwidthStepper_Stepper_0`. |
+| `options.edition` | `string` | Catalog / Enum | Firewall edition token: `detail_3_` for Standard, `detail_11_` for Professional. In declarative quotes, write `edition: standard` or `edition: professional`. *(Portal controls: `calculator_cfw_editionRadio_edition`)* |
+| `options.eips` | `number / unit` | `0..2000 PCS` (step 1) | Additional protected public IP addresses beyond the edition baseline. Alias: `protected_eips`. *(Portal controls: `calculator_cfw_eipStepper_Stepper_0`)* |
+| `options.bandwidth_mbps` | `number / unit` | `0..20000 Mbit/s` (step 5) | Additional internet border protection bandwidth in Mbit/s (in 5 Mbit/s increments). Alias: `protection_bandwidth_mbps`. *(Portal controls: `calculator_cfw_bandwidthStepper_Stepper_0`)* |
 
 ---
 

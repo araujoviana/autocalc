@@ -42,6 +42,23 @@ resources:
       backup_storage_gb: 400 GB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example GAUSSDB"
+settlement: total
+cards:
+  - id: enterprise-opengauss
+    service: gaussdb
+    region: sa-brazil-1
+    billing: monthly
+    spec: gaussdb.bs.c6.4xlarge.x864.ha
+    options:
+      deploy_model: centralized
+      storage_gb: 100
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -51,13 +68,13 @@ Top-level card fields: `id` (required), `service: gaussdb`, `region`, `billing` 
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `gaussdb_gaussdb.vm`. |
-| `options.database_type` | `string` | Catalog / Enum | **DB Engine**. Maps to portal control `calculator_opgauss_radio_databseType`. |
-| `options.db_version` | `string` | Catalog / Enum | **DB Engine Version**. Maps to portal control `calculator_opgauss_radio_dbOpenGaussVersion`. |
-| `options.instance_type` | `string` | Catalog / Enum | **DB Instance Type**. Maps to portal control `calculator_opgauss_radio_insType`. |
-| `options.deploy_model` | `string` | Catalog / Enum | **Deployment Model**. Maps to portal control `calculator_opgauss_radio_deployModel`. |
-| `options.public_type` | `string` | Catalog / Enum | **Instance Specifications**. Maps to portal control `calculator_opgauss_spec_radio_publicOpengaussType`. |
-| `options.spec` | `string` | Catalog / Enum | ** **. Maps to portal control `calculator_opgauss_spec_radio_spec`. |
-| `options.storage_gb` | `number / unit` | `40..24000` (step 4) | **Storage Space**. Maps to portal control `calculator_openGauss_volume_stepper_Stepper_0`. |
+| `options.database_type` | `string` | Catalog / Enum | Database engine type (`openGauss`). *(Portal controls: `calculator_opgauss_radio_databseType`)* |
+| `options.db_version` | `string` | Catalog / Enum | openGauss engine version (e.g. `3.200`). Alias: `version`. *(Portal controls: `calculator_opgauss_radio_dbOpenGaussVersion`)* |
+| `options.instance_type` | `string` | Catalog / Enum | Component deployment model: `independent` (separate CN/DN) or `combined`. *(Portal controls: `calculator_opgauss_radio_insType`)* |
+| `options.deploy_model` | `string` | Catalog / Enum | Deployment architecture: `centralized` (Primary/Standby) or `distributed` (Sharded cluster). In declarative quotes, write `deployment_mode: centralized`. *(Portal controls: `calculator_opgauss_radio_deployModel`)* |
+| `options.public_type` | `string` | Catalog / Enum | Compute specification family (`x86` or `arm`). *(Portal controls: `calculator_opgauss_spec_radio_publicOpengaussType`)* |
+| `options.spec` | `string` | Catalog / Enum | GaussDB compute SKU (e.g. `gaussdb.bs.c6.4xlarge.x864.ha`). *(Portal controls: `calculator_opgauss_spec_radio_spec`)* |
+| `options.storage_gb` | `number / unit` | `40..24000` (step 4) | Data node disk capacity in GB (40–24,000 GB, in 4 GB increments). *(Portal controls: `calculator_openGauss_volume_stepper_Stepper_0`)* |
 
 ---
 

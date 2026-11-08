@@ -37,6 +37,24 @@ resources:
       storage_gb: 300 GB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example RABBITMQ"
+settlement: total
+cards:
+  - id: task-queue
+    service: rabbitmq
+    region: sa-brazil-1
+    billing: monthly
+    options:
+      spec_id: c6.2u4g.single
+      brokers: 1
+      storage_gb: 100
+      version: "3.8"
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -46,10 +64,10 @@ Top-level card fields: `id` (required), `service: rabbitmq`, `region`, `billing`
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `dms_dms.platinum`. |
-| `options.version` | `string` | Catalog / Enum | RabbitMQ engine version (default: `3.8`). *(Portal controls: `calculator_rabbitMQ_version_switch_UNSET_Switch`)* |
-| `options.spec_id` | `string` | Catalog / Enum | Broker flavor (`c6.2u4g.single`..`c6.24u48g.single` or `c6.2u4g.cluster`..`c6.32u64g.cluster`). *(Portal controls: `calculator_rabbitMQ_architecture_switch_architectureName`, `calculator_rabbitMQ_specType_switch_specName`)* |
-| `options.storage_gb` | `number / unit` | `100..30000` (step 100) | Broker storage in GB (≥ 100 GB). *(Portal controls: `calculator_rabbitMQ_new_storage_stepper_Stepper_0`)* |
-| `options.brokers` | `any` | Builder-validated | Broker count (`1` for single-node; `3`, `5`, or `7` for cluster). |
+| `options.version` | `string` | Catalog / Enum | RabbitMQ engine version (default: `3.8`). Alias: `engine_version`. *(Portal controls: `calculator_rabbitMQ_version_switch_UNSET_Switch`)* |
+| `options.spec_id` | `string` | Catalog / Enum | Broker flavor (`c6.2u4g.single`..`c6.24u48g.single` or `c6.2u4g.cluster`..`c6.32u64g.cluster`). Can also be passed as `flavor`. *(Portal controls: `calculator_rabbitMQ_architecture_switch_architectureName`, `calculator_rabbitMQ_specType_switch_specName`)* |
+| `options.storage_gb` | `number / unit` | `100..30000` (step 100) | Broker disk storage per node in GB (≥ 100 GB). Total cluster storage equals `storage_gb * brokers`. *(Portal controls: `calculator_rabbitMQ_new_storage_stepper_Stepper_0`)* |
+| `options.brokers` | `any` | Builder-validated | Broker node count: `1` for single-node; `3`, `5`, or `7` for cluster. |
 
 ---
 

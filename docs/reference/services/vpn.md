@@ -38,6 +38,23 @@ resources:
       connection_groups: 10
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example VPN"
+settlement: total
+cards:
+  - id: ipsec-vpn
+    service: vpn
+    region: sa-brazil-1
+    billing: monthly
+    options:
+      eip1_mbps: 10
+      eip2_mbps: 10
+      connection_groups: 10
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -47,10 +64,10 @@ Top-level card fields: `id` (required), `service: vpn`, `region`, `billing` (`mo
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `vpc_bandwidth`. |
-| `options.spec` | `string` | Catalog / Enum | **Specification**. Maps to portal control `calculator_evpnGatewaySpec_radio_calGatewaySpec`. |
-| `options.connection_groups` | `number / unit` | Default `10` when `S2C-VPN-Ent.Basic`<br>`10..100` (step 1) when `V300||V1G||S2C-VPN-Ent.GM`<br>`1..10` (step 1) when `S2C-VPN-Ent.Basic`<br>`1..100` (step 1) when `V300||V1G||S2C-VPN-Ent.GM` | **VPN Connection Groups**. Maps to portal control `calculator_evpnGatewaySpec_radio_Stepper_1`. |
-| `options.eip1_mbps` | `number / unit` | `1..300 Mbit/s` (step 1) | **EIP 1 Bandwidth**. Maps to portal control `calculator_evpnEip1_stepper_Stepper_0`. |
-| `options.eip2_mbps` | `number / unit` | `1..300 Mbit/s` (step 1) | **EIP 2 Bandwidth**. Maps to portal control `calculator_evpnEip2_stepper_Stepper_0`. |
+| `options.spec` | `string` | Catalog / Enum | VPN gateway specification (`Basic`, `Professional1`, `Professional2`). *(Portal controls: `calculator_evpnGatewaySpec_radio_calGatewaySpec`)* |
+| `options.connection_groups` | `number / unit` | Default `10` when `S2C-VPN-Ent.Basic`<br>`10..100` (step 1) when `V300||V1G||S2C-VPN-Ent.GM`<br>`1..10` (step 1) when `S2C-VPN-Ent.Basic`<br>`1..100` (step 1) when `V300||V1G||S2C-VPN-Ent.GM` | Number of IPsec VPN connection groups (default: 10; max 100). Alias: `connections`. *(Portal controls: `calculator_evpnGatewaySpec_radio_Stepper_1`)* |
+| `options.eip1_mbps` | `number / unit` | `1..300 Mbit/s` (step 1) | Primary active tunnel EIP bandwidth in Mbit/s (1–300 Mbit/s). In declarative quotes, write `bandwidth: 20 Mbps` (sets both tunnels). *(Portal controls: `calculator_evpnEip1_stepper_Stepper_0`)* |
+| `options.eip2_mbps` | `number / unit` | `1..300 Mbit/s` (step 1) | Secondary active tunnel EIP bandwidth in Mbit/s (1–300 Mbit/s). *(Portal controls: `calculator_evpnEip2_stepper_Stepper_0`)* |
 
 ---
 

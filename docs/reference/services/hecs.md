@@ -2,7 +2,7 @@
 
 | Property | Value |
 | :--- | :--- |
-| **Service Code** | `hecs` |
+| **Service Code** | `hecs` (aliases: `flexus`, `flexus-x`, `flexus_x`) |
 | **Category** | Compute |
 | **Publish Gate Status** | `DEFAULT_ONLY` (Catalog & Replay Only) — *Only page defaults have been accepted; requested configuration is unverified.* |
 | **Verified Frontend** | `11.4.201` |
@@ -29,6 +29,20 @@ resources:
   - id: hecs-main
     service: hecs
     billing: monthly
+```
+
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example HECS"
+settlement: total
+cards:
+  - id: flexus-x-instance
+    service: hecs
+    region: sa-brazil-1
+    billing: monthly
+    quantity: 1
 ```
 
 ---

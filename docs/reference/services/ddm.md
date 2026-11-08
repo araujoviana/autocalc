@@ -35,6 +35,23 @@ resources:
       nodes: 2
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example DDM"
+settlement: total
+cards:
+  - id: database-middleware
+    service: ddm
+    region: sa-brazil-1
+    billing: monthly
+    quantity: 2
+    options:
+      spec_type: c6
+      spec: ddm.c6.2xlarge.2
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -44,8 +61,8 @@ Top-level card fields: `id` (required), `service: ddm`, `region`, `billing` (`mo
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `ddm_ddm`. |
-| `options.spec_type` | `string` | Catalog / Enum | **Instance Class**. Maps to portal control `calculator_insSpec_radio_specType`. |
-| `options.spec` | `string` | Catalog / Enum | Maps to portal control `calculator_insSpec_radio_specBefore`. |
+| `options.spec_type` | `string` | Catalog / Enum | Instance class: `c6` (High-performance) or `s6` (General-purpose). *(Portal controls: `calculator_insSpec_radio_specType`)* |
+| `options.spec` | `string` | Catalog / Enum | Node specification code (e.g. `ddm.c6.2xlarge.2` for 8 vCPUs / 16 GB). Node count is configured via card `quantity` (≥ 2). *(Portal controls: `calculator_insSpec_radio_specBefore`)* |
 
 ---
 

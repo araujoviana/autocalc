@@ -35,6 +35,21 @@ resources:
       public_outbound_bandwidth_mbps: 50 Mbps
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example APIG"
+settlement: total
+cards:
+  - id: api-gateway-instance
+    service: apig
+    region: sa-brazil-1
+    billing: ondemand
+    options:
+      edition: BASIC
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -44,8 +59,8 @@ Top-level card fields: `id` (required), `service: apig`, `region`, `billing` (`o
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` / `options.edition` | `string` | Catalog SKU | Resolved catalog specification code (group `apig_apig.instance`). Can also be selected via `needs:`. |
-| `options.edition` | `string` | Catalog / Enum | **Edition**. Maps to portal control `calculator_spec_radioGroups_type`. |
-| `options.hours` | `number / unit` | `1..9999 hour` (step 1) | **Required Duration**. Maps to portal control `global_ONDEMANDTIME_Stepper_0`. |
+| `options.edition` | `string` | Catalog / Enum | API Gateway dedicated instance tier: `BASIC` (2,000 TPS), `PROFESSIONAL` (10,000 TPS), `ENTERPRISE` (20,000 TPS), or `PLATINUM` (50,000 TPS). *(Portal controls: `calculator_spec_radioGroups_type`)* |
+| `options.hours` | `number / unit` | `1..9999 hour` (step 1) | Operating duration in hours (default: 730). *(Portal controls: `global_ONDEMANDTIME_Stepper_0`)* |
 
 ---
 

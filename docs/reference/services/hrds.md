@@ -38,6 +38,23 @@ resources:
       storage_gb: 300 GB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example HRDS"
+settlement: total
+cards:
+  - id: dedicated-mysql
+    service: hrds
+    region: sa-brazil-1
+    billing: monthly
+    spec: rds.mysql.y1.large.2.ha
+    options:
+      db_type: mysql
+      storage_gb: 120
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -47,11 +64,11 @@ Top-level card fields: `id` (required), `service: hrds`, `region`, `billing` (`m
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `rds_rds.vm`. |
-| `options.db_type` | `string` | Catalog / Enum | **DB Engine**. Maps to portal control `calculator_rdsvm_radio_dbType`. |
-| `options.db_version` | `string` | Catalog / Enum | **DB Engine Version**. Maps to portal control `calculator_rdsvm_radio_dbVersion`. |
-| `options.instance_type` | `string` | Catalog / Enum | **DB Instance Type**. Maps to portal control `calculator_rdsvm_radio_instanceType`. |
-| `options.spec` | `string` | Catalog / Enum | Maps to portal control `calculator_rdsvm_radio2_spec`. |
-| `options.storage_gb` | `number / unit` | Default `120` | Maps to portal control `calculator_rdsvolume_stepper_Stepper_0`. |
+| `options.db_type` | `string` | Catalog / Enum | Relational database engine: `mysql`, `postgresql`, or `sqlserver`. In declarative quotes, write `needs: { engine: mysql }`. *(Portal controls: `calculator_rdsvm_radio_dbType`)* |
+| `options.db_version` | `string` | Catalog / Enum | Database engine version (e.g. `8.0` for MySQL, `14` for PostgreSQL). Alias: `version`. *(Portal controls: `calculator_rdsvm_radio_dbVersion`)* |
+| `options.instance_type` | `string` | Catalog / Enum | Dedicated instance topology: `ha` (Primary/Standby) or `single`. *(Portal controls: `calculator_rdsvm_radio_instanceType`)* |
+| `options.spec` | `string` | Catalog / Enum | Dedicated RDS y1 family SKU (e.g. `rds.mysql.y1.large.2.ha`). *(Portal controls: `calculator_rdsvm_radio2_spec`)* |
+| `options.storage_gb` | `number / unit` | Default `120` | Dedicated database disk capacity in GB (120–4,000 GB, in 10 GB increments). *(Portal controls: `calculator_rdsvolume_stepper_Stepper_0`)* |
 
 ---
 

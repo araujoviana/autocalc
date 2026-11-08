@@ -39,6 +39,23 @@ resources:
       storage_gb: 500 GB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example DDS"
+settlement: total
+cards:
+  - id: mongodb-repset
+    service: dds
+    region: sa-brazil-1
+    billing: monthly
+    spec: dds.mongodb.c6.large.8.repset
+    options:
+      type: ReplicaSet
+      shard_storage_gb: 100
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -48,11 +65,11 @@ Top-level card fields: `id` (required), `service: dds`, `region`, `billing` (`mo
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `dds_dds.vm`. |
-| `options.type` | `string` | Catalog / Enum | **DB Instance Type**. Maps to portal control `calculator_dds_versionType_radio_type`. |
-| `options.flavor_type` | `string` | Catalog / Enum | **Specifications**. Maps to portal control `calculator_dds_versionType_radio_flavorType`. |
-| `options.shard_spec` | `string` | Catalog / Enum | **shard Class**. Maps to portal control `calculator_dds_colony_shard_spec`. |
-| `options.shards` | `number / unit` | `2..32 dataInfo_22_` (step 1) | **shard Quantity**. Maps to portal control `calculator_dds_colony_shard_Stepper_0`. |
-| `options.shard_storage_gb` | `number / unit` | `10..5000` (step 10) | Maps to portal control `calculator_dds_colony_shard_volume_Stepper_0`. |
+| `options.type` | `string` | Catalog / Enum | Document database topology: `ReplicaSet` (3-node Replica Set) or `Cluster` (Sharded Cluster). In declarative quotes, write `topology: replica-set`. *(Portal controls: `calculator_dds_versionType_radio_type`)* |
+| `options.flavor_type` | `string` | Catalog / Enum | Compute specification family: `dedicated` or `general-purpose`. *(Portal controls: `calculator_dds_versionType_radio_flavorType`)* |
+| `options.shard_spec` | `string` | Catalog / Enum | Compute flavor SKU for shard nodes (e.g. `dds.mongodb.c6.large.8.shard`). *(Portal controls: `calculator_dds_colony_shard_spec`)* |
+| `options.shards` | `number / unit` | `2..32 dataInfo_22_` (step 1) | Number of shard clusters (2–32). Applicable only in `Cluster` mode. Alias: `nodes`. *(Portal controls: `calculator_dds_colony_shard_Stepper_0`)* |
+| `options.shard_storage_gb` | `number / unit` | `10..5000` (step 10) | Storage capacity per shard node in GB (10–5,000 GB). In ReplicaSet mode, represents node storage. *(Portal controls: `calculator_dds_colony_shard_volume_Stepper_0`)* |
 
 ---
 

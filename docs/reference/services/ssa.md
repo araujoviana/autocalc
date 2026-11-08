@@ -2,7 +2,7 @@
 
 | Property | Value |
 | :--- | :--- |
-| **Service Code** | `ssa` |
+| **Service Code** | `ssa` (aliases: `secmaster`) |
 | **Category** | Security & Compliance |
 | **Publish Gate Status** | `CATALOG_ONLY` (Unverified Form Mapping) — *Selected catalog specs have no verified form mapping.* |
 | **Verified Frontend** | `11.4.201` |
@@ -31,6 +31,21 @@ resources:
     billing: ondemand
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example SSA"
+settlement: total
+cards:
+  - id: secmaster
+    service: ssa
+    region: sa-brazil-1
+    billing: ondemand
+    options:
+      edition: professional
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -40,7 +55,7 @@ Top-level card fields: `id` (required), `service: ssa`, `region`, `billing` (`on
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `sa_secmaster.typical`. |
-| `options.edition` | `string` | Catalog / Enum | **Specification**. Maps to portal control `calculator_ssa_edition_version1`. |
+| `options.edition` | `string` | Catalog / Enum | SecMaster / SSA edition: `basic`, `standard`, or `professional`. *(Portal controls: `calculator_ssa_edition_version1`)* |
 
 ---
 

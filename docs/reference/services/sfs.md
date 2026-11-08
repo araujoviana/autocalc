@@ -34,6 +34,21 @@ resources:
       storage_space_gb: 5000 GB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example SFS"
+settlement: total
+cards:
+  - id: shared-nfs
+    service: sfs
+    region: sa-brazil-1
+    billing: ondemand
+    options:
+      capacity_gb: 1000
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -43,7 +58,7 @@ Top-level card fields: `id` (required), `service: sfs`, `region`, `billing` (`on
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `sfs_sfs`. |
-| `options.capacity_gb` | `string` | Catalog / Enum | Maps to portal control `calculator_sfsDemand_radio_Stepper_0`. |
+| `options.capacity_gb` | `string` | Catalog / Enum | Standard shared file system capacity in GB (minimum 1 GB). In declarative quotes, write `capacity: "1000 GB"` or `size_gb: 1000`. *(Portal controls: `calculator_sfsDemand_radio_Stepper_0`)* |
 
 ---
 

@@ -35,6 +35,22 @@ resources:
       capacity: 4 TB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example SFSTURBO"
+settlement: total
+cards:
+  - id: high-iops-nfs
+    service: sfsturbo
+    region: sa-brazil-1
+    billing: yearly
+    options:
+      tier: 20MBps
+      size_gb: 3686.4
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -44,8 +60,8 @@ Top-level card fields: `id` (required), `service: sfsturbo`, `region`, `billing`
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` / `options.tier` | `string` | Catalog SKU | Resolved catalog specification code (group `sfsturbo_sfsturbo`). Can also be selected via `needs:`. |
-| `options.tier` | `string` | Catalog / Enum | **File System Type / Type**. Maps to portal controls `calculator_sfsType_radio_fileType`, `calculator_sfsType_radio_sellingStatus`, `calculator_sfsType_radio_sfsType`. |
-| `options.size_gb` | `string` | Catalog / Enum | File system capacity in GB (must be a multiple of 0.1 TB = 102.4 GB; min 3686.4 GB for `20MBps`, 1228.8 GB for others). *(Portal controls: `calculator_sfsPeriod_36input`)* |
+| `options.tier` | `string` | Catalog / Enum | Throughput performance tier: `20MBps`, `40MBps`, `125MBps`, `250MBps`, `500MBps`, `1000MBps`. In declarative `version: "1"`, write `throughput: 40MBps`. *(Portal controls: `calculator_sfsType_radio_fileType`, `calculator_sfsType_radio_sellingStatus`, `calculator_sfsType_radio_sfsType`)* |
+| `options.size_gb` | `string` | Catalog / Enum | File system capacity in GB (must be a multiple of 0.1 TB = 102.4 GB; min 3686.4 GB for `20MBps`, 1228.8 GB for others). In declarative quotes, write `capacity: "4 TB"`. *(Portal controls: `calculator_sfsPeriod_36input`)* |
 
 ---
 

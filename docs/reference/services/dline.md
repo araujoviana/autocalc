@@ -34,6 +34,21 @@ resources:
       port: 1G
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example DLINE"
+settlement: total
+cards:
+  - id: direct-connect
+    service: dline
+    region: sa-brazil-1
+    billing: monthly
+    options:
+      port: 1ge
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -43,7 +58,7 @@ Top-level card fields: `id` (required), `service: dline`, `region`, `billing` (`
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` / `options.port` | `string` | Catalog SKU | Resolved catalog specification code (group `dcaas_dcaas.port`). Can also be selected via `needs:`. |
-| `options.port` | `string` | Catalog / Enum | **Port Speed**. Maps to portal control `calculator_dline_radio_portType`. |
+| `options.port` | `string` | Catalog / Enum | Direct Connect physical port speed: `1ge` (1 Gbps), `10ge` (10 Gbps), `40ge` (40 Gbps), or `100ge` (100 Gbps). In declarative quotes, write `bandwidth: 10 Gbps`. *(Portal controls: `calculator_dline_radio_portType`)* |
 
 ---
 

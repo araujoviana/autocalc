@@ -36,6 +36,23 @@ resources:
       memory_mb: 512 MB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example FUNCTION"
+settlement: total
+cards:
+  - id: serverless-api
+    service: function
+    region: sa-brazil-1
+    billing: ondemand
+    options:
+      requests_10k: 1000
+      memory_mb: 512
+      compute: 100
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -45,9 +62,9 @@ Top-level card fields: `id` (required), `service: function`, `region`, `billing`
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `functionstage_functionstage`. |
-| `options.requests_10k` | `number / unit` | `0..1000000000000000 month` (step 1)<br>`0..1000000000000000 day` (step 1)<br>`0..1000000000000000 hour` (step 1) | **Average Requests (Ten thousand counts)**. Maps to portal control `calculator_fgs_request_Stepper_0`. |
-| `options.compute` | `string` | Catalog / Enum | **calc_3_**. Maps to portal control `calculator_fgs_compute`. |
-| `options.memory_mb` | `number / unit` | `128..1024 MB` (step 1)<br>`0..10 GB` (step 1) | **Amount of memory allocated**. Maps to portal control `calculator_fgs_memory_Stepper_0`. |
+| `options.requests_10k` | `number / unit` | `0..1000000000000000 month` (step 1)<br>`0..1000000000000000 day` (step 1)<br>`0..1000000000000000 hour` (step 1) | Average monthly invocations in units of 10,000 counts (e.g. `1000` = 10,000,000 invocations). In declarative quotes, write `requests: 10M` or `invocations: 10M`. *(Portal controls: `calculator_fgs_request_Stepper_0`)* |
+| `options.compute` | `string` | Catalog / Enum | Execution compute units / duration (measured in GB-seconds or duration multiplier). In declarative quotes, write `execution_time_ms: 200` or `compute_units: 100`. *(Portal controls: `calculator_fgs_compute`)* |
+| `options.memory_mb` | `number / unit` | `128..1024 MB` (step 1)<br>`0..10 GB` (step 1) | Memory allocated per function instance (128 MB to 1024 MB). Default: `512`. *(Portal controls: `calculator_fgs_memory_Stepper_0`)* |
 
 ---
 
@@ -67,7 +84,7 @@ Source file: `src/schema/files/function.yaml`
 | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
 | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
 | `calculator_fgs_request_Stepper_0` | Average Requests (Ten thousand counts) | `base-stepper` | `0..1000000000000000 month` (step 1)<br>`0..1000000000000000 day` (step 1)<br>`0..1000000000000000 hour` (step 1) | Mapped → `requests_10k` |
-| `calculator_fgs_compute` | calc_3_ | `common-input` | Catalog / Enum | Mapped → `compute` |
+| `calculator_fgs_compute` | Execution Compute Units (Duration / GB-s) | `common-input` | Catalog / Enum | Mapped → `compute` |
 | `calculator_fgs_memory_Stepper_0` | Amount of memory allocated | `base-stepper` | `128..1024 MB` (step 1)<br>`0..10 GB` (step 1) | Mapped → `memory_mb` |
 
 ---

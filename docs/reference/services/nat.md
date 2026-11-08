@@ -34,6 +34,21 @@ resources:
       size: L
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example NAT"
+settlement: total
+cards:
+  - id: nat-gateway
+    service: nat
+    region: sa-brazil-1
+    billing: ondemand
+    options:
+      size: middle
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -43,7 +58,7 @@ Top-level card fields: `id` (required), `service: nat`, `region`, `billing` (`on
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` / `options.size` | `string` | Catalog SKU | Resolved catalog specification code (group `natgateway_natgateway`). Can also be selected via `needs:`. |
-| `options.size` | `string` | Catalog / Enum | **Type**. Maps to portal control `calculator_nat_radio_type`. |
+| `options.size` | `string` | Catalog / Enum | NAT gateway scale: `small` (10k conns), `middle` / `medium` (50k conns), `large` (200k conns), `xlarge` (1M conns). Aliases: `s`, `m`, `l`, `xl`. *(Portal controls: `calculator_nat_radio_type`)* |
 
 ---
 

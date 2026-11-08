@@ -62,8 +62,8 @@ Top-level card fields: `id` (required), `service: cce`, `region`, `billing` (`on
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `cce_cce.cluster`. |
 | `options.cluster_type` | `string` | Catalog / Enum | Cluster edition (`standard`). CCE Turbo is currently blocked pending verification. *(Portal controls: `calculator_clustertype_radio_clusterType`)* |
-| `options.scale` | `string` | Catalog / Enum | Maximum worker node scale (`small` = 50, `medium` = 200, `large` = 1000, `xlarge` = 2000). *(Portal controls: `calculator_clustertype_radio_clusterNodeScale`)* |
-| `options.ha` | `string` | Catalog / Enum | High-availability multi-master control plane (`true` selects `cce.s2.*`, `false` selects `cce.s1.*`). *(Portal controls: `calculator_clustertype_radio_clusterMasterScale`)* |
+| `options.scale` | `string` | Catalog / Enum | Maximum worker node scale (`small` = 50 nodes, `medium` = 200 nodes, `large` = 1000 nodes, `xlarge` = 2000 nodes). Accepts `50nodes`, `200nodes`, `1000nodes`, `2000nodes`. *(Portal controls: `calculator_clustertype_radio_clusterNodeScale`)* |
+| `options.ha` | `string` | Catalog / Enum | High-availability multi-master control plane (`true` selects `cce.s2.*` multi-master, `false` selects `cce.s1.*` single-master). Alias: `control_plane_ha: true` or `master_az: 3AZ`. *(Portal controls: `calculator_clustertype_radio_clusterMasterScale`)* |
 
 ---
 

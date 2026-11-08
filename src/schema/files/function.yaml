@@ -52,7 +52,7 @@ controls:
   option: requests_10k
 - id: calculator_fgs_compute
   kind: common-input
-  title: calc_3_
+  title: Execution Compute Units (Duration / GB-s)
   default: 100.0
   after:
   - calculator_fgs_request_Stepper_0

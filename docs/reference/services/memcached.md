@@ -35,6 +35,22 @@ resources:
       capacity_gb: 8 GB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example MEMCACHED"
+settlement: total
+cards:
+  - id: session-cache
+    service: memcached
+    region: sa-brazil-1
+    billing: ondemand
+    options:
+      instance_type: single_node
+      memory_gb: 4
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -44,8 +60,8 @@ Top-level card fields: `id` (required), `service: memcached`, `region`, `billing
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `dcs_dcs.memcached`. |
-| `options.instance_type` | `string` | Catalog / Enum | **Instance Type**. Maps to portal control `calculator_memcached_version_instance_type`. |
-| `options.memory_gb` | `number / unit` | `2..9999` (step 1) | **Specification**. Maps to portal control `calculator_memcached_version_Stepper_0`. |
+| `options.instance_type` | `string` | Catalog / Enum | Cache topology: `single_node` or `master_standby` (High Availability). In declarative quotes, write `topology: master-standby`. *(Portal controls: `calculator_memcached_version_instance_type`)* |
+| `options.memory_gb` | `number / unit` | `2..9999` (step 1) | Cache memory capacity in GB (minimum 2 GB). Alias: `capacity_gb`. *(Portal controls: `calculator_memcached_version_Stepper_0`)* |
 | `options.hours` | `number / unit` | `1..9999 hour` (step 1) | **Required Duration**. Maps to portal control `global_ONDEMANDTIME_Stepper_0`. |
 
 ---

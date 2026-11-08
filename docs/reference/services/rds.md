@@ -66,10 +66,10 @@ Top-level card fields: `id` (required), `service: rds`, `region`, `billing` (`on
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` / `options.flavor` | `string` | Catalog SKU | Resolved catalog specification code (group `rds_rds.vm`). Can also be selected via `needs:`. |
-| `options.flavor` | `string` | Catalog / Enum | **DB Engine / DB Engine Version / DB Instance Type / DB Instance Class**. Maps to portal controls `calculator_rdsvm_radio_dbType`, `calculator_rdsvm_radio_dbVersion`, `calculator_rdsvm_radio_instanceType`, `calculator_rdsvm_radio_publicType`, `calculator_rdsvm_radio2_spec`. |
-| `options.volume_type` | `string` | Catalog / Enum | **Storage**. Maps to portal control `calculator_rdsvolume_stepper_type`. |
-| `options.storage_gb` | `number / unit` | `40..32000` (step 10) | Database volume size in GB (40–4000 GB). *(Portal controls: `calculator_rdsvolume_stepper_Stepper_0`)* |
-| `options.db_version` | `any` | Builder-validated | Database engine version (e.g. `8.0`, `5.7`, `14`). |
+| `options.flavor` | `string` | Catalog / Enum | Database compute specification (group `rds_rds.vm`). Can also be synthesized from `needs: { vcpus, memory_gb }` and `topology: primary-standby`. *(Portal controls: `calculator_rdsvm_radio_dbType`, `calculator_rdsvm_radio_dbVersion`, `calculator_rdsvm_radio_instanceType`, `calculator_rdsvm_radio_publicType`, `calculator_rdsvm_radio2_spec`)* |
+| `options.volume_type` | `string` | Catalog / Enum | Storage media type selector (`cloud-ssd`, `common`). *(Portal controls: `calculator_rdsvolume_stepper_type`)* |
+| `options.storage_gb` | `number / unit` | `40..32000` (step 10) | Database volume size in GB (40–4000 GB). In declarative `version: "1"`, write `storage_gb: "500 GB"`. *(Portal controls: `calculator_rdsvolume_stepper_Stepper_0`)* |
+| `options.db_version` | `any` | Builder-validated | Database engine release version (e.g. `8.0`, `5.7`, `14`). Alias: `version`. |
 | `options.storage_spec` | `any` | Builder-validated | Volume SKU override; defaults to the selected engine's Cloud SSD volume. |
 
 ---

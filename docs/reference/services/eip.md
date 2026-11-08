@@ -34,6 +34,22 @@ resources:
       traffic_gb: 500 GB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example EIP"
+settlement: total
+cards:
+  - id: egress-public-ip
+    service: eip
+    region: sa-brazil-1
+    billing: ondemand
+    options:
+      ip_quantity: 1
+      bandwidth_mbps: 10
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -43,8 +59,8 @@ Top-level card fields: `id` (required), `service: eip`, `region`, `billing` (`mo
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `vpc_bandwidth`. |
-| `options.bandwidth_mbps` | `number / unit` | `1..2000` (step 1) when `^19_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`5..2000` (step 1) when `^19_share$`<br>`1..99 calc_29_` (step 1) when `^19_share$`<br>`1..9999` (step 1) when `^12_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`1..9999` (step 1) when `^12_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`300..2000` (step 1) | **Bandwidth**. Maps to portal control `calculator_eip_radio_Stepper_0`. |
-| `options.ip_quantity` | `number / unit` | `1..99  ` (step 1) | **EIP Quantity**. Maps to portal control `calculator_ipQuantity_stepper_Stepper_0`. |
+| `options.bandwidth_mbps` | `number / unit` | `1..2000` (step 1) when `^19_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`5..2000` (step 1) when `^19_share$`<br>`1..99 calc_29_` (step 1) when `^19_share$`<br>`1..9999` (step 1) when `^12_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`1..9999` (step 1) when `^12_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`300..2000` (step 1) | Dedicated public IP bandwidth in Mbit/s (1–2000 Mbit/s for BGP). In declarative quotes, write `bandwidth: 10 Mbps`. *(Portal controls: `calculator_eip_radio_Stepper_0`)* |
+| `options.ip_quantity` | `number / unit` | `1..99  ` (step 1) | Number of public IP addresses (1–99). In declarative quotes, write `count: 1` or `quantity: 1`. *(Portal controls: `calculator_ipQuantity_stepper_Stepper_0`)* |
 
 ---
 

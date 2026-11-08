@@ -28,7 +28,7 @@ Virtual machines, serverless functions, and dedicated compute instances.
 | :--- | :--- | :--- | :--- | :--- |
 | [`ecs`](ecs.md) | Elastic Cloud Server | — | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
 | [`function`](function.md) | FunctionGraph | `fg`, `functiongraph` | `ondemand` | `VERIFIED` |
-| [`hecs`](hecs.md) | Flexus X Instance | — | `monthly`, `yearly`, `ondemand` | `DEFAULT_ONLY` |
+| [`hecs`](hecs.md) | Flexus X Instance | `flexus`, `flexus-x`, `flexus_x` | `monthly`, `yearly`, `ondemand` | `DEFAULT_ONLY` |
 
 ### Containers
 
@@ -110,8 +110,8 @@ Web application firewalls, cloud firewalls, host security, KMS encryption, and D
 | [`waf`](waf.md) | Web Application Firewall | — | `ondemand` | `VERIFIED` |
 | [`cfw`](cfw.md) | Cloud Firewall | — | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
 | [`hss`](hss.md) | Host Security Service | — | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
-| [`dew`](dew.md) | Data Encryption Workshop | `kms` | `ondemand` | `VERIFIED` |
-| [`ssa`](ssa.md) | Situation Awareness | — | `ondemand` | `CATALOG_ONLY` |
+| [`dew`](dew.md) | Data Encryption Workshop | `csms`, `kms` | `ondemand` | `VERIFIED` |
+| [`ssa`](ssa.md) | Situation Awareness | `secmaster` | `ondemand` | `CATALOG_ONLY` |
 | [`aad`](aad.md) | Anti-DDoS Advanced | — | `monthly`, `yearly` | `DEFAULT_ONLY` |
 | [`dbss`](dbss.md) | Database Security Service | — | `monthly`, `yearly` | `DEFAULT_ONLY` |
 | [`dsc`](dsc.md) | Data Security Center | — | `monthly`, `yearly` | `DEFAULT_ONLY` |

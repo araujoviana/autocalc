@@ -36,6 +36,22 @@ resources:
       capacity_gb: 4000 GB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example CBR"
+settlement: total
+cards:
+  - id: server-backup-vault
+    service: cbr
+    region: sa-brazil-1
+    billing: yearly
+    options:
+      vault_spec: vault.backup.server.normal
+      size_gb: 1000
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -45,8 +61,8 @@ Top-level card fields: `id` (required), `service: cbr`, `region`, `billing` (`on
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` / `options.vault_spec` | `string` | Catalog SKU | Resolved catalog specification code (group `cbr_cbr.vault`). Can also be selected via `needs:`. |
-| `options.vault_spec` | `string` | Catalog / Enum | **Vault Type**. Maps to portal control `calculator_cbr_type_item`. |
-| `options.size_gb` | `number / unit` | `10..10485760` (step 1000) when `vault.(backup|replication).*`<br>`1024..10485760` (step 1024) when `vault.hybrid.*` | Backup vault capacity in GB (10–10,485,760 GB). *(Portal controls: `calculator_cbr_type_Stepper_0`)* |
+| `options.vault_spec` | `string` | Catalog / Enum | Backup vault specification SKU (`vault.backup.server.normal`, `vault.backup.server.multiaz`, `vault.backup.volume.normal`, `vault.backup.database.normal`, `vault.backup.turbo.normal`). In declarative quotes, write `vault_type: server` or `vault_type: disk`. *(Portal controls: `calculator_cbr_type_item`)* |
+| `options.size_gb` | `number / unit` | `10..10485760` (step 1000) when `vault.(backup|replication).*`<br>`1024..10485760` (step 1024) when `vault.hybrid.*` | Backup vault storage capacity in GB (10–10,485,760 GB). In declarative quotes, write `capacity: "4 TB"`. *(Portal controls: `calculator_cbr_type_Stepper_0`)* |
 
 ---
 

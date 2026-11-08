@@ -37,6 +37,23 @@ resources:
       retention_days: 30
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example LTS"
+settlement: total
+cards:
+  - id: centralized-logs
+    service: lts
+    region: sa-brazil-1
+    billing: ondemand
+    options:
+      flow_gb_per_day: 10
+      retention_days: 30
+      index_percent: 100
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -46,15 +63,15 @@ Top-level card fields: `id` (required), `service: lts`, `region`, `billing` (`on
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `lts_lts.logflow`. |
-| `options.flow_gb_per_day` | `number / unit` | `1..9999999999 GB/day` (step 1)<br>`1..9999999999 TB/day` (step 1) | **Raw Log Size**. Maps to portal control `calculator_ltsLogFlow_stepper_Stepper_0`. |
-| `options.cold_enabled` | `string` | Catalog / Enum | **Intelligent Cold Storage**. Maps to portal control `calculator_lts_cold_switch_UNSET_Switch`. |
-| `options.retention_days` | `number / unit` | `1..365` (step 1) | **Log Storage Duration (Days)**. Maps to portal control `calculator_ltsStorage_normal_stepper_Stepper_0`. |
-| `options.total_retention_days` | `number / unit` | `1..365` (step 1) | **Log Storage Duration (Days), cold storage on**. Maps to portal control `calculator_ltsStorage_stepper_Stepper_0`. |
-| `options.hot_retention_days` | `number / unit` | `1..365` (step 1) | **Hot Storage Duration (Days)**. Maps to portal control `calculator_ltsHotStorage_stepper_Stepper_0`. |
-| `options.index_percent` | `number / unit` | `1..100 %` (step 1) | **Index Field Ratio**. Maps to portal control `calculator_ltsLogIndexRate_stepper_Stepper_0`. |
-| `options.transfer_basic_gb_per_day` | `number / unit` | `0..9999999999 GB/day` (step 1)<br>`0..9999999999 TB/day` (step 1) | **Daily Basic Transfer Volume**. Maps to portal control `calculator_lts_transfer_basic_stepper_Stepper_0`. |
-| `options.transfer_senior_gb_per_day` | `number / unit` | `0..9999999999 GB/day` (step 1)<br>`0..9999999999 TB/day` (step 1) | **Daily Advanced Transfer Volume**. Maps to portal control `calculator_lts_transfer_senior_stepper_Stepper_0`. |
-| `options.months` | `number / unit` | `1..60 month` (step 1)<br>`1..30 day` (step 1) | **Required Duration**. Maps to portal control `global_ONDEMANDTIME_Stepper_0`. |
+| `options.flow_gb_per_day` | `number / unit` | `1..9999999999 GB/day` (step 1)<br>`1..9999999999 TB/day` (step 1) | Daily raw log ingestion volume in GB/day (1–9,999,999,999 GB/day). In declarative quotes, write `monthly_flow: 300 GB` (automatically divided by 30 days). *(Portal controls: `calculator_ltsLogFlow_stepper_Stepper_0`)* |
+| `options.cold_enabled` | `string` | Catalog / Enum | Enable automated lifecycle to low-cost intelligent cold storage (`true` or `false`). *(Portal controls: `calculator_lts_cold_switch_UNSET_Switch`)* |
+| `options.retention_days` | `number / unit` | `1..365` (step 1) | Log storage retention duration in days (1–365). Default: `30`. *(Portal controls: `calculator_ltsStorage_normal_stepper_Stepper_0`)* |
+| `options.total_retention_days` | `number / unit` | `1..365` (step 1) | Total combined retention duration (hot + cold) in days (1–365). Requires `cold_enabled: true`. *(Portal controls: `calculator_ltsStorage_stepper_Stepper_0`)* |
+| `options.hot_retention_days` | `number / unit` | `1..365` (step 1) | Duration in days to retain logs in hot storage before migrating to cold storage (1–365). Requires `cold_enabled: true`. *(Portal controls: `calculator_ltsHotStorage_stepper_Stepper_0`)* |
+| `options.index_percent` | `number / unit` | `1..100 %` (step 1) | Percentage of ingested log data indexed for full-text query (1–100%). Default: `100`. *(Portal controls: `calculator_ltsLogIndexRate_stepper_Stepper_0`)* |
+| `options.transfer_basic_gb_per_day` | `number / unit` | `0..9999999999 GB/day` (step 1)<br>`0..9999999999 TB/day` (step 1) | Daily log transfer volume via basic streaming in GB/day. *(Portal controls: `calculator_lts_transfer_basic_stepper_Stepper_0`)* |
+| `options.transfer_senior_gb_per_day` | `number / unit` | `0..9999999999 GB/day` (step 1)<br>`0..9999999999 TB/day` (step 1) | Daily log transfer volume via advanced streaming in GB/day. *(Portal controls: `calculator_lts_transfer_senior_stepper_Stepper_0`)* |
+| `options.months` | `number / unit` | `1..60 month` (step 1)<br>`1..30 day` (step 1) | Evaluation duration in months (1–60) for pay-per-use calculation. *(Portal controls: `global_ONDEMANDTIME_Stepper_0`)* |
 
 ---
 

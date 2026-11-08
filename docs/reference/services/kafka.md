@@ -37,6 +37,23 @@ resources:
       storage_gb: 300 GB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example KAFKA"
+settlement: total
+cards:
+  - id: event-stream
+    service: kafka
+    region: sa-brazil-1
+    billing: monthly
+    options:
+      spec_id: c6.2u4g.cluster
+      brokers: 3
+      storage_gb: 100
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -46,9 +63,9 @@ Top-level card fields: `id` (required), `service: kafka`, `region`, `billing` (`
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `dms_dms.platinum`. |
-| `options.spec_id` | `string` | Catalog / Enum | Broker flavor (`kafka.2u4g.single.small`, `c6.2u4g.cluster`, `c6.4u8g.cluster`, `c6.8u16g.cluster`, `c6.12u24g.cluster`, `c6.16u32g.cluster`). *(Portal controls: `calculator_kafka_architecture_switch_architectureName`, `calculator_kafka_specType_switch_specName`)* |
-| `options.brokers` | `number / unit` | Default `1 PCS` | Broker count (`1` for single-node, `≥ 3` for cluster). *(Portal controls: `calculator_kafka_node_num_stepper_Stepper_0`)* |
-| `options.storage_gb` | `number / unit` | `100..10000` (step 100) | Total broker disk storage in GB (≥ 100 GB). *(Portal controls: `calculator_kafka_new_storage_stepper_Stepper_0`)* |
+| `options.spec_id` | `string` | Catalog / Enum | Broker flavor (`kafka.2u4g.single.small`, `c6.2u4g.cluster`, `c6.4u8g.cluster`, `c6.8u16g.cluster`, `c6.12u24g.cluster`, `c6.16u32g.cluster`). Can also be passed as `flavor`. *(Portal controls: `calculator_kafka_architecture_switch_architectureName`, `calculator_kafka_specType_switch_specName`)* |
+| `options.brokers` | `number / unit` | Default `1 PCS` | Broker node count: `1` for single-node specs, `≥ 3` for cluster specs. *(Portal controls: `calculator_kafka_node_num_stepper_Stepper_0`)* |
+| `options.storage_gb` | `number / unit` | `100..10000` (step 100) | Broker disk storage per node in GB (≥ 100 GB). Note: total cluster storage equals `storage_gb * brokers`. *(Portal controls: `calculator_kafka_new_storage_stepper_Stepper_0`)* |
 
 ---
 

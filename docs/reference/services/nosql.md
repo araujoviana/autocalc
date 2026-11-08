@@ -39,6 +39,24 @@ resources:
       storage_gb: 400 GB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example NOSQL"
+settlement: total
+cards:
+  - id: document-kv
+    service: nosql
+    region: sa-brazil-1
+    billing: monthly
+    options:
+      flavor: large.4
+      nodes: 2
+      storage_gb: 100
+      engine: dynamodb
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -49,8 +67,8 @@ Top-level card fields: `id` (required), `service: nosql`, `region`, `billing` (`
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `nosql_nosql.vm`. |
 | `options.engine` | `string` | Catalog / Enum | NoSQL API engine (`dynamodb`). *(Portal controls: `calculator_nosql_versionType_group_versionType`)* |
-| `options.flavor` | `any` | Builder-validated | GeminiDB node size (`large.4`, `xlarge.4`, `2xlarge.4`, `4xlarge.4`, `8xlarge.4`). |
-| `options.nodes` | `any` | Builder-validated | Cluster node count (2–200). |
+| `options.flavor` | `any` | Builder-validated | GeminiDB node size (`large.4`, `xlarge.4`, `2xlarge.4`, `4xlarge.4`, `8xlarge.4`). Can also be synthesized from `needs: { vcpus }`. |
+| `options.nodes` | `any` | Builder-validated | Cluster node count (2–200). Alias: `replicas`. |
 | `options.storage_gb` | `any` | Builder-validated | Storage space in GB (≥ 100 GB). |
 
 ---

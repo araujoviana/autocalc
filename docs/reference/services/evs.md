@@ -62,8 +62,8 @@ Top-level card fields: `id` (required), `service: evs`, `region`, `billing` (`on
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` / `options.type` | `string` | Catalog SKU | Resolved catalog specification code (group `ebs_volume`). Can also be selected via `needs:`. |
-| `options.type` | `string` | Catalog / Enum | **Disk Capacity**. Maps to portal control `calculator_product_stepper_productType`. |
-| `options.size_gb` | `number / unit` | `10..32768 detail_42_` (step 10) | Disk capacity in GB (minimum 10 GB). *(Portal controls: `calculator_product_stepper_Stepper_0`)* |
+| `options.type` | `string` | Catalog / Enum | Volume storage class: `GPSSD` (General-Purpose SSD), `SSD` (Ultra-high I/O), `SAS` (High I/O), `ESSD` (Extreme SSD), `GPSSD2`, `ESSD2`. In declarative `version: "1"`, write `volume_type: general-ssd`. *(Portal controls: `calculator_product_stepper_productType`)* |
+| `options.size_gb` | `number / unit` | `10..32768 detail_42_` (step 10) | Disk capacity in GB (minimum 10 GB). In declarative `version: "1"`, supports unit strings like `size: 500 GiB`. *(Portal controls: `calculator_product_stepper_Stepper_0`)* |
 | `options.iops` | `any` | Builder-validated | Provisioned IOPS (applies only to on-demand `GPSSD2` or `ESSD2` volumes). |
 | `options.throughput` | `any` | Builder-validated | Provisioned throughput in MB/s (applies only to on-demand `GPSSD2` volumes). |
 

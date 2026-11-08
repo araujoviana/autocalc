@@ -35,6 +35,22 @@ resources:
       traffic_gb: 2000 GB
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example ER"
+settlement: total
+cards:
+  - id: hub-router
+    service: er
+    region: sa-brazil-1
+    billing: ondemand
+    options:
+      attachments: 2
+      downflow_gb: 500
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -44,9 +60,9 @@ Top-level card fields: `id` (required), `service: er`, `region`, `billing` (`ond
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `er_er.attachment`. |
-| `options.attachments` | `number / unit` | `0..9999 PCS` (step 1) | **Attachment Quantity**. Maps to portal control `calculator_attachment_stepper_Stepper_0`. |
-| `options.attachment_hours` | `number / unit` | `1..999999 hour` (step 1) | **Required Duration**. Maps to portal control `calculator_attachment_time_stepper_Stepper_0`. |
-| `options.downflow_gb` | `number / unit` | `1..999999 GB` (step 1) | **Traffic**. Maps to portal control `calculator_downflow_stepper_Stepper_0`. |
+| `options.attachments` | `number / unit` | `0..9999 PCS` (step 1) | Number of connected VPC or gateway attachments (≥ 1; default: 2). Alias: `connections`. *(Portal controls: `calculator_attachment_stepper_Stepper_0`)* |
+| `options.attachment_hours` | `number / unit` | `1..999999 hour` (step 1) | Attachment operating duration in hours (default: 730). Alias: `hours`. *(Portal controls: `calculator_attachment_time_stepper_Stepper_0`)* |
+| `options.downflow_gb` | `number / unit` | `1..999999 GB` (step 1) | Monthly routed data traffic through Enterprise Router in GB. In declarative quotes, write `traffic: "500 GB"` or `traffic_gb: 500`. *(Portal controls: `calculator_downflow_stepper_Stepper_0`)* |
 
 ---
 

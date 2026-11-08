@@ -36,6 +36,23 @@ resources:
       rule_expansion: 1
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example WAF"
+settlement: total
+cards:
+  - id: cloud-waf
+    service: waf
+    region: sa-brazil-1
+    billing: ondemand
+    options:
+      domains: 1
+      rules: 1
+      requests: 1000000
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -44,9 +61,9 @@ Top-level card fields: `id` (required), `service: waf`, `region`, `billing` (`on
 
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
-| `options.domains` | `any` | Builder-validated | Domain expansion package count (≥ 1). |
-| `options.requests` | `any` | Builder-validated | Monthly request count (≥ 1,000,000). |
-| `options.rules` | `any` | Builder-validated | Rule expansion package count (≥ 1). |
+| `options.domains` | `any` | Builder-validated | Additional protected domain expansion packages (≥ 1). In declarative quotes, write `domains: 2`. |
+| `options.requests` | `any` | Builder-validated | Monthly HTTP/HTTPS inspection request volume (≥ 1,000,000). In declarative quotes, write `requests: "10M"`. |
+| `options.rules` | `any` | Builder-validated | Additional custom rule expansion packages (≥ 1). In declarative quotes, write `rules: 5`. |
 
 ---
 

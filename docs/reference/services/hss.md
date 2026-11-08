@@ -35,6 +35,22 @@ resources:
       edition: Enterprise
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example HSS"
+settlement: total
+cards:
+  - id: server-security
+    service: hss
+    region: sa-brazil-1
+    billing: monthly
+    quantity: 5
+    options:
+      edition: dataInfo_4_
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -44,7 +60,7 @@ Top-level card fields: `id` (required), `service: hss`, `region`, `billing` (`mo
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `hss_hss`. |
-| `options.edition` | `string` | Catalog / Enum | **Edition**. Maps to portal control `calculator_hssType_radio_type`. |
+| `options.edition` | `string` | Catalog / Enum | Host security tier token (`dataInfo_1_` Basic, `dataInfo_6_` Enterprise, `dataInfo_4_` Premium, `dataInfo_3_` WTP, `dataInfo_5_` Container). In declarative quotes, write `edition: premium` or `edition: enterprise`. *(Portal controls: `calculator_hssType_radio_type`)* |
 
 ---
 

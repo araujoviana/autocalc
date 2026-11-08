@@ -34,6 +34,21 @@ resources:
       quantity: 2
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example SDRS"
+settlement: total
+cards:
+  - id: vm-dr-protection
+    service: sdrs
+    region: sa-brazil-1
+    billing: ondemand
+    options:
+      protection_groups: 2
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -43,7 +58,7 @@ Top-level card fields: `id` (required), `service: sdrs`, `region`, `billing` (`o
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `sdrs_hdrsinst`. |
-| `options.protection_groups` | `number / unit` | `1..1000` (step 1) | Maps to portal control `calculator_sdrs_stepper_Stepper_0`. |
+| `options.protection_groups` | `number / unit` | `1..1000` (step 1) | Number of protected disaster recovery replication instances (1–1000). In declarative quotes, write `dr_pairs: 2` or `protected_instances: 2`. *(Portal controls: `calculator_sdrs_stepper_Stepper_0`)* |
 | `options.hours` | `number / unit` | `1..9999 hour` (step 1) | **Required Duration**. Maps to portal control `global_ONDEMANDTIME_Stepper_0`. |
 
 ---

@@ -36,6 +36,21 @@ resources:
       public_ip_count: 1
 ```
 
+### Plain Card (`cards:`)
+
+```yaml
+customer: Example Corp
+name: "Example ELB"
+settlement: total
+cards:
+  - id: shared-load-balancer
+    service: elb
+    region: sa-brazil-1
+    billing: ondemand
+    options:
+      public_ip_count: 1
+```
+
 ---
 
 ## Argument Reference (`needs` & `options`)
@@ -45,8 +60,8 @@ Top-level card fields: `id` (required), `service: elb`, `region`, `billing` (`on
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `elb_elbv2`. |
-| `options.public_ip_count` | `number / unit` | `1..2 PCS` (step 1) | Shared load balancer network selector (`1` or `2`). *(Portal controls: `calculator_ip_Stepper_0`)* |
-| `options.hours` | `number / unit` | `1..9999 hour` (step 1) | **Required Duration**. Maps to portal control `global_ONDEMANDTIME_Stepper_0`. |
+| `options.public_ip_count` | `number / unit` | `1..2 PCS` (step 1) | Load balancer network type selector: `1` = Public Network (Internet-facing with dynamic BGP EIP), `2` = Private Network (internal VPC). In declarative quotes, write `network_type: public` or `public: true`. *(Portal controls: `calculator_ip_Stepper_0`)* |
+| `options.hours` | `number / unit` | `1..9999 hour` (step 1) | Operating duration in hours (default: 730). *(Portal controls: `global_ONDEMANDTIME_Stepper_0`)* |
 
 ---
 
