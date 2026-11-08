@@ -41,11 +41,13 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Docs
+      - name: Docs (Strict build & drift check)
         if: matrix.os == 'ubuntu-latest'
         env:
           NO_MKDOCS_2_WARNING: "1"
-        run: bun run docs:build
+        run: |
+          bun run docs:build
+          git diff --exit-code docs/reference/services/
 
       - uses: actions/setup-node@v4
         with:

@@ -63,7 +63,7 @@ You can pass the quote file path as a positional argument (`autocalc plan quote.
 | `autocalc edit-check LIST_ID_OR_URL` | Re-price saved cards in the calculator's headless Edit view (`--limit`) | no |
 | `autocalc login [--profile NAME] [--timeout S]` | Open a browser window and wait for you to sign in; prints the account and browser used | — |
 | `autocalc logout [--profile NAME]` | Sign out by clearing the local browser profile session | — |
-| `autocalc auth status [--profile NAME]` | Show local authentication session status (cookie names only, never values) | — |
+| `autocalc auth status [--profile NAME]` | Show local authentication session status (cookie names only, never values; shortcut alias: `autocalc status`) | — |
 | `autocalc lists` | List the saved price lists in your Huawei Cloud account | **yes** |
 | `autocalc rename LIST_ID_OR_URL NAME` | Rename a saved price list | **yes** |
 | `autocalc duplicate LIST_ID_OR_URL` | Duplicate a saved price list (`--name`) | **yes** |
@@ -78,6 +78,8 @@ You can pass the quote file path as a positional argument (`autocalc plan quote.
 | `autocalc doctor` | Check endpoints, frontend version, browser detection, profile presence, and cache | no |
 | `autocalc completion [shell] [target] [--install]` | Generate or install shell completion script (`bash`, `zsh`, `fish`). Use `--install` (or `autocalc completion install [target]`) to configure automatically | no |
 | `autocalc schema <pull\|coverage\|diff> SERVICE` | Inspect or refresh service page schemas (`--json`) | no |
+| `autocalc render-check LIST_ID_OR_URL` | Diagnostic check verifying card DOM elements render cleanly in browser | no |
+| `autocalc page-controls SERVICE` | Diagnostic inspection of browser page controls for a service schema | no |
 | `autocalc update [--to vX.Y.Z]` | Reinstall from the newest release tag, or the one named; prints `old -> new` (`AUTOCALC_NO_UPDATE_CHECK=1` disables daily check notices) | no |
 | `autocalc install-browser` | Install Playwright's pinned Chromium (only needed without a system Chrome/Edge/Chromium) | no |
 
@@ -107,6 +109,7 @@ autocalc publish-quote --draft-id d-1a2b3c4d --name "acme web tier"
 | `AUTOCALC_ENCODE_WORKERS` | Concurrent anonymous browser contexts used during card encoding (default `3 (or CPU/RAM budget)`) |
 | `AUTOCALC_PAGE_HEADED` | Set to `1` to show browser windows during card encoding and gate checks |
 | `AUTOCALC_SCHEMA_DIR` | Override directory path for service page schema definitions |
+| `AUTOCALC_REPO` | Git repository URL or remote for release update checks and installations |
 | `AUTOCALC_KEEP_ON_FAIL` | Set to `1` to keep a remote list that failed the publish gate for inspection |
 | `AUTOCALC_NO_UPDATE_CHECK` | Set to `1` to disable the daily release update check notice |
 
