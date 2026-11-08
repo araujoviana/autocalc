@@ -15,8 +15,12 @@ When pushing changes to `main`:
    - **Features** (`feat:`): bumps `minor`.
    - **Fixes & Refactors** (`fix:`, `perf:`, `refactor:`): bumps `patch`.
    - **Non-functional changes** (`docs:`, `chore:`, `style:`, `test:`, `ci:`): no bump (`none`).
-3. If a bump is required, it automatically updates `package.json`, commits `chore(release): vX.Y.Z`, and creates the annotated tag `vX.Y.Z`.
-4. Pushes to other branches (e.g., feature branches) are ignored by the hook.
+3. If a bump is required:
+   - It updates `package.json`, commits `chore(release): vX.Y.Z`, and creates the annotated tag `vX.Y.Z`.
+   - It pushes both the release commit (`HEAD:refs/heads/main`) and the tag (`refs/tags/vX.Y.Z`) directly to the remote repository.
+   - It cancels git's outer push (exit code 1) because git pre-populates the push ref list before hooks execute. The updated release commit and tag are already on the remote, and both local and remote `main` are synchronized.
+4. If no bump is required (e.g., only docs or chore commits), the push proceeds normally without creating a release commit or tag.
+5. Pushes to other branches (e.g., feature branches) are ignored by the hook.
 
 ```bash
 git push origin main

@@ -268,4 +268,103 @@ describe("Version Bump CLI Runner (scripts/bump-version.ts)", () => {
     const lastCommitMsg = runGit(["log", "-1", "--pretty=%s"], tempDir).stdout;
     expect(lastCommitMsg).toBe("feat: branch feature");
   });
+
+  it("git push with pre-push hook bumps version, tags, and pushes to bare remote", () => {
+    const bareDir = fs.mkdtempSync(path.join(os.tmpdir(), "bump-bare-remote-"));
+    try {
+      runGit(["init", "--bare", "-b", "main"], bareDir);
+
+      setupRepo("0.3.0", true);
+      runGit(["remote", "add", "origin", bareDir], tempDir);
+      // Seed remote with the initial 0.3.0 commit and tag
+      runGit(["push", "--no-verify", "origin", "main", "v0.3.0"], tempDir);
+
+      // Deploy scripts and hooks into tempDir so git pre-push can run
+      const rootDir = path.resolve(__dirname, "../..");
+      fs.cpSync(path.join(rootDir, "scripts"), path.join(tempDir, "scripts"), { recursive: true });
+      fs.cpSync(path.join(rootDir, ".githooks"), path.join(tempDir, ".githooks"), { recursive: true });
+      fs.chmodSync(path.join(tempDir, ".githooks/pre-push"), 0o755);
+      runGit(["add", "scripts", ".githooks"], tempDir);
+      runGit(["commit", "-m", "chore: setup scripts and hooks"], tempDir);
+      runGit(["config", "core.hooksPath", ".githooks"], tempDir);
+
+      // Add a feature commit
+      fs.writeFileSync(path.join(tempDir, "feature.txt"), "shiny new feature");
+      runGit(["add", "feature.txt"], tempDir);
+      runGit(["commit", "-m", "feat: implement shiny new feature"], tempDir);
+
+      // Attempt git push - pre-push hook should intercept, bump, push, and cancel stale push
+      const pushResult = runGit(["push", "origin", "main"], tempDir);
+      expect(pushResult.exitCode).toBe(1);
+
+      const combinedOutput = `${pushResult.stdout}\n${pushResult.stderr}`;
+      expect(combinedOutput).toContain(
+        "[pre-push] Automatically bumped version to 0.4.0 (tag v0.4.0) and pushed to origin."
+      );
+      expect(combinedOutput).toContain("[pre-push] Cancelling stale pre-bump push.");
+
+      // Verify remote received both the release commit and the release tag
+      const remoteLastCommit = runGit(["log", "-1", "--pretty=%s", "main"], bareDir).stdout;
+      expect(remoteLastCommit).toBe("chore(release): v0.4.0");
+
+      const remoteTags = runGit(["tag", "-l"], bareDir).stdout.split("\n");
+      expect(remoteTags).toContain("v0.4.0");
+
+      const remotePkgJson = JSON.parse(runGit(["show", "main:package.json"], bareDir).stdout);
+      expect(remotePkgJson.version).toBe("0.4.0");
+
+      // Verify local repo also has the release commit and tag
+      const localLastCommit = runGit(["log", "-1", "--pretty=%s"], tempDir).stdout;
+      expect(localLastCommit).toBe("chore(release): v0.4.0");
+
+      // Second push right after: remote is already up to date, exits 0
+      const secondPush = runGit(["push", "origin", "main"], tempDir);
+      expect(secondPush.exitCode).toBe(0);
+      expect(secondPush.stdout + secondPush.stderr).toContain("Everything up-to-date");
+    } finally {
+      fs.rmSync(bareDir, { recursive: true, force: true });
+    }
+  });
+
+  it("git push with pre-push hook allows non-bumping commits through without creating releases", () => {
+    const bareDir = fs.mkdtempSync(path.join(os.tmpdir(), "bump-bare-remote-docs-"));
+    try {
+      runGit(["init", "--bare", "-b", "main"], bareDir);
+
+      setupRepo("0.3.0", true);
+      runGit(["remote", "add", "origin", bareDir], tempDir);
+      runGit(["push", "--no-verify", "origin", "main", "v0.3.0"], tempDir);
+
+      const rootDir = path.resolve(__dirname, "../..");
+      fs.cpSync(path.join(rootDir, "scripts"), path.join(tempDir, "scripts"), { recursive: true });
+      fs.cpSync(path.join(rootDir, ".githooks"), path.join(tempDir, ".githooks"), { recursive: true });
+      fs.chmodSync(path.join(tempDir, ".githooks/pre-push"), 0o755);
+      runGit(["add", "scripts", ".githooks"], tempDir);
+      runGit(["commit", "-m", "chore: setup scripts and hooks"], tempDir);
+      runGit(["config", "core.hooksPath", ".githooks"], tempDir);
+
+      // Add a docs-only commit
+      fs.writeFileSync(path.join(tempDir, "README.md"), "# Updated Docs");
+      runGit(["add", "README.md"], tempDir);
+      runGit(["commit", "-m", "docs: update documentation"], tempDir);
+
+      // git push should pass without bump
+      const pushResult = runGit(["push", "origin", "main"], tempDir);
+      expect(pushResult.exitCode).toBe(0);
+
+      const combinedOutput = `${pushResult.stdout}\n${pushResult.stderr}`;
+      expect(combinedOutput).toContain("No version bump needed");
+
+      // Verify remote received the docs commit
+      const remoteLastCommit = runGit(["log", "-1", "--pretty=%s", "main"], bareDir).stdout;
+      expect(remoteLastCommit).toBe("docs: update documentation");
+
+      // No new tag created
+      const remoteTags = runGit(["tag", "-l"], bareDir).stdout.split("\n");
+      expect(remoteTags).not.toContain("v0.3.1");
+      expect(remoteTags).not.toContain("v0.4.0");
+    } finally {
+      fs.rmSync(bareDir, { recursive: true, force: true });
+    }
+  });
 });

@@ -134,7 +134,8 @@ export interface BumpOptions {
   dryRun?: boolean;
   hook?: boolean;
   force?: boolean;
-  cwd?: string;
+  remote?: string | undefined;
+  cwd?: string | undefined;
 }
 
 export interface DryRunOutput {
@@ -224,6 +225,14 @@ export async function runBumpVersion(opts: BumpOptions = {}): Promise<void> {
   git(["commit", "-m", `chore(release): v${nextVersion}`], { cwd });
   git(["tag", "-a", `v${nextVersion}`, "-m", `Release v${nextVersion}`], { cwd });
 
+  if (opts.hook) {
+    const remote = opts.remote ?? "origin";
+    git(["push", "--no-verify", remote, "HEAD:refs/heads/main", `refs/tags/v${nextVersion}`], { cwd });
+    console.log(`[pre-push] Automatically bumped version to ${nextVersion} (tag v${nextVersion}) and pushed to ${remote}.`);
+    console.log(`[pre-push] Cancelling stale pre-bump push.`);
+    process.exit(1);
+  }
+
   console.log(`Bumped version from ${currentVersion} to ${nextVersion} (tagged v${nextVersion})`);
 }
 
@@ -233,8 +242,24 @@ if (import.meta.main) {
   const dryRun = args.includes("--dry-run");
   const hook = args.includes("--hook");
   const force = args.includes("--force");
+  let remote: string | undefined;
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (!arg) continue;
+    if (arg === "--remote" && args[i + 1]) {
+      remote = args[i + 1];
+      i++;
+    } else if (arg.startsWith("--remote=")) {
+      remote = arg.slice("--remote=".length);
+    }
+  }
 
-  runBumpVersion({ dryRun, hook, force }).catch((err) => {
+  const opts: BumpOptions = { dryRun, hook, force };
+  if (remote !== undefined) {
+    opts.remote = remote;
+  }
+
+  runBumpVersion(opts).catch((err) => {
     console.error(err instanceof Error ? err.message : String(err));
     process.exit(1);
   });
