@@ -117,6 +117,25 @@ To prevent catastrophic 1,000x unit bugs (such as bare numbers being interpreted
 - **Anti-Splitting Invariant**: Services with fixed baseline fees (`cce`, `nat`, `elb`, `dline`, `vpn`) and tiered OBS egress factors (`download.external`, `download.cdn`) are protected from multi-card splitting so base charges and marginal tier brackets are never distorted.
 - **Wire Budgeting & Title Sanitization**: Lists are budgeted below 950 KiB and 200 cards per shard (`Part 1`, `Part 2`), and list titles are stripped of any `autocalc` watermark and capped at 55 characters.
 
+### Multi-List Partitioning & Wire Limits
+
+Enterprise quotations with hundreds of compute, storage, or network resources exceed Huawei Cloud's calculator portal limits: HTTP 413 around ~1 MiB of payload JSON and portal DOM crashes beyond ~200 cards per saved list. `autocalc` manages large quotations through automatic multi-list partitioning:
+
+- **Partition Boundaries**:
+  - `MAX_LIST_CARDS = 200`: Safe card limit per saved shopping list to prevent browser DOM freezing.
+  - `MAX_LIST_BYTES = 950 * 1024` (972,800 bytes): Wire budget threshold safely below the ~1 MiB HTTP 413 limit.
+- **Deterministic Shard Titling**:
+  - Single-shard quotes retain their unsuffixed title (e.g., `Acme Latam Core`).
+  - Multi-shard quotes receive numbered suffixes: `<title> - Part 1`, `<title> - Part 2`, etc., clamped to 55 characters max (`MAX_TITLE_LENGTH = 55`) with all tool watermarking stripped.
+- **Plan Phase**:
+  - When partitions are required, `autocalc plan` (or MCP `plan_quote`) outputs a dedicated **Partition Shards** table detailing each shard's title, card count, and estimated wire byte size.
+  - Shards are recorded in `quote.lock.yaml` with index, title, card count, and estimated bytes.
+- **Sequential Publish Gate (`apply`)**:
+  - `autocalc apply` (or MCP `apply_quote`) publishes each partition sequentially.
+  - For each shard, an isolated draft is compiled and verified through the fail-closed publish gate (`stored == rated == Edit`).
+  - Upon successful verification of all shards, the complete set of share links is returned and written to `quote.lock.yaml` (`share_id` and `share_link` fields).
+  - **Partial Failure Safety**: If shard $k$ fails gate verification, the publish gate immediately deletes shard $k$ from the account, halts further publishing, and raises `CalculatorError("GATE_FAILED", ...)`, reporting all previously verified shard links in `error.details.published_shards`.
+
 ---
 
 ## 2. Plain Quote File (`cards:`)

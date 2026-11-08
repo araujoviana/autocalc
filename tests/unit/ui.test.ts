@@ -181,6 +181,50 @@ test("plan-quote notes an ambiguous image and counts the card as needing attenti
   expect(out).toContain("1 of 1 cards need attention before apply");
 });
 
+test("plan-quote renders partition shards table when quote partitions across multiple lists", () => {
+  const tty = new Tty();
+  const out = ui.quoteView("plan-quote", {
+    cards: [
+      { id: "web-1", spec: "c7.large.2", price: "20.00" },
+      { id: "web-2", spec: "c7.large.2", price: "20.00" },
+    ],
+    pending: [],
+    shards: [
+      { index: 0, title: "Acme Prod - Part 1", cardCount: 150, estimatedBytes: 500 * 1024 },
+      { index: 1, title: "Acme Prod - Part 2", cardCount: 100, estimatedBytes: 350 * 1024 },
+    ],
+  }, tty)!;
+
+  expect(out).toContain("Partition Shards (>200 cards or >950 KiB):");
+  expect(out).toContain("Acme Prod - Part 1");
+  expect(out).toContain("150 cards");
+  expect(out).toContain("~500 KiB");
+  expect(out).toContain("Acme Prod - Part 2");
+  expect(out).toContain("100 cards");
+  expect(out).toContain("~350 KiB");
+  expect(out).toContain("2 cards resolved across 2 shards; ready to apply");
+});
+
+test("apply-quote renders all partition shard names and links when multi-shard quote is published", () => {
+  const tty = new Tty();
+  const out = ui.quoteView("apply-quote", {
+    name: "Acme Prod",
+    url: "https://calculator.huaweicloud.com/#/share?token=part1",
+    checks: [
+      { title: "web-1", stored: "20.00", rated: "20.00", edit: "20.00", ok: true },
+      { title: "web-2", stored: "20.00", rated: "20.00", edit: "20.00", ok: true },
+    ],
+    shards: [
+      { index: 0, title: "Acme Prod - Part 1", url: "https://calculator.huaweicloud.com/#/share?token=part1", cardCount: 1 },
+      { index: 1, title: "Acme Prod - Part 2", url: "https://calculator.huaweicloud.com/#/share?token=part2", cardCount: 1 },
+    ],
+  }, tty)!;
+
+  expect(out).toContain("Published Acme Prod: 2 cards verified across 2 lists");
+  expect(out).toContain("Acme Prod - Part 1: https://calculator.huaweicloud.com/#/share?token=part1");
+  expect(out).toContain("Acme Prod - Part 2: https://calculator.huaweicloud.com/#/share?token=part2");
+});
+
 test("a failed publish gate reads as one line per card, not a JSON blob", () => {
   const pipe = new Tty("utf-8", false);
   const gate = new CalculatorError("GATE_FAILED", "The list did not pass the publish gate.", undefined,

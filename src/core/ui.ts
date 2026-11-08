@@ -156,23 +156,45 @@ export function quoteView(cmd: string, result: unknown, stream?: StreamLike): st
       (c: any) => !("spec" in c) || c.spec_problem || (Array.isArray(c.unmapped_options) && c.unmapped_options.length) || c.lock_drift || c.price_anomaly || (Array.isArray(c.image_choices) && c.image_choices.length),
     ).length;
     const out = table(rows, ["CARD", "SPEC", "PRICE", "NOTES"], stream);
+
+    let shardSection = "";
+    if (Array.isArray(r.shards) && r.shards.length > 1) {
+      const shardRows = r.shards.map((s: any) => [
+        String(s.title ?? `Part ${s.index + 1}`),
+        `${s.cardCount ?? s.card_count} cards`,
+        `~${Math.round((s.estimatedBytes ?? s.estimated_bytes ?? 0) / 1024)} KiB`,
+      ]);
+      shardSection = "\n\n" +
+        paint("Partition Shards (>200 cards or >950 KiB):", "bold", stream) + "\n" +
+        table(shardRows, ["SHARD", "CARDS", "WIRE SIZE"], stream);
+    }
+
     return (
       out +
+      shardSection +
       "\n" +
       (problems
         ? status("warn", `${problems} of ${rows.length} cards need attention before apply`, stream)
-        : status("ok", `${rows.length} cards resolved; ready to apply`, stream))
+        : status("ok", `${rows.length} cards resolved${Array.isArray(r.shards) && r.shards.length > 1 ? ` across ${r.shards.length} shards` : ""}; ready to apply`, stream))
     );
   }
   if ((cmd === "apply-quote" || cmd === "apply" || cmd === "publish-quote" || cmd === "publish_quote") && r.url) {
     const checks: any[] = Array.isArray(r.checks) ? r.checks : [];
     const rows = checks.map((c): [string, string, string, string, string] => [String(c.title ?? c.index), String(c.stored ?? "-"), String(c.rated ?? "-"), String(c.edit ?? "-"), c.ok === false ? "differs" : "ok"]);
     const warnings: string[] = Array.isArray(r.warnings) ? r.warnings.map(String) : [];
+
+    let shardLines: string[] = [];
+    if (Array.isArray(r.shards) && r.shards.length > 1) {
+      shardLines = r.shards.map((s: any) => `  ${paint(s.title || `Part ${s.index + 1}`, "bold", stream)}: ${s.url}`);
+    } else {
+      shardLines = [`  ${r.url}`];
+    }
+
     return [
       rows.length ? table(rows, ["CARD", "STORED", "RATED", "EDIT", "CHECK"], stream) : null,
-      status("ok", `Published ${r.name ?? "the list"}: ${checks.length} card${checks.length === 1 ? "" : "s"} verified`, stream),
+      status("ok", `Published ${r.name ?? "the list"}: ${checks.length} card${checks.length === 1 ? "" : "s"} verified${Array.isArray(r.shards) && r.shards.length > 1 ? ` across ${r.shards.length} lists` : ""}`, stream),
       ...warnings.map(w => status("warn", w, stream)),
-      `  ${r.url}`,
+      ...shardLines,
     ].filter((line): line is string => line !== null).join("\n");
   }
   return null;

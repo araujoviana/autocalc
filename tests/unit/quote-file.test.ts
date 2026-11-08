@@ -229,3 +229,202 @@ test("a normal yearly price, or a SKU with no known prices, raises no anomaly", 
   Object.assign(ctx.provider, { prices: async () => null });
   expect(((await quoteFile.plan(ctx, q)) as Dict).cards[0].price_anomaly).toBeUndefined();
 });
+
+test("plan calculates single shard with unsuffixed title for quote under card limit", async () => {
+  const { ctx, dir } = await env();
+  const yaml = `
+version: "1"
+metadata:
+  id: small-quote
+  customer: Acme Small Corp
+  title_prefix: Acme Small
+defaults:
+  region: sa-brazil-1
+  billing: monthly
+resources:
+  - id: web-1
+    service: ecs
+    spec: c7n.large.2
+  - id: web-2
+    service: ecs
+    spec: c7n.large.2
+`;
+  const file = join(dir, "small.yaml");
+  await writeFile(file, yaml, "utf8");
+  const q = await quoteFile.load(file);
+  const planned = (await quoteFile.plan(ctx, q)) as Dict;
+
+  expect(planned.shards).toBeDefined();
+  expect(planned.shards.length).toBe(1);
+  expect(planned.shards[0].title).toBe("Acme Small");
+  expect(planned.shards[0].cardCount).toBe(2);
+});
+
+test("plan calculates multiple partition shards for quotes exceeding 200 cards", async () => {
+  const { ctx, dir } = await env();
+  const resourcesYaml = Array.from(
+    { length: 220 },
+    (_, i) => `  - id: worker-${i}
+    service: ecs
+    spec: c7n.large.2`
+  ).join("\n");
+
+  const yaml = `
+version: "1"
+metadata:
+  id: large-quote
+  customer: Acme Enterprise
+  title_prefix: Acme Prod
+defaults:
+  region: sa-brazil-1
+  billing: monthly
+resources:
+${resourcesYaml}
+`;
+  const file = join(dir, "large.yaml");
+  await writeFile(file, yaml, "utf8");
+  const q = await quoteFile.load(file);
+  const planned = (await quoteFile.plan(ctx, q)) as Dict;
+
+  expect(planned.shards).toBeDefined();
+  expect(planned.shards.length).toBe(2);
+  expect(planned.shards[0].title).toBe("Acme Prod - Part 1");
+  expect(planned.shards[0].cardCount).toBe(200);
+  expect(planned.shards[1].title).toBe("Acme Prod - Part 2");
+  expect(planned.shards[1].cardCount).toBe(20);
+
+  const lockYamlPath = join(dir, "large.lock.yaml");
+  const { parseLockfile } = await import("../../src/core/compiler/lockfile.ts");
+  const lock = parseLockfile(await readFile(lockYamlPath, "utf8"));
+  expect(lock.shards.length).toBe(2);
+  expect(lock.shards[0]!.title).toBe("Acme Prod - Part 1");
+  expect(lock.shards[1]!.title).toBe("Acme Prod - Part 2");
+});
+
+test("apply on partitioned quote publishes each shard sequentially with Part N titles and returns all share links", async () => {
+  const { ctx, dir } = await env();
+  const publishedCalls: Array<{ name: string; cardCount: number }> = [];
+
+  ctx.publish = {
+    form: async () => ({}),
+    encode: async () => ({ selectedProduct: { productAllInfos: [] } }),
+    liveVersion: async () => "11.4.201",
+    publish: async (name: string, cards: any[]) => {
+      publishedCalls.push({ name, cardCount: cards.length });
+      const id = `list-${name.replace(/[^a-zA-Z0-9]/g, "-")}`;
+      const url = `https://calculator.huaweicloud.com/#/share?id=${id}`;
+      return {
+        id,
+        url,
+        checks: cards.map((_, i) => ({ title: `card-${i}`, ok: true, stored: "10.00", rated: "10.00", edit: "10.00" })),
+      };
+    },
+  };
+
+  const resourcesYaml = Array.from(
+    { length: 210 },
+    (_, i) => `  - id: worker-${i}
+    service: ecs
+    spec: c7n.large.2`
+  ).join("\n");
+
+  const yaml = `
+version: "1"
+metadata:
+  id: part-quote
+  customer: Acme Partitioned Corp
+  title_prefix: Acme Partitioned
+defaults:
+  region: sa-brazil-1
+  billing: monthly
+resources:
+${resourcesYaml}
+`;
+  const file = join(dir, "partitioned.yaml");
+  await writeFile(file, yaml, "utf8");
+  const q = await quoteFile.load(file);
+
+  const applied = (await quoteFile.apply(ctx, q)) as Dict;
+
+  expect(publishedCalls.length).toBe(2);
+  expect(publishedCalls[0]!.name).toBe("Acme Partitioned - Part 1");
+  expect(publishedCalls[0]!.cardCount).toBe(200);
+  expect(publishedCalls[1]!.name).toBe("Acme Partitioned - Part 2");
+  expect(publishedCalls[1]!.cardCount).toBe(10);
+
+  expect(applied.shards.length).toBe(2);
+  expect(applied.urls).toEqual([
+    "https://calculator.huaweicloud.com/#/share?id=list-Acme-Partitioned---Part-1",
+    "https://calculator.huaweicloud.com/#/share?id=list-Acme-Partitioned---Part-2",
+  ]);
+  expect(applied.checks.length).toBe(210);
+
+  const lockYamlPath = join(dir, "partitioned.lock.yaml");
+  const { parseLockfile } = await import("../../src/core/compiler/lockfile.ts");
+  const lock = parseLockfile(await readFile(lockYamlPath, "utf8"));
+  expect(lock.shards.length).toBe(2);
+  expect(lock.shards[0]!.share_link).toBe(applied.urls[0]);
+  expect(lock.shards[1]!.share_link).toBe(applied.urls[1]);
+});
+
+test("apply halts and reports prior published shards if subsequent shard fails publish gate", async () => {
+  const { ctx, dir } = await env();
+  let callCount = 0;
+
+  ctx.publish = {
+    form: async () => ({}),
+    encode: async () => ({ selectedProduct: { productAllInfos: [] } }),
+    liveVersion: async () => "11.4.201",
+    publish: async (name: string, cards: any[]) => {
+      callCount++;
+      if (callCount === 1) {
+        return {
+          id: "L1-SUCCESS",
+          url: "https://calculator.huaweicloud.com/#/share?id=L1",
+          checks: cards.map((_, i) => ({ title: `card-${i}`, ok: true })),
+        };
+      }
+      throw new CalculatorError("GATE_FAILED", "Shard 2 price disagreement at Edit check");
+    },
+  };
+
+  const resourcesYaml = Array.from(
+    { length: 210 },
+    (_, i) => `  - id: worker-${i}
+    service: ecs
+    spec: c7n.large.2`
+  ).join("\n");
+
+  const yaml = `
+version: "1"
+metadata:
+  id: fail-quote
+  customer: Acme Failing Corp
+  title_prefix: Acme Failing
+defaults:
+  region: sa-brazil-1
+  billing: monthly
+resources:
+${resourcesYaml}
+`;
+  const file = join(dir, "failing.yaml");
+  await writeFile(file, yaml, "utf8");
+  const q = await quoteFile.load(file);
+
+  let caughtError: CalculatorError | null = null;
+  try {
+    await quoteFile.apply(ctx, q);
+  } catch (err) {
+    caughtError = err as CalculatorError;
+  }
+
+  expect(caughtError).not.toBeNull();
+  expect(caughtError!.code).toBe("GATE_FAILED");
+  expect(caughtError!.message).toContain("Shard 2 price disagreement");
+  expect(caughtError!.details).toBeDefined();
+  expect((caughtError!.details as Dict).published_shards).toBeDefined();
+  expect((caughtError!.details as Dict).published_shards.length).toBe(1);
+  expect((caughtError!.details as Dict).published_shards[0].title).toBe("Acme Failing - Part 1");
+  expect((caughtError!.details as Dict).published_shards[0].id).toBe("L1-SUCCESS");
+  expect(callCount).toBe(2);
+});

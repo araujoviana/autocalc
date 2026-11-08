@@ -88,7 +88,7 @@ describe("20 Real-World Business Architecture YAML Scenarios", () => {
     };
 
     const entries = await readdir(SCENARIOS_DIR);
-    scenarioFiles = entries.filter((f) => f.endsWith(".yaml")).sort();
+    scenarioFiles = entries.filter((f) => f.endsWith(".yaml") && !f.endsWith(".lock.yaml")).sort();
   });
 
   afterAll(async () => {
