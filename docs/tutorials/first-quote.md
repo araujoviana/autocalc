@@ -17,6 +17,8 @@ curl -fsSL https://raw.githubusercontent.com/araujoviana/autocalc/main/install.s
 irm https://raw.githubusercontent.com/araujoviana/autocalc/main/install.ps1 | iex
 ```
 
+> Note: On headless Linux servers or Docker containers, run `autocalc install-browser` after installation.
+
 `AUTOCALC_REF=<tag-or-branch>` installs another ref. Update later with `autocalc update`
 (`--to vX.Y.Z` for a specific release); it never updates on its own. If `autocalc` is not found,
 open a new shell: Bun puts it in `~/.bun/bin`.
@@ -45,6 +47,17 @@ autocalc quote Santiago 'ecs:c7n.large.2.linux*3' 'ecs:SSD*3@100' --billing mont
 ```
 
 The prices come from Huawei's own rating engine, so they match the website.
+
+autocalc uses a concise DSL syntax for CLI pricing:
+
+```
+service:spec[*quantity][@disk_size_gb]
+```
+
+- `service`: service identifier (e.g. `ecs`, `evs`, `obs`).
+- `spec`: catalog resource spec code or flavor (e.g. `c7n.large.2.linux`, `SSD`).
+- `*quantity`: optional resource count multiplier (e.g. `*3` for 3 instances).
+- `@disk_size_gb`: optional capacity or attached disk size in gigabytes (e.g. `@100` for 100 GB).
 
 ## 4. Sign in once
 
@@ -83,6 +96,23 @@ autocalc plan quote.yaml    # validates, picks the spec, prices it; saves nothin
 autocalc apply quote.yaml   # saves the list, checks it three ways, prints the link
 ```
 
+Sample terminal output for planning and applying:
+
+```text
+$ autocalc plan quote.yaml
+CARD  SPEC                PRICE    NOTES
+web   c7n.large.2.linux   $98.40   -
+
+✔ 1 cards resolved; ready to apply
+
+$ autocalc apply quote.yaml
+CARD  STORED   RATED    EDIT     CHECK
+web   $98.40   $98.40   $98.40   ok
+
+✔ Published [autocalc] example: 1 card verified
+  https://calculator.intl.huaweicloud.com/calculator.html?shareListId=01234567-89ab-cdef-0123-456789abcdef
+```
+
 `plan` shows one row per card. If a card needs attention (an ambiguous image, an option the
 schema does not map, a price that moved since the lock file), it says so before you apply. Name an
 exact image with `options.image`; the default, `AlmaLinux`, matches several catalog versions.
@@ -113,7 +143,13 @@ autocalc validate <shareListId> # re-read the list and look for glitches
 
 ## 7. Put the quotes in a workbook
 
-Ask the agent: *"Export these lists to quotes.xlsx: prod is <link>, dev is <link>."* The workbook has
+Export multi-environment quotes to a structured Excel spreadsheet using the CLI:
+
+```bash
+autocalc export --rows '[{"env":"prod","list":"<url_or_id>"}]' --path quotes.xlsx
+```
+
+Or ask the agent: *"Export these lists to quotes.xlsx: prod is <link>, dev is <link>."* The workbook has
 four sheets:
 
 - **Quotes**: environment, list name, total in USD and the link, plus a total row.

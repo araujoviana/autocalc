@@ -9,7 +9,7 @@ bun install --frozen-lockfile   # install locked dependencies
 bun run check                   # TypeScript typecheck
 bun run check:boundaries        # core/interface boundary checks
 bun run test:offline            # offline tests: no network, session or corpus needed
-mkdocs build --strict           # this documentation site
+bun run docs:build              # this documentation site (or: uv run --with mkdocs-material mkdocs build --strict)
 ```
 
 ## Live checks (by hand)
@@ -19,6 +19,8 @@ bun run test:live                        # read-only checks against the real cal
 bun scripts/template-audit.ts            # golden-corpus Edit agreement check
 bun tests/support/region-sweep.ts        # 50-service live page verification across regions
 ```
+
+The **golden corpus** is a local collection of real, verified saved quotes pulled from your Huawei Cloud account, used to verify that card reconstruction and Edit views never drift.
 
 - `bun run test:live` needs network access. The golden corpus checks also need the local corpus
   ([Refresh the golden corpus](refresh-corpus.md)).

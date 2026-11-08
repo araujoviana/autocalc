@@ -2,6 +2,26 @@
 
 CLI and MCP server for pricing, validating, and publishing verified quotes on the Huawei Cloud Pricing Calculator.
 
+## Who is autocalc for?
+
+autocalc is built around two first-class personas:
+
+1. **AI Agents (Claude Code, Cursor, Windsurf via MCP)**: Automated architecture pricing, interactive requirement resolution, and verified link delivery directly within agentic workflows.
+2. **Cloud Architects & FinOps Engineers (via CLI)**: Rapid catalog search, declarative YAML quotes, offline validation (<50ms linting), and multi-quote Excel workbook export.
+
+## Why autocalc?
+
+In enterprise procurement, formal cloud RFPs, and partner deal registration programs (such as Huawei Cloud partner portal or distributor deal registration), estimates cannot simply be markdown tables, approximate calculations, or unverified spreadsheets. Cloud provider account executives, solution architects, and procurement desks require an authentic, reproducible share link hosted on the cloud provider's official pricing calculator (`calculator.html?shareListId=...`). This official link proves the exact bill of materials (BOM), validates regional SKU availability, and unlocks partner deal discount approvals.
+
+| Capability / Workflow | Manual Web UI | Generic Estimators (Infracost, etc.) | autocalc |
+| :--- | :--- | :--- | :--- |
+| **Official Provider Share Link** | Yes (slow, repetitive manual selection across dozens of dropdowns per card) | No (emits markdown tables or proprietary UI dashboards only) | **Yes** (automated, official `calculator.html?shareListId=...` link in ~60s) |
+| **Enterprise Procurement & Deal Reg** | Supported, but labor-intensive and prone to human configuration error | Not accepted by cloud vendor sales desks or distributor partner portals | **Accepted** (authentic provider share link ready for deal registration and RFP submission) |
+| **Edit-Price Integrity Verification** | None (silent configuration drift or dropped parameters when opening link) | N/A (does not produce official calculator cards) | **3-Way Gate** (Stored = Rated = Headless Edit, or auto-deleted) |
+| **Declarative Infrastructure Quotes** | None (ephemeral browser session state lost on timeout) | Terraform / HCL code only | **Declarative YAML** (`quote.yaml`, strict physical units, `quote.lock.yaml`) |
+| **AI Agent Integration** | Impossible (requires interactive browser automation and CAPTCHA handling) | Webhooks or CI-only | **Native MCP Server** (Claude Code, Cursor, Windsurf via stdio) |
+| **Multi-Quote Workbook Export** | One-by-one manual spreadsheet export | Git pull request diff summaries | **Automated Excel Export** (Quotes, Decisions, Resources, Totals) |
+
 ## Installation & Update
 
 **Linux / macOS:**
