@@ -10,6 +10,7 @@ export class PublicTransport {
   private requestEpoch = 0;
   private closing: Promise<void> | undefined;
   private closed = false;
+  private readonly inFlight = new Map<string, Promise<unknown>>();
 
   constructor(
     private readonly cache: CatalogCache,
@@ -110,15 +111,29 @@ export class PublicTransport {
     if (!options.refresh) {
       const cached = await this.cache.get(url);
       if (cached !== undefined) return cached;
-      if (options.mirror) {
+      const key = `${url}::${options.mirror ?? ""}`;
+      const existing = this.inFlight.get(key);
+      if (existing) return existing;
+      const promise = (async () => {
         try {
-          const result = await this.fetch(options.mirror);
+          if (options.mirror) {
+            try {
+              const result = await this.fetch(options.mirror);
+              await this.cache.set(url, result);
+              return result;
+            } catch {
+              /* A mirror failure falls back to the primary endpoint. */
+            }
+          }
+          const result = await this.fetch(url);
           await this.cache.set(url, result);
           return result;
-        } catch {
-          /* A mirror failure falls back to the primary endpoint. */
+        } finally {
+          this.inFlight.delete(key);
         }
-      }
+      })();
+      this.inFlight.set(key, promise);
+      return promise;
     }
     const result = await this.fetch(url);
     await this.cache.set(url, result);

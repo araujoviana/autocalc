@@ -14,10 +14,28 @@ function imageName(image: Record<string, unknown>): string {
 
 /** The catalog images a requested image names for one flavor family: an exact name or id wins, otherwise every image whose platform and name contain each word. More than one result means the request is ambiguous. */
 export function matchImages(images: Record<string, unknown>[], family: string, image: string): Record<string, unknown>[] {
-  const matches = (candidate: Record<string, unknown>) => image.toLowerCase().split(/\s+/).every(term => `${display(candidate.__platform)} ${imageName(candidate)}`.toLowerCase().includes(term));
+  const matches = (candidate: Record<string, unknown>) => {
+    const bit = display(candidate.__os_bit);
+    const text = `${display(candidate.__platform)} ${display(candidate.__os_type)} ${bit}bit ${bit} bit ${imageName(candidate)}`.toLowerCase();
+    const terms = image.toLowerCase().split(/\s+/).filter(Boolean);
+    return terms.every(term => text.includes(term));
+  };
   let matched = images.filter(candidate => matches(candidate) && Array.isArray(candidate.type) && candidate.type.includes(family));
   if (!matched.length) matched = images.filter(matches);
   const exact = matched.filter(candidate => imageName(candidate).toLowerCase() === image.toLowerCase() || String(candidate.id) === image);
+  if (exact.length === 1) return exact;
+  if (!matched.length) {
+    const relaxed = image.toLowerCase().replace(/\b\d+bit\b/i, "").trim().split(/\s+/).filter(Boolean);
+    if (relaxed.length) {
+      const relaxedMatch = (candidate: Record<string, unknown>) => {
+        const text = `${display(candidate.__platform)} ${display(candidate.__os_type)} ${imageName(candidate)}`.toLowerCase();
+        return relaxed.every(term => text.includes(term));
+      };
+      let relaxedMatched = images.filter(candidate => relaxedMatch(candidate) && Array.isArray(candidate.type) && candidate.type.includes(family));
+      if (!relaxedMatched.length) relaxedMatched = images.filter(relaxedMatch);
+      if (relaxedMatched.length === 1) return relaxedMatched;
+    }
+  }
   return exact.length === 1 ? exact : matched;
 }
 

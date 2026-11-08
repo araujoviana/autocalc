@@ -155,7 +155,12 @@ describe("20 Real-World Business Architecture YAML Scenarios", () => {
           ...chosen,
           ...card.options,
         };
-        const rewriteValue = await ctx.publish!.form(formInput);
+        let rewriteValue: Record<string, unknown>;
+        try {
+          rewriteValue = (await ctx.publish!.form(formInput)) as Record<string, unknown>;
+        } catch (error) {
+          throw new Error(`Scenario ${file} card ${row.id} (${card.service}) failed form(): ${error instanceof Error ? error.message : String(error)}`);
+        }
         expect(rewriteValue, `${file} -> ${row.id} form output`).toBeDefined();
       }
 
