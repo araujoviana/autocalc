@@ -8,12 +8,9 @@ Cloud quote and share link through MCP tools that describe themselves and are ha
 ## Requirements
 
 ### Requirement: Tool inventory
-The MCP server `hwc-calculator` SHALL expose the workflow tools (`draft_quote`, `revise_quote`,
-`publish_quote`), the declarative tools (`plan_quote`, `apply_quote`), discovery tools
-(`list_services`, `list_regions`, `describe_service`, `supported_services`, `search_skus`),
-pricing tools (`quote`, `convert_currency`, `compare_modes`, `compare_regions`), list tools
-(`read_price_list`, `list_my_price_lists`, `rename_price_list`, `duplicate_price_list`,
-`delete_price_list`) and auth tools (`auth_status`, `auth_login`).
+The MCP server `hwc-calculator` SHALL expose workflow tools (`draft_quote`, `revise_quote`,
+`publish_quote`), declarative tools (`plan_quote`, `apply_quote`), discovery tools, pricing
+tools, list management tools, and authentication tools.
 
 #### Scenario: Tool listing
 - **WHEN** an MCP client lists tools
