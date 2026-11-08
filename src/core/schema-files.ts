@@ -15,13 +15,18 @@ export function coverage(schema: Schema) {
   return { mapped_percent: total ? Math.round(100 * mapped / total) : 100, unmapped, unsupported };
 }
 
+let cachedIndex: string | undefined;
+
 export async function schemaIndex(dir = SCHEMA_DIR): Promise<string> {
+  if (dir === SCHEMA_DIR && cachedIndex) return cachedIndex;
   const rows = [];
   for (const file of (await readdir(dir)).filter(name => name.endsWith(".yaml")).sort()) {
     const schema = Bun.YAML.parse(await readFile(join(dir, file), "utf8")) as Schema, c = coverage(schema);
     rows.push({ service: schema.service, frontend: schema.frontend, mapped_percent: c.mapped_percent, unmapped: c.unmapped, unsupported: c.unsupported, resource: `autocalc://schema/${schema.service}` });
   }
-  return JSON.stringify(rows, null, 2);
+  const result = JSON.stringify(rows, null, 2);
+  if (dir === SCHEMA_DIR) cachedIndex = result;
+  return result;
 }
 
 export async function schemaOf(service: string, dir = SCHEMA_DIR): Promise<string> {

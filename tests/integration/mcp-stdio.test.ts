@@ -46,8 +46,21 @@ test("schema resources list services and read one without login", async () => {
     const index = JSON.parse(((await client.readResource({ uri: "autocalc://schema/index" })).contents[0] as { text: string }).text) as Array<{ service: string; mapped_percent: number }>;
     expect(index.find(row => row.service === "ecs")?.mapped_percent).toBeGreaterThan(0);
     expect(((await client.readResource({ uri: "autocalc://schema/ecs" })).contents[0] as { text: string }).text).toContain("service: ecs");
-    await expect(client.readResource({ uri: "autocalc://schema/..%2Fx" })).rejects.toThrow();
-    await expect(client.readResource({ uri: "autocalc://schema/nope" })).rejects.toThrow(/No schema/);
+    let errTraversal: Error | undefined;
+    try {
+      await client.readResource({ uri: "autocalc://schema/..%2Fx" });
+    } catch (e) {
+      errTraversal = e as Error;
+    }
+    expect(errTraversal).toBeDefined();
+
+    let errMissing: Error | undefined;
+    try {
+      await client.readResource({ uri: "autocalc://schema/nope" });
+    } catch (e) {
+      errMissing = e as Error;
+    }
+    expect(errMissing?.message).toMatch(/No schema/);
   } finally { await client.close(); }
 }, 60000);
 
