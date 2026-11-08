@@ -114,7 +114,7 @@ function regionsView(r: Row, s?: StreamLike): string {
   const entries = Object.entries(r).filter(([k]) => k !== "update_notice").sort(([a], [b]) => a.localeCompare(b));
   if (!entries.length) return "No regions found.";
   return appendNotice(
-    `${table(entries.map(([id, portalName]) => [id, regionLocation(id, String(portalName)), String(portalName)]), ["REGION ID", "LOCATION", "PORTAL LABEL"], s)}\n${paint(`${entries.length} regions. Pass either the REGION ID (e.g. sa-brazil-1) or LOCATION (e.g. "São Paulo").`, "dim", s)}`,
+    `${table(entries.map(([id, portalName]) => [id, regionLocation(id, String(portalName)), String(portalName)]), ["REGION ID", "LOCATION", "PORTAL LABEL"], s)}\n${paint(`${entries.length} ${entries.length === 1 ? "region" : "regions"}. Pass either the REGION ID (e.g. sa-brazil-1) or LOCATION (e.g. "São Paulo").`, "dim", s)}`,
     r,
     s,
   );

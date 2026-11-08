@@ -4,7 +4,8 @@ import { CalculatorError } from "./errors.ts";
 
 const vendorObject = z.looseObject({});
 const productSchema = z.looseObject({ product: z.record(z.string(), z.array(vendorObject)) });
-const menuSchema = z.looseObject({ global: z.record(z.string(), z.string()), regionsOfSite: z.looseObject({ HWC: z.array(z.string()) }).optional(), menuInfos: z.array(z.looseObject({ parentCategoryName: z.string(), subCategoryLists: z.array(z.looseObject({ urlPath: z.string(), categoryName: z.string(), hasCalculator: z.boolean().optional(), hideCalculator: z.boolean().optional(), regionOnline: z.looseObject({ regionList: z.array(z.string()).optional() }).nullable().optional() })) })).optional() });
+const regionMapSchema = z.looseObject({ regionList: z.array(z.string()).optional() }).passthrough().nullable().optional();
+const menuSchema = z.looseObject({ global: z.record(z.string(), z.string()), regionsOfSite: z.looseObject({ HWC: z.array(z.string()) }).optional(), menuInfos: z.array(z.looseObject({ parentCategoryName: z.string(), subCategoryLists: z.array(z.looseObject({ urlPath: z.string(), categoryName: z.string(), hasCalculator: z.boolean().optional(), hideCalculator: z.boolean().optional(), regionOnline: regionMapSchema, regionBeta: regionMapSchema })) })).optional() });
 const asObject = (value: unknown): Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {};
 const asString = (value: unknown): string => typeof value === "string" ? value : "";
 interface PublicReader { get(url: string, options?: { mirror?: string; refresh?: boolean }): Promise<unknown> }
@@ -25,7 +26,10 @@ export class Catalog {
   async services(query = "") {
     const menu = await this.menu();
     if (!menu.menuInfos) throw new CalculatorError("UNEXPECTED_RESPONSE", "Calculator menu has no services");
-    return menu.menuInfos.flatMap(category => category.subCategoryLists.filter(service => service.hasCalculator && !service.hideCalculator).map(service => ({ service: service.urlPath, name: service.categoryName, category: category.parentCategoryName, regions: service.regionOnline?.regionList ?? [] })))
+    return menu.menuInfos.flatMap(category => category.subCategoryLists.filter(service => service.hasCalculator && !service.hideCalculator).map(service => {
+      const regionList = (service.regionOnline?.regionList?.length ? service.regionOnline.regionList : service.regionBeta?.regionList) ?? [];
+      return { service: service.urlPath, name: service.categoryName, category: category.parentCategoryName, regions: regionList };
+    }))
       .filter(service => `${service.service} ${service.name} ${service.category}`.toLowerCase().includes(query.toLowerCase()));
   }
   async regions(): Promise<Record<string, string>> {

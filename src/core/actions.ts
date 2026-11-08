@@ -84,11 +84,13 @@ export const handlers = {
     const region = new RegionResolver(menu.global).resolve(input.region);
     const node = menu.menuInfos?.flatMap(category => category.subCategoryLists).find(service => service.urlPath === vendorServiceCode(input.service));
     if (!node) throw new CalculatorError("SERVICE_NOT_SOLD", `Unknown service ${input.service}`);
-    const regionOnline = node.regionOnline ?? {}, entry = regionOnline[region];
+    const onlineMap = (node.regionOnline?.regionList?.length ? node.regionOnline : node.regionBeta) as Record<string, unknown> | undefined ?? {};
+    const entry = onlineMap[region];
     const modes = entry && typeof entry === "object" && Array.isArray((entry as Record<string, unknown>).common) ? (entry as { common: unknown[] }).common : [];
     const catalog = await ctx.catalog.productInfo(input.service, region);
     const groups = Object.fromEntries(Object.entries(catalog.product).map(([name, items]) => [name, { count: items.length, sample_specs: items.map(item => item.resourceSpecCode).filter(Boolean).slice(0, 8) }]));
-    return { service: input.service, region, modes_in_region: modes, sold_in_region: (node.regionOnline?.regionList ?? []).includes(region), groups, builders: supportedServices().filter(item => vendorServiceCode(item.service) === vendorServiceCode(input.service)) };
+    const regionsList = ((onlineMap.regionList as string[] | undefined) ?? []);
+    return { service: input.service, region, modes_in_region: modes, sold_in_region: regionsList.includes(region), groups, builders: supportedServices().filter(item => vendorServiceCode(item.service) === vendorServiceCode(input.service)) };
   }),
   quote: handler(QuoteInput, runQuote),
   convert_currency: handler(ConvertInput, async (ctx, input) => convertCurrency(input.amount_usd, input.currency, await exchangeRates(page => ctx.catalog.exchangePage(page)))),

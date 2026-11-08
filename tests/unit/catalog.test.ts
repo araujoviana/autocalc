@@ -34,7 +34,8 @@ test("search preserves intentionally empty catalog labels", async () => {
 });
 
 test("menu listing excludes hidden services and filters by name", async () => {
-  const catalog = new Catalog({ async get() { return { global: { r: "Region" }, regionsOfSite: { HWC: ["r"] }, menuInfos: [{ parentCategoryName: "Compute", subCategoryLists: [{ urlPath: "ecs", categoryName: "Elastic Cloud Server", hasCalculator: true, regionOnline: { regionList: ["r"] } }, { urlPath: "hidden", categoryName: "Hidden", hasCalculator: true, hideCalculator: true }] }] }; } });
+  const catalog = new Catalog({ async get() { return { global: { r: "Region", b: "Beta Region" }, regionsOfSite: { HWC: ["r", "b"] }, menuInfos: [{ parentCategoryName: "Compute", subCategoryLists: [{ urlPath: "ecs", categoryName: "Elastic Cloud Server", hasCalculator: true, regionOnline: { regionList: ["r"] } }, { urlPath: "maas", categoryName: "ModelArts Studio", hasCalculator: true, regionBeta: { regionList: ["b"] } }, { urlPath: "hidden", categoryName: "Hidden", hasCalculator: true, hideCalculator: true }] }] }; } });
   expect(await catalog.services("elastic")).toEqual([{ service: "ecs", name: "Elastic Cloud Server", category: "Compute", regions: ["r"] }]);
-  expect(await catalog.regions()).toEqual({ r: "Region" });
+  expect(await catalog.services("maas")).toEqual([{ service: "maas", name: "ModelArts Studio", category: "Compute", regions: ["b"] }]);
+  expect(await catalog.regions()).toEqual({ r: "Region", b: "Beta Region" });
 });
