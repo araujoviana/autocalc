@@ -15,6 +15,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -34,9 +36,16 @@ jobs:
       - name: Offline tests
         run: bun run test:offline
 
+      - uses: astral-sh/setup-uv@v5
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          enable-cache: true
+
       - name: Docs
         if: matrix.os == 'ubuntu-latest'
-        run: pipx run --spec mkdocs-material mkdocs build --strict
+        env:
+          NO_MKDOCS_2_WARNING: "1"
+        run: bun run docs:build
 
       - uses: actions/setup-node@v4
         with:
