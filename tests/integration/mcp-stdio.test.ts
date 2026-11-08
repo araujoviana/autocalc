@@ -72,6 +72,12 @@ test("invalid tool input returns a structured validation error", async () => {
     expect(result.isError).toBe(true);
     const content = result.content as Array<{ type: string; text?: string }>;
     expect(JSON.parse(content[0]?.text ?? "null")).toMatchObject({ error: "VALIDATION" });
-    await expect(client.callTool({ name: "no_such_tool", arguments: {} })).rejects.toMatchObject({ code: -32602 });
+    let errNoSuchTool: { code?: number } | undefined;
+    try {
+      await client.callTool({ name: "no_such_tool", arguments: {} });
+    } catch (e) {
+      errNoSuchTool = e as { code?: number };
+    }
+    expect(errNoSuchTool?.code).toBe(-32602);
   } finally { await client.close(); }
 }, 60000);
