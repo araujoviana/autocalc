@@ -17,6 +17,7 @@
     "docs:generate": "bun scripts/generate-service-docs.ts",
     "docs:serve": "bun run docs:generate && uv run --with mkdocs-material --with mkdocs-git-revision-date-localized-plugin --with mkdocs-redirects mkdocs serve",
     "docs:build": "bun run docs:generate && uv run --with mkdocs-material --with mkdocs-git-revision-date-localized-plugin --with mkdocs-redirects mkdocs build --strict",
+    "prepare": "git config core.hooksPath .githooks",
     "version:bump": "bun scripts/bump-version.ts",
     "bump": "bun scripts/bump-version.ts"
   },

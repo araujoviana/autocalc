@@ -1,0 +1,30 @@
+#!/usr/bin/env bun
+// Pre-push hook: ensures version bump and tags before pushing to main.
+
+// Git sends: <local ref> <local sha1> <remote ref> <remote sha1> on stdin
+const stdin = await new Response(Bun.stdin.stream()).text();
+const lines = stdin.trim().split("\n").filter(Boolean);
+
+let pushingMain = false;
+for (const line of lines) {
+  const parts = line.split(" ");
+  const localRef = parts[0] ?? "";
+  const remoteRef = parts[2] ?? "";
+  if (localRef.endsWith("/main") || remoteRef.endsWith("/main") || localRef === "refs/heads/main" || remoteRef === "refs/heads/main") {
+    pushingMain = true;
+    break;
+  }
+}
+
+// Only enforce on main branch
+if (!pushingMain) {
+  process.exit(0);
+}
+
+const proc = Bun.spawnSync(["bun", "scripts/bump-version.ts", "--hook", ...process.argv.slice(2)], {
+  stdin: "inherit",
+  stdout: "inherit",
+  stderr: "inherit",
+});
+
+process.exit(proc.exitCode ?? 0);
