@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Service Code** | `ddm` |
 | **Category** | Databases & Cache |
-| **Publish Gate Status** | `VERIFIED` (Full Publish Gate) |
+| **Publish Gate Status** | <span class="badge badge--verified">VERIFIED</span> (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `monthly`, `yearly`, `ondemand` |
 | **Primary Catalog Group** | `ddm_ddm` |
@@ -14,43 +14,43 @@
 
 ## Example Usage
 
-### Declarative Quote (`version: "1"`)
+=== "Declarative Quote (`version: '1'`)"
 
-```yaml
-version: "1"
-metadata:
-  id: example-ddm
-  customer: Example Corp
-  title_prefix: "Example DDM"
-defaults:
-  region: sa-brazil-1
-  billing: monthly
-resources:
-  - id: sharding-middleware-ddm
-    environment: prod
-    service: ddm
-    billing: ondemand
-    options:
-      flavor: ddm.4u8g.node
-      nodes: 2
-```
+    ```yaml
+    version: "1"
+    metadata:
+      id: example-ddm
+      customer: Example Corp
+      title_prefix: "Example DDM"
+    defaults:
+      region: sa-brazil-1
+      billing: monthly
+    resources:
+      - id: sharding-middleware-ddm
+        environment: prod
+        service: ddm
+        billing: ondemand
+        options:
+          flavor: ddm.4u8g.node
+          nodes: 2
+    ```
 
-### Plain Card (`cards:`)
+=== "Plain Card (`cards:`)"
 
-```yaml
-customer: Example Corp
-name: "Example DDM"
-settlement: total
-cards:
-  - id: database-middleware
-    service: ddm
-    region: sa-brazil-1
-    billing: monthly
-    quantity: 2
-    options:
-      spec_type: c6
-      spec: ddm.c6.2xlarge.2
-```
+    ```yaml
+    customer: Example Corp
+    name: "Example DDM"
+    settlement: total
+    cards:
+      - id: database-middleware
+        service: ddm
+        region: sa-brazil-1
+        billing: monthly
+        quantity: 2
+        options:
+          spec_type: c6
+          spec: ddm.c6.2xlarge.2
+    ```
 
 ---
 
@@ -73,28 +73,28 @@ Top-level card fields: `id` (required), `service: ddm`, `region`, `billing` (`mo
 
 ---
 
-## Portal Control Schema (`autocalc://schema/ddm`)
+??? note "Portal Control Schema (autocalc://schema/ddm) — 7 controls"
 
-Source file: `src/schema/files/ddm.yaml`
-
-| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
-| `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-| `calculator_insSpec_radio_specType` | Instance Class | `base-radio-group` | Catalog / Enum | Mapped → `spec_type` |
-| `calculator_insSpec_radio_specBefore` | — | `base-select` | Catalog / Enum | Mapped → `spec` |
-| `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
-| `global_QUANTITY_Stepper_0` | Instance Nodes | `base-stepper` | `1..32 PCS` (step 1) | Mapped → `quantity` |
+    Source file: `src/schema/files/ddm.yaml`
+    
+    | Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
+    | :--- | :--- | :--- | :--- | :--- |
+    | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
+    | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
+    | `calculator_insSpec_radio_specType` | Instance Class | `base-radio-group` | Catalog / Enum | Mapped → `spec_type` |
+    | `calculator_insSpec_radio_specBefore` | — | `base-select` | Catalog / Enum | Mapped → `spec` |
+    | `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
+    | `global_QUANTITY_Stepper_0` | Instance Nodes | `base-stepper` | `1..32 PCS` (step 1) | Mapped → `quantity` |
 
 ---
 
-## Live Compatibility Replay
+???+ check "Live Compatibility Replay (sa-brazil-1) — 3 scenarios passing"
 
-Source: `docs/compat/ddm.md` (ddm compatibility (sa-brazil-1, 2026-11-07))
-
-| Scenario | Replay Result | Stage | Detail |
-| :--- | :--- | :--- | :--- |
-| `ondemand-c6-8xlarge` | `ok` | `ok` | — |
-| `monthly-c6-8xlarge` | `ok` | `ok` | — |
-| `yearly-c6-8xlarge` | `ok` | `ok` | — |
+    Source: `docs/compat/ddm.md` (ddm compatibility (sa-brazil-1, 2026-11-07))
+    
+    | Scenario | Replay Result | Stage | Detail |
+    | :--- | :--- | :--- | :--- |
+    | `ondemand-c6-8xlarge` | `ok` | `ok` | — |
+    | `monthly-c6-8xlarge` | `ok` | `ok` | — |
+    | `yearly-c6-8xlarge` | `ok` | `ok` | — |

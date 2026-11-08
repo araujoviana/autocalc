@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Service Code** | `vpcep` |
 | **Category** | Networking & Edge |
-| **Publish Gate Status** | `VERIFIED` (Full Publish Gate) |
+| **Publish Gate Status** | <span class="badge badge--verified">VERIFIED</span> (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `ondemand` |
 | **Primary Catalog Group** | `vpc_vpcep` |
@@ -14,40 +14,40 @@
 
 ## Example Usage
 
-### Declarative Quote (`version: "1"`)
+=== "Declarative Quote (`version: '1'`)"
 
-```yaml
-version: "1"
-metadata:
-  id: example-vpcep
-  customer: Example Corp
-  title_prefix: "Example VPCEP"
-defaults:
-  region: sa-brazil-1
-  billing: ondemand
-resources:
-  - id: private-service-vpcep
-    environment: secops
-    service: vpcep
-    billing: ondemand
-    options:
-      traffic_gb: 1000 GB
-```
+    ```yaml
+    version: "1"
+    metadata:
+      id: example-vpcep
+      customer: Example Corp
+      title_prefix: "Example VPCEP"
+    defaults:
+      region: sa-brazil-1
+      billing: ondemand
+    resources:
+      - id: private-service-vpcep
+        environment: secops
+        service: vpcep
+        billing: ondemand
+        options:
+          traffic_gb: 1000 GB
+    ```
 
-### Plain Card (`cards:`)
+=== "Plain Card (`cards:`)"
 
-```yaml
-customer: Example Corp
-name: "Example VPCEP"
-settlement: total
-cards:
-  - id: service-endpoint
-    service: vpcep
-    region: sa-brazil-1
-    billing: ondemand
-    options:
-      duration_hours: 730
-```
+    ```yaml
+    customer: Example Corp
+    name: "Example VPCEP"
+    settlement: total
+    cards:
+      - id: service-endpoint
+        service: vpcep
+        region: sa-brazil-1
+        billing: ondemand
+        options:
+          duration_hours: 730
+    ```
 
 ---
 
@@ -68,25 +68,25 @@ Top-level card fields: `id` (required), `service: vpcep`, `region`, `billing` (`
 
 ---
 
-## Portal Control Schema (`autocalc://schema/vpcep`)
+??? note "Portal Control Schema (autocalc://schema/vpcep) — 5 controls"
 
-Source file: `src/schema/files/vpcep.yaml`
-
-| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
-| `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-| `calculator_vpcep_serviceType_serviceType` | Service Category | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `calculator_vpcep_time_Stepper_0` | Purchase Duration | `base-stepper` | `1..999999 hour` (step 1) | Mapped → `duration_hours` |
+    Source file: `src/schema/files/vpcep.yaml`
+    
+    | Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
+    | :--- | :--- | :--- | :--- | :--- |
+    | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
+    | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
+    | `calculator_vpcep_serviceType_serviceType` | Service Category | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_vpcep_time_Stepper_0` | Purchase Duration | `base-stepper` | `1..999999 hour` (step 1) | Mapped → `duration_hours` |
 
 ---
 
-## Live Compatibility Replay
+???+ check "Live Compatibility Replay (sa-brazil-1) — 2 scenarios passing"
 
-Source: `docs/compat/vpcep.md` (vpcep compatibility (sa-brazil-1, 2026-11-07))
-
-| Scenario | Replay Result | Stage | Detail |
-| :--- | :--- | :--- | :--- |
-| `hours-300` | `ok` | `ok` | — |
-| `hours-730` | `ok` | `ok` | — |
+    Source: `docs/compat/vpcep.md` (vpcep compatibility (sa-brazil-1, 2026-11-07))
+    
+    | Scenario | Replay Result | Stage | Detail |
+    | :--- | :--- | :--- | :--- |
+    | `hours-300` | `ok` | `ok` | — |
+    | `hours-730` | `ok` | `ok` | — |

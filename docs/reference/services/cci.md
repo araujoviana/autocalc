@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Service Code** | `cci` |
 | **Category** | Containers |
-| **Publish Gate Status** | `VERIFIED` (Full Publish Gate) |
+| **Publish Gate Status** | <span class="badge badge--verified">VERIFIED</span> (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `ondemand` |
 | **Primary Catalog Group** | — |
@@ -14,26 +14,39 @@
 
 ## Example Usage
 
-### Declarative Quote (`version: "1"`)
+=== "Declarative Quote (`version: '1'`)"
 
-```yaml
-version: "1"
-metadata:
-  id: example-cci
-  customer: Example Corp
-  title_prefix: "Example CCI"
-defaults:
-  region: sa-brazil-1
-  billing: ondemand
-resources:
-  - id: tournament-burst-cci
-    environment: latam_south
-    service: cci
-    billing: ondemand
-    options:
-      vcpus: 32
-      memory_gb: 64 GB
-```
+    ```yaml
+    version: "1"
+    metadata:
+      id: example-cci
+      customer: Example Corp
+      title_prefix: "Example CCI"
+    defaults:
+      region: sa-brazil-1
+      billing: ondemand
+    resources:
+      - id: tournament-burst-cci
+        environment: latam_south
+        service: cci
+        billing: ondemand
+        options:
+          vcpus: 32
+          memory_gb: 64 GB
+    ```
+
+=== "Plain Card (`cards:`)"
+
+    ```yaml
+    customer: Example Corp
+    name: "Example CCI"
+    settlement: total
+    cards:
+      - id: cci-main
+        service: cci
+        region: sa-brazil-1
+        billing: ondemand
+    ```
 
 ---
 
@@ -54,29 +67,29 @@ Top-level card fields: `id` (required), `service: cci`, `region`, `billing` (`on
 
 ---
 
-## Portal Control Schema (`autocalc://schema/cci`)
+??? note "Portal Control Schema (autocalc://schema/cci) — 9 controls"
 
-Source file: `src/schema/files/cci.yaml`
-
-| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
-| `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
-| `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-| `calculator_cciSpec_radio_arch` | CPU Architecture | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (builder prices on-demand container CPU and memory) |
-| `calculator_cciSpec_radio_productType` | Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (builder prices on-demand container CPU and memory) |
-| `calculator_cciSpec_radio_specType` | Package | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (resource packages are not used by the on-demand builder) |
-| `calculator_cciSpec_radio_gpu` | — | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (GPU pods are not used by the CPU/memory builder) |
-| `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
-| `global_QUANTITY_Stepper_0` | Quantity | `base-stepper` | `1..999 PCS` (step 1) | Mapped → `quantity` |
+    Source file: `src/schema/files/cci.yaml`
+    
+    | Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
+    | :--- | :--- | :--- | :--- | :--- |
+    | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
+    | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
+    | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
+    | `calculator_cciSpec_radio_arch` | CPU Architecture | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (builder prices on-demand container CPU and memory) |
+    | `calculator_cciSpec_radio_productType` | Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (builder prices on-demand container CPU and memory) |
+    | `calculator_cciSpec_radio_specType` | Package | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (resource packages are not used by the on-demand builder) |
+    | `calculator_cciSpec_radio_gpu` | — | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (GPU pods are not used by the CPU/memory builder) |
+    | `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
+    | `global_QUANTITY_Stepper_0` | Quantity | `base-stepper` | `1..999 PCS` (step 1) | Mapped → `quantity` |
 
 ---
 
-## Live Compatibility Replay
+???+ check "Live Compatibility Replay (sa-brazil-1) — 2 scenarios passing"
 
-Source: `docs/compat/cci.md` (cci compatibility (sa-brazil-1, 2026-11-07))
-
-| Scenario | Replay Result | Stage | Detail |
-| :--- | :--- | :--- | :--- |
-| `ondemand-2u4g` | `ok` | `ok` | — |
-| `ondemand-4u8g` | `ok` | `ok` | — |
+    Source: `docs/compat/cci.md` (cci compatibility (sa-brazil-1, 2026-11-07))
+    
+    | Scenario | Replay Result | Stage | Detail |
+    | :--- | :--- | :--- | :--- |
+    | `ondemand-2u4g` | `ok` | `ok` | — |
+    | `ondemand-4u8g` | `ok` | `ok` | — |

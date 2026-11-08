@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Service Code** | `maas` |
 | **Category** | Observability & AI |
-| **Publish Gate Status** | `VERIFIED` (Full Publish Gate) |
+| **Publish Gate Status** | <span class="badge badge--verified">VERIFIED</span> (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `ondemand` |
 | **Primary Catalog Group** | `modelarts_modelarts.tokens` |
@@ -14,43 +14,43 @@
 
 ## Example Usage
 
-### Declarative Quote (`version: "1"`)
+=== "Declarative Quote (`version: '1'`)"
 
-```yaml
-version: "1"
-metadata:
-  id: example-maas
-  customer: Example Corp
-  title_prefix: "Example MAAS"
-defaults:
-  region: ap-southeast-1
-  billing: ondemand
-resources:
-  - id: maas-deepseek-tokens
-    environment: ai_prod
-    service: maas
-    billing: ondemand
-    options:
-      model: deepseek-v3-671b
-      tokens_thousands: 50000
-```
+    ```yaml
+    version: "1"
+    metadata:
+      id: example-maas
+      customer: Example Corp
+      title_prefix: "Example MAAS"
+    defaults:
+      region: ap-southeast-1
+      billing: ondemand
+    resources:
+      - id: maas-deepseek-tokens
+        environment: ai_prod
+        service: maas
+        billing: ondemand
+        options:
+          model: deepseek-v3-671b
+          tokens_thousands: 50000
+    ```
 
-### Plain Card (`cards:`)
+=== "Plain Card (`cards:`)"
 
-```yaml
-customer: Example Corp
-name: "Example MAAS"
-settlement: total
-cards:
-  - id: maas-deepseek-tokens
-    service: maas
-    region: ap-southeast-1
-    billing: ondemand
-    spec: modelarts.tokens.deepseek.v4.1.flash
-    options:
-      input_mtokens: 50
-      output_mtokens: 10
-```
+    ```yaml
+    customer: Example Corp
+    name: "Example MAAS"
+    settlement: total
+    cards:
+      - id: maas-deepseek-tokens
+        service: maas
+        region: ap-southeast-1
+        billing: ondemand
+        spec: modelarts.tokens.deepseek.v4.1.flash
+        options:
+          input_mtokens: 50
+          output_mtokens: 10
+    ```
 
 ---
 
@@ -80,30 +80,30 @@ Top-level card fields: `id` (required), `service: maas`, `region`, `billing` (`o
 
 ---
 
-## Portal Control Schema (`autocalc://schema/maas`)
+??? note "Portal Control Schema (autocalc://schema/maas) — 11 controls"
 
-Source file: `src/schema/files/maas.yaml`
-
-| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
-| `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-| `calculator_ucsType_radio_ondemand_reasoningMode` | Inference Mode | `base-radio-group` | Catalog / Enum | Mapped → `reasoning_mode` |
-| `calculator_ucsType_radio_ondemand_modelServiceType` | Model Type | `base-radio-group` | Catalog / Enum | Mapped → `model_service_type` |
-| `calculator_ucsType_radio_ondemand_modelSeries` | Models | `base-radio-group` | Catalog / Enum | Mapped → `model_series` |
-| `calculator_ucsType_radio_ondemand_modelName` | Model | `base-radio-group` | Catalog / Enum | Mapped → `model_name` |
-| `calculator_ucsType_radio_ondemand_billingModeType` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing_mode_type` |
-| `calculator_Input_stepper_Stepper_0` | Input | `base-stepper` | `1..999999999 million tokens` (step 1) | Mapped → `input_mtokens` |
-| `calculator_output_stepper_Stepper_0` | Output | `base-stepper` | `1..999999999 million tokens` (step 1) | Mapped → `output_mtokens` |
-| `calculator_token_cached_input_stepper_Stepper_0` | Cache Hit Input | `base-stepper` | `1..999999999 million tokens` (step 1) | Mapped → `cached_input_mtokens` |
+    Source file: `src/schema/files/maas.yaml`
+    
+    | Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
+    | :--- | :--- | :--- | :--- | :--- |
+    | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
+    | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
+    | `calculator_ucsType_radio_ondemand_reasoningMode` | Inference Mode | `base-radio-group` | Catalog / Enum | Mapped → `reasoning_mode` |
+    | `calculator_ucsType_radio_ondemand_modelServiceType` | Model Type | `base-radio-group` | Catalog / Enum | Mapped → `model_service_type` |
+    | `calculator_ucsType_radio_ondemand_modelSeries` | Models | `base-radio-group` | Catalog / Enum | Mapped → `model_series` |
+    | `calculator_ucsType_radio_ondemand_modelName` | Model | `base-radio-group` | Catalog / Enum | Mapped → `model_name` |
+    | `calculator_ucsType_radio_ondemand_billingModeType` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing_mode_type` |
+    | `calculator_Input_stepper_Stepper_0` | Input | `base-stepper` | `1..999999999 million tokens` (step 1) | Mapped → `input_mtokens` |
+    | `calculator_output_stepper_Stepper_0` | Output | `base-stepper` | `1..999999999 million tokens` (step 1) | Mapped → `output_mtokens` |
+    | `calculator_token_cached_input_stepper_Stepper_0` | Cache Hit Input | `base-stepper` | `1..999999999 million tokens` (step 1) | Mapped → `cached_input_mtokens` |
 
 ---
 
-## Live Compatibility Replay
+???+ check "Live Compatibility Replay (sa-brazil-1) — 1 scenarios passing"
 
-Source: `docs/compat/maas.md` (maas compatibility (sa-brazil-1, 2026-11-07))
-
-| Scenario | Replay Result | Stage | Detail |
-| :--- | :--- | :--- | :--- |
-| `ondemand-deepseek-flash` | `ok` | `ok` | — |
+    Source: `docs/compat/maas.md` (maas compatibility (sa-brazil-1, 2026-11-07))
+    
+    | Scenario | Replay Result | Stage | Detail |
+    | :--- | :--- | :--- | :--- |
+    | `ondemand-deepseek-flash` | `ok` | `ok` | — |

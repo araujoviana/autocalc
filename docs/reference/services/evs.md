@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Service Code** | `evs` |
 | **Category** | Storage & Backup |
-| **Publish Gate Status** | `VERIFIED` (Full Publish Gate) |
+| **Publish Gate Status** | <span class="badge badge--verified">VERIFIED</span> (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `ondemand`, `monthly`, `yearly` |
 | **Primary Catalog Group** | `ebs_volume` |
@@ -14,44 +14,44 @@
 
 ## Example Usage
 
-### Declarative Quote (`version: "1"`)
+=== "Declarative Quote (`version: '1'`)"
 
-```yaml
-version: "1"
-metadata:
-  id: example-evs
-  customer: Example Corp
-  title_prefix: "Example EVS"
-defaults:
-  region: sa-brazil-1
-  billing: ondemand
-resources:
-  - id: sap-hana-log-evs
-    environment: prod
-    service: evs
-    billing: monthly
-    quantity: 4
-    options:
-      type: extreme-ssd
-      size: 500 GiB
-```
+    ```yaml
+    version: "1"
+    metadata:
+      id: example-evs
+      customer: Example Corp
+      title_prefix: "Example EVS"
+    defaults:
+      region: sa-brazil-1
+      billing: ondemand
+    resources:
+      - id: sap-hana-log-evs
+        environment: prod
+        service: evs
+        billing: monthly
+        quantity: 4
+        options:
+          type: extreme-ssd
+          size: 500 GiB
+    ```
 
-### Plain Card (`cards:`)
+=== "Plain Card (`cards:`)"
 
-```yaml
-customer: Example Corp
-name: "Example EVS"
-settlement: total
-cards:
-  - id: data-volume
-    service: evs
-    region: sa-brazil-1
-    billing: monthly
-    quantity: 3
-    spec: GPSSD
-    options:
-      size_gb: 500
-```
+    ```yaml
+    customer: Example Corp
+    name: "Example EVS"
+    settlement: total
+    cards:
+      - id: data-volume
+        service: evs
+        region: sa-brazil-1
+        billing: monthly
+        quantity: 3
+        spec: GPSSD
+        options:
+          size_gb: 500
+    ```
 
 ---
 
@@ -76,34 +76,34 @@ Top-level card fields: `id` (required), `service: evs`, `region`, `billing` (`on
 
 ---
 
-## Portal Control Schema (`autocalc://schema/evs`)
+??? note "Portal Control Schema (autocalc://schema/evs) — 7 controls"
 
-Source file: `src/schema/files/evs.yaml`
-
-| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
-| `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
-| `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-| `calculator_product_stepper_productType` | Disk Capacity | `base-select` | Catalog / Enum | Mapped → `type` |
-| `calculator_product_stepper_Stepper_0` | — | `base-stepper` | `10..32768 detail_42_` (step 10) | Mapped → `size_gb` |
-| `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
-| `global_QUANTITY_Stepper_0` | Quantity | `base-stepper` | `1..10000 disk` (step 1) | Mapped → `quantity` |
+    Source file: `src/schema/files/evs.yaml`
+    
+    | Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
+    | :--- | :--- | :--- | :--- | :--- |
+    | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
+    | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
+    | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
+    | `calculator_product_stepper_productType` | Disk Capacity | `base-select` | Catalog / Enum | Mapped → `type` |
+    | `calculator_product_stepper_Stepper_0` | — | `base-stepper` | `10..32768 detail_42_` (step 10) | Mapped → `size_gb` |
+    | `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
+    | `global_QUANTITY_Stepper_0` | Quantity | `base-stepper` | `1..10000 disk` (step 1) | Mapped → `quantity` |
 
 ---
 
-## Live Compatibility Replay
+???+ check "Live Compatibility Replay (sa-brazil-1) — 9 scenarios passing"
 
-Source: `docs/compat/evs.md` (evs compatibility (sa-brazil-1, 2026-11-07))
-
-| Scenario | Replay Result | Stage | Detail |
-| :--- | :--- | :--- | :--- |
-| `gpssd-ondemand` | `ok` | `ok` | — |
-| `gpssd-monthly` | `ok` | `ok` | — |
-| `gpssd-yearly` | `ok` | `ok` | — |
-| `ssd` | `ok` | `ok` | — |
-| `sas` | `ok` | `ok` | — |
-| `sata` | `ok` | `ok` | — |
-| `essd` | `ok` | `ok` | — |
-| `gpssd2-ondemand` | `ok` | `ok` | — |
-| `quantity-3` | `ok` | `ok` | — |
+    Source: `docs/compat/evs.md` (evs compatibility (sa-brazil-1, 2026-11-07))
+    
+    | Scenario | Replay Result | Stage | Detail |
+    | :--- | :--- | :--- | :--- |
+    | `gpssd-ondemand` | `ok` | `ok` | — |
+    | `gpssd-monthly` | `ok` | `ok` | — |
+    | `gpssd-yearly` | `ok` | `ok` | — |
+    | `ssd` | `ok` | `ok` | — |
+    | `sas` | `ok` | `ok` | — |
+    | `sata` | `ok` | `ok` | — |
+    | `essd` | `ok` | `ok` | — |
+    | `gpssd2-ondemand` | `ok` | `ok` | — |
+    | `quantity-3` | `ok` | `ok` | — |

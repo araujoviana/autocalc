@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Service Code** | `hecs` (aliases: `flexus`, `flexus-x`, `flexus_x`) |
 | **Category** | Compute |
-| **Publish Gate Status** | `DEFAULT_ONLY` (Catalog & Replay Only) — *Only page defaults have been accepted; requested configuration is unverified.* |
+| **Publish Gate Status** | <span class="badge badge--default">DEFAULT_ONLY</span> (Catalog & Replay Only) — *Only page defaults have been accepted; requested configuration is unverified.* |
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `monthly`, `yearly`, `ondemand` |
 | **Primary Catalog Group** | — |
@@ -14,36 +14,36 @@
 
 ## Example Usage
 
-### Declarative Quote (`version: "1"`)
+=== "Declarative Quote (`version: '1'`)"
 
-```yaml
-version: "1"
-metadata:
-  id: example-hecs
-  customer: Example Corp
-  title_prefix: "Example HECS"
-defaults:
-  region: sa-brazil-1
-  billing: monthly
-resources:
-  - id: hecs-main
-    service: hecs
-    billing: monthly
-```
+    ```yaml
+    version: "1"
+    metadata:
+      id: example-hecs
+      customer: Example Corp
+      title_prefix: "Example HECS"
+    defaults:
+      region: sa-brazil-1
+      billing: monthly
+    resources:
+      - id: hecs-main
+        service: hecs
+        billing: monthly
+    ```
 
-### Plain Card (`cards:`)
+=== "Plain Card (`cards:`)"
 
-```yaml
-customer: Example Corp
-name: "Example HECS"
-settlement: total
-cards:
-  - id: flexus-x-instance
-    service: hecs
-    region: sa-brazil-1
-    billing: monthly
-    quantity: 1
-```
+    ```yaml
+    customer: Example Corp
+    name: "Example HECS"
+    settlement: total
+    cards:
+      - id: flexus-x-instance
+        service: hecs
+        region: sa-brazil-1
+        billing: monthly
+        quantity: 1
+    ```
 
 ---
 
@@ -61,39 +61,39 @@ Top-level card fields: `id` (required), `service: hecs`, `region`, `billing` (`m
 
 ---
 
-## Portal Control Schema (`autocalc://schema/hecs`)
+??? note "Portal Control Schema (autocalc://schema/hecs) — 18 controls"
 
-Source file: `src/schema/files/hecs.yaml`
-
-| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
-| `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-| `calculator_hecs_radio_arch` | Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `calculator_hecs_radio_vmType` | — | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `calculator_hecs_radio_cpu` | — | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `calculator_hecs_radio_mem` | — | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `calculator_ims_select___platform` | Image | `base-select` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `calculator_ims_select_name` | — | `base-select` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `calculator_evs_stepper_main_type` | System Disk | `base-select` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `calculator_evs_stepper_main_Stepper_0` | — | `base-stepper` | `40..1024` (step 20) | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `calculator_eip_switch_UNSET_Switch` | EIP | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `calculator_eip_radio_eipSpec` | EIP Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `calculator_eip_radio_shareType` | Bandwidth Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `calculator_eip_radio_eipType` | Billed By | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `calculator_eip_radio_Stepper_1` | Bandwidth | `base-stepper` | `5..2000` (step 1) when `^19_share`<br>`1..2000` (step 1) when `^19_s?bgp`<br>`1..9999` (step 1) when `^12_` | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
-| `global_QUANTITY_Stepper_0` | Quantity | `base-stepper` | `1..100 HECS` (step 1) | Mapped → `quantity` |
+    Source file: `src/schema/files/hecs.yaml`
+    
+    | Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
+    | :--- | :--- | :--- | :--- | :--- |
+    | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
+    | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
+    | `calculator_hecs_radio_arch` | Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_hecs_radio_vmType` | — | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_hecs_radio_cpu` | — | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_hecs_radio_mem` | — | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_ims_select___platform` | Image | `base-select` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_ims_select_name` | — | `base-select` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_evs_stepper_main_type` | System Disk | `base-select` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_evs_stepper_main_Stepper_0` | — | `base-stepper` | `40..1024` (step 20) | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_eip_switch_UNSET_Switch` | EIP | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_eip_radio_eipSpec` | EIP Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_eip_radio_shareType` | Bandwidth Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_eip_radio_eipType` | Billed By | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_eip_radio_Stepper_1` | Bandwidth | `base-stepper` | `5..2000` (step 1) when `^19_share`<br>`1..2000` (step 1) when `^19_s?bgp`<br>`1..9999` (step 1) when `^12_` | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
+    | `global_QUANTITY_Stepper_0` | Quantity | `base-stepper` | `1..100 HECS` (step 1) | Mapped → `quantity` |
 
 ---
 
-## Live Compatibility Replay
+???+ check "Live Compatibility Replay (sa-brazil-1) — 3 scenarios passing"
 
-Source: `docs/compat/hecs.md` (hecs compatibility (sa-brazil-1, 2026-11-07))
-
-| Scenario | Replay Result | Stage | Detail |
-| :--- | :--- | :--- | :--- |
-| `monthly` | `ok` | `ok` | — |
-| `yearly` | `ok` | `ok` | — |
-| `ondemand` | `ok` | `ok` | — |
+    Source: `docs/compat/hecs.md` (hecs compatibility (sa-brazil-1, 2026-11-07))
+    
+    | Scenario | Replay Result | Stage | Detail |
+    | :--- | :--- | :--- | :--- |
+    | `monthly` | `ok` | `ok` | — |
+    | `yearly` | `ok` | `ok` | — |
+    | `ondemand` | `ok` | `ok` | — |

@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Service Code** | `dline` (aliases: `dc`, `direct-connect`, `direct_connect`) |
 | **Category** | Networking & Edge |
-| **Publish Gate Status** | `VERIFIED` (Full Publish Gate) |
+| **Publish Gate Status** | <span class="badge badge--verified">VERIFIED</span> (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `monthly`, `yearly` |
 | **Primary Catalog Group** | `dcaas_dcaas.port` |
@@ -14,40 +14,40 @@
 
 ## Example Usage
 
-### Declarative Quote (`version: "1"`)
+=== "Declarative Quote (`version: '1'`)"
 
-```yaml
-version: "1"
-metadata:
-  id: example-dline
-  customer: Example Corp
-  title_prefix: "Example DLINE"
-defaults:
-  region: sa-brazil-1
-  billing: monthly
-resources:
-  - id: rsfn-direct-connect
-    environment: prod
-    service: dline
-    billing: monthly
-    options:
-      port: 1G
-```
+    ```yaml
+    version: "1"
+    metadata:
+      id: example-dline
+      customer: Example Corp
+      title_prefix: "Example DLINE"
+    defaults:
+      region: sa-brazil-1
+      billing: monthly
+    resources:
+      - id: rsfn-direct-connect
+        environment: prod
+        service: dline
+        billing: monthly
+        options:
+          port: 1G
+    ```
 
-### Plain Card (`cards:`)
+=== "Plain Card (`cards:`)"
 
-```yaml
-customer: Example Corp
-name: "Example DLINE"
-settlement: total
-cards:
-  - id: direct-connect
-    service: dline
-    region: sa-brazil-1
-    billing: monthly
-    options:
-      port: 1ge
-```
+    ```yaml
+    customer: Example Corp
+    name: "Example DLINE"
+    settlement: total
+    cards:
+      - id: direct-connect
+        service: dline
+        region: sa-brazil-1
+        billing: monthly
+        options:
+          port: 1ge
+    ```
 
 ---
 
@@ -69,32 +69,32 @@ Top-level card fields: `id` (required), `service: dline`, `region`, `billing` (`
 
 ---
 
-## Portal Control Schema (`autocalc://schema/dline`)
+??? note "Portal Control Schema (autocalc://schema/dline) — 6 controls"
 
-Source file: `src/schema/files/dline.yaml`
-
-| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
-| `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
-| `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-| `calculator_dline_radio_portType` | Port Speed | `base-radio-group` | Catalog / Enum | Mapped → `port` |
-| `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
-| `global_QUANTITY_Stepper_0` | Quantity | `base-stepper` | `1..9999 port` (step 1) | Mapped → `quantity` |
+    Source file: `src/schema/files/dline.yaml`
+    
+    | Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
+    | :--- | :--- | :--- | :--- | :--- |
+    | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
+    | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
+    | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
+    | `calculator_dline_radio_portType` | Port Speed | `base-radio-group` | Catalog / Enum | Mapped → `port` |
+    | `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
+    | `global_QUANTITY_Stepper_0` | Quantity | `base-stepper` | `1..9999 port` (step 1) | Mapped → `quantity` |
 
 ---
 
-## Live Compatibility Replay
+???+ check "Live Compatibility Replay (sa-brazil-1) — 8 scenarios passing"
 
-Source: `docs/compat/dline.md` (dline compatibility (sa-brazil-1, 2026-11-07))
-
-| Scenario | Replay Result | Stage | Detail |
-| :--- | :--- | :--- | :--- |
-| `monthly-1ge` | `ok` | `ok` | — |
-| `yearly-1ge` | `ok` | `ok` | — |
-| `monthly-10ge` | `ok` | `ok` | — |
-| `yearly-10ge` | `ok` | `ok` | — |
-| `monthly-40ge` | `ok` | `ok` | — |
-| `yearly-40ge` | `ok` | `ok` | — |
-| `monthly-100ge` | `ok` | `ok` | — |
-| `yearly-100ge` | `ok` | `ok` | — |
+    Source: `docs/compat/dline.md` (dline compatibility (sa-brazil-1, 2026-11-07))
+    
+    | Scenario | Replay Result | Stage | Detail |
+    | :--- | :--- | :--- | :--- |
+    | `monthly-1ge` | `ok` | `ok` | — |
+    | `yearly-1ge` | `ok` | `ok` | — |
+    | `monthly-10ge` | `ok` | `ok` | — |
+    | `yearly-10ge` | `ok` | `ok` | — |
+    | `monthly-40ge` | `ok` | `ok` | — |
+    | `yearly-40ge` | `ok` | `ok` | — |
+    | `monthly-100ge` | `ok` | `ok` | — |
+    | `yearly-100ge` | `ok` | `ok` | — |

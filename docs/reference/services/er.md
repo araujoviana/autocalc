@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Service Code** | `er` |
 | **Category** | Networking & Edge |
-| **Publish Gate Status** | `VERIFIED` (Full Publish Gate) |
+| **Publish Gate Status** | <span class="badge badge--verified">VERIFIED</span> (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `ondemand` |
 | **Primary Catalog Group** | `er_er.attachment` |
@@ -14,42 +14,42 @@
 
 ## Example Usage
 
-### Declarative Quote (`version: "1"`)
+=== "Declarative Quote (`version: '1'`)"
 
-```yaml
-version: "1"
-metadata:
-  id: example-er
-  customer: Example Corp
-  title_prefix: "Example ER"
-defaults:
-  region: sa-brazil-1
-  billing: ondemand
-resources:
-  - id: inter-vpc-enterprise-router
-    environment: prod
-    service: er
-    billing: ondemand
-    options:
-      attachments: 4
-      traffic_gb: 2000 GB
-```
+    ```yaml
+    version: "1"
+    metadata:
+      id: example-er
+      customer: Example Corp
+      title_prefix: "Example ER"
+    defaults:
+      region: sa-brazil-1
+      billing: ondemand
+    resources:
+      - id: inter-vpc-enterprise-router
+        environment: prod
+        service: er
+        billing: ondemand
+        options:
+          attachments: 4
+          traffic_gb: 2000 GB
+    ```
 
-### Plain Card (`cards:`)
+=== "Plain Card (`cards:`)"
 
-```yaml
-customer: Example Corp
-name: "Example ER"
-settlement: total
-cards:
-  - id: hub-router
-    service: er
-    region: sa-brazil-1
-    billing: ondemand
-    options:
-      attachments: 2
-      downflow_gb: 500
-```
+    ```yaml
+    customer: Example Corp
+    name: "Example ER"
+    settlement: total
+    cards:
+      - id: hub-router
+        service: er
+        region: sa-brazil-1
+        billing: ondemand
+        options:
+          attachments: 2
+          downflow_gb: 500
+    ```
 
 ---
 
@@ -72,26 +72,26 @@ Top-level card fields: `id` (required), `service: er`, `region`, `billing` (`ond
 
 ---
 
-## Portal Control Schema (`autocalc://schema/er`)
+??? note "Portal Control Schema (autocalc://schema/er) — 6 controls"
 
-Source file: `src/schema/files/er.yaml`
-
-| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
-| `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-| `calculator_attachment_stepper_Stepper_0` | Attachment Quantity | `base-stepper` | `0..9999 PCS` (step 1) | Mapped → `attachments` |
-| `calculator_attachment_time_stepper_Stepper_0` | Required Duration | `base-stepper` | `1..999999 hour` (step 1) | Mapped → `attachment_hours` |
-| `calculator_downflow_stepper_Stepper_0` | Traffic | `base-stepper` | `1..999999 GB` (step 1) | Mapped → `downflow_gb` |
+    Source file: `src/schema/files/er.yaml`
+    
+    | Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
+    | :--- | :--- | :--- | :--- | :--- |
+    | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
+    | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
+    | `calculator_attachment_stepper_Stepper_0` | Attachment Quantity | `base-stepper` | `0..9999 PCS` (step 1) | Mapped → `attachments` |
+    | `calculator_attachment_time_stepper_Stepper_0` | Required Duration | `base-stepper` | `1..999999 hour` (step 1) | Mapped → `attachment_hours` |
+    | `calculator_downflow_stepper_Stepper_0` | Traffic | `base-stepper` | `1..999999 GB` (step 1) | Mapped → `downflow_gb` |
 
 ---
 
-## Live Compatibility Replay
+???+ check "Live Compatibility Replay (sa-brazil-1) — 2 scenarios passing"
 
-Source: `docs/compat/er.md` (er compatibility (sa-brazil-1, 2026-11-07))
-
-| Scenario | Replay Result | Stage | Detail |
-| :--- | :--- | :--- | :--- |
-| `traffic-attachments` | `ok` | `ok` | — |
-| `single-attachment` | `ok` | `ok` | — |
+    Source: `docs/compat/er.md` (er compatibility (sa-brazil-1, 2026-11-07))
+    
+    | Scenario | Replay Result | Stage | Detail |
+    | :--- | :--- | :--- | :--- |
+    | `traffic-attachments` | `ok` | `ok` | — |
+    | `single-attachment` | `ok` | `ok` | — |

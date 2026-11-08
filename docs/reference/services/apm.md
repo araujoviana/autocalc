@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Service Code** | `apm` |
 | **Category** | Observability & AI |
-| **Publish Gate Status** | `VERIFIED` (Full Publish Gate) |
+| **Publish Gate Status** | <span class="badge badge--verified">VERIFIED</span> (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `ondemand` |
 | **Primary Catalog Group** | `apm_apm2.instance` |
@@ -14,39 +14,39 @@
 
 ## Example Usage
 
-### Declarative Quote (`version: "1"`)
+=== "Declarative Quote (`version: '1'`)"
 
-```yaml
-version: "1"
-metadata:
-  id: example-apm
-  customer: Example Corp
-  title_prefix: "Example APM"
-defaults:
-  region: sa-brazil-1
-  billing: ondemand
-resources:
-  - id: game-telemetry-apm
-    environment: latam_south
-    service: apm
-    billing: ondemand
-    options:
-      probe_days: 500
-```
+    ```yaml
+    version: "1"
+    metadata:
+      id: example-apm
+      customer: Example Corp
+      title_prefix: "Example APM"
+    defaults:
+      region: sa-brazil-1
+      billing: ondemand
+    resources:
+      - id: game-telemetry-apm
+        environment: latam_south
+        service: apm
+        billing: ondemand
+        options:
+          probe_days: 500
+    ```
 
-### Plain Card (`cards:`)
+=== "Plain Card (`cards:`)"
 
-```yaml
-customer: Example Corp
-name: "Example APM"
-settlement: total
-cards:
-  - id: apm-monitors
-    service: apm
-    region: sa-brazil-1
-    billing: ondemand
-    spec: apm2.instance.normal
-```
+    ```yaml
+    customer: Example Corp
+    name: "Example APM"
+    settlement: total
+    cards:
+      - id: apm-monitors
+        service: apm
+        region: sa-brazil-1
+        billing: ondemand
+        spec: apm2.instance.normal
+    ```
 
 ---
 
@@ -66,30 +66,30 @@ Top-level card fields: `id` (required), `service: apm`, `region`, `billing` (`on
 
 ---
 
-## Portal Control Schema (`autocalc://schema/apm`)
+??? note "Portal Control Schema (autocalc://schema/apm) — 10 controls"
 
-Source file: `src/schema/files/apm.yaml`
-
-| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
-| `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
-| `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-| `calculator_apm2Enterprise150_stepper_Stepper_0` | Basic Packages | `base-stepper` | `0..9999` (step 1) | Fixed / Unsupported (builder prices pay-per-use APM 2.0 instances) |
-| `calculator_apm2Enterprise1200_stepper_Stepper_0` | Medium Packages | `base-stepper` | `0..9999` (step 1) | Fixed / Unsupported (builder prices pay-per-use APM 2.0 instances) |
-| `calculator_apm2Enterprise9600_stepper_Stepper_0` | Advanced Packages | `base-stepper` | `0..9999` (step 1) | Fixed / Unsupported (builder prices pay-per-use APM 2.0 instances) |
-| `calculator_apm2Enterprise36500_stepper_Stepper_0` | Golden Packages | `base-stepper` | `0..9999` (step 1) | Fixed / Unsupported (builder prices pay-per-use APM 2.0 instances) |
-| `calculator_apm2Enterprise109500_stepper_Stepper_0` | Platinum Packages | `base-stepper` | `0..9999` (step 1) | Fixed / Unsupported (builder prices pay-per-use APM 2.0 instances) |
-| `calculator_apm2Enterprise182500_stepper_Stepper_0` | Top Packages | `base-stepper` | `0..9999` (step 1) | Fixed / Unsupported (builder prices pay-per-use APM 2.0 instances) |
-| `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
+    Source file: `src/schema/files/apm.yaml`
+    
+    | Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
+    | :--- | :--- | :--- | :--- | :--- |
+    | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
+    | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
+    | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
+    | `calculator_apm2Enterprise150_stepper_Stepper_0` | Basic Packages | `base-stepper` | `0..9999` (step 1) | Fixed / Unsupported (builder prices pay-per-use APM 2.0 instances) |
+    | `calculator_apm2Enterprise1200_stepper_Stepper_0` | Medium Packages | `base-stepper` | `0..9999` (step 1) | Fixed / Unsupported (builder prices pay-per-use APM 2.0 instances) |
+    | `calculator_apm2Enterprise9600_stepper_Stepper_0` | Advanced Packages | `base-stepper` | `0..9999` (step 1) | Fixed / Unsupported (builder prices pay-per-use APM 2.0 instances) |
+    | `calculator_apm2Enterprise36500_stepper_Stepper_0` | Golden Packages | `base-stepper` | `0..9999` (step 1) | Fixed / Unsupported (builder prices pay-per-use APM 2.0 instances) |
+    | `calculator_apm2Enterprise109500_stepper_Stepper_0` | Platinum Packages | `base-stepper` | `0..9999` (step 1) | Fixed / Unsupported (builder prices pay-per-use APM 2.0 instances) |
+    | `calculator_apm2Enterprise182500_stepper_Stepper_0` | Top Packages | `base-stepper` | `0..9999` (step 1) | Fixed / Unsupported (builder prices pay-per-use APM 2.0 instances) |
+    | `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
 
 ---
 
-## Live Compatibility Replay
+???+ check "Live Compatibility Replay (sa-brazil-1) — 2 scenarios passing"
 
-Source: `docs/compat/apm.md` (apm compatibility (sa-brazil-1, 2026-11-07))
-
-| Scenario | Replay Result | Stage | Detail |
-| :--- | :--- | :--- | :--- |
-| `ondemand-normal` | `ok` | `ok` | — |
-| `ondemand-normal-full` | `ok` | `ok` | — |
+    Source: `docs/compat/apm.md` (apm compatibility (sa-brazil-1, 2026-11-07))
+    
+    | Scenario | Replay Result | Stage | Detail |
+    | :--- | :--- | :--- | :--- |
+    | `ondemand-normal` | `ok` | `ok` | — |
+    | `ondemand-normal-full` | `ok` | `ok` | — |

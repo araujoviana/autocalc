@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Service Code** | `cbr` |
 | **Category** | Storage & Backup |
-| **Publish Gate Status** | `VERIFIED` (Full Publish Gate) |
+| **Publish Gate Status** | <span class="badge badge--verified">VERIFIED</span> (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `ondemand`, `monthly`, `yearly` |
 | **Primary Catalog Group** | `cbr_cbr.vault` |
@@ -14,43 +14,43 @@
 
 ## Example Usage
 
-### Declarative Quote (`version: "1"`)
+=== "Declarative Quote (`version: '1'`)"
 
-```yaml
-version: "1"
-metadata:
-  id: example-cbr
-  customer: Example Corp
-  title_prefix: "Example CBR"
-defaults:
-  region: sa-brazil-1
-  billing: ondemand
-resources:
-  - id: hospital-vault-cbr
-    environment: prod
-    service: cbr
-    billing: monthly
-    options:
-      vault_type: Server
-      vault_spec: server.backup
-      capacity_gb: 4000 GB
-```
+    ```yaml
+    version: "1"
+    metadata:
+      id: example-cbr
+      customer: Example Corp
+      title_prefix: "Example CBR"
+    defaults:
+      region: sa-brazil-1
+      billing: ondemand
+    resources:
+      - id: hospital-vault-cbr
+        environment: prod
+        service: cbr
+        billing: monthly
+        options:
+          vault_type: Server
+          vault_spec: server.backup
+          capacity_gb: 4000 GB
+    ```
 
-### Plain Card (`cards:`)
+=== "Plain Card (`cards:`)"
 
-```yaml
-customer: Example Corp
-name: "Example CBR"
-settlement: total
-cards:
-  - id: server-backup-vault
-    service: cbr
-    region: sa-brazil-1
-    billing: yearly
-    options:
-      vault_spec: vault.backup.server.normal
-      size_gb: 1000
-```
+    ```yaml
+    customer: Example Corp
+    name: "Example CBR"
+    settlement: total
+    cards:
+      - id: server-backup-vault
+        service: cbr
+        region: sa-brazil-1
+        billing: yearly
+        options:
+          vault_spec: vault.backup.server.normal
+          size_gb: 1000
+    ```
 
 ---
 
@@ -74,34 +74,34 @@ Top-level card fields: `id` (required), `service: cbr`, `region`, `billing` (`on
 
 ---
 
-## Portal Control Schema (`autocalc://schema/cbr`)
+??? note "Portal Control Schema (autocalc://schema/cbr) — 6 controls"
 
-Source file: `src/schema/files/cbr.yaml`
-
-| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
-| `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
-| `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-| `calculator_cbr_type_item` | Vault Type | `base-select` | Catalog / Enum | Mapped → `vault_spec` |
-| `calculator_cbr_type_Stepper_0` | — | `base-stepper` | `10..10485760` (step 1000) when `vault.(backup|replication).*`<br>`1024..10485760` (step 1024) when `vault.hybrid.*` | Mapped → `size_gb` |
-| `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
+    Source file: `src/schema/files/cbr.yaml`
+    
+    | Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
+    | :--- | :--- | :--- | :--- | :--- |
+    | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
+    | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
+    | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
+    | `calculator_cbr_type_item` | Vault Type | `base-select` | Catalog / Enum | Mapped → `vault_spec` |
+    | `calculator_cbr_type_Stepper_0` | — | `base-stepper` | `10..10485760` (step 1000) when `vault.(backup|replication).*`<br>`1024..10485760` (step 1024) when `vault.hybrid.*` | Mapped → `size_gb` |
+    | `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
 
 ---
 
-## Live Compatibility Replay
+???+ check "Live Compatibility Replay (sa-brazil-1) — 10 scenarios passing"
 
-Source: `docs/compat/cbr.md` (cbr compatibility (sa-brazil-1, 2026-11-07))
-
-| Scenario | Replay Result | Stage | Detail |
-| :--- | :--- | :--- | :--- |
-| `yearly-server` | `ok` | `ok` | — |
-| `monthly-server` | `ok` | `ok` | — |
-| `ondemand-server` | `ok` | `ok` | — |
-| `database` | `ok` | `ok` | — |
-| `volume` | `ok` | `ok` | — |
-| `server-multiaz` | `ok` | `ok` | — |
-| `turbo` | `ok` | `ok` | — |
-| `database-multiaz` | `ok` | `ok` | — |
-| `workspace` | `ok` | `ok` | — |
-| `replication` | `ok` | `ok` | — |
+    Source: `docs/compat/cbr.md` (cbr compatibility (sa-brazil-1, 2026-11-07))
+    
+    | Scenario | Replay Result | Stage | Detail |
+    | :--- | :--- | :--- | :--- |
+    | `yearly-server` | `ok` | `ok` | — |
+    | `monthly-server` | `ok` | `ok` | — |
+    | `ondemand-server` | `ok` | `ok` | — |
+    | `database` | `ok` | `ok` | — |
+    | `volume` | `ok` | `ok` | — |
+    | `server-multiaz` | `ok` | `ok` | — |
+    | `turbo` | `ok` | `ok` | — |
+    | `database-multiaz` | `ok` | `ok` | — |
+    | `workspace` | `ok` | `ok` | — |
+    | `replication` | `ok` | `ok` | — |

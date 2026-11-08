@@ -725,6 +725,43 @@ function aliasesFor(service: string): string[] {
     .sort();
 }
 
+function indent(text: string, spaces = 4): string {
+  const prefix = " ".repeat(spaces);
+  return text
+    .split("\n")
+    .map(line => (line.length > 0 ? prefix + line : prefix))
+    .join("\n");
+}
+
+function renderExamples(
+  service: string,
+  info: { modes: string[] },
+  v1Example?: ScenarioExample
+): string {
+  const v1Yaml = v1Example
+    ? `version: "1"\nmetadata:\n  id: example-${service}\n  customer: Example Corp\n  title_prefix: "Example ${service.toUpperCase()}"\ndefaults:\n  region: ${service === "maas" ? "ap-southeast-1" : "sa-brazil-1"}\n  billing: ${info.modes[0] ?? "monthly"}\nresources:\n${v1Example.snippet.split("\n").map(l => "  " + l).join("\n")}`
+    : `version: "1"\nmetadata:\n  id: example-${service}\n  customer: Example Corp\n  title_prefix: "Example ${service.toUpperCase()}"\ndefaults:\n  region: ${service === "maas" ? "ap-southeast-1" : "sa-brazil-1"}\n  billing: ${info.modes[0] ?? "monthly"}\nresources:\n  - id: ${service}-main\n    service: ${service}\n    billing: ${info.modes[0] ?? "monthly"}`;
+
+  const plainCards = (
+    PLAIN_EXAMPLES[service] ??
+    `cards:\n  - id: ${service}-main\n    service: ${service}\n    region: ${service === "maas" ? "ap-southeast-1" : "sa-brazil-1"}\n    billing: ${info.modes[0] ?? "monthly"}`
+  ).trim();
+  const plainYaml = `customer: Example Corp\nname: "Example ${service.toUpperCase()}"\nsettlement: total\n${plainCards}`;
+
+  const v1Block = indent(`\`\`\`yaml\n${v1Yaml}\n\`\`\``);
+  const plainBlock = indent(`\`\`\`yaml\n${plainYaml}\n\`\`\``);
+
+  return `## Example Usage
+
+=== "Declarative Quote (\`version: '1'\`)"
+
+${v1Block}
+
+=== "Plain Card (\`cards:\`)"
+
+${plainBlock}`;
+}
+
 function formatRanges(ranges: Array<{ min?: number | null; max?: number | null; step?: number | null; default?: number | null; unit?: string | null; when?: string | null }>): string {
   if (!ranges || ranges.length === 0) return "Catalog / Enum";
   const parts = ranges.map(r => {
@@ -799,23 +836,17 @@ async function main() {
       const unsupportedControls = schema?.controls.filter(c => c.unsupported).length ?? 0;
 
       const statusBadge = info.publication_supported
-        ? "`VERIFIED` (Full Publish Gate)"
+        ? '<span class="badge badge--verified">VERIFIED</span> (Full Publish Gate)'
         : ACCEPTED_DEFAULT_ONLY.has(service)
-          ? "`DEFAULT_ONLY` (Catalog & Replay Only)"
-          : "`CATALOG_ONLY` (Unverified Form Mapping)";
+          ? '<span class="badge badge--default">DEFAULT_ONLY</span> (Catalog & Replay Only)'
+          : '<span class="badge badge--default">CATALOG_ONLY</span> (Unverified Form Mapping)';
 
       indexRows.push(
-        `| [\`${service}\`](${service}.md) | ${info.description} | ${category.title} | ${info.modes.map(m => `\`${m}\``).join(", ")} | ${info.publication_supported ? "Verified (`11.4.201`)" : "Catalog / Replay"} |`
+        `| [\`${service}\`](${service}.md) | ${info.description} | ${category.title} | ${info.modes.map(m => `\`${m}\``).join(", ")} | ${info.publication_supported ? '<span class="badge badge--verified">VERIFIED</span>' : '<span class="badge badge--default">DEFAULT_ONLY</span>'} |`
       );
 
       const v1Example = scenarioExamples.get(service);
-      const v1Yaml = v1Example
-        ? `\`\`\`yaml\nversion: "1"\nmetadata:\n  id: example-${service}\n  customer: Example Corp\n  title_prefix: "Example ${service.toUpperCase()}"\ndefaults:\n  region: ${service === "maas" ? "ap-southeast-1" : "sa-brazil-1"}\n  billing: ${info.modes[0] ?? "monthly"}\nresources:\n${v1Example.snippet.split("\n").map(l => "  " + l).join("\n")}\n\`\`\``
-        : `\`\`\`yaml\nversion: "1"\nmetadata:\n  id: example-${service}\n  customer: Example Corp\n  title_prefix: "Example ${service.toUpperCase()}"\ndefaults:\n  region: ${service === "maas" ? "ap-southeast-1" : "sa-brazil-1"}\n  billing: ${info.modes[0] ?? "monthly"}\nresources:\n  - id: ${service}-main\n    service: ${service}\n    billing: ${info.modes[0] ?? "monthly"}\n\`\`\``;
-
-      const plainYaml = PLAIN_EXAMPLES[service]
-        ? `\`\`\`yaml\ncustomer: Example Corp\nname: "Example ${service.toUpperCase()}"\nsettlement: total\n${PLAIN_EXAMPLES[service]}\n\`\`\``
-        : null;
+      const examplesMd = renderExamples(service, info, v1Example);
 
       // Option table rows
       const optionRows: string[] = [];
@@ -902,6 +933,19 @@ async function main() {
         behavioralNotes.push(n);
       }
 
+      const controlTable = controlRows.length > 0
+        ? [
+            "| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |",
+            "| :--- | :--- | :--- | :--- | :--- |",
+            ...controlRows,
+          ].join("\n")
+        : "*No portal controls recorded.*";
+
+      const schemaBlock = `??? note "Portal Control Schema (autocalc://schema/${service}) — ${totalControls} controls"\n\n${indent(
+        `Source file: \`src/schema/files/${service}.yaml\`\n\n${controlTable}`
+      )}`;
+
+      const passingScenarios = compat.scenarios.filter(s => s.result === "ok").length;
       const compatTable = compat.scenarios.length
         ? [
             "| Scenario | Replay Result | Stage | Detail |",
@@ -909,6 +953,10 @@ async function main() {
             ...compat.scenarios.map(s => `| \`${s.scenario}\` | \`${s.result}\` | \`${s.stage}\` | ${s.detail || "—"} |`),
           ].join("\n")
         : "*No live replay scenarios recorded.*";
+
+      const compatBlock = `???+ check "Live Compatibility Replay (sa-brazil-1) — ${passingScenarios} scenarios passing"\n\n${indent(
+        `Source: \`docs/compat/${service}.md\` (${compat.header})\n\n${compatTable}`
+      )}`;
 
       const pageMd = `# \`${service}\` — ${info.description}
 
@@ -924,12 +972,8 @@ async function main() {
 
 ---
 
-## Example Usage
+${examplesMd}
 
-### Declarative Quote (\`version: "1"\`)
-
-${v1Yaml}
-${plainYaml ? `\n### Plain Card (\`cards:\`)\n\n${plainYaml}\n` : ""}
 ---
 
 ## Argument Reference (\`needs\` & \`options\`)
@@ -950,23 +994,11 @@ ${behavioralNotes.map(n => `- ${n}`).join("\n")}
 
 ---
 
-## Portal Control Schema (\`autocalc://schema/${service}\`)
-
-Source file: \`src/schema/files/${service}.yaml\`
-
-${controlRows.length > 0 ? [
-  "| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |",
-  "| :--- | :--- | :--- | :--- | :--- |",
-  ...controlRows,
-].join("\n") : "*No portal controls recorded.*"}
+${schemaBlock}
 
 ---
 
-## Live Compatibility Replay
-
-Source: \`docs/compat/${service}.md\` (${compat.header})
-
-${compatTable}
+${compatBlock}
 `;
 
       await writeFile(join(outDir, `${service}.md`), pageMd, "utf8");
@@ -978,7 +1010,11 @@ ${compatTable}
     const rows = cat.services.map(svc => {
       const info = allSupported.get(svc)!;
       const aliases = aliasesFor(svc);
-      const status = info.publication_supported ? "`VERIFIED`" : ACCEPTED_DEFAULT_ONLY.has(svc) ? "`DEFAULT_ONLY`" : "`CATALOG_ONLY`";
+      const status = info.publication_supported
+        ? '<span class="badge badge--verified">VERIFIED</span>'
+        : ACCEPTED_DEFAULT_ONLY.has(svc)
+          ? '<span class="badge badge--default">DEFAULT_ONLY</span>'
+          : '<span class="badge badge--default">CATALOG_ONLY</span>';
       return `| [\`${svc}\`](${svc}.md) | ${info.description} | ${aliases.length ? aliases.map(a => `\`${a}\``).join(", ") : "—"} | ${info.modes.map(m => `\`${m}\``).join(", ")} | ${status} |`;
     });
     return `### ${cat.title}

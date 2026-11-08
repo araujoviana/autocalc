@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Service Code** | `obs` |
 | **Category** | Storage & Backup |
-| **Publish Gate Status** | `VERIFIED` (Full Publish Gate) |
+| **Publish Gate Status** | <span class="badge badge--verified">VERIFIED</span> (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `ondemand`, `monthly`, `yearly` |
 | **Primary Catalog Group** | — |
@@ -14,50 +14,50 @@
 
 ## Example Usage
 
-### Declarative Quote (`version: "1"`)
+=== "Declarative Quote (`version: '1'`)"
 
-```yaml
-version: "1"
-metadata:
-  id: example-obs
-  customer: Example Corp
-  title_prefix: "Example OBS"
-defaults:
-  region: sa-brazil-1
-  billing: ondemand
-resources:
-  - id: product-media-obs
-    environment: edge
-    service: obs
-    billing: ondemand
-    options:
-      storage_class: standard
-      capacity: 10 TB
-      traffic: 5 TB/mo
-      read_requests: 5000k
-      write_requests: 500k
-```
+    ```yaml
+    version: "1"
+    metadata:
+      id: example-obs
+      customer: Example Corp
+      title_prefix: "Example OBS"
+    defaults:
+      region: sa-brazil-1
+      billing: ondemand
+    resources:
+      - id: product-media-obs
+        environment: edge
+        service: obs
+        billing: ondemand
+        options:
+          storage_class: standard
+          capacity: 10 TB
+          traffic: 5 TB/mo
+          read_requests: 5000k
+          write_requests: 500k
+    ```
 
-### Plain Card (`cards:`)
+=== "Plain Card (`cards:`)"
 
-```yaml
-customer: Example Corp
-name: "Example OBS"
-settlement: total
-cards:
-  - id: object-store
-    service: obs
-    region: sa-brazil-1
-    billing: ondemand
-    options:
-      storage_class: standard
-      multi_az: true
-      components:
-        - { factor: size_3az, value: 10, unit: TB }
-        - { factor: download.external, value: 1000 }
-        - { factor: get, value: 500 }
-        - { factor: put, value: 50 }
-```
+    ```yaml
+    customer: Example Corp
+    name: "Example OBS"
+    settlement: total
+    cards:
+      - id: object-store
+        service: obs
+        region: sa-brazil-1
+        billing: ondemand
+        options:
+          storage_class: standard
+          multi_az: true
+          components:
+            - { factor: size_3az, value: 10, unit: TB }
+            - { factor: download.external, value: 1000 }
+            - { factor: get, value: 500 }
+            - { factor: put, value: 50 }
+    ```
 
 ---
 
@@ -87,43 +87,43 @@ Top-level card fields: `id` (required), `service: obs`, `region`, `billing` (`on
 
 ---
 
-## Portal Control Schema (`autocalc://schema/obs`)
+??? note "Portal Control Schema (autocalc://schema/obs) — 9 controls"
 
-Source file: `src/schema/files/obs.yaml`
-
-| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
-| `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
-| `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-| `calculator_productType_switch_productType` | Product Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (fixed to object storage by the builder) |
-| `calculator_Pack_checkboxGroup_packageType` | Package Type | `base-checkbox-group` | Catalog / Enum | Mapped → `package` |
-| `calculator_storagePack_radio_obsStorageSize` | Storage Space | `base-radio-group` | Catalog / Enum | Mapped → `package` |
-| `calculator_Outbound_radio_obsDownTrafficSize` | Internet Outbound Traffic | `base-radio-group` | Catalog / Enum | Mapped → `traffic_package` |
-| `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
-| `global_QUANTITY_Stepper_0` | Quantity | `base-stepper` | `1..99 PCS` (step 1) | Mapped → `quantity` |
+    Source file: `src/schema/files/obs.yaml`
+    
+    | Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
+    | :--- | :--- | :--- | :--- | :--- |
+    | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
+    | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
+    | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
+    | `calculator_productType_switch_productType` | Product Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (fixed to object storage by the builder) |
+    | `calculator_Pack_checkboxGroup_packageType` | Package Type | `base-checkbox-group` | Catalog / Enum | Mapped → `package` |
+    | `calculator_storagePack_radio_obsStorageSize` | Storage Space | `base-radio-group` | Catalog / Enum | Mapped → `package` |
+    | `calculator_Outbound_radio_obsDownTrafficSize` | Internet Outbound Traffic | `base-radio-group` | Catalog / Enum | Mapped → `traffic_package` |
+    | `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
+    | `global_QUANTITY_Stepper_0` | Quantity | `base-stepper` | `1..99 PCS` (step 1) | Mapped → `quantity` |
 
 ---
 
-## Live Compatibility Replay
+???+ check "Live Compatibility Replay (sa-brazil-1) — 16 scenarios passing"
 
-Source: `docs/compat/obs.md` (obs compatibility (sa-brazil-1, 2026-11-07))
-
-| Scenario | Replay Result | Stage | Detail |
-| :--- | :--- | :--- | :--- |
-| `std` | `ok` | `ok` | — |
-| `std-3az` | `ok` | `ok` | — |
-| `warm` | `ok` | `ok` | — |
-| `warm-3az` | `ok` | `ok` | — |
-| `cold` | `ok` | `ok` | — |
-| `pkg-monthly` | `ok` | `ok` | — |
-| `pkg-yearly` | `ok` | `ok` | — |
-| `pkg-3az-yearly` | `ok` | `ok` | — |
-| `pkg-3az-monthly` | `ok` | `ok` | — |
-| `pkg-traffic-1tb` | `ok` | `ok` | — |
-| `pkg-no-traffic` | `ok` | `ok` | — |
-| `pkg-3az-100gb` | `ok` | `ok` | — |
-| `cold-restore-standard` | `ok` | `ok` | — |
-| `cold-direct-read` | `ok` | `ok` | — |
-| `months-3` | `ok` | `ok` | — |
-| `months-12-warm` | `ok` | `ok` | — |
+    Source: `docs/compat/obs.md` (obs compatibility (sa-brazil-1, 2026-11-07))
+    
+    | Scenario | Replay Result | Stage | Detail |
+    | :--- | :--- | :--- | :--- |
+    | `std` | `ok` | `ok` | — |
+    | `std-3az` | `ok` | `ok` | — |
+    | `warm` | `ok` | `ok` | — |
+    | `warm-3az` | `ok` | `ok` | — |
+    | `cold` | `ok` | `ok` | — |
+    | `pkg-monthly` | `ok` | `ok` | — |
+    | `pkg-yearly` | `ok` | `ok` | — |
+    | `pkg-3az-yearly` | `ok` | `ok` | — |
+    | `pkg-3az-monthly` | `ok` | `ok` | — |
+    | `pkg-traffic-1tb` | `ok` | `ok` | — |
+    | `pkg-no-traffic` | `ok` | `ok` | — |
+    | `pkg-3az-100gb` | `ok` | `ok` | — |
+    | `cold-restore-standard` | `ok` | `ok` | — |
+    | `cold-direct-read` | `ok` | `ok` | — |
+    | `months-3` | `ok` | `ok` | — |
+    | `months-12-warm` | `ok` | `ok` | — |

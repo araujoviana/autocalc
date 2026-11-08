@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Service Code** | `nat` |
 | **Category** | Networking & Edge |
-| **Publish Gate Status** | `VERIFIED` (Full Publish Gate) |
+| **Publish Gate Status** | <span class="badge badge--verified">VERIFIED</span> (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `ondemand`, `monthly`, `yearly` |
 | **Primary Catalog Group** | `natgateway_natgateway` |
@@ -14,40 +14,40 @@
 
 ## Example Usage
 
-### Declarative Quote (`version: "1"`)
+=== "Declarative Quote (`version: '1'`)"
 
-```yaml
-version: "1"
-metadata:
-  id: example-nat
-  customer: Example Corp
-  title_prefix: "Example NAT"
-defaults:
-  region: sa-brazil-1
-  billing: ondemand
-resources:
-  - id: egress-nat-gateway
-    environment: prod
-    service: nat
-    billing: ondemand
-    options:
-      size: L
-```
+    ```yaml
+    version: "1"
+    metadata:
+      id: example-nat
+      customer: Example Corp
+      title_prefix: "Example NAT"
+    defaults:
+      region: sa-brazil-1
+      billing: ondemand
+    resources:
+      - id: egress-nat-gateway
+        environment: prod
+        service: nat
+        billing: ondemand
+        options:
+          size: L
+    ```
 
-### Plain Card (`cards:`)
+=== "Plain Card (`cards:`)"
 
-```yaml
-customer: Example Corp
-name: "Example NAT"
-settlement: total
-cards:
-  - id: nat-gateway
-    service: nat
-    region: sa-brazil-1
-    billing: ondemand
-    options:
-      size: middle
-```
+    ```yaml
+    customer: Example Corp
+    name: "Example NAT"
+    settlement: total
+    cards:
+      - id: nat-gateway
+        service: nat
+        region: sa-brazil-1
+        billing: ondemand
+        options:
+          size: middle
+    ```
 
 ---
 
@@ -69,30 +69,30 @@ Top-level card fields: `id` (required), `service: nat`, `region`, `billing` (`on
 
 ---
 
-## Portal Control Schema (`autocalc://schema/nat`)
+??? note "Portal Control Schema (autocalc://schema/nat) — 6 controls"
 
-Source file: `src/schema/files/nat.yaml`
-
-| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
-| `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
-| `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-| `calculator_nat_type_nattype` | Gateway | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (fixed to public NAT gateway by the builder) |
-| `calculator_nat_radio_type` | Type | `base-select` | Catalog / Enum | Mapped → `size` |
-| `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
+    Source file: `src/schema/files/nat.yaml`
+    
+    | Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
+    | :--- | :--- | :--- | :--- | :--- |
+    | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
+    | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
+    | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
+    | `calculator_nat_type_nattype` | Gateway | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (fixed to public NAT gateway by the builder) |
+    | `calculator_nat_radio_type` | Type | `base-select` | Catalog / Enum | Mapped → `size` |
+    | `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
 
 ---
 
-## Live Compatibility Replay
+???+ check "Live Compatibility Replay (sa-brazil-1) — 6 scenarios passing"
 
-Source: `docs/compat/nat.md` (nat compatibility (sa-brazil-1, 2026-11-07))
-
-| Scenario | Replay Result | Stage | Detail |
-| :--- | :--- | :--- | :--- |
-| `ondemand-small` | `ok` | `ok` | — |
-| `ondemand-middle` | `ok` | `ok` | — |
-| `ondemand-large` | `ok` | `ok` | — |
-| `ondemand-xlarge` | `ok` | `ok` | — |
-| `monthly-small` | `ok` | `ok` | — |
-| `yearly-large` | `ok` | `ok` | — |
+    Source: `docs/compat/nat.md` (nat compatibility (sa-brazil-1, 2026-11-07))
+    
+    | Scenario | Replay Result | Stage | Detail |
+    | :--- | :--- | :--- | :--- |
+    | `ondemand-small` | `ok` | `ok` | — |
+    | `ondemand-middle` | `ok` | `ok` | — |
+    | `ondemand-large` | `ok` | `ok` | — |
+    | `ondemand-xlarge` | `ok` | `ok` | — |
+    | `monthly-small` | `ok` | `ok` | — |
+    | `yearly-large` | `ok` | `ok` | — |

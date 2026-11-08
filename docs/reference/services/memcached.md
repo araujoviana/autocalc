@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Service Code** | `memcached` |
 | **Category** | Databases & Cache |
-| **Publish Gate Status** | `VERIFIED` (Full Publish Gate) |
+| **Publish Gate Status** | <span class="badge badge--verified">VERIFIED</span> (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `ondemand` |
 | **Primary Catalog Group** | `dcs_dcs.memcached` |
@@ -14,42 +14,42 @@
 
 ## Example Usage
 
-### Declarative Quote (`version: "1"`)
+=== "Declarative Quote (`version: '1'`)"
 
-```yaml
-version: "1"
-metadata:
-  id: example-memcached
-  customer: Example Corp
-  title_prefix: "Example MEMCACHED"
-defaults:
-  region: sa-brazil-1
-  billing: ondemand
-resources:
-  - id: bi-query-cache-memcached
-    environment: analytics
-    service: memcached
-    billing: ondemand
-    options:
-      instance_type: Master/Standby
-      capacity_gb: 8 GB
-```
+    ```yaml
+    version: "1"
+    metadata:
+      id: example-memcached
+      customer: Example Corp
+      title_prefix: "Example MEMCACHED"
+    defaults:
+      region: sa-brazil-1
+      billing: ondemand
+    resources:
+      - id: bi-query-cache-memcached
+        environment: analytics
+        service: memcached
+        billing: ondemand
+        options:
+          instance_type: Master/Standby
+          capacity_gb: 8 GB
+    ```
 
-### Plain Card (`cards:`)
+=== "Plain Card (`cards:`)"
 
-```yaml
-customer: Example Corp
-name: "Example MEMCACHED"
-settlement: total
-cards:
-  - id: session-cache
-    service: memcached
-    region: sa-brazil-1
-    billing: ondemand
-    options:
-      instance_type: single_node
-      memory_gb: 4
-```
+    ```yaml
+    customer: Example Corp
+    name: "Example MEMCACHED"
+    settlement: total
+    cards:
+      - id: session-cache
+        service: memcached
+        region: sa-brazil-1
+        billing: ondemand
+        options:
+          instance_type: single_node
+          memory_gb: 4
+    ```
 
 ---
 
@@ -74,27 +74,27 @@ Top-level card fields: `id` (required), `service: memcached`, `region`, `billing
 
 ---
 
-## Portal Control Schema (`autocalc://schema/memcached`)
+??? note "Portal Control Schema (autocalc://schema/memcached) — 7 controls"
 
-Source file: `src/schema/files/memcached.yaml`
-
-| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
-| `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-| `calculator_memcached_version_instance_type` | Instance Type | `base-radio-group` | Catalog / Enum | Mapped → `instance_type` |
-| `calculator_memcached_version_Stepper_0` | Specification | `base-radio-stepper` | `2..9999` (step 1) | Mapped → `memory_gb` |
-| `global_ONDEMANDTIME_Stepper_0` | Required Duration | `base-stepper` | `1..9999 hour` (step 1) | Mapped → `hours` |
-| `global_QUANTITY_Stepper_0` | Quantity | `base-stepper` | `1..500 instance` (step 1) | Mapped → `quantity` |
+    Source file: `src/schema/files/memcached.yaml`
+    
+    | Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
+    | :--- | :--- | :--- | :--- | :--- |
+    | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
+    | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
+    | `calculator_memcached_version_instance_type` | Instance Type | `base-radio-group` | Catalog / Enum | Mapped → `instance_type` |
+    | `calculator_memcached_version_Stepper_0` | Specification | `base-radio-stepper` | `2..9999` (step 1) | Mapped → `memory_gb` |
+    | `global_ONDEMANDTIME_Stepper_0` | Required Duration | `base-stepper` | `1..9999 hour` (step 1) | Mapped → `hours` |
+    | `global_QUANTITY_Stepper_0` | Quantity | `base-stepper` | `1..500 instance` (step 1) | Mapped → `quantity` |
 
 ---
 
-## Live Compatibility Replay
+???+ check "Live Compatibility Replay (sa-brazil-1) — 2 scenarios passing"
 
-Source: `docs/compat/memcached.md` (memcached compatibility (sa-brazil-1, 2026-11-07))
-
-| Scenario | Replay Result | Stage | Detail |
-| :--- | :--- | :--- | :--- |
-| `ondemand-single-8gb` | `ok` | `ok` | — |
-| `ondemand-ha-16gb` | `ok` | `ok` | — |
+    Source: `docs/compat/memcached.md` (memcached compatibility (sa-brazil-1, 2026-11-07))
+    
+    | Scenario | Replay Result | Stage | Detail |
+    | :--- | :--- | :--- | :--- |
+    | `ondemand-single-8gb` | `ok` | `ok` | — |
+    | `ondemand-ha-16gb` | `ok` | `ok` | — |

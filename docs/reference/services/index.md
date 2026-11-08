@@ -26,9 +26,9 @@ Virtual machines, serverless functions, and dedicated compute instances.
 
 | Service | Name | Declarative Aliases | Billing Modes | Publish Gate |
 | :--- | :--- | :--- | :--- | :--- |
-| [`ecs`](ecs.md) | Elastic Cloud Server | — | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
-| [`function`](function.md) | FunctionGraph | `fg`, `functiongraph` | `ondemand` | `VERIFIED` |
-| [`hecs`](hecs.md) | Flexus X Instance | `flexus`, `flexus-x`, `flexus_x` | `monthly`, `yearly`, `ondemand` | `DEFAULT_ONLY` |
+| [`ecs`](ecs.md) | Elastic Cloud Server | — | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`function`](function.md) | FunctionGraph | `fg`, `functiongraph` | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`hecs`](hecs.md) | Flexus X Instance | `flexus`, `flexus-x`, `flexus_x` | `monthly`, `yearly`, `ondemand` | <span class="badge badge--default">DEFAULT_ONLY</span> |
 
 ### Containers
 
@@ -36,9 +36,9 @@ Managed Kubernetes clusters, serverless container instances, and multi-cloud con
 
 | Service | Name | Declarative Aliases | Billing Modes | Publish Gate |
 | :--- | :--- | :--- | :--- | :--- |
-| [`cce`](cce.md) | Cloud Container Engine | — | `ondemand`, `monthly`, `yearly` | `VERIFIED` |
-| [`cci`](cci.md) | Cloud Container Instance | — | `ondemand` | `VERIFIED` |
-| [`ucs`](ucs.md) | Ubiquitous Cloud Native Service | — | `monthly`, `yearly`, `ondemand` | `DEFAULT_ONLY` |
+| [`cce`](cce.md) | Cloud Container Engine | — | `ondemand`, `monthly`, `yearly` | <span class="badge badge--verified">VERIFIED</span> |
+| [`cci`](cci.md) | Cloud Container Instance | — | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`ucs`](ucs.md) | Ubiquitous Cloud Native Service | — | `monthly`, `yearly`, `ondemand` | <span class="badge badge--default">DEFAULT_ONLY</span> |
 
 ### Databases & Cache
 
@@ -46,17 +46,17 @@ Relational, NoSQL, document, distributed databases, caching, and data replicatio
 
 | Service | Name | Declarative Aliases | Billing Modes | Publish Gate |
 | :--- | :--- | :--- | :--- | :--- |
-| [`rds`](rds.md) | Relational Database Service | — | `ondemand`, `monthly`, `yearly` | `VERIFIED` |
-| [`rdsformariadb`](rdsformariadb.md) | RDS for MariaDB | `mariadb` | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
-| [`taurusdb`](taurusdb.md) | TaurusDB | — | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
-| [`gaussdb`](gaussdb.md) | GaussDB | — | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
-| [`hrds`](hrds.md) | Dedicated RDS | — | `monthly`, `yearly` | `VERIFIED` |
-| [`dds`](dds.md) | Document Database Service | `mongodb` | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
-| [`nosql`](nosql.md) | GeminiDB DynamoDB | `geminidb` | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
-| [`redis`](redis.md) | Distributed Cache Service (Redis) | `dcs` | `monthly`, `yearly` | `VERIFIED` |
-| [`memcached`](memcached.md) | Distributed Cache Service (Memcached) | — | `ondemand` | `VERIFIED` |
-| [`ddm`](ddm.md) | Distributed Database Middleware | — | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
-| [`drs`](drs.md) | Data Replication Service | — | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
+| [`rds`](rds.md) | Relational Database Service | — | `ondemand`, `monthly`, `yearly` | <span class="badge badge--verified">VERIFIED</span> |
+| [`rdsformariadb`](rdsformariadb.md) | RDS for MariaDB | `mariadb` | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`taurusdb`](taurusdb.md) | TaurusDB | — | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`gaussdb`](gaussdb.md) | GaussDB | — | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`hrds`](hrds.md) | Dedicated RDS | — | `monthly`, `yearly` | <span class="badge badge--verified">VERIFIED</span> |
+| [`dds`](dds.md) | Document Database Service | `mongodb` | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`nosql`](nosql.md) | GeminiDB DynamoDB | `geminidb` | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`redis`](redis.md) | Distributed Cache Service (Redis) | `dcs` | `monthly`, `yearly` | <span class="badge badge--verified">VERIFIED</span> |
+| [`memcached`](memcached.md) | Distributed Cache Service (Memcached) | — | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`ddm`](ddm.md) | Distributed Database Middleware | — | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`drs`](drs.md) | Data Replication Service | — | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
 
 ### Storage & Backup
 
@@ -64,14 +64,14 @@ Block volumes, object storage, network file systems, cloud backup vaults, and di
 
 | Service | Name | Declarative Aliases | Billing Modes | Publish Gate |
 | :--- | :--- | :--- | :--- | :--- |
-| [`evs`](evs.md) | Elastic Volume Service | — | `ondemand`, `monthly`, `yearly` | `VERIFIED` |
-| [`obs`](obs.md) | Object Storage Service | — | `ondemand`, `monthly`, `yearly` | `VERIFIED` |
-| [`sfs`](sfs.md) | Scalable File Service | — | `ondemand` | `VERIFIED` |
-| [`sfsturbo`](sfsturbo.md) | Scalable File Service Turbo | `sfs-turbo`, `sfs_turbo` | `ondemand`, `monthly`, `yearly` | `VERIFIED` |
-| [`cbr`](cbr.md) | Cloud Backup and Recovery | — | `ondemand`, `monthly`, `yearly` | `VERIFIED` |
-| [`sdrs`](sdrs.md) | Storage Disaster Recovery Service | — | `ondemand` | `VERIFIED` |
-| [`dss`](dss.md) | Dedicated Distributed Storage Service | — | `yearly` | `VERIFIED` |
-| [`des`](des.md) | Data Express Service | — | `ondemand` | `VERIFIED` |
+| [`evs`](evs.md) | Elastic Volume Service | — | `ondemand`, `monthly`, `yearly` | <span class="badge badge--verified">VERIFIED</span> |
+| [`obs`](obs.md) | Object Storage Service | — | `ondemand`, `monthly`, `yearly` | <span class="badge badge--verified">VERIFIED</span> |
+| [`sfs`](sfs.md) | Scalable File Service | — | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`sfsturbo`](sfsturbo.md) | Scalable File Service Turbo | `sfs-turbo`, `sfs_turbo` | `ondemand`, `monthly`, `yearly` | <span class="badge badge--verified">VERIFIED</span> |
+| [`cbr`](cbr.md) | Cloud Backup and Recovery | — | `ondemand`, `monthly`, `yearly` | <span class="badge badge--verified">VERIFIED</span> |
+| [`sdrs`](sdrs.md) | Storage Disaster Recovery Service | — | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`dss`](dss.md) | Dedicated Distributed Storage Service | — | `yearly` | <span class="badge badge--verified">VERIFIED</span> |
+| [`des`](des.md) | Data Express Service | — | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
 
 ### Networking & Edge
 
@@ -79,16 +79,16 @@ Load balancers, NAT gateways, elastic IPs, enterprise routers, VPNs, and direct 
 
 | Service | Name | Declarative Aliases | Billing Modes | Publish Gate |
 | :--- | :--- | :--- | :--- | :--- |
-| [`elb`](elb.md) | Elastic Load Balance | — | `ondemand`, `monthly`, `yearly` | `VERIFIED` |
-| [`nat`](nat.md) | NAT Gateway | — | `ondemand`, `monthly`, `yearly` | `VERIFIED` |
-| [`eip`](eip.md) | Elastic IP | — | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
-| [`er`](er.md) | Enterprise Router | — | `ondemand` | `VERIFIED` |
-| [`vpcep`](vpcep.md) | VPC Endpoint | — | `ondemand` | `VERIFIED` |
-| [`vpn`](vpn.md) | Virtual Private Network | — | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
-| [`dline`](dline.md) | Cloud Connect / Direct Connect As A Service | `dc`, `direct-connect`, `direct_connect` | `monthly`, `yearly` | `VERIFIED` |
-| [`cc`](cc.md) | Cloud Connect | — | `monthly`, `yearly` | `DEFAULT_ONLY` |
-| [`esw`](esw.md) | Enterprise Switch | — | `monthly`, `yearly`, `ondemand` | `DEFAULT_ONLY` |
-| [`ga`](ga.md) | Global Accelerator | — | `ondemand` | `DEFAULT_ONLY` |
+| [`elb`](elb.md) | Elastic Load Balance | — | `ondemand`, `monthly`, `yearly` | <span class="badge badge--verified">VERIFIED</span> |
+| [`nat`](nat.md) | NAT Gateway | — | `ondemand`, `monthly`, `yearly` | <span class="badge badge--verified">VERIFIED</span> |
+| [`eip`](eip.md) | Elastic IP | — | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`er`](er.md) | Enterprise Router | — | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`vpcep`](vpcep.md) | VPC Endpoint | — | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`vpn`](vpn.md) | Virtual Private Network | — | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`dline`](dline.md) | Cloud Connect / Direct Connect As A Service | `dc`, `direct-connect`, `direct_connect` | `monthly`, `yearly` | <span class="badge badge--verified">VERIFIED</span> |
+| [`cc`](cc.md) | Cloud Connect | — | `monthly`, `yearly` | <span class="badge badge--default">DEFAULT_ONLY</span> |
+| [`esw`](esw.md) | Enterprise Switch | — | `monthly`, `yearly`, `ondemand` | <span class="badge badge--default">DEFAULT_ONLY</span> |
+| [`ga`](ga.md) | Global Accelerator | — | `ondemand` | <span class="badge badge--default">DEFAULT_ONLY</span> |
 
 ### Middleware & Messaging
 
@@ -96,10 +96,10 @@ API gateways and managed Kafka and RabbitMQ message brokers.
 
 | Service | Name | Declarative Aliases | Billing Modes | Publish Gate |
 | :--- | :--- | :--- | :--- | :--- |
-| [`apig`](apig.md) | API Gateway | — | `ondemand` | `VERIFIED` |
-| [`kafka`](kafka.md) | DMS (for Kafka) | `dmq`, `dms-kafka` | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
-| [`rabbitmq`](rabbitmq.md) | DMS (for RabbitMQ) | `dms-rabbitmq` | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
-| [`reliability`](reliability.md) | Reliability (Distributed Message Service) | — | `monthly`, `yearly`, `ondemand` | `DEFAULT_ONLY` |
+| [`apig`](apig.md) | API Gateway | — | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`kafka`](kafka.md) | DMS (for Kafka) | `dmq`, `dms-kafka` | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`rabbitmq`](rabbitmq.md) | DMS (for RabbitMQ) | `dms-rabbitmq` | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`reliability`](reliability.md) | Reliability (Distributed Message Service) | — | `monthly`, `yearly`, `ondemand` | <span class="badge badge--default">DEFAULT_ONLY</span> |
 
 ### Security & Compliance
 
@@ -107,15 +107,15 @@ Web application firewalls, cloud firewalls, host security, KMS encryption, and D
 
 | Service | Name | Declarative Aliases | Billing Modes | Publish Gate |
 | :--- | :--- | :--- | :--- | :--- |
-| [`waf`](waf.md) | Web Application Firewall | — | `ondemand` | `VERIFIED` |
-| [`cfw`](cfw.md) | Cloud Firewall | — | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
-| [`hss`](hss.md) | Host Security Service | — | `monthly`, `yearly`, `ondemand` | `VERIFIED` |
-| [`dew`](dew.md) | Data Encryption Workshop | `csms`, `kms` | `ondemand` | `VERIFIED` |
-| [`ssa`](ssa.md) | Situation Awareness | `secmaster` | `ondemand` | `CATALOG_ONLY` |
-| [`aad`](aad.md) | Anti-DDoS Advanced | — | `monthly`, `yearly` | `DEFAULT_ONLY` |
-| [`dbss`](dbss.md) | Database Security Service | — | `monthly`, `yearly` | `DEFAULT_ONLY` |
-| [`dsc`](dsc.md) | Data Security Center | — | `monthly`, `yearly` | `DEFAULT_ONLY` |
-| [`edgesec`](edgesec.md) | Edge Security | — | `monthly` | `DEFAULT_ONLY` |
+| [`waf`](waf.md) | Web Application Firewall | — | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`cfw`](cfw.md) | Cloud Firewall | — | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`hss`](hss.md) | Host Security Service | — | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`dew`](dew.md) | Data Encryption Workshop | `csms`, `kms` | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`ssa`](ssa.md) | Situation Awareness | `secmaster` | `ondemand` | <span class="badge badge--default">CATALOG_ONLY</span> |
+| [`aad`](aad.md) | Anti-DDoS Advanced | — | `monthly`, `yearly` | <span class="badge badge--default">DEFAULT_ONLY</span> |
+| [`dbss`](dbss.md) | Database Security Service | — | `monthly`, `yearly` | <span class="badge badge--default">DEFAULT_ONLY</span> |
+| [`dsc`](dsc.md) | Data Security Center | — | `monthly`, `yearly` | <span class="badge badge--default">DEFAULT_ONLY</span> |
+| [`edgesec`](edgesec.md) | Edge Security | — | `monthly` | <span class="badge badge--default">DEFAULT_ONLY</span> |
 
 ### Observability & AI
 
@@ -123,6 +123,6 @@ Log management, application performance monitoring, and ModelArts Studio token i
 
 | Service | Name | Declarative Aliases | Billing Modes | Publish Gate |
 | :--- | :--- | :--- | :--- | :--- |
-| [`lts`](lts.md) | Log Tank Service | — | `ondemand` | `VERIFIED` |
-| [`apm`](apm.md) | Application Performance Management | — | `ondemand` | `VERIFIED` |
-| [`maas`](maas.md) | Model as a Service (ModelArts Studio) | — | `ondemand` | `VERIFIED` |
+| [`lts`](lts.md) | Log Tank Service | — | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`apm`](apm.md) | Application Performance Management | — | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`maas`](maas.md) | Model as a Service (ModelArts Studio) | — | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |

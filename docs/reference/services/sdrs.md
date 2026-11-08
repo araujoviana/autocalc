@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Service Code** | `sdrs` |
 | **Category** | Storage & Backup |
-| **Publish Gate Status** | `VERIFIED` (Full Publish Gate) |
+| **Publish Gate Status** | <span class="badge badge--verified">VERIFIED</span> (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `ondemand` |
 | **Primary Catalog Group** | `sdrs_hdrsinst` |
@@ -14,40 +14,40 @@
 
 ## Example Usage
 
-### Declarative Quote (`version: "1"`)
+=== "Declarative Quote (`version: '1'`)"
 
-```yaml
-version: "1"
-metadata:
-  id: example-sdrs
-  customer: Example Corp
-  title_prefix: "Example SDRS"
-defaults:
-  region: sa-brazil-1
-  billing: ondemand
-resources:
-  - id: storage-disaster-recovery-sdrs
-    environment: dr
-    service: sdrs
-    billing: ondemand
-    options:
-      quantity: 2
-```
+    ```yaml
+    version: "1"
+    metadata:
+      id: example-sdrs
+      customer: Example Corp
+      title_prefix: "Example SDRS"
+    defaults:
+      region: sa-brazil-1
+      billing: ondemand
+    resources:
+      - id: storage-disaster-recovery-sdrs
+        environment: dr
+        service: sdrs
+        billing: ondemand
+        options:
+          quantity: 2
+    ```
 
-### Plain Card (`cards:`)
+=== "Plain Card (`cards:`)"
 
-```yaml
-customer: Example Corp
-name: "Example SDRS"
-settlement: total
-cards:
-  - id: vm-dr-protection
-    service: sdrs
-    region: sa-brazil-1
-    billing: ondemand
-    options:
-      protection_groups: 2
-```
+    ```yaml
+    customer: Example Corp
+    name: "Example SDRS"
+    settlement: total
+    cards:
+      - id: vm-dr-protection
+        service: sdrs
+        region: sa-brazil-1
+        billing: ondemand
+        options:
+          protection_groups: 2
+    ```
 
 ---
 
@@ -69,26 +69,26 @@ Top-level card fields: `id` (required), `service: sdrs`, `region`, `billing` (`o
 
 ---
 
-## Portal Control Schema (`autocalc://schema/sdrs`)
+??? note "Portal Control Schema (autocalc://schema/sdrs) — 6 controls"
 
-Source file: `src/schema/files/sdrs.yaml`
-
-| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
-| `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-| `calculator_sdrs_stepper_replicationType` | DR Server | `base-select` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `calculator_sdrs_stepper_Stepper_0` | — | `base-stepper` | `1..1000` (step 1) | Mapped → `protection_groups` |
-| `global_ONDEMANDTIME_Stepper_0` | Required Duration | `base-stepper` | `1..9999 hour` (step 1) | Mapped → `hours` |
+    Source file: `src/schema/files/sdrs.yaml`
+    
+    | Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
+    | :--- | :--- | :--- | :--- | :--- |
+    | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
+    | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
+    | `calculator_sdrs_stepper_replicationType` | DR Server | `base-select` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_sdrs_stepper_Stepper_0` | — | `base-stepper` | `1..1000` (step 1) | Mapped → `protection_groups` |
+    | `global_ONDEMANDTIME_Stepper_0` | Required Duration | `base-stepper` | `1..9999 hour` (step 1) | Mapped → `hours` |
 
 ---
 
-## Live Compatibility Replay
+???+ check "Live Compatibility Replay (sa-brazil-1) — 2 scenarios passing"
 
-Source: `docs/compat/sdrs.md` (sdrs compatibility (sa-brazil-1, 2026-11-07))
-
-| Scenario | Replay Result | Stage | Detail |
-| :--- | :--- | :--- | :--- |
-| `groups-5` | `ok` | `ok` | — |
-| `groups-100` | `ok` | `ok` | — |
+    Source: `docs/compat/sdrs.md` (sdrs compatibility (sa-brazil-1, 2026-11-07))
+    
+    | Scenario | Replay Result | Stage | Detail |
+    | :--- | :--- | :--- | :--- |
+    | `groups-5` | `ok` | `ok` | — |
+    | `groups-100` | `ok` | `ok` | — |

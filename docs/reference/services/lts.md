@@ -4,7 +4,7 @@
 | :--- | :--- |
 | **Service Code** | `lts` |
 | **Category** | Observability & AI |
-| **Publish Gate Status** | `VERIFIED` (Full Publish Gate) |
+| **Publish Gate Status** | <span class="badge badge--verified">VERIFIED</span> (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `ondemand` |
 | **Primary Catalog Group** | `lts_lts.logflow` |
@@ -14,45 +14,45 @@
 
 ## Example Usage
 
-### Declarative Quote (`version: "1"`)
+=== "Declarative Quote (`version: '1'`)"
 
-```yaml
-version: "1"
-metadata:
-  id: example-lts
-  customer: Example Corp
-  title_prefix: "Example LTS"
-defaults:
-  region: sa-brazil-1
-  billing: ondemand
-resources:
-  - id: playback-telemetry-lts
-    environment: origin
-    service: lts
-    billing: ondemand
-    options:
-      raw_log_size_gb: 500 GB
-      index_traffic_gb: 250 GB
-      log_storage_gb: 1000 GB
-      retention_days: 30
-```
+    ```yaml
+    version: "1"
+    metadata:
+      id: example-lts
+      customer: Example Corp
+      title_prefix: "Example LTS"
+    defaults:
+      region: sa-brazil-1
+      billing: ondemand
+    resources:
+      - id: playback-telemetry-lts
+        environment: origin
+        service: lts
+        billing: ondemand
+        options:
+          raw_log_size_gb: 500 GB
+          index_traffic_gb: 250 GB
+          log_storage_gb: 1000 GB
+          retention_days: 30
+    ```
 
-### Plain Card (`cards:`)
+=== "Plain Card (`cards:`)"
 
-```yaml
-customer: Example Corp
-name: "Example LTS"
-settlement: total
-cards:
-  - id: centralized-logs
-    service: lts
-    region: sa-brazil-1
-    billing: ondemand
-    options:
-      flow_gb_per_day: 10
-      retention_days: 30
-      index_percent: 100
-```
+    ```yaml
+    customer: Example Corp
+    name: "Example LTS"
+    settlement: total
+    cards:
+      - id: centralized-logs
+        service: lts
+        region: sa-brazil-1
+        billing: ondemand
+        options:
+          flow_gb_per_day: 10
+          retention_days: 30
+          index_percent: 100
+    ```
 
 ---
 
@@ -81,31 +81,31 @@ Top-level card fields: `id` (required), `service: lts`, `region`, `billing` (`on
 
 ---
 
-## Portal Control Schema (`autocalc://schema/lts`)
+??? note "Portal Control Schema (autocalc://schema/lts) — 12 controls"
 
-Source file: `src/schema/files/lts.yaml`
-
-| Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
-| `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-| `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-| `calculator_ltsLogFlow_stepper_Stepper_0` | Raw Log Size | `base-stepper` | `1..9999999999 GB/day` (step 1)<br>`1..9999999999 TB/day` (step 1) | Mapped → `flow_gb_per_day` |
-| `calculator_lts_cold_switch_UNSET_Switch` | Intelligent Cold Storage | `base-radio-group` | Catalog / Enum | Mapped → `cold_enabled` |
-| `calculator_ltsStorage_normal_stepper_Stepper_0` | Log Storage Duration (Days) | `base-stepper` | `1..365` (step 1) | Mapped → `retention_days` |
-| `calculator_ltsStorage_stepper_Stepper_0` | Log Storage Duration (Days), cold storage on | `base-stepper` | `1..365` (step 1) | Mapped → `total_retention_days` |
-| `calculator_ltsHotStorage_stepper_Stepper_0` | Hot Storage Duration (Days) | `base-stepper` | `1..365` (step 1) | Mapped → `hot_retention_days` |
-| `calculator_ltsLogIndexRate_stepper_Stepper_0` | Index Field Ratio | `base-stepper` | `1..100 %` (step 1) | Mapped → `index_percent` |
-| `calculator_lts_transfer_basic_stepper_Stepper_0` | Daily Basic Transfer Volume | `base-stepper` | `0..9999999999 GB/day` (step 1)<br>`0..9999999999 TB/day` (step 1) | Mapped → `transfer_basic_gb_per_day` |
-| `calculator_lts_transfer_senior_stepper_Stepper_0` | Daily Advanced Transfer Volume | `base-stepper` | `0..9999999999 GB/day` (step 1)<br>`0..9999999999 TB/day` (step 1) | Mapped → `transfer_senior_gb_per_day` |
-| `global_ONDEMANDTIME_Stepper_0` | Required Duration | `base-stepper` | `1..60 month` (step 1)<br>`1..30 day` (step 1) | Mapped → `months` |
+    Source file: `src/schema/files/lts.yaml`
+    
+    | Control ID | Portal Title | Widget Kind | Ranges / Stepping | Mapping Status |
+    | :--- | :--- | :--- | :--- | :--- |
+    | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
+    | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
+    | `calculator_ltsLogFlow_stepper_Stepper_0` | Raw Log Size | `base-stepper` | `1..9999999999 GB/day` (step 1)<br>`1..9999999999 TB/day` (step 1) | Mapped → `flow_gb_per_day` |
+    | `calculator_lts_cold_switch_UNSET_Switch` | Intelligent Cold Storage | `base-radio-group` | Catalog / Enum | Mapped → `cold_enabled` |
+    | `calculator_ltsStorage_normal_stepper_Stepper_0` | Log Storage Duration (Days) | `base-stepper` | `1..365` (step 1) | Mapped → `retention_days` |
+    | `calculator_ltsStorage_stepper_Stepper_0` | Log Storage Duration (Days), cold storage on | `base-stepper` | `1..365` (step 1) | Mapped → `total_retention_days` |
+    | `calculator_ltsHotStorage_stepper_Stepper_0` | Hot Storage Duration (Days) | `base-stepper` | `1..365` (step 1) | Mapped → `hot_retention_days` |
+    | `calculator_ltsLogIndexRate_stepper_Stepper_0` | Index Field Ratio | `base-stepper` | `1..100 %` (step 1) | Mapped → `index_percent` |
+    | `calculator_lts_transfer_basic_stepper_Stepper_0` | Daily Basic Transfer Volume | `base-stepper` | `0..9999999999 GB/day` (step 1)<br>`0..9999999999 TB/day` (step 1) | Mapped → `transfer_basic_gb_per_day` |
+    | `calculator_lts_transfer_senior_stepper_Stepper_0` | Daily Advanced Transfer Volume | `base-stepper` | `0..9999999999 GB/day` (step 1)<br>`0..9999999999 TB/day` (step 1) | Mapped → `transfer_senior_gb_per_day` |
+    | `global_ONDEMANDTIME_Stepper_0` | Required Duration | `base-stepper` | `1..60 month` (step 1)<br>`1..30 day` (step 1) | Mapped → `months` |
 
 ---
 
-## Live Compatibility Replay
+???+ check "Live Compatibility Replay (sa-brazil-1) — 1 scenarios passing"
 
-Source: `docs/compat/lts.md` (lts compatibility (sa-brazil-1, 2026-11-07))
-
-| Scenario | Replay Result | Stage | Detail |
-| :--- | :--- | :--- | :--- |
-| `ondemand-cold-storage` | `ok` | `ok` | — |
+    Source: `docs/compat/lts.md` (lts compatibility (sa-brazil-1, 2026-11-07))
+    
+    | Scenario | Replay Result | Stage | Detail |
+    | :--- | :--- | :--- | :--- |
+    | `ondemand-cold-storage` | `ok` | `ok` | — |
