@@ -244,10 +244,23 @@ export async function main(argv: string[], outStream?: ui.StreamLike & { write?:
     });
     if (code !== 0) commandExit = code;
   });
-  program.command("completion").description("Generate shell completion script (bash, zsh, fish)").argument("[shell]", "Shell type: bash, zsh, fish (defaults to current $SHELL)").action(async (shell?: string) => {
-    const { generateCompletion } = await import("./core/completion.ts");
-    writeOut(generateCompletion(shell));
-  });
+  program
+    .command("completion")
+    .description("Generate or install shell completion script (bash, zsh, fish)")
+    .argument("[shell]", "Shell type (bash, zsh, fish) or 'install' to configure automatically")
+    .argument("[target]", "Target shell when using 'install' (bash, zsh, fish)")
+    .option("--install", "Automatically install completion script for the target shell")
+    .action(async (arg1?: string, arg2?: string, options?: { install?: boolean }) => {
+      const { generateCompletion, installCompletion } = await import("./core/completion.ts");
+      const shouldInstall = options?.install || arg1 === "install";
+      const targetShell = arg1 === "install" ? arg2 : arg1;
+      if (shouldInstall) {
+        const res = await installCompletion(targetShell);
+        writeOut(res.message);
+      } else {
+        writeOut(generateCompletion(targetShell));
+      }
+    });
   program.command("install-browser").description("Install the pinned Playwright Chromium revision").action(async () => { const processHandle = Bun.spawn([process.execPath, "--bun", playwrightCliPath(), "install", "chromium"], { stdout: "pipe", stderr: "pipe" }); const [stdout, stderr, status] = await Promise.all([new Response(processHandle.stdout).text(), new Response(processHandle.stderr).text(), processHandle.exited]); if (stdout) process.stderr.write(stdout); if (stderr) process.stderr.write(stderr); if (status !== 0) commandExit = status; });
   program.command("update").description("Move to the newest release").option("--to <tag>", "a release tag, vX.Y.Z (default: the newest)").action(async (options: { to?: string }) => { writeOut(runUpdate(options.to)); });
 

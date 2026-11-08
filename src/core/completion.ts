@@ -1,3 +1,6 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { supportedServices } from "./services/index.ts";
 import { REGION_LOCATIONS } from "./regions.ts";
 import { CalculatorError } from "./errors.ts";
@@ -432,4 +435,44 @@ export function generateCompletion(shell?: string): string {
     default:
       throw new CalculatorError("VALIDATION", `Unsupported shell: ${shell}`, "Choose from: bash, zsh, fish.");
   }
+}
+
+export async function installCompletion(shell?: string, homeDir = homedir()): Promise<{ path: string; message: string }> {
+  const chosen = (shell ? shell.toLowerCase() : detectShell()) as ShellType;
+  const script = generateCompletion(chosen);
+
+  if (chosen === "fish") {
+    const dir = join(homeDir, ".config", "fish", "completions");
+    await mkdir(dir, { recursive: true });
+    const file = join(dir, "autocalc.fish");
+    await writeFile(file, script, "utf-8");
+    return {
+      path: file,
+      message: `Installed fish completions to ${file}.\nTab completion is active immediately.`,
+    };
+  }
+
+  if (chosen === "bash") {
+    const dir = join(homeDir, ".local", "share", "bash-completion", "completions");
+    await mkdir(dir, { recursive: true });
+    const file = join(dir, "autocalc");
+    await writeFile(file, script, "utf-8");
+    return {
+      path: file,
+      message: `Installed bash completions to ${file}.\nOpen a new shell or run 'source ${file}' to activate.`,
+    };
+  }
+
+  if (chosen === "zsh") {
+    const dir = join(homeDir, ".zsh", "completions");
+    await mkdir(dir, { recursive: true });
+    const file = join(dir, "_autocalc");
+    await writeFile(file, script, "utf-8");
+    return {
+      path: file,
+      message: `Installed zsh completions to ${file}.\nEnsure ~/.zsh/completions is in your fpath, or add 'source <(autocalc completion zsh)' to ~/.zshrc.`,
+    };
+  }
+
+  throw new CalculatorError("VALIDATION", `Unsupported shell: ${shell}`, "Choose from: bash, zsh, fish.");
 }

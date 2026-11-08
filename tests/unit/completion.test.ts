@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import {
   generateCompletion,
+  installCompletion,
   generateBashCompletion,
   generateZshCompletion,
   generateFishCompletion,
@@ -8,6 +9,9 @@ import {
   COMMANDS,
 } from "../../src/core/completion.ts";
 import { main } from "../../src/cli.ts";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 test("detectShell detects zsh, fish, and bash fallback", () => {
   expect(detectShell("/bin/zsh")).toBe("zsh");
@@ -67,4 +71,40 @@ test("CLI completion command runs and writes to output stream", async () => {
   const code = await main(["node", "autocalc", "completion", "bash"], mockStream);
   expect(code).toBe(0);
   expect(output).toContain("_autocalc_completions()");
+});
+
+test("installCompletion writes completion files for fish, bash, and zsh", async () => {
+  const tmp = await mkdtemp(join(tmpdir(), "autocalc-comp-"));
+  try {
+    const fishRes = await installCompletion("fish", tmp);
+    expect(fishRes.path).toContain("autocalc.fish");
+    const fishContent = await readFile(fishRes.path, "utf-8");
+    expect(fishContent).toContain("complete -c autocalc -f");
+
+    const bashRes = await installCompletion("bash", tmp);
+    expect(bashRes.path).toContain("autocalc");
+    const bashContent = await readFile(bashRes.path, "utf-8");
+    expect(bashContent).toContain("_autocalc_completions");
+
+    const zshRes = await installCompletion("zsh", tmp);
+    expect(zshRes.path).toContain("_autocalc");
+    const zshContent = await readFile(zshRes.path, "utf-8");
+    expect(zshContent).toContain("#compdef autocalc");
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
+});
+
+test("CLI completion --install invokes installer", async () => {
+  let output = "";
+  const mockStream = {
+    write: (text: string) => {
+      output += text;
+    },
+    isTTY: false,
+  };
+
+  const code = await main(["node", "autocalc", "completion", "fish", "--install"], mockStream);
+  expect(code).toBe(0);
+  expect(output).toContain("Installed fish completions");
 });

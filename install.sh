@@ -46,6 +46,14 @@ if [ -d "$HOME/.local/bin" ] && echo ":$PATH:" | grep -q ":$HOME/.local/bin:"; t
   ln -sf "$bun_bin/autocalc-mcp" "$HOME/.local/bin/autocalc-mcp" 2>/dev/null || true
 fi
 
+# Configure shell completions automatically if supported
+if [ -d "$HOME/.config/fish" ] || [ -n "${FISH_VERSION:-}" ]; then
+  "$bun_bin/autocalc" completion fish --install >/dev/null 2>&1 || true
+fi
+if [ -d "$HOME/.local/share/bash-completion/completions" ]; then
+  "$bun_bin/autocalc" completion bash --install >/dev/null 2>&1 || true
+fi
+
 if command -v claude >/dev/null 2>&1; then
   mcp_out=$(claude mcp add hwc-calculator -- autocalc-mcp 2>&1 || true)
   if echo "$mcp_out" | grep -qi "already exists"; then
