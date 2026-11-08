@@ -23,21 +23,24 @@ open a new shell: Bun puts it in `~/.bun/bin`.
 
 ## 2. Explore the catalog (no login needed)
 
-Find out where ECS is sold, then search São Paulo for a Linux server with at least 4 vCPUs and
-8 GB:
+Find out where ECS is sold (`autocalc regions` shows each region's technical **Region ID** like `sa-brazil-1`, its **Location** like `São Paulo, Brazil`, and Huawei's **Portal Label** like `LA-Sao Paulo1`). You can pass either the Region ID (`sa-brazil-1`) or the Location (`"São Paulo"`) to any command:
 
 ```bash
 autocalc regions ecs
-autocalc search ecs "Sao Paulo" linux --vcpus 4 --mem 8 --billing monthly --limit 5
+autocalc search ecs sa-brazil-1 linux --vcpus 4 --mem 8 --billing monthly --limit 5
+# Or by location name:
+autocalc search ecs "São Paulo" linux --vcpus 4 --mem 8 --billing monthly --limit 5
 ```
 
 The results are sorted cheapest first, with list prices in USD.
 
 ## 3. Price a bill of materials
 
-Price three `c7n.large.2` servers with a 100 GB SSD each, monthly, in Santiago:
+Price three `c7n.large.2` servers with a 100 GB SSD each, monthly, in Santiago (`la-south-2`):
 
 ```bash
+autocalc quote la-south-2 'ecs:c7n.large.2.linux*3' 'ecs:SSD*3@100' --billing monthly
+# Or by location name:
 autocalc quote Santiago 'ecs:c7n.large.2.linux*3' 'ecs:SSD*3@100' --billing monthly
 ```
 
@@ -76,14 +79,14 @@ cards:
 ```
 
 ```bash
-autocalc plan-quote --path quote.yaml    # validates, picks the spec, prices it; saves nothing on the website
-autocalc apply-quote --path quote.yaml   # saves the list, checks it three ways, prints the link
+autocalc plan quote.yaml    # validates, picks the spec, prices it; saves nothing on the website
+autocalc apply quote.yaml   # saves the list, checks it three ways, prints the link
 ```
 
-`plan-quote` shows one row per card. If a card needs attention (an ambiguous image, an option the
+`plan` shows one row per card. If a card needs attention (an ambiguous image, an option the
 schema does not map, a price that moved since the lock file), it says so before you apply. Name an
 exact image with `options.image`; the default, `AlmaLinux`, matches several catalog versions.
-`apply-quote` prints progress while the headless browser works (about a minute), then a table of
+`apply` prints progress while the headless browser works (about a minute), then a table of
 stored, rated and Edit prices per card, and the link. If a list with the same name already exists
 it warns and creates another. If a check fails, the list is deleted and nothing is left on your
 account. Field reference: [Quote files](../reference/quote-files.md).

@@ -1,0 +1,56 @@
+version: "1"
+
+metadata:
+  id: acme-web-infra
+  customer: "Acme Cloud Services"
+  title_prefix: "Production Web Stack"
+  currency: USD
+
+horizon:
+  duration: 1y
+  billing_policy: as-specified
+
+defaults:
+  provider: huawei
+  region: sa-brazil-1
+  availability: multi-az
+  billing: monthly
+
+templates:
+  web_node:
+    service: ecs
+    needs:
+      vcpus: 4
+      memory: "8 GiB"
+    options:
+      os: ubuntu-22.04
+      system_disk:
+        type: high-io
+        size: "100 GiB"
+
+resources:
+  - id: web-servers
+    use: web_node
+    quantity: 2
+    billing: monthly
+
+  - id: ingress-load-balancer
+    service: elb
+    billing: ondemand
+
+  - id: primary-db
+    service: rds
+    billing: monthly
+    needs:
+      engine: mysql
+      vcpus: 2
+      memory: "8 GiB"
+    options:
+      storage_gb: "200 GB"
+
+  - id: object-storage
+    service: obs
+    billing: ondemand
+    options:
+      storage_class: standard
+      capacity: "1 TB"

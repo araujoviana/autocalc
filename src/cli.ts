@@ -47,13 +47,114 @@ async function readJsonArg(value: string): Promise<unknown> {
   }
 }
 
+interface HelpGroup {
+  title: string;
+  items: Array<[string, string]>;
+}
+
+const HELP_GROUPS: HelpGroup[] = [
+  {
+    title: "Catalog & Pricing (no login needed)",
+    items: [
+      ["services [query]", "List calculator services, optionally filtered"],
+      ["regions [service]", "List regions where a service is sold"],
+      ["describe <service>", "Show available billing modes and catalog groups"],
+      ["search <service> <region> [terms...]", "Search SKUs (--billing, --vcpus, --mem, --limit, --refresh)"],
+      ["quote <region> <items...>", "Price service:spec[*qty][@size] items in USD (--currency)"],
+      ["convert <amount> <currency>", "Convert a USD amount using Huawei Cloud FX rates"],
+      ["compare-modes [items...]", "Compare ondemand, monthly, and yearly pricing (--region, --items)"],
+      ["compare-regions [items...]", "Compare item pricing across multiple regions (--regions, --items)"],
+      ["supported", "List supported card builders and verification status"],
+    ],
+  },
+  {
+    title: "Declarative Quotes (YAML files)",
+    items: [
+      ["compile [file]", "Compile a version '1' quote file offline (<50ms)"],
+      ["plan [file]", "Validate quote YAML, resolve SKUs, rate, and write lockfile"],
+      ["apply [file]", "Encode cards, save list, run 3-way publish gate, return link"],
+      ["export --rows <json|@file>", "Export shared lists into a 4-sheet .xlsx workbook (--path)"],
+    ],
+  },
+  {
+    title: "Shared Lists & Account",
+    items: [
+      ["read <url_or_id>", "Read a shared price list anonymously"],
+      ["validate <url_or_id>", "Re-read a shared list and check for arithmetic/catalog glitches"],
+      ["edit-check <url_or_id>", "Re-price saved cards in headless Edit view (--limit)"],
+      ["login", "Open a browser window to sign in to Huawei Cloud"],
+      ["logout", "Clear the current profile session"],
+      ["auth status", "Check local authentication session status"],
+      ["lists", "List saved price lists in your Huawei Cloud account"],
+      ["rename <url_or_id> <name>", "Rename a saved price list"],
+      ["duplicate <url_or_id>", "Duplicate a saved price list (--name)"],
+      ["delete <url_or_id> --yes", "Delete a saved price list"],
+    ],
+  },
+  {
+    title: "System & Schema Maintenance",
+    items: [
+      ["doctor", "Check endpoints, frontend version, browser, and local cache"],
+      ["completion [shell]", "Generate shell completion script (bash, zsh, fish)"],
+      ["schema <pull|coverage|diff> <service>", "Inspect or refresh service card schemas"],
+      ["update [--to vX.Y.Z]", "Upgrade autocalc to the newest release tag"],
+      ["install-browser", "Install Playwright's pinned Chromium browser"],
+    ],
+  },
+];
+
+function formatRootHelp(stream?: ui.StreamLike): string {
+  const b = (s: string) => ui.paint(s, "bold", stream);
+  const d = (s: string) => ui.paint(s, "dim", stream);
+  const lines: string[] = [
+    `${b("autocalc")} — Verified price quotes and share links for the Huawei Cloud Calculator`,
+    "",
+    `${b("Usage:")} autocalc [options] <command>`,
+    "",
+    `${b("Global Options:")}`,
+    "  --profile <name>                          Authentication profile (default: default)",
+    "  --headed                                  Show browser windows during automation",
+    "  --json                                    Print structured JSON output",
+    "  --version                                 Print version number",
+    "  -h, --help                                Show help for any command",
+  ];
+
+  const padWidth = 38;
+  for (const group of HELP_GROUPS) {
+    lines.push("", `${b(group.title + ":")}`);
+    for (const [cmd, desc] of group.items) {
+      lines.push(`  ${cmd.padEnd(padWidth)}  ${desc}`);
+    }
+  }
+
+  lines.push(
+    "",
+    d("Tip: Run 'autocalc <command> --help' for command flags. MCP/agent subcommands (plan-quote, apply-quote, draft-quote, etc.) remain available directly."),
+  );
+  return lines.join("\n") + "\n";
+}
+
 export async function main(argv: string[], outStream?: ui.StreamLike & { write?: (s: string) => unknown }): Promise<number> {
   const writeOut = (text: string) => {
     if (outStream && typeof outStream.write === "function") outStream.write(`${text}\n`);
     else process.stdout.write(`${text}\n`);
   };
   const program = new Command();
-  program.name("autocalc").description("Huawei Cloud calculator").version(`autocalc ${pkg.version}`, "--version").option("--headed", "Show browser windows").option("--profile <name>", "Authentication profile").option("--json", "Print JSON").exitOverride();
+  program
+    .name("autocalc")
+    .description("Verified price quotes and share links for the Huawei Cloud Calculator")
+    .version(`autocalc ${pkg.version}`, "--version")
+    .option("--headed", "Show browser windows")
+    .option("--profile <name>", "Authentication profile")
+    .option("--json", "Print JSON")
+    .configureHelp({
+      formatHelp: (cmd, helper) => {
+        if (cmd === program) return formatRootHelp(outStream);
+        return Command.prototype.createHelp().formatHelp(cmd, helper);
+      },
+    })
+    .exitOverride();
+
   let core: ReturnType<typeof createCore> | undefined;
   let commandFailed = false;
   let commandExit: number | undefined;
@@ -62,14 +163,25 @@ export async function main(argv: string[], outStream?: ui.StreamLike & { write?:
   const onInt = () => interrupt(130), onTerm = () => interrupt(143);
   process.once("SIGINT", onInt); process.once("SIGTERM", onTerm);
   const getCore = () => core ??= createCore({ ...(program.opts<{ profile?: string }>().profile ? { profile: program.opts<{ profile: string }>().profile } : {}), headed: !!program.opts<{ headed?: boolean }>().headed });
-  /** A terminal gets the readable view for `cmd`; a pipe or --json gets the JSON. */
+  /** Human commands always render their readable view unless --json is passed. */
   const show = (cmd: string, result: unknown) => {
-    const human = !program.opts<{ json?: boolean }>().json && ui.fancy(outStream) ? ui.quoteView(cmd, result, outStream) : null;
+    const human = !program.opts<{ json?: boolean }>().json ? ui.quoteView(cmd, result, outStream) : null;
     writeOut(human ?? JSON.stringify(result, null, 2));
   };
-  const print = async (name: string, input: unknown, view?: string) => show(view ?? name, withNotice(await getCore().invoke(name, input)));
-  program.command("services").description("List calculator services").argument("[query]").action(async (query?: string) => { await print("list_services", { query: query ?? "" }); });
-  program.command("regions").description("List calculator regions").argument("[service]").option("--region <name>", "Resolve a region name").action(async (service: string | undefined, options: { region?: string }) => { await print("list_regions", { service: service ?? "", region: options.region ?? "" }); });
+  const invokeTool = async (name: string, input: Record<string, unknown>) =>
+    toolOverrides[name] ? await toolOverrides[name]!(input) : await getCore().invoke(name, input);
+  const print = async (name: string, input: Record<string, unknown>, view?: string) =>
+    show(view ?? name, withNotice(await invokeTool(name, input)));
+  const resolveQuoteItems = async (positional: string[], itemsOption?: string): Promise<unknown> => {
+    if (itemsOption !== undefined) return readJsonArg(itemsOption);
+    if (positional.length > 0) return positional.map(parseItem);
+    throw new CalculatorError("VALIDATION", "Quote items are required", "Pass service:spec[*qty][@size] items or --items <json|@file>.");
+  };
+
+  // 1. Catalog & Pricing
+  program.command("services").description("List calculator services").argument("[query]").action(async (query?: string) => { await print("list_services", { query: query ?? "" }, "services"); });
+  program.command("regions").description("List calculator regions").argument("[service]").action(async (service?: string) => { await print("list_regions", { service: service ?? "" }, "regions"); });
+  program.command("describe").description("Describe service availability").argument("<service>").option("--region <name>").action(async (service: string, options: { region?: string }) => { await print("describe_service", { service, ...(options.region === undefined ? {} : { region: options.region }) }, "describe"); });
   program.command("search").description("Search SKUs").argument("<service>").argument("<region>").argument("[terms...]").option("--billing <mode>").option("--vcpus <count>").option("--mem <gb>").option("--limit <count>").option("--refresh").action(async (service: string, region: string, terms: string[], options: { billing?: string; vcpus?: string; mem?: string; limit?: string; refresh?: boolean }) => { await print("search_skus", { service, region, query: terms.join(" "), limit: options.limit ?? 20, refresh: options.refresh ?? false, ...(options.billing === undefined ? {} : { billing: options.billing }), ...(options.vcpus === undefined ? {} : { min_vcpus: options.vcpus }), ...(options.mem === undefined ? {} : { min_memory_gb: options.mem }) }, "search"); });
   program.command("quote").description("Quote items in USD").argument("<region>").argument("<items...>").option("--billing <mode>").option("--hours <hours>").option("--periods <count>").option("--currency <code>", "Display a converted total using published FX rates").action(async (region: string, items: string[], options: { billing?: string; hours?: string; periods?: string; currency?: string }) => {
     const result = await getCore().invoke("quote", { region, items: items.map(parseItem), ...(options.billing === undefined ? {} : { billing: options.billing }), ...(options.hours === undefined ? {} : { hours: options.hours }), ...(options.periods === undefined ? {} : { periods: options.periods }) });
@@ -78,10 +190,47 @@ export async function main(argv: string[], outStream?: ui.StreamLike & { write?:
       show("quote", output);
     } else show("quote", result);
   });
-  program.command("convert").description("Convert a USD amount").argument("<amount>").argument("<currency>").action(async (amount: string, currency: string) => { await print("convert_currency", { amount_usd: amount, currency }); });
-  program.command("page-controls").description("List the controls of a service's calculator page").argument("<service>").action(async (service: string) => {
+  program.command("convert").description("Convert a USD amount").argument("<amount>").argument("<currency>").action(async (amount: string, currency: string) => { await print("convert_currency", { amount_usd: amount, currency }, "convert"); });
+  program.command("compare-modes").description("Compare billing modes").argument("[items...]", "Quote items (service:spec[*qty][@size])").option("--items <file>", "JSON quote items or - for stdin").option("--region <region>").option("--modes <modes>", "Comma-separated modes").option("--currency <currency>").option("--hours <hours>").option("--periods <count>").action(async (positional: string[], options: { items?: string; region?: string; modes?: string; currency?: string; hours?: string; periods?: string }) => { await print("compare_modes", { items: await resolveQuoteItems(positional, options.items), ...(options.region ? { region: options.region } : {}), ...(options.modes ? { modes: options.modes.split(",") } : {}), ...(options.currency ? { currency: options.currency } : {}), ...(options.hours ? { hours: options.hours } : {}), ...(options.periods ? { periods: options.periods } : {}) }, "compare-modes"); });
+  program.command("compare-regions").description("Compare region prices").argument("[items...]", "Quote items (service:spec[*qty][@size])").option("--items <file>", "JSON quote items or - for stdin").requiredOption("--regions <regions>", "Comma-separated regions").option("--billing <mode>").action(async (positional: string[], options: { items?: string; regions: string; billing?: string }) => { await print("compare_regions", { items: await resolveQuoteItems(positional, options.items), regions: options.regions.split(","), ...(options.billing ? { billing: options.billing } : {}) }, "compare-regions"); });
+  program.command("supported").description("List supported card builders").action(async () => { await print("supported_services", {}, "supported"); });
+
+  // 2. Declarative Quotes (ergonomic positional or --path)
+  program.command("compile").description("Compile a declarative quote file (version '1') offline in <50ms").argument("[file]", "Path to quote YAML file").option("--path <file>", "Path to quote YAML file").action(async (file: string | undefined, options: { path?: string }) => {
+    const target = options.path ?? file ?? "quote.yaml";
+    await print("compile_quote", { path: target }, "compile-quote");
+  });
+  program.command("plan").description("Validate quote YAML against service schemas, resolve SKUs, rate, and write lockfile").argument("[file]", "Path to quote YAML file").option("--path <file>", "Path to quote YAML file").action(async (file: string | undefined, options: { path?: string }) => {
+    const target = options.path ?? file ?? "quote.yaml";
+    await print("plan_quote", { path: target }, "plan-quote");
+  });
+  program.command("apply").description("Publish a planned quote file through the verified publish gate and return the share link").argument("[file]", "Path to quote YAML file").option("--path <file>", "Path to quote YAML file").option("--name <name>", "Override saved list name").action(async (file: string | undefined, options: { path?: string; name?: string }) => {
+    const target = options.path ?? file ?? "quote.yaml";
+    await print("apply_quote", { path: target, ...(options.name ? { name: options.name } : {}) }, "apply-quote");
+  });
+  program.command("export").description("Export shared lists into a 4-sheet .xlsx workbook (Quotes, Decisions, Resources, Totals)").requiredOption("--rows <JSON|@FILE>", "Rows of {env, list, draft_id?}").option("--path <value>", "Output .xlsx path").action(async (options: { rows: string; path?: string }) => {
+    await print("export_quotes_xlsx", { rows: await readJsonArg(options.rows), ...(options.path ? { path: options.path } : {}) }, "export-quotes-xlsx");
+  });
+
+  // 3. Shared Lists & Account
+  program.command("read").description("Read a shared price list").argument("<url_or_id>").action(async (urlOrId: string) => { await print("read_price_list", { url_or_id: urlOrId }, "read"); });
+  program.command("validate").description("Validate a shared price list").argument("<url_or_id>").action(async (urlOrId: string) => { const result = await getCore().validate(urlOrId); show("validate", result); if (!result.ok) commandFailed = true; });
+  program.command("render-check", { hidden: true }).description("Check anonymous calculator rendering").argument("<url_or_id>").action(async (urlOrId: string) => { const result = await getCore().renderCheck(urlOrId); show("render-check", result); if (!result.ok) commandFailed = true; });
+  program.command("edit-check").description("Compare saved cards with anonymous Edit pricing").argument("<url_or_id>").option("--limit <count>").action(async (urlOrId: string, options: { limit?: string }) => { const parsed = options.limit === undefined ? undefined : PositiveInteger.safeParse(options.limit); if (parsed && !parsed.success) throw new CalculatorError("VALIDATION", "Limit must be a positive integer"); const result = await getCore().editCheck(urlOrId, parsed?.data); show("edit-check", result); if (!result.ok) commandFailed = true; });
+  program.command("lists").description("List your saved price lists").action(async () => { await print("list_my_price_lists", {}, "lists"); });
+  program.command("delete").description("Delete a saved price list").argument("<url_or_id>").option("--yes", "Confirm deletion").action(async (urlOrId: string, options: { yes?: boolean }) => { if (!options.yes) throw new CalculatorError("VALIDATION", "Deletion requires --yes"); await print("delete_price_list", { url_or_id: urlOrId }, "delete"); });
+  program.command("rename").description("Rename a saved price list").argument("<url_or_id>").argument("<name>").action(async (urlOrId: string, name: string) => { await print("rename_price_list", { url_or_id: urlOrId, new_name: name }, "rename"); });
+  program.command("duplicate").description("Copy a saved price list").argument("<url_or_id>").option("--name <name>").action(async (urlOrId: string, options: { name?: string }) => { await print("duplicate_price_list", { url_or_id: urlOrId, ...(options.name ? { new_name: options.name } : {}) }, "duplicate"); });
+  program.command("login").description("Sign in through a browser").option("--timeout <seconds>", "Login deadline, default 300 seconds").option("--profile <name>").action(async (options: { timeout?: string; profile?: string }) => { if (options.profile) program.setOptionValue("profile", options.profile); await print("auth_login", { timeout: options.timeout ?? 300 }, "login"); });
+  const auth = program.command("auth").description("Inspect authentication");
+  auth.command("status").description("Show local session metadata").option("--profile <name>").action(async (options: { profile?: string }) => { if (options.profile) program.setOptionValue("profile", options.profile); await print("auth_status", {}, "auth status"); });
+  program.command("logout").description("Clear the current profile session").option("--profile <name>").action(async (options: { profile?: string }) => { if (options.profile) program.setOptionValue("profile", options.profile); await getCore().logout(); writeOut("Logged out"); });
+
+  // 4. System & Schema Maintenance
+  program.command("doctor").description("Check public calculator endpoints and local auth status").action(async () => { const result = await getCore().doctor(); show("doctor", result); if (!result.ok) commandFailed = true; });
+  program.command("page-controls", { hidden: true }).description("List the controls of a service's calculator page").argument("<service>").action(async (service: string) => {
     const { BrowserManager } = await import("./core/browser.ts"), { pageControls } = await import("./core/page/controls.ts"), manager = new BrowserManager({ headed: process.env.AUTOCALC_PAGE_HEADED === "1" || !!program.opts<{ headed?: boolean }>().headed });
-    try { writeOut(JSON.stringify(await pageControls(manager, service), null, 2)); } finally { await manager.close(); }
+    try { show("page-controls", await pageControls(manager, service)); } finally { await manager.close(); }
   });
   program.command("schema").description("Manage service page schemas (pull, coverage, diff)").argument("<action>").argument("<service>").option("--json", "print JSON even on a terminal").action(async (action: string, service: string, options: { json?: boolean }) => {
     if (!["pull", "coverage", "diff"].includes(action)) throw new CalculatorError("VALIDATION", `Invalid schema action ${action}`, "Choose from pull, coverage, diff.");
@@ -95,33 +244,19 @@ export async function main(argv: string[], outStream?: ui.StreamLike & { write?:
     });
     if (code !== 0) commandExit = code;
   });
-  program.command("supported").description("List supported card builders").action(async () => { await print("supported_services", {}); });
-  program.command("describe").description("Describe service availability").argument("<service>").option("--region <name>").action(async (service: string, options: { region?: string }) => { await print("describe_service", { service, ...(options.region === undefined ? {} : { region: options.region }) }); });
-  program.command("read").description("Read a shared price list").argument("<url_or_id>").action(async (urlOrId: string) => {
-    await print("read_price_list", { url_or_id: urlOrId });
+  program.command("completion").description("Generate shell completion script (bash, zsh, fish)").argument("[shell]", "Shell type: bash, zsh, fish (defaults to current $SHELL)").action(async (shell?: string) => {
+    const { generateCompletion } = await import("./core/completion.ts");
+    writeOut(generateCompletion(shell));
   });
-  program.command("validate").description("Validate a shared price list").argument("<url_or_id>").action(async (urlOrId: string) => { const result = await getCore().validate(urlOrId); show("validate", result); if (!result.ok) commandFailed = true; });
-  program.command("render-check").description("Check anonymous calculator rendering").argument("<url_or_id>").action(async (urlOrId: string) => { const result = await getCore().renderCheck(urlOrId); writeOut(JSON.stringify(result, null, 2)); if (!result.ok) commandFailed = true; });
-  program.command("edit-check").description("Compare saved cards with anonymous Edit pricing").argument("<url_or_id>").option("--limit <count>").action(async (urlOrId: string, options: { limit?: string }) => { const parsed = options.limit === undefined ? undefined : PositiveInteger.safeParse(options.limit); if (parsed && !parsed.success) throw new CalculatorError("VALIDATION", "Limit must be a positive integer"); const result = await getCore().editCheck(urlOrId, parsed?.data); show("edit-check", result); if (!result.ok) commandFailed = true; });
-  program.command("doctor").description("Check public calculator endpoints and local auth status").action(async () => { const result = await getCore().doctor(); show("doctor", result); if (!result.ok) commandFailed = true; });
   program.command("install-browser").description("Install the pinned Playwright Chromium revision").action(async () => { const processHandle = Bun.spawn([process.execPath, "--bun", playwrightCliPath(), "install", "chromium"], { stdout: "pipe", stderr: "pipe" }); const [stdout, stderr, status] = await Promise.all([new Response(processHandle.stdout).text(), new Response(processHandle.stderr).text(), processHandle.exited]); if (stdout) process.stderr.write(stdout); if (stderr) process.stderr.write(stderr); if (status !== 0) commandExit = status; });
-  program.command("update").description("move to the newest release").option("--to <tag>", "a release tag, vX.Y.Z (default: the newest)").action(async (options: { to?: string }) => { writeOut(runUpdate(options.to)); });
-  program.command("compare-modes").description("Compare billing modes").requiredOption("--items <file>", "JSON quote items or - for stdin").option("--region <region>").option("--modes <modes>", "Comma-separated modes").option("--currency <currency>").option("--hours <hours>").option("--periods <count>").action(async (options: { items: string; region?: string; modes?: string; currency?: string; hours?: string; periods?: string }) => { await print("compare_modes", { items: await readJsonArg(options.items), ...(options.region ? { region: options.region } : {}), ...(options.modes ? { modes: options.modes.split(",") } : {}), ...(options.currency ? { currency: options.currency } : {}), ...(options.hours ? { hours: options.hours } : {}), ...(options.periods ? { periods: options.periods } : {}) }); });
-  program.command("compare-regions").description("Compare region prices").requiredOption("--items <file>", "JSON quote items or - for stdin").requiredOption("--regions <regions>", "Comma-separated regions").option("--billing <mode>").action(async (options: { items: string; regions: string; billing?: string }) => { await print("compare_regions", { items: await readJsonArg(options.items), regions: options.regions.split(","), ...(options.billing ? { billing: options.billing } : {}) }); });
-  program.command("lists").description("List your saved price lists").action(async () => { await print("list_my_price_lists", {}, "lists"); });
-  program.command("delete").description("Delete a saved price list").argument("<url_or_id>").option("--yes", "Confirm deletion").action(async (urlOrId: string, options: { yes?: boolean }) => { if (!options.yes) throw new CalculatorError("VALIDATION", "Deletion requires --yes"); await print("delete_price_list", { url_or_id: urlOrId }); });
-  program.command("rename").description("Rename a saved price list").argument("<url_or_id>").argument("<name>").action(async (urlOrId: string, name: string) => { await print("rename_price_list", { url_or_id: urlOrId, new_name: name }); });
-  program.command("duplicate").description("Copy a saved price list").argument("<url_or_id>").option("--name <name>").action(async (urlOrId: string, options: { name?: string }) => { await print("duplicate_price_list", { url_or_id: urlOrId, ...(options.name ? { new_name: options.name } : {}) }); });
-  program.command("login").description("Sign in through a browser").option("--timeout <seconds>", "Login deadline, default 300 seconds").option("--profile <name>").action(async (options: { timeout?: string; profile?: string }) => { if (options.profile) program.setOptionValue("profile", options.profile); await print("auth_login", options.timeout === undefined ? {} : { timeout: options.timeout }); });
-  const auth = program.command("auth").description("Inspect authentication");
-  auth.command("status").description("Show local session metadata").option("--profile <name>").action(async (options: { profile?: string }) => { if (options.profile) program.setOptionValue("profile", options.profile); await print("auth_status", {}); });
-  program.command("logout").description("Clear the current profile session").option("--profile <name>").action(async (options: { profile?: string }) => { if (options.profile) program.setOptionValue("profile", options.profile); await getCore().logout(); writeOut("Logged out"); });
+  program.command("update").description("Move to the newest release").option("--to <tag>", "a release tag, vX.Y.Z (default: the newest)").action(async (options: { to?: string }) => { writeOut(runUpdate(options.to)); });
 
+  // 5. Generated MCP tool commands (hidden from top-level human help to prevent clutter, but 100% functional)
   const taken = new Set(program.commands.map(c => c.name()));
   for (const [name, entry] of Object.entries(registry)) {
     const cmd = name.replaceAll("_", "-");
     if (taken.has(cmd)) continue;
-    const sub = program.command(cmd).description(entry.description.split("\n")[0]!);
+    const sub = program.command(cmd, { hidden: true }).description(entry.description.split("\n")[0]!);
     const shape = (entry.schema as unknown as { shape?: Record<string, any> }).shape ?? {};
     const jsonFields = new Set<string>();
     for (const [propName, propSchema] of Object.entries(shape)) {
@@ -149,7 +284,7 @@ export async function main(argv: string[], outStream?: ui.StreamLike & { write?:
           rawInput[propName] = jsonFields.has(propName) && typeof val === "string" ? await readJsonArg(val) : val;
         }
       }
-      const rawResult = toolOverrides[name] ? await toolOverrides[name]!(rawInput) : await getCore().invoke(name, rawInput);
+      const rawResult = await invokeTool(name, rawInput);
       const result = withNotice(rawResult);
       const asJson = Boolean(program.opts<{ json?: boolean }>().json);
       const human = !asJson && ui.fancy(outStream) ? ui.quoteView(cmd, result, outStream) : null;

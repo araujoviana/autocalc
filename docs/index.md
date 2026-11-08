@@ -15,8 +15,10 @@ not a cosmetic one ([ADR-0002](adr/0002-share-link-is-the-deliverable.md)).
 | You want to… | Read |
 |---|---|
 | get a first quote and link working | [Tutorial: your first quote](tutorials/first-quote.md) |
+| browse all 51 Huawei Cloud services & YAML arguments | [Huawei Cloud Service Catalog](reference/services/index.md) |
+| write a declarative `version: "1"` quote or card file | [Quote files & schemas](reference/quote-files.md) |
+| look up a CLI command, an error code or an endpoint | [CLI Reference](reference/cli.md) |
 | do a specific job (run tests, refresh fixtures) | [How-to guides](how-to/run-tests.md) |
-| look up a command, an error code or an endpoint | [Reference](reference/cli.md) |
 | understand why the calculator is hard to drive | [Explanation](explanation/architecture.md) |
 | know why a decision was made | [Decisions (ADRs)](adr/index.md) |
 | see what comes next and what is still open | [Roadmap](roadmap.md) |

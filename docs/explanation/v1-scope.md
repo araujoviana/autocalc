@@ -13,15 +13,11 @@ listed per row: no priced SKU, a one-time purchase, a support contract, a profes
 Checked live on 2026-10-17: the catalog lists 97 services;
 4 are not counted, so **93 count and the v1 target is 47**.
 
-The former count of 50 included default-only page acceptance and incomplete prices. It did not
-establish request fidelity and is withdrawn. The v1 target is **not yet demonstrated**.
+As of 2026-11-07 ([Project status](../status.md)), **40 services are `VERIFIED`** (100% control mapping coverage in `src/schema/files/*.yaml` and validated across 20 multi-service business scenarios) and **all 51 supported services** pass live anonymous replay (`bun run compat <service>`). See the [**Huawei Cloud Service Catalog**](../reference/services/index.md) for the per-service argument and schema reference.
+
 Publication requires an eligible builder, supported billing, representable quantity/options,
 a mapped chosen specification, and matching requested/page/global values before price checks.
-
-The table below separates eligible builders from blocked paths. Eligibility does not guarantee
-that every regional spec or option combination can publish. Recipes without a chosen-spec
-mapping reject decided catalog specs. LTS, FunctionGraph and default-only recipes are blocked;
-CCE turbo is blocked while standard clusters remain eligible.
+Default-only recipes (`aad`, `cc`, `dbss`, `dsc`, `edgesec`, `esw`, `ga`, `hecs`, `reliability`, `ucs`) and unmapped spec recipes (`ssa`) remain blocked from `apply-quote` / `publish-quote` until their custom option/spec mappings are verified.
 
 ## Every service
 

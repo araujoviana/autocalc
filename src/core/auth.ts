@@ -111,7 +111,16 @@ export class AuthManager {
       } finally { signal?.removeEventListener("abort", cancelPage); }
     });
   }
-  async refresh(): Promise<void> { await this.login(120, false); }
+  async refresh(): Promise<void> {
+    try {
+      await this.login(2, false);
+    } catch {
+      await this.store.clear().catch(() => undefined);
+      this.refreshedCredentials = undefined;
+      await this.resetRequest();
+      throw new CalculatorError("AUTH_EXPIRED", "Calculator session has expired", "Run 'autocalc login' to sign in again.");
+    }
+  }
   async logout(): Promise<void> {
     this.refreshedCredentials = undefined;
     this.lastUserAgent = undefined;

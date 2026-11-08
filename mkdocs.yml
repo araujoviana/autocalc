@@ -4,6 +4,8 @@ docs_dir: docs
 strict: true
 exclude_docs: |
   /quotes.md
+  /handoff.md
+  /compat/
   /reports/
   /private/
   /research/
@@ -15,6 +17,9 @@ theme:
   features:
     - navigation.sections
     - navigation.indexes
+    - navigation.top
+    - search.suggest
+    - search.highlight
     - content.code.copy
   palette:
     - media: "(prefers-color-scheme: light)"
@@ -39,16 +44,78 @@ nav:
   - Project status: status.md
   - Tutorials:
       - Your first quote: tutorials/first-quote.md
+  - Huawei Cloud Provider:
+      - Service Catalog: reference/services/index.md
+      - Compute:
+          - "ecs (Elastic Cloud Server)": reference/services/ecs.md
+          - "function (FunctionGraph)": reference/services/function.md
+          - "hecs (Flexus X Instance)": reference/services/hecs.md
+      - Containers:
+          - "cce (Cloud Container Engine)": reference/services/cce.md
+          - "cci (Cloud Container Instance)": reference/services/cci.md
+          - "ucs (Ubiquitous Cloud Native)": reference/services/ucs.md
+      - Databases & Cache:
+          - "rds (Relational Database)": reference/services/rds.md
+          - "rdsformariadb (RDS for MariaDB)": reference/services/rdsformariadb.md
+          - "taurusdb (TaurusDB)": reference/services/taurusdb.md
+          - "gaussdb (GaussDB)": reference/services/gaussdb.md
+          - "hrds (Dedicated RDS)": reference/services/hrds.md
+          - "dds (Document Database / MongoDB)": reference/services/dds.md
+          - "nosql (GeminiDB DynamoDB)": reference/services/nosql.md
+          - "redis (DCS for Redis)": reference/services/redis.md
+          - "memcached (DCS for Memcached)": reference/services/memcached.md
+          - "ddm (Distributed DB Middleware)": reference/services/ddm.md
+          - "drs (Data Replication Service)": reference/services/drs.md
+      - Storage & Backup:
+          - "evs (Elastic Volume Service)": reference/services/evs.md
+          - "obs (Object Storage Service)": reference/services/obs.md
+          - "sfs (Scalable File Service)": reference/services/sfs.md
+          - "sfsturbo (SFS Turbo)": reference/services/sfsturbo.md
+          - "cbr (Cloud Backup & Recovery)": reference/services/cbr.md
+          - "sdrs (Storage Disaster Recovery)": reference/services/sdrs.md
+          - "dss (Dedicated Distributed Storage)": reference/services/dss.md
+          - "des (Data Express Service)": reference/services/des.md
+      - Networking & Edge:
+          - "elb (Elastic Load Balance)": reference/services/elb.md
+          - "nat (NAT Gateway)": reference/services/nat.md
+          - "eip (Elastic IP)": reference/services/eip.md
+          - "er (Enterprise Router)": reference/services/er.md
+          - "vpcep (VPC Endpoint)": reference/services/vpcep.md
+          - "vpn (Virtual Private Network)": reference/services/vpn.md
+          - "dline (Direct Connect)": reference/services/dline.md
+          - "cc (Cloud Connect)": reference/services/cc.md
+          - "esw (Enterprise Switch)": reference/services/esw.md
+          - "ga (Global Accelerator)": reference/services/ga.md
+      - Middleware & Messaging:
+          - "apig (API Gateway)": reference/services/apig.md
+          - "kafka (DMS for Kafka)": reference/services/kafka.md
+          - "rabbitmq (DMS for RabbitMQ)": reference/services/rabbitmq.md
+          - "reliability (DMS Reliability)": reference/services/reliability.md
+      - Security & Compliance:
+          - "waf (Web Application Firewall)": reference/services/waf.md
+          - "cfw (Cloud Firewall)": reference/services/cfw.md
+          - "hss (Host Security Service)": reference/services/hss.md
+          - "dew (Data Encryption Workshop / KMS)": reference/services/dew.md
+          - "ssa (Situation Awareness)": reference/services/ssa.md
+          - "aad (Anti-DDoS Advanced)": reference/services/aad.md
+          - "dbss (Database Security Service)": reference/services/dbss.md
+          - "dsc (Data Security Center)": reference/services/dsc.md
+          - "edgesec (Edge Security)": reference/services/edgesec.md
+      - Observability & AI:
+          - "lts (Log Tank Service)": reference/services/lts.md
+          - "apm (Application Performance Mgmt)": reference/services/apm.md
+          - "maas (ModelArts Studio / MaaS)": reference/services/maas.md
+  - Reference:
+      - Quote files & schemas: reference/quote-files.md
+      - CLI: reference/cli.md
+      - Errors: reference/errors.md
+      - Huawei calculator backend: reference/huawei-backend.md
   - How-to guides:
       - Run the tests: how-to/run-tests.md
       - Refresh the golden corpus: how-to/refresh-corpus.md
       - Fetch the calculator bundle: how-to/fetch-bundle.md
       - Cut a release: how-to/release.md
-  - Reference:
-      - CLI: reference/cli.md
-      - Errors: reference/errors.md
-      - Quote files and card schemas: reference/quote-files.md
-      - Huawei calculator backend: reference/huawei-backend.md
+      - Audit remediation (archive): how-to/audit-remediation.md
   - Explanation:
       - Architecture: explanation/architecture.md
       - "v1 scope: which services count": explanation/v1-scope.md

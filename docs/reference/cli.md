@@ -1,62 +1,89 @@
 # CLI reference
 
-The `autocalc` command set. The commands below are written by hand; every MCP tool is also a
-subcommand generated from the tool registry ([ADR-0007](../adr/0007-workflow-surface-and-one-registry.md)),
-named with hyphens (`draft-quote`, `list-my-price-lists`, …). A generated command is skipped when a
-hand-written one has the name, so `autocalc quote` is the hand-written one. Every command accepts `-h`.
+Every `autocalc` command outputs human-readable tables on an interactive terminal and structured JSON when piped or passed `--json`. Every command accepts `-h` / `--help`.
 
-Regions accept an id (`sa-brazil-1`) or a friendly name (`"São Paulo"`, `Santiago`). Commands
-that touch the account use the profile from `--profile` or `AUTOCALC_PROFILE` (default
-`default`).
+Regions accept either a **Region ID** (`sa-brazil-1`, `la-south-2`) or a **Geographic Location** (`"São Paulo"`, `Santiago`). `autocalc regions` displays all three columns (`REGION ID`, `LOCATION`, and `PORTAL LABEL`). Commands that touch your Huawei Cloud account use the profile from `--profile` or `AUTOCALC_PROFILE` (default `default`).
+
+---
+
+## 1. Catalog & Pricing (No Login Required)
 
 | Command | Purpose | Needs login |
 |---|---|---|
 | `autocalc services [query]` | List services that have a calculator, optionally filtered | no |
-| `autocalc regions [service]` | List regions, or the regions where a service is sold | no |
+| `autocalc regions [service]` | List all regions, or the regions where a service is sold | no |
+| `autocalc describe SERVICE` | Show available billing modes and catalog groups for a service (`--region`) | no |
 | `autocalc search SERVICE REGION [terms…]` | Search SKUs; `--billing ondemand\|monthly\|yearly`, `--vcpus N`, `--mem GB`, `--limit N`, `--refresh` (bypass the 24 h cache) | no |
 | `autocalc quote REGION SERVICE:SPEC[*QTY][@SIZE] …` | Price items with the live rating engine; `--billing`, `--hours` (on-demand, default 730), `--periods` (monthly/yearly), `--currency` | no |
-| `autocalc validate LIST_ID` | Re-read a saved list anonymously and report glitches | no |
-| `autocalc export-quotes-xlsx --rows '[{"env":"prod","list":"<url or id>"}]' [--path quotes.xlsx]` | Write a workbook with four sheets: Quotes (environment, list name, total, link), Decisions (what was chosen and why), Resources (every priced resource) and Totals (instances, vCPUs, RAM, storage). Reads the lists anonymously; also an MCP tool | no |
-| `autocalc login [--profile NAME] [--timeout S]` | Open a browser window and wait for you to sign in; prints the account and the browser used | — |
-| `autocalc logout [--profile NAME]` | Sign out by deleting the browser profile, and delete any session copy left by an earlier version | — |
-| `autocalc auth status [--profile NAME]` | Open the profile headless and show whether it is signed in (cookie names only, never values) | — |
-| `autocalc lists` | List the saved lists in your account | yes |
-| `autocalc doctor` | Check endpoints, frontend version, the chosen browser, whether a profile exists, and the cache (does not open the profile) | no |
-| `autocalc update [--to vX.Y.Z]` | Reinstall from the newest release tag, or the one named; prints `old -> new`. Never runs on its own; tool results carry an `update_notice` at most once a day (`AUTOCALC_NO_UPDATE_CHECK=1` turns it off) | no |
-| `autocalc install-browser` | Install Playwright's Chromium (only needed without a system browser) | no |
+| `autocalc convert AMOUNT CURRENCY` | Convert a USD amount using Huawei Cloud FX rates | no |
+| `autocalc compare-modes [ITEMS…]` | Compare ondemand, monthly, and yearly pricing (`--items <json\|@file>`, `--region`, `--modes`, `--currency`, `--hours`, `--periods`) | no |
+| `autocalc compare-regions [ITEMS…] --regions <list>` | Compare item pricing across multiple regions (`--items <json\|@file>`, `--billing`) | no |
+| `autocalc supported` | List supported card builders, billing modes, and publish gate verification status | no |
 
-## Quote workflow
+---
 
-`draft-quote`, `revise-quote` and `publish-quote` are the only route to a share link. Scalar
-parameters are options (`--customer acme`); lists and objects take JSON, or `@file.json`, and the
-result prints as JSON.
+## 2. Declarative Quotes (YAML Files)
+
+You can pass the quote file path as a positional argument (`autocalc plan quote.yaml`), with `--path` (`autocalc plan --path quote.yaml`), or omit it when the file is named `quote.yaml` in the current directory (`autocalc plan`).
+
+| Command | Purpose | Needs login |
+|---|---|---|
+| `autocalc compile [FILE]` | Compile a `version: "1"` declarative quote file offline (<50ms) (`--path`) | no |
+| `autocalc plan [FILE]` | Validate a quote YAML file against service schemas, resolve SKUs, rate, and write the lockfile (`--path`) | no |
+| `autocalc apply [FILE]` | Encode cards in headless browser, save list, run the 3-way publish gate, and print the share link (`--path`, `--name`) | **yes** |
+| `autocalc export --rows '[{"env":"prod","list":"<url or id>"}]'` | Write a workbook with four sheets (`Quotes`, `Decisions`, `Resources`, `Totals`) (`--path quotes.xlsx`) | no |
+
+---
+
+## 3. Shared Lists & Account
+
+| Command | Purpose | Needs login |
+|---|---|---|
+| `autocalc read LIST_ID_OR_URL` | Read and display a shared price list anonymously | no |
+| `autocalc validate LIST_ID_OR_URL` | Re-read a saved list anonymously and report arithmetic or catalog glitches | no |
+| `autocalc edit-check LIST_ID_OR_URL` | Re-price saved cards in the calculator's headless Edit view (`--limit`) | no |
+| `autocalc login [--profile NAME] [--timeout S]` | Open a browser window and wait for you to sign in; prints the account and browser used | — |
+| `autocalc logout [--profile NAME]` | Sign out by clearing the local browser profile session | — |
+| `autocalc auth status [--profile NAME]` | Show local authentication session status (cookie names only, never values) | — |
+| `autocalc lists` | List the saved price lists in your Huawei Cloud account | **yes** |
+| `autocalc rename LIST_ID_OR_URL NAME` | Rename a saved price list | **yes** |
+| `autocalc duplicate LIST_ID_OR_URL` | Duplicate a saved price list (`--name`) | **yes** |
+| `autocalc delete LIST_ID_OR_URL --yes` | Delete a saved price list (requires `--yes`) | **yes** |
+
+---
+
+## 4. System & Schema Maintenance
+
+| Command | Purpose | Needs login |
+|---|---|---|
+| `autocalc doctor` | Check endpoints, frontend version, browser detection, profile presence, and cache | no |
+| `autocalc completion [SHELL]` | Generate shell completion script for `bash`, `zsh`, or `fish` (defaults to `$SHELL`) | no |
+| `autocalc schema <pull\|coverage\|diff> SERVICE` | Inspect or refresh service page schemas (`--json`) | no |
+| `autocalc update [--to vX.Y.Z]` | Reinstall from the newest release tag, or the one named; prints `old -> new` (`AUTOCALC_NO_UPDATE_CHECK=1` disables daily check notices) | no |
+| `autocalc install-browser` | Install Playwright's pinned Chromium (only needed without a system Chrome/Edge/Chromium) | no |
+
+---
+
+## 5. Agent & MCP Subcommands
+
+Every MCP tool registered in `src/core/registry.ts` is also executable directly as a hyphenated CLI subcommand (`plan-quote`, `apply-quote`, `compile-quote`, `export-quotes-xlsx`, `draft-quote`, `revise-quote`, `publish-quote`, `list-drafts`, `inspect-draft`, `recover-draft`, etc., [ADR-0007](../adr/0007-workflow-surface-and-one-registry.md)). To keep `autocalc --help` clean for humans, those verbose agent aliases are hidden from the root help screen, while their `--help` flags remain available individually:
 
 ```sh
-autocalc draft-quote --customer acme --requirements @reqs.json   # ranked candidates, a draft id
+autocalc draft-quote --customer acme --requirements @reqs.json
 autocalc revise-quote --draft-id d-1a2b3c4d --decisions @choices.json
-autocalc publish-quote --draft-id d-1a2b3c4d --name "acme web tier"   # runs the publish gate
+autocalc publish-quote --draft-id d-1a2b3c4d --name "acme web tier"
 ```
 
-A requirement is `{"id","service","region","billing","quantity"?,"needs"?,"spec"?,"options"?}`.
-`publish-quote` builds cards on the calculator page (a browser is needed). Support is restricted to services and options whose requested configuration can be preserved. Default-only recipes and known incomplete pricing paths are rejected before saving. The result carries `warnings` when the live calculator frontend differs from the verified version.
+---
 
 ## Environment variables
 
 | Variable | Effect |
 |---|---|
 | `AUTOCALC_PROFILE` | Named login profile (default `default`) |
+| `AUTOCALC_CONFIG` | Session, drafts, and config directory (default `~/.config/autocalc`) |
 | `AUTOCALC_CACHE` | Catalog cache directory (default `~/.cache/autocalc`) |
-| `AUTOCALC_BROWSER` | Path of the Chromium-family browser to drive; overrides auto-detection (Chrome, then Edge, then Chromium, then Playwright's build) |
-| `AUTOCALC_ENCODE_WORKERS` | Browser contexts `publish_quote` encodes cards with at once (default `6`; each is an isolated anonymous context) |
-
-## MCP server
-
-`autocalc-mcp` runs the MCP server (`hwc-calculator`) over stdio. Its tools are described by
-the `mcp-surface` spec.
-
-Configuration: `AUTOCALC_CONFIG` overrides the session/config directory (default `~/.config/autocalc`). `AUTOCALC_REPO` overrides the Git repository used for update checks.
-
-`compare-modes` accepts `--hours` (monthly on-demand usage) and `--periods` (months or years);
-monthly equivalents divide term totals by their duration. Use `inspect-draft` after a failed
-publication. An `unknown_outcome` requires reconciling saved lists before `recover-draft` with
-an explicit no-remote-list confirmation and justification. It never deletes remote lists.
+| `AUTOCALC_BROWSER` | Path of the Chromium-family browser to drive; overrides auto-detection |
+| `AUTOCALC_ENCODE_WORKERS` | Concurrent anonymous browser contexts used during card encoding (default `6`) |
+| `AUTOCALC_KEEP_ON_FAIL` | Set to `1` to keep a remote list that failed the publish gate for inspection |
+| `AUTOCALC_NO_UPDATE_CHECK` | Set to `1` to disable the daily release update check notice |

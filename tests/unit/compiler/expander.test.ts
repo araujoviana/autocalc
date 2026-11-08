@@ -114,4 +114,26 @@ resources:
     const doc = parseQuoteYaml(noRegionYaml);
     expect(() => expandResources(doc)).toThrow(CalculatorError);
   });
+
+  it("normalizes geographic location names to canonical region IDs offline", () => {
+    const locationYaml = `
+version: "1"
+metadata: { id: x, customer: c }
+defaults:
+  region: "São Paulo"
+  billing: monthly
+resources:
+  - id: r1
+    service: ecs
+    needs: { vcpus: 2, memory: 4 GiB }
+  - id: r2
+    service: ecs
+    region: "Santiago, Chile"
+    needs: { vcpus: 2, memory: 4 GiB }
+`;
+    const doc = parseQuoteYaml(locationYaml);
+    const expanded = expandResources(doc);
+    expect(expanded[0]!.region).toBe("sa-brazil-1");
+    expect(expanded[1]!.region).toBe("la-south-2");
+  });
 });

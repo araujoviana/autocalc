@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { cookieHeader, sessionStatus } from "../../src/core/auth.ts";
+import type { CalculatorError } from "../../src/core/errors.ts";
 test("only Huawei domains contribute cookies", () => {
   expect(cookieHeader([{ name: "a", value: "1", domain: ".huaweicloud.com" }, { name: "bad", value: "2", domain: "evilhuaweicloud.com" }])).toBe("a=1");
 });
@@ -60,6 +61,52 @@ test("refresh retries with newly acquired cookies instead of the stale stored lo
     expect(await lists.lists()).toEqual([]);
     expect(headers).toEqual(["csrf=old; sid=old|old|Mozilla/5.0", "csrf=fresh; sid=fresh|fresh|Mozilla/5.0"]);
   } finally { await auth.close(); server.stop(); await rm(directory, { recursive: true, force: true }); }
+});
+
+test("refresh failure on expired session clears stale store and raises AUTH_EXPIRED", async () => {
+  const { mkdtemp, rm } = await import("node:fs/promises");
+  const { join } = await import("node:path");
+  const { tmpdir } = await import("node:os");
+  const { AuthManager } = await import("../../src/core/auth.ts");
+  const { ListSession } = await import("../../src/core/lists.ts");
+  const { CalculatorError } = await import("../../src/core/errors.ts");
+  const directory = await mkdtemp(join(tmpdir(), "autocalc-refresh-fail-"));
+  const store = new (await import("../../src/core/session-store.ts")).SessionStore(join(directory, "profile"));
+  await store.save({ cookie: "csrf=expired; sid=expired" });
+  const server = Bun.serve({ port: 0, fetch() {
+    return Response.json({ retCode: "CBC.0101" });
+  } });
+  const page = { goto: async () => {}, close: async () => {} };
+  // Headless browser probe also fails to authenticate (session expired on server)
+  const browser = {
+    withProfile: async (_headed: boolean, operation: (context: unknown) => Promise<unknown>) =>
+      operation({
+        pages: () => [page],
+        request: { get: async () => ({ ok: () => true, json: async () => ({ retCode: "CBC.0101" }) }) },
+        cookies: async () => [],
+      }),
+    close: async () => {},
+  } as unknown as import("../../src/core/browser.ts").BrowserManager;
+  const auth = new AuthManager({ profile: "test", profileDir: join(directory, "profile"), browser });
+  const lists = new ListSession((method, _url, body) => auth.call(method, server.url.href, body), () => auth.refresh());
+  try {
+    let err: unknown;
+    try {
+      await lists.lists();
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeInstanceOf(CalculatorError);
+    expect((err as CalculatorError).code).toBe("AUTH_EXPIRED");
+    // Ensure the stale session on disk was cleared so auth status doesn't report signed in
+    expect(await store.load()).toBeUndefined();
+    const status = await auth.status();
+    expect(status.logged_in).toBe(false);
+  } finally {
+    await auth.close();
+    server.stop();
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test("concurrent authenticated calls share one request context", async () => {

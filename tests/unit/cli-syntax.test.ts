@@ -31,3 +31,19 @@ test("auth import is gone", async () => {
     process.stderr.write = origWrite;
   }
 });
+
+test("CLI login defaults to 300s timeout", async () => {
+  const { toolOverrides } = await import("../../src/cli.ts");
+  let capturedInput: Record<string, unknown> | undefined;
+  toolOverrides["auth_login"] = async input => {
+    capturedInput = input;
+    return { logged_in: true, profile: "default" };
+  };
+  try {
+    const code = await main(["node", "autocalc", "login"]);
+    expect(code).toBe(0);
+    expect(capturedInput).toEqual({ timeout: 300 });
+  } finally {
+    delete toolOverrides["auth_login"];
+  }
+});

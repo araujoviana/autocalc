@@ -1,0 +1,25 @@
+{
+  "ingress-load-balancer": {
+    "needs": {},
+    "price": "0.053",
+    "spec": "elbv2.basic.default"
+  },
+  "object-storage": {
+    "needs": {},
+    "price": null,
+    "spec": "obs.001"
+  },
+  "primary-db": {
+    "needs": {},
+    "price": "149.37",
+    "spec": "rds.mysql.n1.large.4.ha"
+  },
+  "web-servers": {
+    "needs": {
+      "memory_gb": 8,
+      "vcpus": 4
+    },
+    "price": "63.07",
+    "spec": "t6.xlarge.2.linux"
+  }
+}

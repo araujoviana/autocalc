@@ -2,6 +2,7 @@
  * Resolves reusable machine archetypes (`templates`), environments, and defaults
  * into fully resolved concrete resource definitions with deterministic overrides. */
 import { CalculatorError } from "../errors.ts";
+import { RegionResolver } from "../regions.ts";
 import type { QuoteDocument, ResourceDeclaration, ResourceTemplate } from "./ast.ts";
 import { normalizeServiceAlias } from "./normalizer.ts";
 
@@ -87,13 +88,16 @@ export function expandResources(doc: QuoteDocument): ExpandedResource[] {
     }
 
     // Precedence: resource -> env -> template -> defaults
-    const region = (res as any).region ?? envRegion ?? defaults.region;
-    if (!region) {
+    const rawRegion = (res as any).region ?? envRegion ?? defaults.region;
+    if (!rawRegion) {
       throw new CalculatorError(
         "VALIDATION",
         `Resource '${res.id}' has no region specified (set via defaults.region, environment, or card).`
       );
     }
+    const resolver = new RegionResolver();
+    const candidates = resolver.candidates(String(rawRegion));
+    const region = candidates.length === 1 ? candidates[0]! : String(rawRegion).trim();
 
     const availability = res.availability ?? envAvailability ?? tmpl?.availability ?? defaults.availability ?? "single-az";
     const billing = (res.billing ?? tmpl?.billing ?? defaults.billing ?? "monthly").toLowerCase();

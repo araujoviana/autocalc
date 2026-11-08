@@ -117,8 +117,9 @@ async function raiseIfInvalid(quote: Quote, dir?: string) {
   const errors = await validate(quote, dir);
   if (!errors.length) return;
   const first = errors[0]!, legal = first.allowed ?? first.range;
+  const legalStr = Array.isArray(legal) ? legal.join(", ") : isObject(legal) ? `${g(legal.min)}..${g(legal.max)}` : "";
   throw new CalculatorError("VALIDATION", `Card '${first.card}': ${first.error}`,
-    (legal ? `Legal ${first.field}: ${JSON.stringify(legal)}. ` : "") + SCHEMA_HINT, { field: first.field, ...(first.allowed ? { allowed: first.allowed } : {}), errors });
+    (legalStr ? `Legal ${first.field}: ${legalStr}. ` : "") + SCHEMA_HINT, { field: first.field, ...(first.allowed ? { allowed: first.allowed } : {}), errors });
 }
 
 const sameNeeds = (a: unknown, b: unknown) => JSON.stringify(sortKeys(a ?? {})) === JSON.stringify(sortKeys(b ?? {}));
@@ -217,7 +218,7 @@ export async function apply(ctx: ActionContext, quote: Quote, name?: string, dir
   const result = await plan(ctx, quote, dir);
   if (result.pending.length) throw invalid(`Card '${result.pending[0]}' is unresolved; choose a spec with \`spec:\` in the file.`, "spec", result.pending);
   for (const row of result.cards) {
-    if (row.unmapped_options.length) throw invalid(`Card '${row.id}' sets options the schema does not map: ${JSON.stringify(row.unmapped_options)}.`, row.unmapped_options[0], undefined, SCHEMA_HINT);
+    if (row.unmapped_options.length) throw invalid(`Card '${row.id}' sets options the schema does not map: ${row.unmapped_options.join(", ")}.`, row.unmapped_options[0], undefined, SCHEMA_HINT);
     if (row.spec_problem) throw invalid(`Card '${row.id}': ${row.spec_problem}`, "spec", undefined, "Choose a spec this service can take with these options.");
     if (row.lock_drift) throw invalid(`Card '${row.id}' changed price since the lock was written; review and delete its lock entry to accept.`, "spec", [row.lock_drift.price]);
   }

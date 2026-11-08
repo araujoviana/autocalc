@@ -127,11 +127,28 @@ test("plan_view_lists_cards_and_says_whether_apply_is_ready", () => {
   const ready = { cards: [{ id: "web", spec: "c7n.large.2", price: "10", unmapped_options: [] }] };
   const stuck = { cards: [{ id: "db", candidates: [{}, {}], unmapped_options: ["x"] }] };
   expect(ui.quoteView("plan-quote", ready)).toContain("1 cards resolved; ready to apply");
+  expect(ui.quoteView("plan", ready)).toContain("1 cards resolved; ready to apply");
   const out = ui.quoteView("plan-quote", stuck)!;
   expect(out).toContain("2 candidates: choose a spec");
   expect(out).toContain("1 of 1 cards need attention");
   expect(ui.quoteView("draft-quote", ready)).toBeNull();
   expect(ui.quoteView("apply-quote", { url: "https://u", name: "n", checks: [1, 2] })).toContain("https://u");
+  expect(ui.quoteView("apply", { url: "https://u", name: "n", checks: [1, 2] })).toContain("https://u");
+});
+
+test("regions_and_services_commands_work_and_render_tables_on_tty", async () => {
+  delete process.env.NO_COLOR;
+  process.env.TERM = "xterm";
+  cli.toolOverrides.list_regions = () => ({ "sa-brazil-1": "LA-Sao Paulo1", "la-south-2": "LA-Santiago" });
+  cli.toolOverrides.list_services = () => [{ service: "ecs", name: "Elastic Cloud Server", category: "Compute" }];
+  const tty = new Tty("utf-8", true);
+  expect(await cli.main(["regions", "ecs"], tty)).toBe(0);
+  expect(tty.getvalue()).toContain("REGION ID    LOCATION           PORTAL LABEL");
+  expect(tty.getvalue()).toContain("sa-brazil-1  São Paulo, Brazil  LA-Sao Paulo1");
+  tty.clear();
+  expect(await cli.main(["services", "ecs"], tty)).toBe(0);
+  expect(tty.getvalue()).toContain("SERVICE  NAME                  CATEGORY");
+  expect(tty.getvalue()).toContain("ecs      Elastic Cloud Server  Compute");
 });
 
 test("tool_commands_print_exact_json_through_a_pipe", async () => {

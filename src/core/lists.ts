@@ -42,8 +42,16 @@ export class ListSession {
       if (response.status === 413) throw new CalculatorError("PAYLOAD_TOO_LARGE", "Price list payload is too large", "Split the list into smaller lists.", { cardCount: Array.isArray(body?.cartListData) ? body.cartListData.length : undefined });
       if (response.body === null || typeof response.body !== "object" || Array.isArray(response.body)) throw new CalculatorError(method === "POST" ? "MUTATION_UNKNOWN" : "UNEXPECTED_RESPONSE", method === "POST" ? "Saved-list operation outcome is unknown" : "Invalid saved-list response", method === "POST" ? "Check your saved lists before trying again." : undefined);
       const data = response.body as Record<string, unknown>, code = String(data.retCode ?? "200");
-      if (code === "CBC.0101" && attempt === 0) { await this.refresh(); continue; }
-      if (code === "CBC.0101") throw new CalculatorError("AUTH_EXPIRED", "Calculator session has expired", "Run login to sign in again.");
+      if (code === "CBC.0101" && attempt === 0) {
+        try {
+          await this.refresh();
+          continue;
+        } catch (error) {
+          if (error instanceof CalculatorError && error.code === "AUTH_EXPIRED") throw error;
+          throw new CalculatorError("AUTH_EXPIRED", "Calculator session has expired", "Run 'autocalc login' to sign in again.");
+        }
+      }
+      if (code === "CBC.0101") throw new CalculatorError("AUTH_EXPIRED", "Calculator session has expired", "Run 'autocalc login' to sign in again.");
       if (!["200", "CBC.0000"].includes(code)) throw mapUpstreamError(code);
       if (response.status !== 200) throw new CalculatorError("UPSTREAM", `Saved-list request failed (HTTP ${response.status})`);
       return data;

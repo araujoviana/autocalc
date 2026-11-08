@@ -1,6 +1,8 @@
 /** Terminal rendering for the commands people read. Plain text unless the stream is a terminal (`src/autocalc/ui.py`). */
 
+import pc from "picocolors";
 import type { CalculatorError } from "./errors.ts";
+import { formatRegion } from "./regions.ts";
 import { humanView } from "./views.ts";
 
 export interface StreamLike {
@@ -9,15 +11,20 @@ export interface StreamLike {
   encoding?: string | undefined;
 }
 
-const COLORS: Record<string, string> = {
+export type ColorName = "green" | "yellow" | "red" | "cyan" | "blue" | "magenta" | "dim" | "bold";
+
+const COLORS: Record<ColorName, string> = {
   green: "32",
   yellow: "33",
   red: "31",
+  cyan: "36",
+  blue: "34",
+  magenta: "35",
   dim: "2",
   bold: "1",
 };
 
-const GLYPHS: Record<"ok" | "warn" | "fail", [string, string, string]> = {
+const GLYPHS: Record<"ok" | "warn" | "fail", [string, ColorName, string]> = {
   ok: ["✓", "green", "[ok]  "],
   warn: ["⚠", "yellow", "[warn]"],
   fail: ["✗", "red", "[FAIL]"],
@@ -33,16 +40,23 @@ function resolveStream(stream?: StreamLike): StreamLike {
   return stream ?? defaultStreamOverride ?? process.stdout;
 }
 
-/** True when `stream` is a terminal that should get colors and glyphs. */
-export function fancy(stream?: StreamLike): boolean {
+/** True when `stream` is an interactive terminal (independent of color settings). */
+export function isTerminal(stream?: StreamLike): boolean {
   const s = resolveStream(stream);
-  if (process.env.NO_COLOR || process.env.TERM === "dumb") return false;
   if (typeof s.isatty === "function") return Boolean(s.isatty());
   return Boolean(s.isTTY);
 }
 
-export function paint(text: string, color: "green" | "yellow" | "red" | "dim" | "bold", stream?: StreamLike): string {
-  return fancy(stream) ? `\x1b[${COLORS[color]}m${text}\x1b[0m` : text;
+/** True when `stream` is a terminal that should get colors and glyphs. */
+export function fancy(stream?: StreamLike): boolean {
+  if (process.env.NO_COLOR || process.env.TERM === "dumb") return false;
+  return isTerminal(stream);
+}
+
+export function paint(text: string, color: ColorName, stream?: StreamLike): string {
+  if (!fancy(stream)) return text;
+  const code = COLORS[color] ?? (pc.isColorSupported ? "1" : "");
+  return code ? `\x1b[${code}m${text}\x1b[0m` : text;
 }
 
 const NON_UNICODE_ENCODINGS = new Set([
@@ -65,15 +79,22 @@ function canPrint(text: string, stream?: StreamLike): boolean {
   return true;
 }
 
+/** Visible display width of a string (strips ANSI codes and handles Unicode widths via Bun.stringWidth). */
+export function visibleWidth(text: string): number {
+  return typeof Bun !== "undefined" && typeof Bun.stringWidth === "function"
+    ? Bun.stringWidth(text)
+    : text.replace(/\x1b\[[0-9;]*m/g, "").length;
+}
+
 /** One check line: `✓ text` on a terminal (`[ok] text` when the encoding lacks the glyph), plain otherwise. */
 export function status(kind: "ok" | "warn" | "fail", text: string, stream?: StreamLike): string {
   const [glyph, color, plain] = GLYPHS[kind];
   if (!fancy(stream)) return `${plain} ${text}`;
   const mark = canPrint(glyph, stream) ? glyph : plain.trim();
-  return `${paint(mark, color as "green" | "yellow" | "red", stream)} ${text}`;
+  return `${paint(mark, color, stream)} ${text}`;
 }
 
-/** Left-aligned columns, two spaces apart; the last column is not padded. */
+/** Left-aligned columns, two spaces apart; the last column is not padded. ANSI-aware width calculation. */
 export function table(
   rows: ReadonlyArray<ReadonlyArray<unknown>>,
   headers?: ReadonlyArray<string>,
@@ -82,9 +103,9 @@ export function table(
   const grid = [...(headers ? [headers] : []), ...rows].map(r => r.map(c => String(c)));
   if (!grid.length || !grid[0]?.length) return "";
   const cols = grid[0].length;
-  const widths = Array.from({ length: cols }, (_, i) => Math.max(...grid.map(r => (r[i] ?? "").length)));
+  const widths = Array.from({ length: cols }, (_, i) => Math.max(...grid.map(r => visibleWidth(r[i] ?? ""))));
   const lines = grid.map(r =>
-    r.map((c, i) => (i < r.length - 1 ? c.padEnd(widths[i]!) : c)).join("  "),
+    r.map((c, i) => (i < r.length - 1 ? c + " ".repeat(Math.max(0, widths[i]! - visibleWidth(c))) : c)).join("  "),
   );
   if (headers && fancy(stream)) {
     lines[0] = paint(lines[0]!, "bold", stream);
@@ -92,13 +113,23 @@ export function table(
   return lines.join("\n");
 }
 
-/** A terminal summary of plan-quote / apply-quote; null for every other tool (they print JSON). */
+/** Aligned key-value pairs for summary sections. */
+export function kv(pairs: ReadonlyArray< readonly [string, unknown] >, stream?: StreamLike): string {
+  const active = pairs.filter(([, v]) => v !== undefined && v !== null && v !== "");
+  if (!active.length) return "";
+  const width = Math.max(...active.map(([k]) => visibleWidth(k)));
+  return active
+    .map(([k, v]) => `  ${paint(k.padEnd(width), "dim", stream)}  ${String(v)}`)
+    .join("\n");
+}
+
+/** A terminal summary for any CLI command; falls back to humanView and universal key-value/table rendering. */
 export function quoteView(cmd: string, result: unknown, stream?: StreamLike): string | null {
   const read = humanView(cmd, result, stream);
   if (read !== null) return read;
   if (!result || typeof result !== "object" || Array.isArray(result)) return null;
   const r = result as Record<string, any>;
-  if (cmd === "plan-quote" && Array.isArray(r.cards)) {
+  if ((cmd === "plan-quote" || cmd === "plan") && Array.isArray(r.cards)) {
     const rows: Array<[string, string, string, string]> = [];
     for (const c of r.cards) {
       const notes: string[] = [];
@@ -116,6 +147,9 @@ export function quoteView(cmd: string, result: unknown, stream?: StreamLike): st
       if ("candidates" in c && Array.isArray(c.candidates)) {
         notes.push(c.spec_not_found ? `spec ${c.spec_not_found} not sold here; ${c.candidates.length} closest: choose a spec` : `${c.candidates.length} candidates: choose a spec`);
       }
+      if (c.price_note && !notes.length) {
+        notes.push("usage-priced at publish time");
+      }
       rows.push([String(c.id), String(c.spec ?? "-"), String(c.price || "-"), notes.join("; ")]);
     }
     const problems = r.cards.filter(
@@ -130,7 +164,7 @@ export function quoteView(cmd: string, result: unknown, stream?: StreamLike): st
         : status("ok", `${rows.length} cards resolved; ready to apply`, stream))
     );
   }
-  if (cmd === "apply-quote" && r.url) {
+  if ((cmd === "apply-quote" || cmd === "apply" || cmd === "publish-quote" || cmd === "publish_quote") && r.url) {
     const checks: any[] = Array.isArray(r.checks) ? r.checks : [];
     const rows = checks.map((c): [string, string, string, string, string] => [String(c.title ?? c.index), String(c.stored ?? "-"), String(c.rated ?? "-"), String(c.edit ?? "-"), c.ok === false ? "differs" : "ok"]);
     const warnings: string[] = Array.isArray(r.warnings) ? r.warnings.map(String) : [];
@@ -165,13 +199,56 @@ function gateLines(details: Row, s: StreamLike): string {
   return out;
 }
 
+function formatDetailLines(key: string, value: unknown, s: StreamLike): string[] {
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return [`  ${paint(`${key}:`, "dim", s)} ${String(value)}`];
+  }
+  if (key === "issues" && Array.isArray(value)) {
+    return value.filter(isRow).map(issue => {
+      const path = Array.isArray(issue.path) && issue.path.length ? issue.path.join(".") : "input";
+      const msg = String(issue.message ?? issue.code ?? "invalid value");
+      return `  ${paint("•", "red", s)} ${paint(path, "bold", s)}: ${msg}`;
+    });
+  }
+  if (key === "candidates" && Array.isArray(value)) {
+    return [
+      `  ${paint("candidates:", "dim", s)}`,
+      ...value.map(c => `    • ${formatRegion(String(c))}`),
+    ];
+  }
+  if (key === "allowed" && Array.isArray(value)) {
+    return [`  ${paint("allowed:", "dim", s)} ${value.map(String).join(", ")}`];
+  }
+  if (key === "errors" && Array.isArray(value)) {
+    return value.filter(isRow).map(err => {
+      const cardLabel = err.card ? `card '${String(err.card)}'` : "quote";
+      const fieldLabel = err.field ? ` (${String(err.field)})` : "";
+      return `  ${paint("•", "red", s)} ${cardLabel}${fieldLabel}: ${String(err.error ?? "")}`;
+    });
+  }
+  if (Array.isArray(value)) {
+    return [`  ${paint(`${key}:`, "dim", s)} ${value.map(v => typeof v === "object" ? JSON.stringify(v) : String(v)).join(", ")}`];
+  }
+  if (isRow(value)) {
+    const pairs = Object.entries(value)
+      .filter(([, v]) => v !== undefined && v !== null)
+      .map(([k, v]) => `${k}=${String(v)}`)
+      .join(", ");
+    return [`  ${paint(`${key}:`, "dim", s)} ${pairs}`];
+  }
+  return [];
+}
+
 export function formatError(exc: CalculatorError, stream?: StreamLike): string {
   const s = stream ?? process.stderr;
   let out = `${paint("error", "red", s)}[${exc.code}]: ${exc.message}\n`;
   const details = exc.details;
   if (exc.code === "GATE_FAILED" && details) out += gateLines(details, s);
   else if (details) {
-    for (const [key, value] of Object.entries(details)) out += `  ${paint(`${key}:`, "dim", s)} ${typeof value === "string" ? value : JSON.stringify(value)}\n`;
+    for (const [key, value] of Object.entries(details)) {
+      if (value === undefined || value === null) continue;
+      for (const line of formatDetailLines(key, value, s)) out += `${line}\n`;
+    }
   }
   const hint = exc.hint ?? (exc.code === "GATE_FAILED" ? GATE_HINT : undefined);
   if (hint) out += `  ${paint("->", "dim", s)} ${hint}\n`;
