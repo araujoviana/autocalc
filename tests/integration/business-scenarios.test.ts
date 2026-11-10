@@ -4,9 +4,8 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { CatalogCache } from "../../src/core/cache.ts";
 import { Catalog } from "../../src/core/catalog.ts";
-import { PublicTransport } from "../../src/core/transport.ts";
+import { createSyntheticBusinessCatalog, type SyntheticBusinessReader } from "../support/business-catalog.ts";
 import { HuaweiProvider } from "../../src/providers/huawei.ts";
 import { checkAvailability } from "../../src/core/availability.ts";
 import { DraftStore } from "../../src/core/quote/store.ts";
@@ -21,7 +20,7 @@ import type { ActionContext } from "../../src/core/types.ts";
 const SCENARIOS_DIR = join(import.meta.dir, "..", "fixtures", "scenarios");
 
 describe("20 Real-World Business Architecture YAML Scenarios", () => {
-  let transport: PublicTransport;
+  let transport: SyntheticBusinessReader;
   let catalog: Catalog;
   let provider: HuaweiProvider;
   let draftDir: string;
@@ -31,9 +30,9 @@ describe("20 Real-World Business Architecture YAML Scenarios", () => {
 
   beforeAll(async () => {
     draftDir = mkdtempSync(join(tmpdir(), "autocalc-scenarios-"));
-    const cacheDir = process.env.AUTOCALC_CACHE ?? join(homedir(), ".cache", "autocalc");
-    transport = new PublicTransport(new CatalogCache(cacheDir));
-    catalog = new Catalog(transport);
+    const synthetic = createSyntheticBusinessCatalog();
+    transport = synthetic.transport;
+    catalog = synthetic.catalog;
     provider = new HuaweiProvider({
       skus: (service, region) => catalog.skus(service, region),
       checkMode: async (service, region, billing) =>
