@@ -11,9 +11,9 @@ Execution detail: `docs/superpowers/plans/2026-11-10-latam-cce-iaas-dms-coverage
 
 ## 2. CCE coverage
 
-- [ ] 2.1 Inventory Standard/Turbo variants, master/scale dimensions, placement selectors and modes for both regions using the matching vendor config; verify normalized synthetic fixtures and inventory completeness checks.
-- [ ] 2.2 Extend schemas, builder, form-only publication, spec mapping and discovery without changing valid legacy Standard input semantics; verify CCE unit/form tests, unavailable-combination rejection, and discovery parity.
-- [ ] 2.3 Add regional replay and price-verification cases across every offered finite variant/mode plus boundaries and pairwise controls; update CCE docs and verify actual statuses for each region without claiming blocked checks pass.
+- [x] 2.1 Inventory Standard/Turbo variants, master/scale dimensions, placement selectors and modes for both regions using the matching vendor config; verify normalized synthetic fixtures and inventory completeness checks.
+- [x] 2.2 Extend schemas, builder, form-only publication, spec mapping and discovery without changing valid legacy Standard input semantics; verify CCE unit/form tests, unavailable-combination rejection, and discovery parity.
+- [x] 2.3 Add regional replay and price-verification cases across every offered finite variant/mode plus boundaries and pairwise controls; update CCE docs and verify actual statuses for each region without claiming blocked checks pass.
 
 ## 3. CCE infrastructure dependencies
 

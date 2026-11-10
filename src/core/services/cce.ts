@@ -4,10 +4,36 @@ import type { CardInput } from "../schemas.ts";
 import { selectProduct } from "./common.ts";
 import type { BuilderContext } from "./common.ts";
 export async function buildCce(input: Extract<CardInput, { service: "cce" }>, context: BuilderContext) {
-  if (input.cluster_type !== "standard") throw new CalculatorError("VALIDATION", "Only standard CCE clusters have a verified form mapping.");
-  if (!["small", "medium", "large", "xlarge"].includes(input.scale)) throw new CalculatorError("VALIDATION", `Unknown CCE scale ${input.scale}`);
-  const series = input.ha ? "s2" : "s1";
-  const p = await selectProduct(context, "cce", input.region, "cce_cce.cluster", `cce.${series}.${input.scale}`, input.billing, input.hours);
+  const clusterType = (input.cluster_type ?? "standard").toLowerCase();
+  if (clusterType !== "standard" && clusterType !== "turbo") {
+    throw new CalculatorError("VALIDATION", `Unsupported CCE cluster type ${input.cluster_type}`);
+  }
+
+  let series: string;
+  if (clusterType === "turbo") {
+    if (input.billing !== "ondemand") {
+      throw new CalculatorError("VALIDATION", "CCE Turbo is only available on-demand.");
+    }
+    if (input.ha) {
+      if (!["small", "medium", "large"].includes(input.scale)) {
+        throw new CalculatorError("VALIDATION", `Unknown or unsupported CCE Turbo HA scale ${input.scale}`);
+      }
+      series = "t2";
+    } else {
+      if (input.scale !== "small") {
+        throw new CalculatorError("VALIDATION", `CCE Turbo single-master clusters only support small scale (10 nodes), got ${input.scale}`);
+      }
+      series = "t1";
+    }
+  } else {
+    if (!["small", "medium", "large", "xlarge"].includes(input.scale)) {
+      throw new CalculatorError("VALIDATION", `Unknown CCE scale ${input.scale}`);
+    }
+    series = input.ha ? "s2" : "s1";
+  }
+
+  const spec = `cce.${series}.${input.scale}`;
+  const p = await selectProduct(context, "cce", input.region, "cce_cce.cluster", spec, input.billing, input.hours);
   if (input.billing === "ondemand" && !Object.hasOwn(p, "usageFactor")) p.usageFactor = "duration";
   const keys = ["productType", "clusterType", "clusterNodeScale", "clusterMasterScale"];
   Object.assign(p, { addToList_title: "dataInfo_15_", addToList_product: keys.map(key => String(p[key] ?? "None")).join(" | ") });

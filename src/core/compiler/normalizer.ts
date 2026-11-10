@@ -406,14 +406,28 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
       else if (["200", "medium", "m", "mid"].includes(scaleRaw)) scale = "medium";
       else scale = "small";
 
-      if (spec && /^cce\.s[12]\.(small|medium|large|xlarge)$/.test(spec)) {
-        const parts = spec.split(".");
-        ha = parts[1] === "s2";
-        scale = parts[2]!;
+      const clusterType = String(rawOpts.cluster_type ?? (spec?.startsWith("cce.t") ? "turbo" : "standard")).toLowerCase();
+      const isTurbo = clusterType === "turbo" || (spec ? /^cce\.t[12]\./.test(spec) : false);
+
+      if (isTurbo) {
+        if (spec && /^cce\.t[12]\.(small|medium|large)$/.test(spec)) {
+          const parts = spec.split(".");
+          ha = parts[1] === "t2";
+          scale = parts[2]!;
+        } else {
+          spec = `cce.${ha ? "t2" : "t1"}.${scale}`;
+        }
+        options.cluster_type = "turbo";
       } else {
-        spec = `cce.${ha ? "s2" : "s1"}.${scale}`;
+        if (spec && /^cce\.s[12]\.(small|medium|large|xlarge)$/.test(spec)) {
+          const parts = spec.split(".");
+          ha = parts[1] === "s2";
+          scale = parts[2]!;
+        } else {
+          spec = `cce.${ha ? "s2" : "s1"}.${scale}`;
+        }
+        options.cluster_type = "standard";
       }
-      options.cluster_type = "standard";
       options.ha = ha;
       options.scale = scale;
       if (billing === "ondemand") quantity = 1;

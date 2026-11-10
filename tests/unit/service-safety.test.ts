@@ -40,9 +40,19 @@ test("unverified compute and storage defaults cannot publish", () => {
   }
 });
 
-test.each(["turbo", "typo"])("cce rejects unverified cluster_type %s before catalog", async cluster_type => {
+test.each(["typo", "unknown"])("cce rejects unverified cluster_type %s before catalog", async cluster_type => {
   const context = { productInfo: async () => { throw new Error("catalog should not be accessed"); }, rate: async () => ({}) };
   await expect(buildCce({ service: "cce", region: "test", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type, ha: true, scale: "small" }, context)).rejects.toThrow();
+});
+
+test.each([
+  { billing: "monthly", ha: true, scale: "small" },
+  { billing: "yearly", ha: true, scale: "small" },
+  { billing: "ondemand", ha: false, scale: "large" },
+  { billing: "ondemand", ha: true, scale: "xlarge" },
+])("cce rejects invalid turbo combination %o before catalog", async input => {
+  const context = { productInfo: async () => { throw new Error("catalog should not be accessed"); }, rate: async () => ({}) };
+  await expect(buildCce({ service: "cce", region: "test", billing: input.billing as any, quantity: 1, periods: 1, hours: 730, cluster_type: "turbo", ha: input.ha, scale: input.scale }, context)).rejects.toThrow();
 });
 
 test("ecs rejects ambiguous image before selecting catalog order", async () => {
