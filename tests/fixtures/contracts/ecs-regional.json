@@ -1,0 +1,192 @@
+{
+  "observed_utc": "2026-11-11",
+  "purpose": "Minimal public ECS semantic fields; IDs and prices omitted. Planning amounts are synthetic in the architecture test.",
+  "catalogs": {
+    "ecs|sa-brazil-1": {
+      "source": "https://res-static.hc-cdn.cn/pricecalculator/intl/product/ecs_general.online.portal_sa-brazil-1_calc_productInfo.json",
+      "product": {
+        "ec2_vm": [
+          {
+            "resourceSpecCode": "c7n.xlarge.4.linux",
+            "cloudServiceType": "hws.service.type.ec2",
+            "resourceType": "hws.resource.type.vm",
+            "resourceSpecType": "c7n",
+            "productSpecSysDesc": "Memory:16384MB;vCPUs:4CORE;CPU Architecture:x86;Type:General Computing-plus;System Disk:40GB;Series:C7n;Image:Linux;Spot Duartion:On Demand, Period, Dynamic Price Spot;Local Disk:No Local-Disk;Remark:normal;accelerator card:No Accelerator Card",
+            "spec": "c7n.xlarge.4",
+            "arch": "dataInfo_32_",
+            "vmType": "dataInfo_3_",
+            "generation": "C7n",
+            "cpu": "4dataInfo_36_",
+            "mem": "16BSSUNIT.pluralUnit.102",
+            "type": "normal",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null,
+                "planType": "PRICEPLAN"
+              }
+            ]
+          }
+        ],
+        "ec2_vm.image.special": [
+          {
+            "__platform": "Ubuntu",
+            "__os_type": "Linux",
+            "__os_bit": "64",
+            "name": "Ubuntu 22.04 server 64bit",
+            "type": [
+              "c3",
+              "d2",
+              "d3",
+              "hc1",
+              "hc2",
+              "h3",
+              "t6",
+              "s2",
+              "s3",
+              "m2",
+              "m3",
+              "sn3",
+              "s6",
+              "cc3",
+              "t2",
+              "s7",
+              "c7n",
+              "s7n",
+              "m7n",
+              "x1",
+              "x0",
+              "m6",
+              "m7",
+              "d6",
+              "c6ne",
+              "d7",
+              "c7e",
+              "c7ne",
+              "c7t",
+              "m7ne",
+              "c3ne",
+              "c6",
+              "c6s",
+              "c7",
+              "c9",
+              "m9",
+              "m3ne",
+              "h3ne",
+              "d3ne",
+              "ac6",
+              "ac7",
+              "ac8",
+              "ac9",
+              "ac9s",
+              "am7",
+              "am8",
+              "x1e",
+              "x2e"
+            ]
+          }
+        ]
+      }
+    },
+    "ecs|la-south-2": {
+      "source": "https://res-static.hc-cdn.cn/pricecalculator/intl/product/ecs_general.online.portal_la-south-2_calc_productInfo.json",
+      "product": {
+        "ec2_vm": [
+          {
+            "resourceSpecCode": "c7n.xlarge.4.linux",
+            "cloudServiceType": "hws.service.type.ec2",
+            "resourceType": "hws.resource.type.vm",
+            "resourceSpecType": "c7n",
+            "productSpecSysDesc": "Memory:16384MB;vCPUs:4CORE;CPU Architecture:x86;Type:General Computing-plus;System Disk:40GB;Series:C7n;Image:Linux;Spot Duartion:On Demand, Period, Dynamic Price Spot;Local Disk:No Local-Disk;Remark:normal;accelerator card:No Accelerator Card",
+            "spec": "c7n.xlarge.4",
+            "arch": "dataInfo_32_",
+            "vmType": "dataInfo_3_",
+            "generation": "C7n",
+            "cpu": "4dataInfo_36_",
+            "mem": "16BSSUNIT.pluralUnit.102",
+            "type": "normal",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null,
+                "planType": "PRICEPLAN"
+              }
+            ]
+          }
+        ],
+        "ec2_vm.image.special": [
+          {
+            "__platform": "Ubuntu",
+            "__os_type": "Linux",
+            "__os_bit": "64",
+            "name": "Ubuntu 22.04 server 64bit",
+            "type": [
+              "c3",
+              "d2",
+              "d3",
+              "hc1",
+              "hc2",
+              "h3",
+              "t6",
+              "s2",
+              "s3",
+              "m2",
+              "m3",
+              "sn3",
+              "s6",
+              "cc3",
+              "t2",
+              "s7",
+              "c7n",
+              "s7n",
+              "m7n",
+              "x1",
+              "x0",
+              "m6",
+              "m7",
+              "d6",
+              "c6ne",
+              "d7",
+              "c7e",
+              "c7ne",
+              "c7t",
+              "m7ne",
+              "c3ne",
+              "c6",
+              "c6s",
+              "c7",
+              "c9",
+              "m9",
+              "m3ne",
+              "h3ne",
+              "d3ne",
+              "e3",
+              "e1",
+              "e2",
+              "et2",
+              "e6",
+              "e7",
+              "ac6",
+              "ac7",
+              "ac8",
+              "ac9",
+              "ac9s",
+              "am7",
+              "am8",
+              "x1e",
+              "x2e",
+              "am9",
+              "x3e"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

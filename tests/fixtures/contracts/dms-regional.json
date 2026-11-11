@@ -1,0 +1,340 @@
+{
+  "observed_utc": "2026-11-11",
+  "purpose": "Minimal public catalog semantic fields for offline configuration contracts. Price amounts and product IDs are intentionally omitted; these fixtures cannot certify prices.",
+  "catalogs": {
+    "kafka|sa-brazil-1": {
+      "source": "https://res-static.hc-cdn.cn/pricecalculator/intl/product/kafka_general.online.portal_sa-brazil-1_calc_productInfo.json",
+      "product": {
+        "dms_dms.platinum": [
+          {
+            "resourceSpecCode": "dms.platinum.c6.kafka",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.platinum",
+            "resourceSpecType": "ResourceGroup",
+            "specId": "c6.2u4g.cluster",
+            "specName": "dataInfo_10_",
+            "architectureName": "calc_13_",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          },
+          {
+            "resourceSpecCode": "dms.platinum.c6.kafka",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.platinum",
+            "resourceSpecType": "ResourceGroup",
+            "specId": "c6.4u8g.cluster",
+            "specName": "dataInfo_11_",
+            "architectureName": "calc_13_",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          },
+          {
+            "resourceSpecCode": "dms.platinum.c6.kafka",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.platinum",
+            "resourceSpecType": "ResourceGroup",
+            "specId": "c6.8u16g.cluster",
+            "specName": "dataInfo_12_",
+            "architectureName": "calc_13_",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          }
+        ],
+        "dms_dms.storage": [
+          {
+            "resourceSpecCode": "dms.physical.storage.ultra.v2.kafka",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.storage",
+            "resourceSpecType": "ResourceGroup",
+            "storageType": "dataInfo_7_",
+            "storageUnit": "detail_9_",
+            "type": "v2 ultra for kafka",
+            "linearDisk": "nullBSSUNIT.unit.17",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "kafka|la-south-2": {
+      "source": "https://res-static.hc-cdn.cn/pricecalculator/intl/product/kafka_general.online.portal_la-south-2_calc_productInfo.json",
+      "product": {
+        "dms_dms.platinum": [
+          {
+            "resourceSpecCode": "dms.platinum.c6.kafka",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.platinum",
+            "resourceSpecType": "ResourceGroup",
+            "specId": "c6.2u4g.cluster",
+            "specName": "dataInfo_10_",
+            "architectureName": "calc_13_",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          },
+          {
+            "resourceSpecCode": "dms.platinum.c6.kafka",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.platinum",
+            "resourceSpecType": "ResourceGroup",
+            "specId": "c6.4u8g.cluster",
+            "specName": "dataInfo_11_",
+            "architectureName": "calc_13_",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          },
+          {
+            "resourceSpecCode": "dms.platinum.c6.kafka",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.platinum",
+            "resourceSpecType": "ResourceGroup",
+            "specId": "c6.8u16g.cluster",
+            "specName": "dataInfo_12_",
+            "architectureName": "calc_13_",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          }
+        ],
+        "dms_dms.storage": [
+          {
+            "resourceSpecCode": "dms.physical.storage.ultra.v2.kafka",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.storage",
+            "resourceSpecType": "ResourceGroup",
+            "storageType": "dataInfo_7_",
+            "storageUnit": "detail_9_",
+            "type": "v2 ultra for kafka",
+            "linearDisk": "nullBSSUNIT.unit.17",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "rabbitMQ|sa-brazil-1": {
+      "source": "https://res-static.hc-cdn.cn/pricecalculator/intl/product/rabbitMQ_general.online.portal_sa-brazil-1_calc_productInfo.json",
+      "product": {
+        "dms_dms.platinum": [
+          {
+            "resourceSpecCode": "dms.platinum.c6.rabbitmq",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.platinum",
+            "resourceSpecType": "ResourceGroup",
+            "specId": "c6.2u4g.cluster",
+            "specName": "dataInfo_23_",
+            "architectureName": "dataInfo_2_",
+            "architectureId": "cluster",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          },
+          {
+            "resourceSpecCode": "dms.platinum.c6.rabbitmq",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.platinum",
+            "resourceSpecType": "ResourceGroup",
+            "specId": "c6.4u8g.cluster",
+            "specName": "dataInfo_15_",
+            "architectureName": "dataInfo_2_",
+            "architectureId": "cluster",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          },
+          {
+            "resourceSpecCode": "dms.platinum.c6.rabbitmq",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.platinum",
+            "resourceSpecType": "ResourceGroup",
+            "specId": "amqp.p2.large.6",
+            "specName": "dataInfo_35_",
+            "architectureName": "dataInfo_2_",
+            "architectureId": "cluster",
+            "versionType": "dataInfo_29_",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          }
+        ],
+        "dms_dms.storage": [
+          {
+            "resourceSpecCode": "dms.physical.storage.ultra.v2.rabbitmq",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.storage",
+            "resourceSpecType": "ResourceGroup",
+            "storageType": "dataInfo_12_",
+            "type": "v2 ultra for rabbitmq",
+            "linearDisk": "nullBSSUNIT.unit.17",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "rabbitMQ|la-south-2": {
+      "source": "https://res-static.hc-cdn.cn/pricecalculator/intl/product/rabbitMQ_general.online.portal_la-south-2_calc_productInfo.json",
+      "product": {
+        "dms_dms.platinum": [
+          {
+            "resourceSpecCode": "dms.platinum.c6.rabbitmq",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.platinum",
+            "resourceSpecType": "ResourceGroup",
+            "specId": "c6.2u4g.cluster",
+            "specName": "dataInfo_23_",
+            "architectureName": "dataInfo_2_",
+            "architectureId": "cluster",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          },
+          {
+            "resourceSpecCode": "dms.platinum.c6.rabbitmq",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.platinum",
+            "resourceSpecType": "ResourceGroup",
+            "specId": "c6.4u8g.cluster",
+            "specName": "dataInfo_15_",
+            "architectureName": "dataInfo_2_",
+            "architectureId": "cluster",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          },
+          {
+            "resourceSpecCode": "dms.platinum.c6.rabbitmq",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.platinum",
+            "resourceSpecType": "ResourceGroup",
+            "specId": "amqp.p2.large.6",
+            "specName": "dataInfo_35_",
+            "architectureName": "dataInfo_2_",
+            "architectureId": "cluster",
+            "versionType": "dataInfo_29_",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          }
+        ],
+        "dms_dms.storage": [
+          {
+            "resourceSpecCode": "dms.physical.storage.ultra.v2.rabbitmq",
+            "cloudServiceType": "hws.service.type.dms",
+            "resourceType": "hws.resource.type.dms.storage",
+            "resourceSpecType": "ResourceGroup",
+            "storageType": "dataInfo_12_",
+            "type": "v2 ultra for rabbitmq",
+            "linearDisk": "nullBSSUNIT.unit.17",
+            "planList": [
+              {
+                "billingMode": "MONTHLY",
+                "periodNum": 1,
+                "billingEvent": "event.type.onetime",
+                "measureUnit": null,
+                "measureUnitStep": null
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

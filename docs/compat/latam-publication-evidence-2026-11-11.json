@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "application_version": "0.6.0",
+  "implementation_checkpoint": "bf6725b",
+  "working_tree_state": "local implementation and test review in progress; this report is not a clean-release certification",
+  "verification": "Authenticated synthetic publication using production draft_quote/publish_quote and publish gate. Only newly created exact-name test lists were deleted. Account IDs, customer quotes, credentials and share links omitted.",
+  "coverage_denominator": "Not yet measured across all offered configurations. Six passing observations do not establish full service coverage.",
+  "observations": [
+    {
+      "observed_utc": "2026-11-11T01:24:20.175Z",
+      "region": "sa-brazil-1",
+      "service": "cce",
+      "billing": "monthly",
+      "periods": 1,
+      "quantity": 1,
+      "options": {
+        "cluster_type": "standard",
+        "ha": true,
+        "scale": "small"
+      },
+      "stored_rated_edit": "equal",
+      "edit_skipped": false,
+      "remaining_synthetic_lists": 0
+    },
+    {
+      "observed_utc": "2026-11-11T14:02:12.618Z",
+      "region": "la-south-2",
+      "service": "cce",
+      "billing": "monthly",
+      "periods": 1,
+      "quantity": 1,
+      "options": {
+        "cluster_type": "standard",
+        "ha": true,
+        "scale": "small"
+      },
+      "stored_rated_edit": "equal",
+      "edit_skipped": false,
+      "remaining_synthetic_lists": 0
+    },
+    {
+      "observed_utc": "2026-11-11T14:06:33.053Z",
+      "region": "sa-brazil-1",
+      "service": "kafka",
+      "billing": "monthly",
+      "periods": 1,
+      "quantity": 1,
+      "options": {
+        "spec_id": "c6.2u4g.cluster",
+        "brokers": 3,
+        "storage_gb": 200,
+        "storage_type": "ultra"
+      },
+      "stored_rated_edit": "equal",
+      "edit_skipped": false,
+      "remaining_synthetic_lists": 0
+    },
+    {
+      "observed_utc": "2026-11-11T14:08:27.112Z",
+      "region": "sa-brazil-1",
+      "service": "rabbitmq",
+      "billing": "monthly",
+      "periods": 1,
+      "quantity": 1,
+      "options": {
+        "spec_id": "c6.2u4g.cluster",
+        "brokers": 3,
+        "storage_gb": 200,
+        "storage_type": "ultra",
+        "version": "3.8"
+      },
+      "stored_rated_edit": "equal",
+      "edit_skipped": false,
+      "remaining_synthetic_lists": 0
+    },
+    {
+      "observed_utc": "2026-11-11T14:07:28.728Z",
+      "region": "la-south-2",
+      "service": "kafka",
+      "billing": "monthly",
+      "periods": 1,
+      "quantity": 1,
+      "options": {
+        "spec_id": "c6.2u4g.cluster",
+        "brokers": 3,
+        "storage_gb": 200,
+        "storage_type": "ultra"
+      },
+      "stored_rated_edit": "equal",
+      "edit_skipped": false,
+      "remaining_synthetic_lists": 0
+    },
+    {
+      "observed_utc": "2026-11-11T14:09:26.572Z",
+      "region": "la-south-2",
+      "service": "rabbitmq",
+      "billing": "monthly",
+      "periods": 1,
+      "quantity": 1,
+      "options": {
+        "spec_id": "c6.2u4g.cluster",
+        "brokers": 3,
+        "storage_gb": 200,
+        "storage_type": "ultra",
+        "version": "3.8"
+      },
+      "stored_rated_edit": "equal",
+      "edit_skipped": false,
+      "remaining_synthetic_lists": 0
+    }
+  ]
+}

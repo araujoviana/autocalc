@@ -600,6 +600,8 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
         const flavor = String(rawOpts.flavor ?? (spec?.startsWith("elbv3.") ? spec : "elbv3.professional"));
         options.flavor = flavor;
         spec = flavor;
+        if (rawOpts.az_type !== undefined) options.az_type = rawOpts.az_type;
+        if (rawOpts.protocol !== undefined) options.protocol = rawOpts.protocol;
         if (rawOpts.l4_lcu !== undefined || rawOpts.lcu !== undefined) {
           options.l4_lcu = Number(rawOpts.l4_lcu ?? rawOpts.lcu);
         }
