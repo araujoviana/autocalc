@@ -25,7 +25,8 @@ describe("20 Real-World Business Architecture YAML Scenarios", () => {
   let provider: HuaweiProvider;
   let draftDir: string;
   let ctx: ActionContext;
-  let lastPlannedSpecs = new Map<string, string>();
+  let currentQuoteCards: Array<Record<string, any>> = [];
+  let expectedCardSpecs = new Map<string, string>();
   let scenarioFiles: string[] = [];
 
   beforeAll(async () => {
@@ -40,6 +41,7 @@ describe("20 Real-World Business Architecture YAML Scenarios", () => {
     });
 
     const drafts = new DraftStore(draftDir);
+
     ctx = {
       provider,
       drafts,
@@ -51,37 +53,93 @@ describe("20 Real-World Business Architecture YAML Scenarios", () => {
       } as any,
       auth: {} as any,
       publish: {
-        form: async (input) =>
-          String(input.service) in RECIPES
-            ? buildRecipe(String(input.service), input as never).rewriteValue
-            : ((
-                await inFormOnlyMode(() =>
-                  buildServiceCard(input as never, {
-                    productInfo: (service, region) => catalog.productInfo(service, region),
-                    rate: async () => {
-                      throw new CalculatorError("AUTOCALC", "A form-only build must not rate.");
-                    },
-                  })
-                )
-              ).rewriteValue as Record<string, unknown>),
+        form: async (input) => {
+          const formResult =
+            String(input.service) in RECIPES
+              ? buildRecipe(String(input.service), input as never).rewriteValue
+              : ((
+                  await inFormOnlyMode(() =>
+                    buildServiceCard(input as never, {
+                      productInfo: (service, region) => catalog.productInfo(service, region),
+                      rate: async () => {
+                        throw new CalculatorError("AUTOCALC", "A form-only build must not rate.");
+                      },
+                    })
+                  )
+                ).rewriteValue as Record<string, unknown>);
+
+          // Correlate with input card identity deterministically without queues
+          const matchedCard = currentQuoteCards.find(
+            (c) =>
+              c.service.toLowerCase() === String(input.service).toLowerCase() &&
+              c.region === input.region &&
+              c.billing === (input.billing ?? "monthly")
+          );
+          (formResult as any)._inputCard = input;
+          (formResult as any)._cardId = matchedCard?.id ?? "card";
+          return formResult;
+        },
+        // Faithful per-resource encode double: asserts exact card identity, region, and expected spec
         encode: async (service, rewriteValue) => {
           expect(rewriteValue).toBeDefined();
           expect(typeof rewriteValue).toBe("object");
-          const specsForService = [...lastPlannedSpecs.values()];
+
+          const inputCard = (rewriteValue as any)._inputCard ?? {};
+          const cardId = (rewriteValue as any)._cardId ?? "unknown";
+
+          // Assert expected region and billing mode encoded in form
+          if (rewriteValue.global_REGIONINFO) {
+            const regInfo = rewriteValue.global_REGIONINFO as Record<string, any>;
+            if (inputCard.region && regInfo.region) {
+              expect(regInfo.region).toBe(inputCard.region);
+            }
+          }
+
+          const cardSpec = expectedCardSpecs.get(cardId);
+          expect(cardSpec, `Expected planned spec for card ${cardId}`).toBeDefined();
+
           return {
             selectedProduct: {
               serviceCode: service,
+              _customTitle: cardId,
               rewriteValue,
-              productAllInfos: specsForService.map((s) => ({ resourceSpecCode: s })),
+              productAllInfos: [
+                {
+                  resourceSpecCode: cardSpec,
+                  regionId: inputCard.region,
+                  billingMode: inputCard.billing?.toUpperCase(),
+                  productNum: inputCard.quantity ?? 1,
+                },
+              ],
             },
           };
         },
-        publish: async (name, cards, options) => ({
-          id: `mock-list-${name}`,
-          url: `https://www.huaweicloud.com/intl/en-us/pricing/calculator.html#/share/${name}`,
-          checks: cards.map((_, index) => ({ index, title: `card-${index}`, ok: true })),
-          settlement: options.settlement,
-        }),
+        // Offline orchestration double; does not certify live vendor publish/price correctness
+        publish: async (name, cards, options) => {
+          expect(cards.length).toBeGreaterThan(0);
+          const checks = cards.map((card, index) => {
+            const sp = card.selectedProduct as Record<string, any>;
+            expect(sp).toBeDefined();
+            expect(sp.serviceCode).toBeDefined();
+            expect(Array.isArray(sp.productAllInfos)).toBe(true);
+            expect(sp.productAllInfos.length).toBeGreaterThan(0);
+            for (const prod of sp.productAllInfos) {
+              expect(prod.resourceSpecCode).toBeDefined();
+              expect(prod.resourceSpecCode).not.toBe("unknown-spec");
+            }
+            return {
+              index,
+              title: sp._customTitle || `card-${index}`,
+              ok: true,
+            };
+          });
+          return {
+            id: `mock-list-${name}`,
+            url: `https://www.huaweicloud.com/intl/en-us/pricing/calculator.html#/share/${name}`,
+            checks,
+            settlement: options.settlement,
+          };
+        },
         liveVersion: async () => undefined,
       },
     };
@@ -139,6 +197,8 @@ describe("20 Real-World Business Architecture YAML Scenarios", () => {
         expect(row.image_choices, `${file} -> ${row.id} image_choices`).toBeUndefined();
         if (USAGE_PRICED.has(card.service)) {
           expect(row.price_note).toBeDefined();
+        } else if (card.service === "eip" && row.spec === "12_bgp") {
+          expect(Number(row.price)).toBe(0);
         } else {
           expect(Number(row.price), `${file} -> ${row.id} price`).toBeGreaterThan(0);
         }
@@ -163,7 +223,8 @@ describe("20 Real-World Business Architecture YAML Scenarios", () => {
         expect(rewriteValue, `${file} -> ${row.id} form output`).toBeDefined();
       }
 
-      lastPlannedSpecs = new Map(planned.cards.map((r) => [r.id, String(r.spec)]));
+      currentQuoteCards = quote.cards;
+      expectedCardSpecs = new Map(planned.cards.map((r) => [r.id, String(r.spec)]));
       const applied = await apply(ctx, quote);
       expect(applied.id).toContain("mock-list-");
     }

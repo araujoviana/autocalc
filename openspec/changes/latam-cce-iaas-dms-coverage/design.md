@@ -30,6 +30,8 @@ No new provider, framework, dependency, service family, credential export, unrel
 
 7. **Gate invariant retained.** New paths pass the same stored/rated/Edit checks. Preserve existing explicitly declared portal-defect behavior without adding generic skip rules. Synthetic authenticated tests use `[autocalc]` list names, retain identifiers outside the repo, and clean up only lists created by that test. A missing session or unreachable host blocks live acceptance, not independent implementation and offline work.
 
+8. **Semantic multiset test comparison and harness fault sensitivity.** Product line comparison in `diffProducts` uses multiset semantics that preserve multiplicity, capacity (`resourceSize`, unit), region, and billing dimensions. Test doubles in integration tests provide faithful per-resource outputs rather than dumping all planned specs across cards. Deliberate fault injections ensure that wrong topologies, missing controls, changed units/capacities, dropped duplicates, and broker storage scaling errors are caught before acceptance. All fixtures maintain strict provenance: no client data, bundle dumps, or secrets in Git.
+
 ## Risks / Trade-offs
 
 - Vendor options vary by region/version: inventory before implementation; retain runtime rejection and versioned evidence.

@@ -13,7 +13,13 @@ Execution detail: `docs/superpowers/plans/2026-11-10-latam-cce-iaas-dms-coverage
 
 - [x] 2.1 Inventory Standard/Turbo variants, master/scale dimensions, placement selectors and modes for both regions using the matching vendor config; verify normalized synthetic fixtures and inventory completeness checks.
 - [x] 2.2 Extend schemas, builder, form-only publication, spec mapping and discovery without changing valid legacy Standard input semantics; verify CCE unit/form tests, unavailable-combination rejection, and discovery parity.
-- [x] 2.3 Add regional replay and price-verification cases across every offered finite variant/mode plus boundaries and pairwise controls; update CCE docs and verify actual statuses for each region without claiming blocked checks pass.
+- [ ] 2.3 Add regional replay and price-verification cases across every offered finite variant/mode plus boundaries and pairwise controls; update CCE docs and verify actual statuses for each region without claiming blocked checks pass.
+
+## 2b. Test foundation and harness sensitivity
+
+- [x] 2b.1 Fix harness product comparison (`diffProducts`) as a semantic multiset preserving multiplicity, capacity, unit, region, and billing dimensions; verify regression tests.
+- [x] 2b.2 Replace blanket mock injections in scenario integration tests with faithful per-resource doubles and explicit assertion checks.
+- [x] 2b.3 Add deliberate fault-injection tests proving sensitivity to wrong topology/category, missing controls, changed capacity/unit/region, missing/duplicate products, broker storage multiplication, and publish gate invariant enforcement.
 
 ## 3. CCE infrastructure dependencies
 

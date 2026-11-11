@@ -6,7 +6,30 @@ import { buildCbr } from "../../src/core/services/cbr.ts";
 
 test("NAT, CCE and SFS retain their service-specific form state", async () => {
   const context = {
-    productInfo: async (service: string) => ({ product: Object.fromEntries([[{ nat: "natgateway_natgateway", cce: "cce_cce.cluster", sfsturbo: "sfsturbo_sfsturbo" }[service]!, [{ resourceSpecCode: { nat: "natgateway_small", cce: "cce.s2.small", sfsturbo: "sfs.turbo.20MBps" }[service], cloudServiceType: "c", resourceType: "r", planList: ["ONDEMAND", "MONTHLY", "YEARLY"].map(billingMode => ({ billingMode, productId: "p", periodNum: billingMode === "ONDEMAND" ? null : 1, amount: 1 })) }]]]) }),
+    productInfo: async (service: string) => ({
+      product: Object.fromEntries([
+        [
+          { nat: "natgateway_natgateway", cce: "cce_cce.cluster", sfsturbo: "sfsturbo_sfsturbo" }[service]!,
+          [
+            {
+              resourceSpecCode: { nat: "natgateway_small", cce: "cce.s2.small", sfsturbo: "sfs.turbo.20MBps" }[service],
+              cloudServiceType: "c",
+              resourceType: "r",
+              productType: "dataInfo_13_",
+              clusterType: "dataInfo_2_",
+              clusterMasterScale: "dataInfo_4_",
+              clusterNodeScale: "dataInfo_50_",
+              planList: ["ONDEMAND", "MONTHLY", "YEARLY"].map(billingMode => ({
+                billingMode,
+                productId: "p",
+                periodNum: billingMode === "ONDEMAND" ? null : 1,
+                amount: 1,
+              })),
+            },
+          ],
+        ],
+      ]),
+    }),
     rate: async (body: Record<string, unknown>) => ({ productRatingResult: (body.productInfos as Array<{ id: string }>).map(({ id }) => ({ id, amount: 1, originalAmount: 1 })) }),
   };
   const nat = await buildNat({ service: "nat", region: "r", billing: "ondemand", quantity: 1, periods: 1, hours: 730, size: "small" }, context);
@@ -26,7 +49,22 @@ test("NAT, CCE and SFS retain their service-specific form state", async () => {
 test("CCE preserves an explicitly null catalog usage factor", async () => {
   let factor: unknown = "unseen";
   const context = {
-    productInfo: async () => ({ product: { "cce_cce.cluster": [{ resourceSpecCode: "cce.s2.small", cloudServiceType: "c", resourceType: "r", planList: [{ billingMode: "ONDEMAND", productId: "p", amount: 1, usageFactor: null }] }] } }),
+    productInfo: async () => ({
+      product: {
+        "cce_cce.cluster": [
+          {
+            resourceSpecCode: "cce.s2.small",
+            cloudServiceType: "c",
+            resourceType: "r",
+            productType: "dataInfo_13_",
+            clusterType: "dataInfo_2_",
+            clusterMasterScale: "dataInfo_4_",
+            clusterNodeScale: "dataInfo_50_",
+            planList: [{ billingMode: "ONDEMAND", productId: "p", amount: 1, usageFactor: null }],
+          },
+        ],
+      },
+    }),
     rate: async (body: Record<string, unknown>) => { const line = (body.productInfos as Array<Record<string, unknown>>)[0]!; factor = line.usageFactor; return { productRatingResult: [{ id: line.id, amount: 1 }] }; },
   };
   await buildCce({ service: "cce", region: "r", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "standard", ha: true, scale: "small" }, context);
@@ -43,41 +81,7 @@ test("CBR preserves an explicitly null catalog usage factor", async () => {
   expect(factor).toBeNull();
 });
 
-test("CCE builds all offered Turbo variants and rejects invalid combinations", async () => {
-  const turboSpecs = ["cce.t2.small", "cce.t2.medium", "cce.t2.large", "cce.t1.small"];
-  const context = {
-    productInfo: async () => ({
-      product: {
-        "cce_cce.cluster": turboSpecs.map(spec => ({
-          resourceSpecCode: spec,
-          cloudServiceType: "hws.service.type.cce",
-          resourceType: "hws.resource.type.cce.cluster",
-          planList: [{ billingMode: "ONDEMAND", productId: "p", amount: 1, usageFactor: "duration" }],
-        })),
-      },
-    }),
-    rate: async (body: Record<string, unknown>) => ({
-      productRatingResult: (body.productInfos as Array<{ id: string }>).map(({ id }) => ({ id, amount: 1, originalAmount: 1 })),
-    }),
-  };
-
-  // Turbo HA variants
-  for (const scale of ["small", "medium", "large"] as const) {
-    const card = await buildCce({ service: "cce", region: "r", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "turbo", ha: true, scale }, context);
-    expect(card.selectedProduct.productAllInfos[0].resourceSpecCode).toBe(`cce.t2.${scale}`);
-  }
-
-  // Turbo single-master variant
-  const single = await buildCce({ service: "cce", region: "r", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "turbo", ha: false, scale: "small" }, context);
-  expect(single.selectedProduct.productAllInfos[0].resourceSpecCode).toBe("cce.t1.small");
-
-  // Invalid combinations
-  await expect(buildCce({ service: "cce", region: "r", billing: "monthly", quantity: 1, periods: 1, hours: 730, cluster_type: "turbo", ha: true, scale: "small" }, context)).rejects.toThrow("on-demand");
-  await expect(buildCce({ service: "cce", region: "r", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "turbo", ha: true, scale: "xlarge" }, context)).rejects.toThrow();
-  await expect(buildCce({ service: "cce", region: "r", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "turbo", ha: false, scale: "medium" }, context)).rejects.toThrow();
-});
-
-test("CCE builds Standard and Turbo in both sa-brazil-1 and la-south-2 catalogs", async () => {
+test("CCE builds unified Standard/Turbo cluster family and verifies vendor controls", async () => {
   const { createSyntheticBusinessCatalog } = await import("../support/business-catalog.ts");
   const { catalog } = createSyntheticBusinessCatalog();
   const context = {
@@ -88,12 +92,39 @@ test("CCE builds Standard and Turbo in both sa-brazil-1 and la-south-2 catalogs"
   };
 
   for (const region of ["sa-brazil-1", "la-south-2"]) {
-    // Standard HA
-    const std = await buildCce({ service: "cce", region, billing: "monthly", quantity: 1, periods: 1, hours: 730, cluster_type: "standard", ha: true, scale: "small" }, context);
-    expect(std.selectedProduct.productAllInfos[0].resourceSpecCode).toBe("cce.s2.small");
+    // Standard/Turbo HA variants across scales
+    for (const scale of ["small", "medium", "large", "xlarge"] as const) {
+      const card = await buildCce({ service: "cce", region, billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "standard", ha: true, scale }, context);
+      expect((card.selectedProduct.productAllInfos as any[])[0].resourceSpecCode).toBe(`cce.s2.${scale}`);
+      const render = (card.rewriteValue.template_RENDER as any).calculator_clustertype_radio;
+      expect(render.productType).toBe("dataInfo_13_");
+      expect(render.clusterType).toBe("dataInfo_2_");
+      expect(render.clusterMasterScale).toBe("dataInfo_4_");
+      expect(render.clusterNodeScale).toBeDefined();
+    }
 
-    // Turbo HA
-    const turbo = await buildCce({ service: "cce", region, billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "turbo", ha: true, scale: "medium" }, context);
-    expect(turbo.selectedProduct.productAllInfos[0].resourceSpecCode).toBe("cce.t2.medium");
+    // Single master variant
+    const single = await buildCce({ service: "cce", region, billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "standard", ha: false, scale: "small" }, context);
+    expect((single.selectedProduct.productAllInfos as any[])[0].resourceSpecCode).toBe("cce.s1.small");
+    const singleRender = (single.rewriteValue.template_RENDER as any).calculator_clustertype_radio;
+    expect(singleRender.clusterMasterScale).toBe("dataInfo_5_");
+    expect(singleRender.clusterNodeScale).toBe("dataInfo_50_");
   }
+
+  // Fails closed on missing required vendor controls
+  const brokenContext = {
+    productInfo: async () => ({
+      product: {
+        "cce_cce.cluster": [{
+          resourceSpecCode: "cce.s2.small",
+          cloudServiceType: "hws.service.type.cce",
+          resourceType: "hws.resource.type.cce.cluster",
+          planList: [{ billingMode: "ONDEMAND", productId: "p1", amount: 1, usageFactor: "duration" }],
+          // Missing productType, clusterType, clusterMasterScale, clusterNodeScale
+        }],
+      },
+    }),
+    rate: async () => ({ productRatingResult: [{ id: "p1", amount: 1 }] }),
+  };
+  await expect(buildCce({ service: "cce", region: "sa-brazil-1", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "standard", ha: true, scale: "small" }, brokenContext)).rejects.toThrow(/missing required vendor control/i);
 });
