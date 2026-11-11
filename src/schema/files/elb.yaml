@@ -48,6 +48,7 @@ controls:
   after:
   - calculator_elb_type_elbType
   option: az_type
+  note: São Paulo and Santiago expose only the single-zone selection; multi-zone catalog rows are filtered out by the portal.
 - id: calculator_elb_type_spec_flavorCatagory
   kind: base-radio-group
   title: Specifications

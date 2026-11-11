@@ -1,0 +1,8 @@
+version: "1"
+metadata: { id: latam-verified-starter, customer: Example LATAM customer, title_prefix: Example LATAM starter }
+horizon: { duration: 1m, billing_policy: as-specified }
+defaults: { provider: huawei, region: sa-brazil-1, billing: monthly }
+resources:
+  - { id: clusters, service: cce, quantity: 1, options: { cluster_type: standard, ha: true, scale: small } }
+  - { id: kafka, service: kafka, quantity: 1, options: { spec_id: c6.2u4g.cluster, brokers: 3, storage_gb: "200 GB" } }
+  - { id: rabbit, service: rabbitmq, options: { spec_id: c6.2u4g.cluster, version: "3.8", brokers: 3, storage_gb: "200 GB" } }

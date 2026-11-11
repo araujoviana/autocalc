@@ -54,17 +54,17 @@ const cases: Case[] = [
     ] },
   },
   {
-    name: "same ELB SKU / multiple AZs / TLS",
-    input: { service: "elb", type: "dedicated", flavor: "elbv3.professional", billing: "ondemand", az_type: "multi", protocol: "tls", l4_lcu: 10, hours: 600 },
+    name: "same ELB SKU / single AZ / TLS",
+    input: { service: "elb", type: "dedicated", flavor: "elbv3.professional", billing: "ondemand", az_type: "single", protocol: "tls", l4_lcu: 10, hours: 600 },
     contract: { service: "elb", billing: "ondemand", controls: [
       render("calculator_elb_type.elbType", "dataInfo_3_"),
-      render("calculator_elb_type_spec.azType", "calc_67_"),
+      render("calculator_elb_type_spec.azType", "calc_64_"),
       render("calculator_flavor_checkboxGroup.flavorType", ["calc_71_"]),
       stepper("calculator_lcu_network", 10),
       control("rewriteValue.global_ONDEMANDTIME.UNSET_Stepper_0.measureValue", 600),
     ], products: [
-      { resourceSpecCode: "elbv3.professional", usageFactor: "instance_duration", azType: "calc_67_", flavorType: "calc_71_", usageValue: 600, usageMeasureId: 4, productNum: 1 },
-      { resourceSpecCode: "elbv3.professional", usageFactor: "l4_lcu_duration", azType: "calc_67_", flavorType: "calc_71_", resourceSize: 10, resouceSizeMeasureId: 14, usageValue: 600, usageMeasureId: 4, productNum: 1 },
+      { resourceSpecCode: "elbv3.professional", usageFactor: "instance_duration", azType: "calc_64_", flavorType: "calc_71_", usageValue: 600, usageMeasureId: 4, productNum: 1 },
+      { resourceSpecCode: "elbv3.professional", usageFactor: "l4_lcu_duration", azType: "calc_64_", flavorType: "calc_71_", resourceSize: 10, resouceSizeMeasureId: 14, usageValue: 600, usageMeasureId: 4, productNum: 1 },
     ] },
   },
   {
@@ -255,6 +255,19 @@ for (const invalid of [
 ]) {
   test(`invalid vendor configuration is rejected: ${invalid.name}`, async () => {
     await expect(buildInput(invalid.input, "sa-brazil-1")).rejects.toMatchObject({ code: "VALIDATION" });
+  });
+}
+
+for (const region of ["sa-brazil-1", "la-south-2"]) {
+  test(`ELB multi-zone catalog rows filtered out by the portal are rejected: ${region}`, async () => {
+    const normalized = normalizeResourceToCard({
+      id: "unoffered-elb", service: "elb", region, billing: "ondemand", availability: "single-az", quantity: 1,
+      options: { type: "dedicated", az_type: "multi", protocol: "tls" }, needs: {},
+      horizon: { duration: "1m", effectiveHours: 730, effectiveDays: 30, effectiveMonths: 1, metricMultiplier: 1 },
+    });
+    expect(normalized.options).toMatchObject({ az_type: "multi", protocol: "tls" });
+    await expect(buildInput({ service: "elb", billing: "ondemand", ...normalized.options }, region))
+      .rejects.toMatchObject({ code: "MODE_NOT_OFFERED" });
   });
 }
 

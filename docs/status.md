@@ -1,43 +1,77 @@
 # Project status
 
-Last updated 2026-11-08. This page is the starting point
-for whoever picks the work up; the detail lives in the pages it links.
+Last updated 2026-11-11. The current implementation is TypeScript on Bun, version
+0.6.0. The LATAM work is available on the local
+`feat/latam-cce-iaas-dms-coverage` branch; it has not been merged or released.
+There are 51 committed service schemas. The publication registry labels
+41 verified services; this label does not certify every regional configuration.
 
-## Where things stand
+## Usable checkpoint
 
-The implementation is TypeScript on Bun (v0.4.0, [ADR-0017](adr/0017-typescript-on-bun-is-the-target.md)).
-All three layers of the declarative design exist and are covered by the offline suite
-([architecture](explanation/architecture.md)):
+The current focus is quotation use in São Paulo (`sa-brazil-1`) and Santiago
+(`la-south-2`). Start with `examples/latam-sao-paulo.yaml` or
+`examples/latam-santiago.yaml` and the commands in `examples/README.md`.
+These starters include the verified CCE, Kafka and RabbitMQ configurations below.
+They omit worker, disk, network and ingress charges, which must be quoted separately.
 
-| Layer | State |
-|---|---|
-| Declarative (`src/core/compiler/`) | Implemented and tested: units, templates, expander, normalizer, canonical IR, lock file, wire budgeting, partitioning, logical-to-physical card splitting, and all 4 circuit-breaker degradation tiers (`FULL_GATE_VERIFIED`, `RATING_VERIFIED_EDIT_SKIPPED`, `CACHED_CATALOG_ESTIMATE`, `EXPORT_ONLY`). The catalog anomaly guard flags yearly cards in `autocalc plan` |
-| Canonical (`src/core/quote/`, `quote-file.ts`) | Implemented: ranking, drafts, run records, plan and apply across both legacy `cards:` and declarative `version: "1"` quote files |
-| Vendor (`src/providers/`, `src/core/page/`, `gate.ts`, `src/schema/`) | Implemented: catalog, rating, page encoder, 100% mapped schemas across all 51 committed service files (41 `VERIFIED`, 10 `ACCEPTED_DEFAULT_ONLY`), publish gate |
+Plan totals include primary SKU prices. Publication rates the actual card products,
+including add-ons, and checks stored, rating-engine and Edit prices before returning
+a share link. Use that verified published total for a quotation.
 
-## What has been checked live
+## Evidence checked on 2026-11-11
 
-- **All 51 supported services (`docs/compat/*.md`)**: Every supported service across Tiers 1–5 (16 IaaS compute/storage/network + 4 default-only IaaS/network, 4 Tier 2 containers/serverless, 11 Tier 3 databases, and 16 Tier 4–5 security/middleware/management/AI services) has been replayed live against the Huawei Cloud calculator page (`bun run compat <service>`) with **0 failures**.
-- **20 real-world business architecture YAML scenarios (`tests/fixtures/scenarios/01-*.yaml`..`20-*.yaml`)**: Validate, plan, and build form cards across verified publishable Huawei Cloud services (`tests/integration/business-scenarios.test.ts`).
-- **End-to-end authenticated gate (`plan` / `apply`)**: Verified live on single-card and `version: "1"` declarative quotes (stored = rated = Edit), plus live Edit verification across ECS, EVS, RDS, Redis, NAT, OBS (known-defect skip), Kafka, SFS, SDRS, DES, DSS, ER, Memcached, DRS, DDM, DDS, GaussDB, RDS for MariaDB, TaurusDB, and HRDS.
+| Configuration | São Paulo | Santiago |
+|---|---|---|
+| CCE Standard/Turbo, HA, 50-node scale, monthly, one cluster | Full publication gate passed | Full publication gate passed |
+| Kafka c6.2u4g.cluster, three brokers, 200 GB per broker, ultra storage, monthly | Full publication gate passed | Full publication gate passed |
+| RabbitMQ c6.2u4g.cluster, version 3.8, three brokers, 200 GB per broker, ultra storage, monthly | Full publication gate passed | Full publication gate passed |
+| ECS c7n.xlarge.4.linux, Ubuntu 22.04, six workers, monthly | Full publication gate passed on retry | Not independently certified in this checkpoint |
 
-## What remains open
+The first six observations are repeatable with the explicit authenticated suite in
+[Run the tests](how-to/run-tests.md#synthetic-authenticated-publication).
+Each passed without an Edit skip. Synthetic test lists were removed; existing
+customer quotes were preserved. A sanitized observation record is stored in
+`docs/compat/latam-publication-evidence-2026-11-11.json`.
 
-- Saving a large declarative quote that partitions into multiple saved lists (`Part 1`, `Part 2`, ...) on a live authenticated account.
-- Extending `VERIFIED` publication beyond the 41 verified services to the remaining 10 `ACCEPTED_DEFAULT_ONLY` services (`aad`, `cc`, `dbss`, `dsc`, `edgesec`, `esw`, `ga`, `hecs`, `reliability`, `ucs`) once their custom option/add-on mappings and authenticated Edit-check prices are verified.
-- Post-0.9 items in [the roadmap](roadmap.md): whole-list billing-mode comparison, gated in-place update of a saved list, and list naming/prune helpers.
+These observations cover the listed configurations. They do not establish full IaaS
+coverage, every service variant, every billing mode, or complete architecture
+publication. The full offered-configuration denominator is still being audited.
+Historical per-service replay reports in `docs/compat/` are separate evidence and
+must not be treated as current authenticated regional certification.
 
-## Run an end-to-end check
+## Test coverage
 
-```bash
-autocalc login                                  # once
-autocalc plan  --path quote.yaml                # saves nothing on the website
-autocalc apply --path quote.yaml                # saves one list; delete test lists afterwards
-```
+The offline suite now separates orchestration, semantic configuration contracts,
+real strict publisher adapters, complete architecture component accounting, and
+publication failure/recovery policy. The 20 business architecture fixtures use
+synthetic catalogs and browser/save doubles. Their success checks orchestration;
+live price and publication evidence comes from the authenticated gate.
 
-Use a list name that starts with `[autocalc]` so test lists are easy to find in `autocalc lists`.
-See [Your first quote](tutorials/first-quote.md) for the file format.
+Independent regression tests caught and drove fixes for invalid DMS broker counts,
+incompatible RabbitMQ versions, unknown explicit specifications, lost ELB options,
+card loss/duplication and cross-wired forms. Deliberate corruptions check that these
+oracles actually reject wrong configurations. Details and commands are in
+[Run the tests](how-to/run-tests.md#offline-test-scope).
 
-## Compatibility
+## Known limits for this checkpoint
 
-Per-service live replay results are in `docs/compat/` (`bun run compat <service>`). All 51 supported services across Tiers 1–5 (IaaS compute/storage/network, containers/serverless, databases, security, middleware, management, and AI) have been replayed live and pass (`ok`) across all scenarios. All 51 committed service schemas (`src/schema/files/*.yaml`) are at 100% control coverage (41 `VERIFIED`, 10 `ACCEPTED_DEFAULT_ONLY`), and 20 multi-service business architecture YAML scenarios (`tests/fixtures/scenarios/01-*.yaml`..`20-*.yaml`) validate, plan, and build form cards across verified publishable services.
+- The portal filters multi-zone ELB selections out of São Paulo and Santiago even
+  though their raw catalogs contain corresponding rows. The tool rejects those
+  selections; the starter examples omit ELB.
+- CCE Autopilot is offered in São Paulo's catalog and implemented, but has not passed
+  the authenticated acceptance matrix here. Santiago does not offer it.
+- Standalone legacy CCE `t1`/`t2` SKUs cannot be added through the current portal;
+  its Standard/Turbo selector uses the unified `s1`/`s2` family.
+- Custom dedicated ELB LCUs encountered a portal input blocker during combined
+  acceptance (the page retained 1 after a request for 5). Complete architecture
+  publication remains unverified; the starters exclude this configuration.
+- Network/page-loading and price-settling failures can still interrupt a run.
+  The publish gate does not return an unverified quote as successful.
+- The complete scoped IaaS audit, remaining finite CCE/DMS variant matrices and
+  full architecture publication acceptance remain open in
+  `openspec/changes/latam-cce-iaas-dms-coverage/tasks.md`.
+
+Windows guest quotations, private NAT, RocketMQ, AWS and publication-blocked
+services are excluded from this LATAM work. Windows host compatibility remains
+in scope. Schema/control mappings and `VERIFIED` registry labels alone are not
+proof of full live service coverage.

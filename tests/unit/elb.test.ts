@@ -59,7 +59,7 @@ test("Dedicated ELB selects exact flavor, azType, protocol, and encodes L4/L7 LC
   expect(render1.calculator_flavor_checkboxGroup.flavorType).toEqual(["calc_69_"]);
   expect(render1.calculator_lcu_network.UNSET_Stepper_0.measureValue).toBe(5);
 
-  // 2. Multi AZ (calc_67_), TLS (calc_71_), L4 and L7 LCUs
+  // 2. Single AZ (calc_64_), TLS (calc_71_), L4 and L7 LCUs
   const elbMultiTls = await buildElb(
     {
       service: "elb",
@@ -67,7 +67,7 @@ test("Dedicated ELB selects exact flavor, azType, protocol, and encodes L4/L7 LC
       billing: "ondemand",
       type: "dedicated",
       flavor: "elbv3.professional",
-      az_type: "multi",
+      az_type: "single",
       protocol: "tls",
       l4_lcu: 10,
       l7_lcu: 20,
@@ -79,17 +79,17 @@ test("Dedicated ELB selects exact flavor, azType, protocol, and encodes L4/L7 LC
   );
   const prods2 = elbMultiTls.selectedProduct.productAllInfos as Array<Record<string, unknown>>;
   expect(prods2.length).toBe(3);
-  expect(prods2[0]!.azType).toBe("calc_67_");
+  expect(prods2[0]!.azType).toBe("calc_64_");
   expect(prods2[0]!.flavorType).toBe("calc_71_");
-  expect(prods2[1]!.azType).toBe("calc_67_");
+  expect(prods2[1]!.azType).toBe("calc_64_");
   expect(prods2[1]!.flavorType).toBe("calc_71_");
   expect(prods2[1]!.resourceSize).toBe(10);
-  expect(prods2[2]!.azType).toBe("calc_67_");
+  expect(prods2[2]!.azType).toBe("calc_64_");
   expect(prods2[2]!.flavorType).toBe("calc_39_");
   expect(prods2[2]!.resourceSize).toBe(20);
 
   const render2 = elbMultiTls.rewriteValue.template_RENDER as Record<string, any>;
-  expect(render2.calculator_elb_type_spec.azType).toBe("calc_67_");
+  expect(render2.calculator_elb_type_spec.azType).toBe("calc_64_");
   expect(render2.calculator_flavor_checkboxGroup.flavorType).toEqual(["calc_71_", "calc_39_"]);
   expect(render2.calculator_lcu_network.UNSET_Stepper_0.measureValue).toBe(10);
   expect(render2.calculator_lcu_application.UNSET_Stepper_0.measureValue).toBe(20);

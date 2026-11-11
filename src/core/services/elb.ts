@@ -6,6 +6,12 @@ import type { BuilderContext } from "./common.ts";
 export async function buildElb(input: Extract<CardInput, { service: "elb" }>, context: BuilderContext) {
   if (input.type === "dedicated") {
     if (input.billing !== "ondemand") throw new CalculatorError("VALIDATION", "Dedicated ELB only supports on-demand billing");
+    // Portal config (2026-11) filters calc_67_ out of the LATAM regions,
+    // although their raw catalogs contain these rows. Catalog presence alone
+    // does not establish that the calculator can quote this selection.
+    if (input.az_type === "multi" && ["sa-brazil-1", "la-south-2"].includes(input.region)) {
+      throw new CalculatorError("MODE_NOT_OFFERED", `The calculator does not offer multi-zone ELB selection in ${input.region}; select az_type 'single'.`);
+    }
     const flavor = input.flavor ?? input.spec ?? "elbv3.professional";
     const azType = input.az_type === "multi" ? "calc_67_" : "calc_64_";
     const protocolFlavor = ({ tcp: "calc_69_", udp: "calc_70_", tls: "calc_71_" } as Record<string, string>)[input.protocol ?? "tcp"] ?? "calc_69_";

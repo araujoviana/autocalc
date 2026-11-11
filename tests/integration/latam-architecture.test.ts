@@ -75,7 +75,7 @@ resources:
   - { id: clusters, service: cce, quantity: 2, options: { cluster_type: standard, ha: true, scale: small } }
   - { id: workers, service: ecs, spec: c7n.xlarge.4.linux, quantity: 6, needs: { vcpus: 4, memory: "16 GB" }, options: { os: ubuntu-22.04 } }
   - { id: worker-disks, service: evs, quantity: 6, options: { type: SAS, size_gb: "200 GB" } }
-  - { id: ingress, service: elb, billing: ondemand, quantity: 2, options: { type: dedicated, flavor: elbv3.professional, az_type: multi, protocol: tls, l4_lcu: 5 } }
+  - { id: ingress, service: elb, billing: ondemand, quantity: 2, options: { type: dedicated, flavor: elbv3.professional, az_type: single, protocol: tls, l4_lcu: 5 } }
   - { id: public-addresses, service: eip, billing: ondemand, options: { billed_by: traffic, traffic_gb: "120 GB", ip_quantity: 3 } }
   - { id: kafka, service: kafka, quantity: 2, options: { spec_id: c6.2u4g.cluster, brokers: 3, storage_gb: "200 GB" } }
   - { id: rabbit, service: rabbitmq, options: { spec_id: c6.4u8g.cluster, version: "3.8", brokers: 5, storage_gb: "100 GB" } }
@@ -124,8 +124,8 @@ resources:
       for (const id of ["ingress-1", "ingress-2"]) {
         expect(products(id)).toHaveLength(2);
         expect(products(id)).toEqual(expect.arrayContaining([
-          expect.objectContaining({ resourceSpecCode: "elbv3.professional", usageFactor: "instance_duration", azType: "calc_67_", flavorType: "calc_71_", productNum: 1, usageValue: 730, usageMeasureId: 4 }),
-          expect.objectContaining({ resourceSpecCode: "elbv3.professional", usageFactor: "l4_lcu_duration", resourceSize: 5, resouceSizeMeasureId: 14, azType: "calc_67_", flavorType: "calc_71_", productNum: 1, usageValue: 730, usageMeasureId: 4 }),
+          expect.objectContaining({ resourceSpecCode: "elbv3.professional", usageFactor: "instance_duration", azType: "calc_64_", flavorType: "calc_71_", productNum: 1, usageValue: 730, usageMeasureId: 4 }),
+          expect.objectContaining({ resourceSpecCode: "elbv3.professional", usageFactor: "l4_lcu_duration", resourceSize: 5, resouceSizeMeasureId: 14, azType: "calc_64_", flavorType: "calc_71_", productNum: 1, usageValue: 730, usageMeasureId: 4 }),
         ]));
       }
       expect(products("public-addresses")).toHaveLength(2);

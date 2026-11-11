@@ -18,7 +18,7 @@ Execution detail: `docs/superpowers/plans/2026-11-10-latam-cce-iaas-dms-coverage
 ## 2b. Test foundation and harness sensitivity
 
 - [x] 2b.1 Fix harness product comparison (`diffProducts`) as a semantic multiset preserving multiplicity, capacity, unit, region, and billing dimensions; verify regression tests.
-- [ ] 2b.2 Keep broad scenario test explicitly scoped to orchestration, and add an independent semantic-contract integration suite for CCE/ELB/EIP/DMS/OBS verifying same-service/same-region/same-billing resources with different options/specs and controlled corruptions.
+- [x] 2b.2 Keep broad scenario test explicitly scoped to orchestration, and add an independent semantic-contract integration suite for CCE/ELB/EIP/DMS/OBS verifying same-service/same-region/same-billing resources with different options/specs and controlled corruptions.
 - [x] 2b.3 Add deliberate fault-injection tests proving sensitivity to wrong topology/category, missing controls, changed capacity/unit/region, missing/duplicate products, broker storage multiplication, and publish gate invariant enforcement.
 
 ## 3. CCE infrastructure dependencies
@@ -40,7 +40,7 @@ Execution detail: `docs/superpowers/plans/2026-11-10-latam-cce-iaas-dms-coverage
 
 ## 6. Regional end-to-end acceptance
 
-- [ ] 6.1 Add synthetic declarative CCE architecture scenarios with workers, disks, public networking, dedicated ELB, Kafka and RabbitMQ for each region; verify complete component quantities and totals through plan/apply with test doubles.
+- [x] 6.1 Add synthetic declarative CCE architecture scenarios with workers, disks, public networking, dedicated ELB, Kafka and RabbitMQ for each region; verify complete component quantities and totals through plan/apply with test doubles.
 - [ ] 6.2 Run anonymous scoped regional replay and independent rating checks; verify per-region reports retain timestamp/version and distinguish environment blockers from product unavailability.
 - [ ] 6.3 Run authenticated synthetic publication checks in each region with stored/rated/Edit equality, including a representative complete architecture; clean up only created test lists and keep identifiers outside Git; verify gate results or document blocker without marking complete.
 - [ ] 6.4 Run `bun run check`, `bun run check:boundaries`, `bun run test:offline`, `bun run docs:build`, and `openspec validate latam-cce-iaas-dms-coverage --strict`; review diff for scope/privacy, update status/roadmap/coverage claims, and report unresolved rows honestly.
