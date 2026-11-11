@@ -8,7 +8,7 @@
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `monthly`, `yearly`, `ondemand` |
 | **Primary Catalog Group** | `dms_dms.platinum` |
-| **Schema Coverage** | 10 controls (8 mapped, 2 intentionally fixed/unsupported) |
+| **Schema Coverage** | 10 controls (9 mapped, 1 intentionally fixed/unsupported) |
 
 ---
 
@@ -65,6 +65,7 @@ Top-level card fields: `id` (required), `service: kafka`, `region`, `billing` (`
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `dms_dms.platinum`. |
 | `options.spec_id` | `string` | Catalog / Enum | Broker flavor (`kafka.2u4g.single.small`, `c6.2u4g.cluster`, `c6.4u8g.cluster`, `c6.8u16g.cluster`, `c6.12u24g.cluster`, `c6.16u32g.cluster`). Can also be passed as `flavor`. *(Portal controls: `calculator_kafka_architecture_switch_architectureName`, `calculator_kafka_specType_switch_specName`)* |
 | `options.brokers` | `number / unit` | Default `1 PCS` | Broker node count: `1` for single-node specs, `≥ 3` for cluster specs. *(Portal controls: `calculator_kafka_node_num_stepper_Stepper_0`)* |
+| `options.storage_type` | `string` | Catalog / Enum | **Storage Space per Broker**. Maps to portal control `calculator_kafka_new_storage_stepper_storageType`. |
 | `options.storage_gb` | `number / unit` | `100..10000` (step 100) | Broker disk storage per node in GB (≥ 100 GB). Note: total cluster storage equals `storage_gb * brokers`. *(Portal controls: `calculator_kafka_new_storage_stepper_Stepper_0`)* |
 
 ---
@@ -88,7 +89,7 @@ Top-level card fields: `id` (required), `service: kafka`, `region`, `billing` (`
     | `calculator_kafka_architecture_switch_architectureName` | Architecture | `base-radio-group` | Catalog / Enum | Mapped → `spec_id` |
     | `calculator_kafka_specType_switch_specName` | Flavor | `base-radio-group` | Catalog / Enum | Mapped → `spec_id` |
     | `calculator_kafka_node_num_stepper_Stepper_0` | Brokers | `base-stepper` | Default `1 PCS` | Mapped → `brokers` |
-    | `calculator_kafka_new_storage_stepper_storageType` | Storage Space per Broker | `base-select` | Catalog / Enum | Fixed / Unsupported (fixed to ultra-high I/O storage by the builder) |
+    | `calculator_kafka_new_storage_stepper_storageType` | Storage Space per Broker | `base-select` | Catalog / Enum | Mapped → `storage_type` |
     | `calculator_kafka_new_storage_stepper_Stepper_0` | — | `base-stepper` | `100..10000` (step 100) | Mapped → `storage_gb` |
     | `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
     | `global_QUANTITY_Stepper_0` | Quantity | `base-stepper` | `1..999 instance` (step 1) | Mapped → `quantity` |

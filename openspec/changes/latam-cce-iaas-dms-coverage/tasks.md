@@ -29,8 +29,8 @@ Execution detail: `docs/superpowers/plans/2026-11-10-latam-cce-iaas-dms-coverage
 
 ## 4. Remaining scoped IaaS controls
 
-- [x] 4.1 Audit ECS Linux, EVS, OBS, public NAT, SFS/SFS Turbo, CBR, Direct Connect, ER, VPC Endpoint, VPN, DSS, SDRS and DES against both regional inventories; verify every control is implemented/tested, unavailable, excluded or a documented portal defect with evidence.
-- [x] 4.2 Fix identified in-scope gaps in reviewable service commits with regression tests and updated service docs; inspect relevant preserved local commits without merging unrelated history; verify affected service suites and keep remaining gaps explicit.
+- [ ] 4.1 Audit ECS Linux, EVS, OBS, public NAT, SFS/SFS Turbo, CBR, Direct Connect, ER, VPC Endpoint, VPN, DSS, SDRS and DES against both regional inventories; verify every control is implemented/tested, unavailable, excluded or a documented portal defect with evidence.
+- [ ] 4.2 Fix identified in-scope gaps in reviewable service commits with regression tests and updated service docs; inspect relevant preserved local commits without merging unrelated history; verify affected service suites and keep remaining gaps explicit.
 
 ## 5. Kafka and RabbitMQ
 

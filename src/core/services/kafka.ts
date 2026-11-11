@@ -3,10 +3,15 @@ import { CalculatorError } from "../errors.ts";
 import type { CardInput } from "../schemas.ts";
 import { selectProduct } from "./common.ts";
 import type { BuilderContext } from "./common.ts";
-import { resolveKafkaConfig } from "./dms-config.ts";
+import { resolveDmsConfig } from "./dms-config.ts";
 
 export async function buildKafka(input: Extract<CardInput, { service: "kafka" }>, context: BuilderContext) {
-  const dmsConfig = resolveKafkaConfig(input.spec_id, input.brokers);
+  const dmsConfig = resolveDmsConfig(
+    "kafka",
+    input.region,
+    { specId: input.spec_id, brokers: input.brokers, storageType: input.storage_type },
+    context.dmsConfig
+  );
   const catalog = await context.productInfo("kafka", input.region);
   const raw = catalog.product["dms_dms.platinum"]?.find(
     p => (p.resourceSpecCode === "dms.platinum.c6.kafka" || p.resourceSpecCode === "dms.platinum.ac6.kafka") && p.specId === input.spec_id

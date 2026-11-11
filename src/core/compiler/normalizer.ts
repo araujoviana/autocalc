@@ -714,13 +714,20 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
       options.brokers = specId.includes(".single") ? 1 : Math.max(3, Math.round(Number(rawOpts.brokers ?? rawOpts.broker_count ?? rawOpts.nodes ?? 3)));
       const stGb = toGB(rawOpts.storage_per_broker_gb ?? rawOpts.storage_gb ?? rawOpts.storage ?? rawOpts.capacity ?? rawOpts.size ?? rawNeeds.storage ?? rawNeeds.capacity, `${r.id}.storage`);
       options.storage_gb = stGb !== undefined ? Math.max(100, Math.round(stGb)) : 100;
+      if (rawOpts.storage_type !== undefined) options.storage_type = String(rawOpts.storage_type);
       spec = "dms.platinum.c6.kafka";
       needs = undefined;
       break;
     }
 
     case "rabbitmq": {
-      const validSpecs = new Set(["c6.2u4g.single", "c6.4u8g.single", "c6.8u16g.single", "c6.16u32g.single", "c6.24u48g.single", "c6.2u4g.cluster", "c6.4u8g.cluster", "c6.8u16g.cluster", "c6.12u24g.cluster", "c6.16u32g.cluster", "c6.24u48g.cluster", "c6.32u64g.cluster"]);
+      const validSpecs = new Set([
+        "c6.2u4g.single", "c6.4u8g.single", "c6.8u16g.single", "c6.16u32g.single", "c6.24u48g.single",
+        "c6.2u4g.cluster", "c6.4u8g.cluster", "c6.8u16g.cluster", "c6.12u24g.cluster", "c6.16u32g.cluster", "c6.24u48g.cluster", "c6.32u64g.cluster",
+        "amqp.p1.large.2", "amqp.p1.large.4", "amqp.p2.large.6", "amqp.p2.large.10", "amqp.p2.large.14", "amqp.p2.large.20",
+        "amqp.p2.large.28", "amqp.p2.large.40", "amqp.p2.large.56", "amqp.p2.large.80", "amqp.p2.large.112", "amqp.p2.large.144",
+        "amqp.p2.large.200", "amqp.p2.large.240", "amqp.p2.large.280",
+      ]);
       let specId = String(rawOpts.flavor ?? rawOpts.spec ?? rawOpts.spec_id ?? (spec && validSpecs.has(spec) ? spec : "")).trim();
       if (!validSpecs.has(specId)) {
         const v = vcpus ?? 2;
@@ -731,11 +738,17 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
         }
       }
       options.spec_id = specId;
-      const rawBrokers = Number(rawOpts.brokers ?? rawOpts.broker_count ?? rawOpts.nodes ?? (specId.endsWith(".cluster") ? 3 : 1));
-      options.brokers = specId.endsWith(".single") ? 1 : ([3, 5, 7].includes(rawBrokers) ? rawBrokers : 3);
+      const isAmqp = specId.startsWith("amqp.");
+      const rawBrokers = Number(rawOpts.brokers ?? rawOpts.broker_count ?? rawOpts.nodes ?? (specId.endsWith(".cluster") && !isAmqp ? 3 : 1));
+      options.brokers = (specId.endsWith(".single") || isAmqp) ? 1 : ([3, 5, 7].includes(rawBrokers) ? rawBrokers : 3);
       const stGb = toGB(rawOpts.storage_per_broker_gb ?? rawOpts.storage_gb ?? rawOpts.storage ?? rawOpts.capacity ?? rawOpts.size ?? rawNeeds.storage ?? rawNeeds.capacity, `${r.id}.storage`);
       options.storage_gb = stGb !== undefined ? Math.max(100, Math.round(stGb)) : 100;
-      if (rawOpts.version !== undefined || rawOpts.engine_version !== undefined) options.version = String(rawOpts.version ?? rawOpts.engine_version);
+      if (rawOpts.version !== undefined || rawOpts.engine_version !== undefined) {
+        options.version = String(rawOpts.version ?? rawOpts.engine_version);
+      } else if (isAmqp) {
+        options.version = "amqp";
+      }
+      if (rawOpts.storage_type !== undefined) options.storage_type = String(rawOpts.storage_type);
       spec = "dms.platinum.c6.rabbitmq";
       needs = undefined;
       break;

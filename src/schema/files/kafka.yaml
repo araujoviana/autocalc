@@ -69,8 +69,7 @@ controls:
   values: catalog
   after:
   - calculator_kafka_node_num_stepper_Stepper_0
-  unsupported: true
-  note: fixed to ultra-high I/O storage by the builder
+  option: storage_type
 - id: calculator_kafka_new_storage_stepper_Stepper_0
   kind: base-stepper
   value_type: Stepper_Resource

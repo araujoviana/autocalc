@@ -1,8 +1,10 @@
 import { productFromCatalog } from "../cards.ts";
 import { CalculatorError } from "../errors.ts";
+import type { DmsConfigSource } from "./dms-config.ts";
 export interface BuilderContext {
   productInfo(service: string, region: string): Promise<{ product: Record<string, Record<string, unknown>[]> }>;
   rate(body: Record<string, unknown>): Promise<Record<string, unknown>>;
+  dmsConfig?: DmsConfigSource;
 }
 export async function selectProduct(
   context: BuilderContext,

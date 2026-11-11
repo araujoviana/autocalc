@@ -8,7 +8,7 @@
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `monthly`, `yearly`, `ondemand` |
 | **Primary Catalog Group** | `dms_dms.platinum` |
-| **Schema Coverage** | 11 controls (8 mapped, 3 intentionally fixed/unsupported) |
+| **Schema Coverage** | 11 controls (9 mapped, 2 intentionally fixed/unsupported) |
 
 ---
 
@@ -66,6 +66,7 @@ Top-level card fields: `id` (required), `service: rabbitmq`, `region`, `billing`
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `dms_dms.platinum`. |
 | `options.version` | `string` | Catalog / Enum | RabbitMQ engine version (default: `3.8`). Alias: `engine_version`. *(Portal controls: `calculator_rabbitMQ_version_switch_UNSET_Switch`)* |
 | `options.spec_id` | `string` | Catalog / Enum | Broker flavor (`c6.2u4g.single`..`c6.24u48g.single` or `c6.2u4g.cluster`..`c6.32u64g.cluster`). Can also be passed as `flavor`. *(Portal controls: `calculator_rabbitMQ_architecture_switch_architectureName`, `calculator_rabbitMQ_specType_switch_specName`)* |
+| `options.storage_type` | `string` | Catalog / Enum | **Storage Space**. Maps to portal control `calculator_rabbitMQ_new_storage_stepper_storageType`. |
 | `options.storage_gb` | `number / unit` | `100..30000` (step 100) | Broker disk storage per node in GB (≥ 100 GB). Total cluster storage equals `storage_gb * brokers`. *(Portal controls: `calculator_rabbitMQ_new_storage_stepper_Stepper_0`)* |
 | `options.brokers` | `any` | Builder-validated | Broker node count: `1` for single-node; `3`, `5`, or `7` for cluster. |
 
@@ -90,7 +91,7 @@ Top-level card fields: `id` (required), `service: rabbitmq`, `region`, `billing`
     | `calculator_rabbitMQ_instanceType_switch_instanceType` | Instance Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (fixed to professional edition by the builder) |
     | `calculator_rabbitMQ_architecture_switch_architectureName` | Architecture | `base-radio-group` | Catalog / Enum | Mapped → `spec_id` |
     | `calculator_rabbitMQ_specType_switch_specName` | Flavor | `base-radio-group` | Catalog / Enum | Mapped → `spec_id` |
-    | `calculator_rabbitMQ_new_storage_stepper_storageType` | Storage Space | `base-select` | Catalog / Enum | Fixed / Unsupported (fixed to ultra-high I/O storage by the builder) |
+    | `calculator_rabbitMQ_new_storage_stepper_storageType` | Storage Space | `base-select` | Catalog / Enum | Mapped → `storage_type` |
     | `calculator_rabbitMQ_new_storage_stepper_Stepper_0` | — | `base-stepper` | `100..30000` (step 100) | Mapped → `storage_gb` |
     | `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
     | `global_QUANTITY_Stepper_0` | Quantity | `base-stepper` | `1..999 instance` (step 1) | Mapped → `quantity` |
