@@ -108,5 +108,36 @@
       "edit_skipped": false,
       "remaining_synthetic_lists": 0
     }
+  ],
+  "reviewed_usable_checkpoint": "c67190b",
+  "starter_publications": [
+    {
+      "observed_utc": "2026-11-11T14:46:45.887Z",
+      "region": "sa-brazil-1",
+      "example": "examples/latam-sao-paulo.yaml",
+      "services": [
+        "cce",
+        "kafka",
+        "rabbitmq"
+      ],
+      "cards": 3,
+      "stored_rated_edit": "equal_for_every_card",
+      "edit_skipped": false,
+      "remaining_synthetic_lists": 0
+    },
+    {
+      "observed_utc": "2026-11-11T14:47:56.683Z",
+      "region": "la-south-2",
+      "example": "examples/latam-santiago.yaml",
+      "services": [
+        "cce",
+        "kafka",
+        "rabbitmq"
+      ],
+      "cards": 3,
+      "stored_rated_edit": "equal_for_every_card",
+      "edit_skipped": false,
+      "remaining_synthetic_lists": 0
+    }
   ]
 }

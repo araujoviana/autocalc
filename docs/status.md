@@ -12,6 +12,8 @@ The current focus is quotation use in São Paulo (`sa-brazil-1`) and Santiago
 (`la-south-2`). Start with `examples/latam-sao-paulo.yaml` or
 `examples/latam-santiago.yaml` and the commands in `examples/README.md`.
 These starters include the verified CCE, Kafka and RabbitMQ configurations below.
+Both three-card starters passed combined authenticated publication on 2026-11-11,
+with stored, rated and Edit equality for every card and no Edit skip.
 They omit worker, disk, network and ingress charges, which must be quoted separately.
 
 Plan totals include primary SKU prices. Publication rates the actual card products,
