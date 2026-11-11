@@ -133,12 +133,19 @@ async function ambiguousImages(ctx: ActionContext, region: string, spec: string,
   return matched.length > 1 ? matched.map(imageLabel) : [];
 }
 
+function primaryGroupFor(card: Dict): string | undefined {
+  if (card.group) return card.group;
+  const svc = card.service.toLowerCase();
+  if (svc === "elb" && (card.spec?.startsWith("elbv3") || card.options?.type === "dedicated")) return "elb_elbv3";
+  return PRIMARY_GROUP[svc];
+}
+
 export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
   await raiseIfInvalid(quote, dir);
   const lock = await readLock(quote);
   // a pin applies only to the request it was made for: a changed `needs` is a new question
   const pins = (card: Dict) => { const pin = lock[card.id]; return pin && !card.spec && sameNeeds(pin.needs, card.needs) ? pin : undefined; };
-  const view = await draftQuoteTool(ctx, { customer: quote.customer, requirements: quote.cards.map(card => ({ ...card, ...(!card.group && PRIMARY_GROUP[card.service.toLowerCase()] ? { group: PRIMARY_GROUP[card.service.toLowerCase()] } : {}), ...(pins(card) ? { spec: pins(card).spec } : {}) })) });
+  const view = await draftQuoteTool(ctx, { customer: quote.customer, requirements: quote.cards.map(card => ({ ...card, ...(primaryGroupFor(card) ? { group: primaryGroupFor(card) } : {}), ...(pins(card) ? { spec: pins(card).spec } : {}) })) });
   const draft = await ctx.drafts.load(view.draft_id);
   const decided = new Map(draft.decisions.map(d => [d.requirement_id, d]));
   const rows: Dict[] = [], next: Dict = { ...lock };
@@ -301,7 +308,7 @@ export async function apply(ctx: ActionContext, quote: Quote, name?: string, dir
 
       const shardRequirements = shardCards.map(card => ({
         ...card,
-        ...(!card.group && PRIMARY_GROUP[card.service.toLowerCase()] ? { group: PRIMARY_GROUP[card.service.toLowerCase()] } : {}),
+        ...(primaryGroupFor(card) ? { group: primaryGroupFor(card) } : {}),
         spec: resolvedSpecs.get(String(card.id)) || card.spec,
       }));
 

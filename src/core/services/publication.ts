@@ -65,6 +65,12 @@ export function legalOptions(service: string): string[] | null {
 const HSS_EDITIONS: Record<string, string> = { "hss.version.basic": "dataInfo_1_", "hss.version.premium": "dataInfo_4_", "hss.version.wtp": "dataInfo_3_", "hss.version.container.enterprise": "dataInfo_5_", "hss.version.advanced": "dataInfo_6_" };
 /** What a chosen spec rules out, found at plan time instead of after minutes of page encoding. Returns the problem, or null. */
 export const SPEC_RULES: Record<string, (spec: string, options: Record<string, unknown>) => string | null> = {
+  eip: (spec, options) => {
+    const traffic = options.billed_by === "dataInfo_6_" || options.billed_by === "traffic" || options.traffic_gb !== undefined;
+    if (traffic && spec !== "12_bgp") return `EIP billed by traffic prices the 12_bgp SKU, not ${spec}.`;
+    if (traffic && options.bandwidth_mbps !== undefined) return "EIP billed by traffic has `traffic_gb`, not `bandwidth_mbps`.";
+    return null;
+  },
   des: (spec, options) => options.devices !== undefined && !spec.startsWith("des.teleport") ? `\`devices\` (onsite days) exists only on Teleport devices, not on ${spec}.` : null,
   hss: (spec, options) => {
     const want = HSS_EDITIONS[spec];

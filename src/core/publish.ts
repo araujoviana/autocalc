@@ -74,7 +74,8 @@ export async function publishQuoteTool(ctx: ActionContext, input: { draft_id: st
     if (draft.publication) return draft.publication;
     validateListName(input.name);
     if (draft.publishing) throw invalid("A previous publication has an unknown outcome. Use inspect_draft; check saved lists before recover_draft.", "draft_id");
-    if (draft.requirements.some(r => r.az !== null)) throw invalid("Availability-zone selection is not supported yet.", "az");
+    const withAz = draft.requirements.find(r => r.az !== null);
+    if (withAz) throw invalid(`Availability-zone placement is not supported for ${withAz.service}.`, "az");
     if (draft.pending().length) throw invalid(`Draft ${input.draft_id} still has undecided requirements.`, "requirement_id", draft.pending(), "Call revise_quote for each of them.");
     const unsupported = [...new Set(draft.requirements.map(r => r.service.toLowerCase()))].filter(service => !VERIFIED.has(service)).sort();
     if (unsupported.length) throw invalid(`publish_quote cannot build [${unsupported.map(service => `'${service}'`).join(", ")}] yet.`, "service", [...VERIFIED].sort());

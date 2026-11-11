@@ -6,7 +6,7 @@ export interface BuilderContext {
 }
 export async function selectProduct(context: BuilderContext, service: string, region: string, group: string, spec: string, billing: "ondemand" | "monthly" | "yearly", hours: number, matches?: (plan: Record<string, unknown>) => boolean) {
   const catalog = await context.productInfo(service, region);
-  const item = catalog.product[group]?.find(product => product.resourceSpecCode === spec);
+  const item = catalog.product[group]?.find(product => product.resourceSpecCode === spec && (!matches || (Array.isArray(product.planList) && product.planList.some(matches))));
   if (!item) {
     const base = spec.split(".")[0]!.split("-")[0]!;
     const nearest = (catalog.product[group] ?? []).map(product => typeof product.resourceSpecCode === "string" ? product.resourceSpecCode : "").sort((a, b) =>

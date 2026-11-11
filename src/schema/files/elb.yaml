@@ -38,8 +38,7 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
-  unsupported: true
-  note: fixed to shared load balancer by the builder
+  option: type
 - id: calculator_elb_type_spec_azType
   kind: base-radio-group
   title: Sub-AZ
@@ -144,8 +143,7 @@ controls:
     unit: LCU
   after:
   - calculator_tcp_flow_Stepper_0
-  unsupported: true
-  note: dedicated ELB LCU metric not used by shared ELB builder
+  option: l4_lcu
 - id: calculator_ip_Stepper_0
   kind: base-radio-stepper
   title: Network Type

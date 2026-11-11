@@ -1,8 +1,64 @@
 import { assembleCard, stepper } from "../cards.ts";
+import { CalculatorError } from "../errors.ts";
 import type { CardInput } from "../schemas.ts";
 import { selectProduct } from "./common.ts";
 import type { BuilderContext } from "./common.ts";
 export async function buildElb(input: Extract<CardInput, { service: "elb" }>, context: BuilderContext) {
+  if (input.type === "dedicated") {
+    if (input.billing !== "ondemand") throw new CalculatorError("VALIDATION", "Dedicated ELB only supports on-demand billing");
+    const flavor = input.flavor ?? input.spec ?? "elbv3.professional";
+    const base = await selectProduct(context, "elb", input.region, "elb_elbv3", flavor, "ondemand", input.hours, plan => plan.billingEvent === "event.type.elb.elbv3.instance_duration");
+    Object.assign(base, { addToList_title: "calc_44_", addToList_product: "dataInfo_3_", productNum: 1, inquiryTag: "normal" });
+    if (!Object.hasOwn(base, "usageFactor")) base.usageFactor = "instance_duration";
+    const products = [base];
+
+    const l4 = input.l4_lcu ?? input.lcu ?? 0;
+    const l7 = input.l7_lcu ?? 0;
+    if (l4 > 0) {
+      const pL4 = await selectProduct(context, "elb", input.region, "elb_elbv3", flavor, "ondemand", input.hours, plan => plan.billingEvent === "event.type.elb.elbv3.l4_lcu_duration");
+      Object.assign(pL4, {
+        addToList_title: "calc_45_",
+        addToList_product: "calc_60_",
+        productNum: 1,
+        inquiryTag: "normal",
+        resourceSize: l4,
+        resouceSizeMeasureId: 14,
+        usageFactor: "l4_lcu_duration",
+        usageMeasureId: 4,
+        usageValue: input.hours,
+      });
+      products.push(pL4);
+    }
+    if (l7 > 0) {
+      const pL7 = await selectProduct(context, "elb", input.region, "elb_elbv3", flavor, "ondemand", input.hours, plan => plan.billingEvent === "event.type.elb.elbv3.l7_lcu_duration");
+      Object.assign(pL7, {
+        addToList_title: "calc_45_",
+        addToList_product: "calc_61_",
+        productNum: 1,
+        inquiryTag: "normal",
+        resourceSize: l7,
+        resouceSizeMeasureId: 14,
+        usageFactor: "l7_lcu_duration",
+        usageMeasureId: 4,
+        usageValue: input.hours,
+      });
+      products.push(pL7);
+    }
+    const render: Record<string, unknown> = {
+      calculator_elb_type: { elbType: "dataInfo_3_" },
+    };
+    if (l4 > 0) {
+      render.calculator_lcu_network = { UNSET_Stepper_0: stepper(14, l4, "calc_37_", "calc_37_") };
+    }
+    if (l7 > 0) {
+      render.calculator_lcu_application = { UNSET_Stepper_0: stepper(14, l7, "calc_37_", "calc_37_") };
+    }
+    const card = await assembleCard({ ...input, products, description: "Elastic Load Balance", rewrite: render, includeQuantity: false }, context.rate);
+    const time = card.rewriteValue.global_ONDEMANDTIME as { UNSET_Stepper_0: { measurePluralNameBeforeTrans: string } };
+    time.UNSET_Stepper_0.measurePluralNameBeforeTrans = "calc_22_";
+    return card;
+  }
+
   const base = await selectProduct(context, "elb", input.region, "elb_elbv2", "elbv2.basic.default", input.billing, input.hours);
   Object.assign(base, { addToList_title: "calc_44_", addToList_product: "dataInfo_6_", productNum: 1, inquiryTag: "normal" });
   const products = [base];

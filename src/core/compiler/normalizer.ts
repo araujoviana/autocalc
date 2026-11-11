@@ -1,6 +1,6 @@
 /** Translates compiled `version: "1"` NormalizedResources into canonical Quote card records
  * compatible with `validate()`, `plan()`, and `publishQuoteTool()`. */
-import { modesOf } from "../services/publication.ts";
+import { modesOf, SINGLE_QUANTITY } from "../services/publication.ts";
 import type { NormalizedResource } from "./horizon.ts";
 import { parseBandwidth, parseCapacity, parseDuration, parseRequestRate, parseTraffic } from "./units.ts";
 
@@ -307,6 +307,15 @@ export function normalizeResourceToCards(r: NormalizedResource, docBillingPolicy
     });
   }
 
+  const rawQty = r.quantity ?? 1;
+  if (rawQty > 1 && (SINGLE_QUANTITY.has(service) || (service === "cce" && baseCard.billing === "ondemand"))) {
+    return Array.from({ length: rawQty }, (_, idx) => ({
+      ...baseCard,
+      id: `${r.id}-${idx + 1}`,
+      quantity: 1,
+    }));
+  }
+
   return [baseCard];
 }
 
@@ -561,13 +570,28 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
 
     case "elb": {
       quantity = 1;
-      spec = spec ?? "elbv2.basic.default";
-      if (rawOpts.public_ip_count !== undefined) {
-        options.public_ip_count = Math.min(2, Math.max(1, Math.round(Number(rawOpts.public_ip_count))));
-      } else if (rawOpts.network_type !== undefined || rawOpts.type !== undefined || rawOpts.public !== undefined || rawOpts.internet_facing !== undefined) {
-        const net = String(rawOpts.network_type ?? rawOpts.type ?? "").toLowerCase();
-        const isPub = rawOpts.public === true || rawOpts.internet_facing === true || net.includes("public") || net.includes("internet") || net.includes("external");
-        options.public_ip_count = isPub ? 1 : 2;
+      const isDedicated = rawOpts.type === "dedicated" || (typeof spec === "string" && spec.startsWith("elbv3.")) || (typeof rawOpts.flavor === "string" && rawOpts.flavor.startsWith("elbv3."));
+      if (isDedicated) {
+        options.type = "dedicated";
+        const flavor = String(rawOpts.flavor ?? (spec?.startsWith("elbv3.") ? spec : "elbv3.professional"));
+        options.flavor = flavor;
+        spec = flavor;
+        if (rawOpts.l4_lcu !== undefined || rawOpts.lcu !== undefined) {
+          options.l4_lcu = Number(rawOpts.l4_lcu ?? rawOpts.lcu);
+        }
+        if (rawOpts.l7_lcu !== undefined) {
+          options.l7_lcu = Number(rawOpts.l7_lcu);
+        }
+      } else {
+        options.type = "shared";
+        spec = spec ?? "elbv2.basic.default";
+        if (rawOpts.public_ip_count !== undefined) {
+          options.public_ip_count = Math.min(2, Math.max(1, Math.round(Number(rawOpts.public_ip_count))));
+        } else if (rawOpts.network_type !== undefined || rawOpts.public !== undefined || rawOpts.internet_facing !== undefined) {
+          const net = String(rawOpts.network_type ?? "").toLowerCase();
+          const isPub = rawOpts.public === true || rawOpts.internet_facing === true || net.includes("public") || net.includes("internet") || net.includes("external");
+          options.public_ip_count = isPub ? 1 : 2;
+        }
       }
       needs = undefined;
       break;
@@ -953,11 +977,24 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
     }
 
     case "eip": {
-      spec = spec ?? "19_bgp";
-      const ipQty = Number(rawOpts.count ?? rawOpts.quantity ?? rawOpts.ip_quantity ?? rawOpts.eip_count ?? (quantity > 1 ? quantity : 1));
+      const isTraffic = rawOpts.billed_by === "traffic" || ((rawOpts.traffic_gb !== undefined || rawOpts.traffic !== undefined) && rawOpts.bandwidth_mbps === undefined && rawOpts.bandwidth === undefined);
+      if (isTraffic) {
+        options.billed_by = "traffic";
+        billing = "ondemand";
+        spec = "12_bgp";
+        const trafficGb = toTrafficGB(rawOpts.traffic_gb ?? rawOpts.traffic, `${r.id}.traffic`);
+        options.traffic_gb = trafficGb !== undefined ? Math.max(1, Math.round(trafficGb)) : 1;
+      } else {
+        options.billed_by = "bandwidth";
+        const shareType = String(rawOpts.share_type ?? rawOpts.shareType ?? (spec === "19_share" ? "shared" : "dedicated")).toLowerCase();
+        options.share_type = shareType === "shared" ? "shared" : "dedicated";
+        spec = options.share_type === "shared" ? "19_share" : "19_bgp";
+        const bw = toMbps(rawOpts.bandwidth_mbps ?? rawOpts.bandwidth_mbit ?? rawOpts.bandwidth, `${r.id}.bandwidth`);
+        options.bandwidth_mbps = bw !== undefined && bw > 0 ? Math.max(1, Math.round(bw)) : 1;
+      }
+      const ipQty = Number(rawOpts.count ?? rawOpts.ip_quantity ?? rawOpts.eip_count ?? 1);
       if (ipQty >= 1) options.ip_quantity = Math.min(99, Math.round(ipQty));
-      const bw = toMbps(rawOpts.bandwidth_mbps ?? rawOpts.bandwidth_mbit ?? rawOpts.bandwidth, `${r.id}.bandwidth`);
-      if (bw !== undefined && bw > 0) options.bandwidth_mbps = Math.max(1, Math.round(bw));
+      if (rawOpts.ip_reservation !== undefined) options.ip_reservation = Boolean(rawOpts.ip_reservation);
       quantity = 1;
       needs = undefined;
       break;

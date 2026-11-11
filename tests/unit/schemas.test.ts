@@ -42,6 +42,39 @@ test("rejects quantities that would be silently ignored", () => {
   expect(CardInput.safeParse({ service: "evs", region: "sa-brazil-1", billing: "ondemand", periods: 2 }).success).toBe(false);
 });
 
+test("EIP rejects conflicting metrics and aliases", () => {
+  // Implicit simultaneous bandwidth and positive traffic must be rejected
+  expect(
+    CardInput.safeParse({
+      service: "eip",
+      region: "sa-brazil-1",
+      bandwidth_mbps: 10,
+      traffic_gb: 500,
+    }).success
+  ).toBe(false);
+
+  // Conflicting aliases ip_quantity and eip_count must be rejected
+  expect(
+    CardInput.safeParse({
+      service: "eip",
+      region: "sa-brazil-1",
+      ip_quantity: 2,
+      eip_count: 3,
+    }).success
+  ).toBe(false);
+
+  // Equal duplicate aliases are accepted deliberately
+  expect(
+    CardInput.safeParse({
+      service: "eip",
+      region: "sa-brazil-1",
+      bandwidth_mbps: 10,
+      ip_quantity: 2,
+      eip_count: 2,
+    }).success
+  ).toBe(true);
+});
+
 test("fields the calculator page clamps are rejected above the page's limit instead of mis-pricing on Edit", () => {
   const dew = (extra: object) => CardInput.safeParse({ service: "dew", region: "x", billing: "ondemand", ...extra }).success;
   expect(dew({ keys: 99, api_requests: 9999 })).toBe(true);

@@ -11,7 +11,8 @@ export const RECORDED_CANDIDATES = 20;
 export async function draftQuote(provider: Provider, customer: string, requirements: Requirement[], store: DraftStore): Promise<Draft> {
   if (typeof customer !== "string" || !customer.trim()) throw invalid("customer must be a nonempty string.", "customer");
   if (!Array.isArray(requirements) || requirements.length === 0) throw invalid("A draft requires at least one requirement.", "requirements");
-  if (requirements.some(r => r.az !== null)) throw invalid("Availability-zone selection is not supported yet.", "az");
+  const withAz = requirements.find(r => r.az !== null);
+  if (withAz) throw invalid(`Availability-zone placement is not supported for ${withAz.service}.`, "az");
   const ids = requirements.map(r => r.id);
   if (new Set(ids).size !== ids.length) throw invalid("Requirement ids must be unique.", "id");
   const draft = new Draft(DraftStore.newId(), customer, provider.name, [...requirements]);

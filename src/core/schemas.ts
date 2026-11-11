@@ -80,7 +80,16 @@ const obsComponent = z.strictObject({ factor: Nonempty, value: volume(0, "Usage 
 const obs = z.strictObject({ service: serviceCode("obs"), ...common, billing: standardBilling("ondemand"), components: z.array(obsComponent).optional().describe("OBS usage components; storage uses a 720-hour multiplier"), storage_class: z.enum(["standard", "warm", "cold"]).default("standard").describe("Storage class"), multi_az: BooleanInput.default(false), months: z.number().int().min(1).max(12).default(1).describe("Storage duration in months (pay-per-use usage cards)"), package: z.enum(OBS_PACKAGE_SIZES).optional().describe("Prepaid storage package size; with multi_az it is the multi-AZ package"), traffic_package: z.enum([...OBS_TRAFFIC_SIZES, "none"]).optional().describe("Outbound traffic package; default 50gb where the region sells it, none to leave it out") });
 const rds = z.strictObject({ service: serviceCode("rds"), ...common, billing: standardBilling("ondemand"), flavor: Nonempty, storage_spec: Nonempty.optional().describe("Volume SKU; defaults to the engine's Cloud SSD (or common) volume"), storage_gb: capacity(40, "Storage size in GB"), db_version: Nonempty.optional() });
 const sfs = z.strictObject({ service: serviceCode("sfsturbo"), ...common, billing: standardBilling("yearly"), tier: textDefault("20MBps", "Throughput tier"), size_gb: capacity(3686.4, "Storage size in GB") });
-const elb = z.strictObject({ service: serviceCode("elb"), ...common, quantity: PositiveInteger.pipe(z.literal(1)).default(1), billing: standardBilling("ondemand"), public_ip_count: Nonnegative.pipe(z.number().int().min(1).max(2)).default(2).describe("Network type selector of the shared load balancer page (1 or 2)") });
+const elb = z.strictObject({
+  service: serviceCode("elb"), ...common, quantity: PositiveInteger.pipe(z.literal(1)).default(1), billing: standardBilling("ondemand"),
+  type: z.enum(["shared", "dedicated"]).default("shared").optional().describe("Load balancer type"),
+  flavor: Nonempty.optional().describe("Dedicated load balancer flavor/specification, e.g. elbv3.professional or elbv3.basic.1az"),
+  spec: Nonempty.optional().describe("Alias for flavor"),
+  public_ip_count: Nonnegative.pipe(z.number().int().min(1).max(2)).default(2).optional().describe("Network type selector of the shared load balancer page (1 or 2)"),
+  l4_lcu: Nonnegative.optional().describe("Network load balancing LCUs"),
+  l7_lcu: Nonnegative.optional().describe("Application load balancing LCUs"),
+  lcu: Nonnegative.optional().describe("Network load balancing LCUs"),
+});
 const nat = z.strictObject({ service: serviceCode("nat"), ...common, billing: standardBilling("ondemand"), size: textDefault("small", "Gateway size") });
 const apig = z.strictObject({ service: serviceCode("apig"), ...common, billing: standardBilling("ondemand"), edition: textDefault("BASIC", "API Gateway edition") });
 const dline = z.strictObject({ service: serviceCode("dline"), ...common, billing: standardBilling("monthly"), port: textDefault("1ge", "Port type") });
@@ -94,7 +103,16 @@ const cci = z.strictObject({ service: serviceCode("cci"), region: RegionInput, h
 const rabbitmq = z.strictObject({ service: serviceCode("rabbitmq"), ...common, billing: standardBilling("monthly"), spec_id: textDefault("c6.2u4g.single", "RabbitMQ specification"), storage_gb: capacity(100, "Storage GB"), brokers: count(1, "Broker count"), version: textDefault("3.8", "RabbitMQ version") });
 const kafka = z.strictObject({ service: serviceCode("kafka"), ...common, billing: standardBilling("monthly"), spec_id: textDefault("kafka.2u4g.single.small", "Kafka specification"), storage_gb: capacity(100, "Storage GB"), brokers: count(1, "Broker count") });
 const nosql = z.strictObject({ service: serviceCode("nosql"), region: RegionInput, periods: common.periods, hours: common.hours, title: common.title, billing: standardBilling("monthly"), flavor: textDefault("large.4", "Instance flavor"), nodes: count(2, "Node count"), storage_gb: capacity(100, "Storage GB"), engine: textDefault("dynamodb", "Database engine") });
-const eip = z.strictObject({ service: serviceCode("eip"), ...common, billing: ondemand, eip_count: count(1, "Public IP count"), traffic_gb: volume(0, "Outbound traffic in GB"), ip_reservation: BooleanInput.default(true).describe("Reserve the public IP") });
+const eip = z.strictObject({
+  service: serviceCode("eip"), ...common, billing: standardBilling("ondemand"),
+  eip_count: PositiveInteger.optional().describe("Public IP count"),
+  ip_quantity: PositiveInteger.optional().describe("Public IP count"),
+  traffic_gb: volume(0, "Outbound traffic in GB").optional(),
+  bandwidth_mbps: Numeric.pipe(z.number().positive()).optional().describe("Bandwidth in Mbit/s"),
+  share_type: z.enum(["dedicated", "shared"]).default("dedicated").optional().describe("Bandwidth share type"),
+  billed_by: z.enum(["bandwidth", "traffic"]).optional().describe("EIP billing metric"),
+  ip_reservation: BooleanInput.default(true).describe("Reserve the public IP"),
+});
 const redis = z.strictObject({ service: serviceCode("redis"), ...common, billing: standardBilling("ondemand"), spec: textDefault("redis.single.xu1.large.4", "Redis specification"), bandwidth_mbit: Numeric.pipe(z.number().positive()).optional().describe("Additional bandwidth in Mbit/s") });
 export const CardInput = z.discriminatedUnion("service", [ecs, evs, cce, obs, rds, sfs, elb, nat, apig, dline, cbr, apm, waf, functionGraph, dew, lts, cci, rabbitmq, kafka, nosql, eip, redis])
   .superRefine((card, ctx) => {
@@ -103,13 +121,30 @@ export const CardInput = z.discriminatedUnion("service", [ecs, evs, cce, obs, rd
     if ("hours" in card && card.billing !== "ondemand" && card.hours !== 730) ctx.addIssue({ code: "custom", path: ["hours"], message: "Hours apply only to on-demand billing" });
     // The page's duration selector offers 1 to 9 months or 1 year (verified live on ECS, 2026-11-07).
     if (card.service === "ecs" && ((card.billing === "monthly" && card.periods > 9) || (card.billing === "yearly" && card.periods > 1))) ctx.addIssue({ code: "custom", path: ["periods"], message: "ECS monthly billing allows 1 to 9 periods and yearly billing 1" });
-    if (card.service === "eip" && !card.ip_reservation && card.eip_count !== 1) ctx.addIssue({ code: "custom", path: ["eip_count"], message: "EIP count requires IP reservation" });
+    if (card.service === "elb") {
+      if (card.type === "dedicated" && card.billing !== "ondemand") ctx.addIssue({ code: "custom", path: ["billing"], message: "Dedicated ELB only supports on-demand billing" });
+      if (card.type === "shared" && (card.l4_lcu !== undefined || card.l7_lcu !== undefined || card.lcu !== undefined)) ctx.addIssue({ code: "custom", message: "LCU options apply only to dedicated ELB" });
+    }
+    if (card.service === "eip") {
+      if (card.ip_quantity !== undefined && card.eip_count !== undefined && card.ip_quantity !== card.eip_count) {
+        ctx.addIssue({ code: "custom", message: "Conflicting EIP count aliases: ip_quantity and eip_count must be equal if both are supplied" });
+      }
+      if (card.bandwidth_mbps !== undefined && card.traffic_gb !== undefined && card.traffic_gb > 0) {
+        ctx.addIssue({ code: "custom", message: "EIP cannot specify both bandwidth_mbps and positive traffic_gb; choose either bandwidth or traffic billing" });
+      }
+      const countVal = card.ip_quantity ?? card.eip_count ?? 1;
+      if (!card.ip_reservation && countVal !== 1) ctx.addIssue({ code: "custom", path: ["eip_count"], message: "EIP count requires IP reservation" });
+      // The calculator page always adds the public IP line (checked live 2026-11-07), so a traffic-only card cannot be encoded.
+      if (!card.ip_reservation) ctx.addIssue({ code: "custom", path: ["ip_reservation"], message: "The calculator always includes the public IP line; ip_reservation cannot be false" });
+      if (card.billing !== "ondemand" && card.bandwidth_mbps === undefined) ctx.addIssue({ code: "custom", path: ["bandwidth_mbps"], message: "EIP monthly or yearly billing requires bandwidth_mbps" });
+      if (card.billed_by === "traffic" && card.billing !== "ondemand") ctx.addIssue({ code: "custom", path: ["billing"], message: "EIP billed by traffic only supports on-demand billing" });
+      if (card.billed_by === "traffic" && card.bandwidth_mbps !== undefined) ctx.addIssue({ code: "custom", path: ["bandwidth_mbps"], message: "EIP billed by traffic cannot specify bandwidth_mbps" });
+      if (card.billed_by === "bandwidth" && card.traffic_gb !== undefined && card.traffic_gb > 0) ctx.addIssue({ code: "custom", path: ["traffic_gb"], message: "EIP billed by bandwidth cannot specify traffic_gb" });
+      if (card.billed_by === "traffic" && card.traffic_gb === 0 && !card.ip_reservation) ctx.addIssue({ code: "custom", message: "EIP requires traffic or IP reservation" });
+    }
     if (card.service === "evs" && (card.iops !== undefined || card.throughput !== undefined) && (card.billing !== "ondemand" || !["GPSSD2", "ESSD2"].includes(card.type))) ctx.addIssue({ code: "custom", message: "IOPS and throughput apply only to on-demand GPSSD2 or ESSD2 volumes" });
     if (card.service === "ecs" && card.billing !== "ri" && card.ri_time !== "1_3") ctx.addIssue({ code: "custom", path: ["ri_time"], message: "RI term requires reserved-instance billing" });
     if (card.service === "ecs" && (card.bandwidth_mbit === undefined || card.bandwidth_mbit === 0) && !["19_bgp", "12_bgp"].includes(card.bandwidth_type)) ctx.addIssue({ code: "custom", path: ["bandwidth_type"], message: "Bandwidth type requires bandwidth" });
-    // The calculator page always adds the public IP line (checked live 2026-11-07), so a traffic-only card cannot be encoded.
-    if (card.service === "eip" && !card.ip_reservation) ctx.addIssue({ code: "custom", path: ["ip_reservation"], message: "The calculator always includes the public IP line; ip_reservation cannot be false" });
-    if (card.service === "eip" && !card.ip_reservation && card.traffic_gb === 0) ctx.addIssue({ code: "custom", message: "EIP requires traffic or IP reservation" });
     if (card.service === "sfsturbo" && Math.abs(card.size_gb * 10 / 1024 - Math.round(card.size_gb * 10 / 1024)) > 1e-9) ctx.addIssue({ code: "custom", path: ["size_gb"], message: "SFS Turbo capacity must be representable in 0.1 TB increments" });
     // The calculator page clamps these fields silently when a card is opened in Edit, so a larger value would re-price differently there (issue #6.3).
     if (card.service === "dew") {

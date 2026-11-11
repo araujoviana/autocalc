@@ -144,7 +144,9 @@ export const RECIPES: Record<string, Recipe> = {
   eip: recipe("Elastic IP", {
     ip_quantity: "calculator_ipQuantity_stepper_Stepper_0",
     bandwidth_mbps: "calculator_eip_radio_Stepper_0",
-  }, { modes: PM_OD }),
+    billed_by: "calculator_eip_radio_eipType",
+    traffic_gb: "calculator_eip_radio_Stepper_3",
+  }, { hours: true, modes: PM_OD }),
   vpn: recipe("Virtual Private Network", {
     eip1_mbps: "calculator_evpnEip1_stepper_Stepper_0",
     eip2_mbps: "calculator_evpnEip2_stepper_Stepper_0",
@@ -210,7 +212,13 @@ export function buildRecipe(
   const render: Record<string, unknown> = {};
   for (const [k, controlId] of Object.entries(r.controls)) {
     if (service === "taurusdb" && billing === "ondemand" && k === "storage_gb") continue;
-    if (k in options) render[controlId] = options[k];
+    let val = options[k];
+    if (service === "eip" && k === "billed_by") {
+      if (val === "traffic") val = "dataInfo_6_";
+      else if (val === "bandwidth") val = "dataInfo_5_";
+      else if (val === undefined && options.traffic_gb !== undefined) val = "dataInfo_6_";
+    }
+    if (val !== undefined) render[controlId] = val;
   }
   const form: Record<string, any> = {
     global_REGIONINFO: { ...(r.regionless ? {} : { region: input.region }), locationType: "commonAZ", chargeMode: mode },

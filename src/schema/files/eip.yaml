@@ -56,8 +56,7 @@ controls:
   values: catalog
   after:
   - calculator_eip_radio_type_eipSpec
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: billed_by
 - id: calculator_eip_radio_Stepper_0
   kind: base-stepper
   title: Bandwidth
@@ -115,3 +114,17 @@ controls:
   after:
   - calculator_ipQuantity_stepper_Stepper_0
   option: periods
+- id: calculator_eip_radio_Stepper_3
+  kind: base-stepper
+  title: Traffic
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_3
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 2000.0
+    default: 1.0
+    when: ^19_(s?|(youxuan)?)bgp(-.*-los1a)?$
+  after:
+  - calculator_eip_radio_eipType
+  option: traffic_gb
