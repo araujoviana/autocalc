@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { readdir, readFile, rm } from "node:fs/promises";
-import { homedir } from "node:os";
 import { join } from "node:path";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -16,17 +15,17 @@ import { SPEC_ARG, specOption, USAGE_PRICED, VERIFIED } from "../../src/core/ser
 import { apply, parse, plan, validate } from "../../src/core/quote-file.ts";
 import { CalculatorError } from "../../src/core/errors.ts";
 import type { ActionContext } from "../../src/core/types.ts";
+import { OrchestrationEncoder } from "../support/orchestration-encoder.ts";
 
 const SCENARIOS_DIR = join(import.meta.dir, "..", "fixtures", "scenarios");
 
-describe("20 Real-World Business Architecture YAML Scenarios", () => {
+describe("20 business architecture YAML scenarios (offline orchestration, not live certification)", () => {
   let transport: SyntheticBusinessReader;
   let catalog: Catalog;
   let provider: HuaweiProvider;
   let draftDir: string;
   let ctx: ActionContext;
-  let currentQuoteCards: Array<Record<string, any>> = [];
-  let expectedCardSpecs = new Map<string, string>();
+  const encoder = new OrchestrationEncoder();
   let scenarioFiles: string[] = [];
 
   beforeAll(async () => {
@@ -68,54 +67,15 @@ describe("20 Real-World Business Architecture YAML Scenarios", () => {
                   )
                 ).rewriteValue as Record<string, unknown>);
 
-          // Correlate with input card identity deterministically without queues
-          const matchedCard = currentQuoteCards.find(
-            (c) =>
-              c.service.toLowerCase() === String(input.service).toLowerCase() &&
-              c.region === input.region &&
-              c.billing === (input.billing ?? "monthly")
-          );
-          (formResult as any)._inputCard = input;
-          (formResult as any)._cardId = matchedCard?.id ?? "card";
+          encoder.bind(input, formResult);
           return formResult;
         },
-        // Faithful per-resource encode double: asserts exact card identity, region, and expected spec
-        encode: async (service, rewriteValue) => {
-          expect(rewriteValue).toBeDefined();
-          expect(typeof rewriteValue).toBe("object");
-
-          const inputCard = (rewriteValue as any)._inputCard ?? {};
-          const cardId = (rewriteValue as any)._cardId ?? "unknown";
-
-          // Assert expected region and billing mode encoded in form
-          if (rewriteValue.global_REGIONINFO) {
-            const regInfo = rewriteValue.global_REGIONINFO as Record<string, any>;
-            if (inputCard.region && regInfo.region) {
-              expect(regInfo.region).toBe(inputCard.region);
-            }
-          }
-
-          const cardSpec = expectedCardSpecs.get(cardId);
-          expect(cardSpec, `Expected planned spec for card ${cardId}`).toBeDefined();
-
-          return {
-            selectedProduct: {
-              serviceCode: service,
-              _customTitle: cardId,
-              rewriteValue,
-              productAllInfos: [
-                {
-                  resourceSpecCode: cardSpec,
-                  regionId: inputCard.region,
-                  billingMode: inputCard.billing?.toUpperCase(),
-                  productNum: inputCard.quantity ?? 1,
-                },
-              ],
-            },
-          };
-        },
+        // Only the browser transport is doubled here. Binding checks exact input
+        // forwarding and multiplicity, not vendor encoding, prices or the live gate.
+        encode: async (service, rewriteValue) => encoder.encode(service, rewriteValue),
         // Offline orchestration double; does not certify live vendor publish/price correctness
         publish: async (name, cards, options) => {
+          encoder.assertPublished(cards);
           expect(cards.length).toBeGreaterThan(0);
           const checks = cards.map((card, index) => {
             const sp = card.selectedProduct as Record<string, any>;
@@ -223,10 +183,20 @@ describe("20 Real-World Business Architecture YAML Scenarios", () => {
         expect(rewriteValue, `${file} -> ${row.id} form output`).toBeDefined();
       }
 
-      currentQuoteCards = quote.cards;
-      expectedCardSpecs = new Map(planned.cards.map((r) => [r.id, String(r.spec)]));
+      const plannedMap = new Map(planned.cards.map((card) => [card.id, String(card.spec)]));
+      encoder.begin(quote.cards.map(card => {
+        const selectedSpec = plannedMap.get(card.id)!;
+        const specArg = SPEC_ARG[card.service];
+        return {
+          id: card.id, service: card.service, region: card.region, billing: card.billing,
+          quantity: card.quantity ?? 1, spec: selectedSpec, options: card.options ?? {},
+          ...(specArg ? { specInput: { [specArg]: specOption(card.service, selectedSpec) } } : {}),
+        };
+      }));
+
       const applied = await apply(ctx, quote);
       expect(applied.id).toContain("mock-list-");
+      encoder.assertComplete();
     }
   }, 60000);
 
