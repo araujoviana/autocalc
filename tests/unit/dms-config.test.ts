@@ -71,6 +71,36 @@ describe("DMS Configuration and Topology Resolver", () => {
       ).toThrow(/must be between 3 and 50/);
     });
 
+    test("rejects non-integer and NaN broker counts directly", () => {
+      expect(() =>
+        resolveDmsConfig("kafka", "sa-brazil-1", {
+          specId: "c6.2u4g.cluster",
+          brokers: 3.5,
+        })
+      ).toThrow(/must be an integer/);
+
+      expect(() =>
+        resolveDmsConfig("kafka", "sa-brazil-1", {
+          specId: "c6.2u4g.cluster",
+          brokers: NaN,
+        })
+      ).toThrow(/must be an integer/);
+
+      expect(() =>
+        resolveDmsConfig("kafka", "sa-brazil-1", {
+          specId: "c6.2u4g.cluster",
+          brokers: Infinity,
+        })
+      ).toThrow(/must be an integer/);
+
+      expect(() =>
+        resolveDmsConfig("rabbitmq", "sa-brazil-1", {
+          specId: "c6.2u4g.cluster",
+          brokers: 3.2,
+        })
+      ).toThrow(/must be an integer/);
+    });
+
     test("RabbitMQ 3.8 single-node requires exactly 1 broker", () => {
       const valid = resolveDmsConfig("rabbitmq", "sa-brazil-1", {
         specId: "c6.2u4g.single",

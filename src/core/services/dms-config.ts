@@ -236,6 +236,12 @@ export function resolveDmsConfig(
 
   // Broker count topology validation
   const brokers = selection.brokers;
+  if (!Number.isInteger(brokers)) {
+    throw new CalculatorError(
+      "VALIDATION",
+      `Broker count for ${service} specification ${selection.specId} must be an integer, got ${brokers}`
+    );
+  }
   if (specConfig.allowedBrokers) {
     if (!specConfig.allowedBrokers.includes(brokers)) {
       if (specConfig.allowedBrokers.length === 1 && specConfig.allowedBrokers[0] === 1) {

@@ -82,6 +82,30 @@ const OS_MAP: Record<string, string> = {
   "centos-7": "CentOS 7.9 64bit",
 };
 
+const KAFKA_SPEC_ALIASES: Record<string, string> = {
+  "kafka.2u4g.cluster.small": "s6.2u4g.cluster.small",
+  "kafka.2u4g.cluster": "c6.2u4g.cluster",
+  "kafka.4u8g.cluster": "c6.4u8g.cluster",
+  "kafka.8u16g.cluster": "c6.8u16g.cluster",
+  "kafka.12u24g.cluster": "c6.12u24g.cluster",
+  "kafka.16u32g.cluster": "c6.16u32g.cluster",
+};
+
+const RABBITMQ_SPEC_ALIASES: Record<string, string> = {
+  "rabbitmq.2u4g.cluster": "c6.2u4g.cluster",
+  "rabbitmq.4u8g.cluster": "c6.4u8g.cluster",
+  "rabbitmq.8u16g.cluster": "c6.8u16g.cluster",
+  "rabbitmq.12u24g.cluster": "c6.12u24g.cluster",
+  "rabbitmq.16u32g.cluster": "c6.16u32g.cluster",
+  "rabbitmq.24u48g.cluster": "c6.24u48g.cluster",
+  "rabbitmq.32u64g.cluster": "c6.32u64g.cluster",
+  "rabbitmq.2u4g.single": "c6.2u4g.single",
+  "rabbitmq.4u8g.single": "c6.4u8g.single",
+  "rabbitmq.8u16g.single": "c6.8u16g.single",
+  "rabbitmq.16u32g.single": "c6.16u32g.single",
+  "rabbitmq.24u48g.single": "c6.24u48g.single",
+};
+
 const DISK_TYPE_MAP: Record<string, string> = {
   "high-io": "SAS",
   high_io: "SAS",
@@ -700,20 +724,36 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
     }
 
     case "kafka": {
-      const validSpecs = new Set(["kafka.2u4g.single.small", "kafka.2u4g.single", "s6.2u4g.cluster.small", "c6.2u4g.cluster", "c6.4u8g.cluster", "c6.8u16g.cluster", "c6.12u24g.cluster", "c6.16u32g.cluster"]);
-      let specId = String(rawOpts.flavor ?? rawOpts.spec ?? rawOpts.spec_id ?? (spec && validSpecs.has(spec) ? spec : "")).trim();
-      if (!validSpecs.has(specId)) {
-        const v = vcpus ?? (haHint || Number(rawOpts.brokers ?? 1) >= 3 ? 2 : 2);
-        if (haHint || Number(rawOpts.brokers ?? 1) >= 3) {
+      const explicitSpecRaw = rawOpts.flavor ?? rawOpts.spec ?? rawOpts.spec_id ?? rawOpts.specification ?? rawOpts.flavor_id ?? (spec && spec !== "dms.platinum.c6.kafka" && spec !== "kafka" && spec !== "dms-kafka" && spec !== "dmq" ? spec : undefined);
+      const isSpecExplicit = explicitSpecRaw !== undefined && String(explicitSpecRaw).trim() !== "";
+      let specId: string;
+      if (isSpecExplicit) {
+        const trimmed = String(explicitSpecRaw).trim();
+        specId = KAFKA_SPEC_ALIASES[trimmed] ?? trimmed;
+      } else {
+        const v = vcpus ?? (haHint || (rawOpts.brokers !== undefined && Number(rawOpts.brokers) >= 3) ? 2 : 2);
+        if (haHint || (rawOpts.brokers !== undefined && Number(rawOpts.brokers) >= 3)) {
           specId = v >= 16 ? "c6.16u32g.cluster" : v >= 12 ? "c6.12u24g.cluster" : v >= 8 ? "c6.8u16g.cluster" : v >= 4 ? "c6.4u8g.cluster" : "c6.2u4g.cluster";
         } else {
           specId = "kafka.2u4g.single.small";
         }
       }
       options.spec_id = specId;
-      options.brokers = specId.includes(".single") ? 1 : Math.max(3, Math.round(Number(rawOpts.brokers ?? rawOpts.broker_count ?? rawOpts.nodes ?? 3)));
+
+      const rawBrokers = rawOpts.brokers ?? rawOpts.broker_count ?? rawOpts.nodes ?? rawOpts.node_count ?? rawNeeds.nodes ?? rawNeeds.replicas ?? rawNeeds.brokers;
+      if (rawBrokers !== undefined) {
+        const parsed = Number(rawBrokers);
+        options.brokers = Number.isNaN(parsed) ? rawBrokers : parsed;
+      } else {
+        options.brokers = specId.includes(".single") ? 1 : 3;
+      }
+
       const stGb = toGB(rawOpts.storage_per_broker_gb ?? rawOpts.storage_gb ?? rawOpts.storage ?? rawOpts.capacity ?? rawOpts.size ?? rawNeeds.storage ?? rawNeeds.capacity, `${r.id}.storage`);
-      options.storage_gb = stGb !== undefined ? Math.max(100, Math.round(stGb)) : 100;
+      if (stGb !== undefined) {
+        options.storage_gb = Math.round(stGb);
+      } else {
+        options.storage_gb = 100;
+      }
       if (rawOpts.storage_type !== undefined) options.storage_type = String(rawOpts.storage_type);
       spec = "dms.platinum.c6.kafka";
       needs = undefined;
@@ -721,28 +761,38 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
     }
 
     case "rabbitmq": {
-      const validSpecs = new Set([
-        "c6.2u4g.single", "c6.4u8g.single", "c6.8u16g.single", "c6.16u32g.single", "c6.24u48g.single",
-        "c6.2u4g.cluster", "c6.4u8g.cluster", "c6.8u16g.cluster", "c6.12u24g.cluster", "c6.16u32g.cluster", "c6.24u48g.cluster", "c6.32u64g.cluster",
-        "amqp.p1.large.2", "amqp.p1.large.4", "amqp.p2.large.6", "amqp.p2.large.10", "amqp.p2.large.14", "amqp.p2.large.20",
-        "amqp.p2.large.28", "amqp.p2.large.40", "amqp.p2.large.56", "amqp.p2.large.80", "amqp.p2.large.112", "amqp.p2.large.144",
-        "amqp.p2.large.200", "amqp.p2.large.240", "amqp.p2.large.280",
-      ]);
-      let specId = String(rawOpts.flavor ?? rawOpts.spec ?? rawOpts.spec_id ?? (spec && validSpecs.has(spec) ? spec : "")).trim();
-      if (!validSpecs.has(specId)) {
+      const explicitSpecRaw = rawOpts.flavor ?? rawOpts.spec ?? rawOpts.spec_id ?? rawOpts.specification ?? rawOpts.flavor_id ?? (spec && spec !== "dms.platinum.c6.rabbitmq" && spec !== "rabbitmq" && spec !== "dms-rabbitmq" ? spec : undefined);
+      const isSpecExplicit = explicitSpecRaw !== undefined && String(explicitSpecRaw).trim() !== "";
+      let specId: string;
+      if (isSpecExplicit) {
+        const trimmed = String(explicitSpecRaw).trim();
+        specId = RABBITMQ_SPEC_ALIASES[trimmed] ?? trimmed;
+      } else {
         const v = vcpus ?? 2;
-        if (haHint || Number(rawOpts.brokers ?? 1) >= 3) {
+        if (haHint || (rawOpts.brokers !== undefined && Number(rawOpts.brokers) >= 3)) {
           specId = v >= 16 ? "c6.16u32g.cluster" : v >= 8 ? "c6.8u16g.cluster" : v >= 4 ? "c6.4u8g.cluster" : "c6.2u4g.cluster";
         } else {
           specId = v >= 16 ? "c6.16u32g.single" : v >= 8 ? "c6.8u16g.single" : v >= 4 ? "c6.4u8g.single" : "c6.2u4g.single";
         }
       }
       options.spec_id = specId;
+
       const isAmqp = specId.startsWith("amqp.");
-      const rawBrokers = Number(rawOpts.brokers ?? rawOpts.broker_count ?? rawOpts.nodes ?? (specId.endsWith(".cluster") && !isAmqp ? 3 : 1));
-      options.brokers = (specId.endsWith(".single") || isAmqp) ? 1 : ([3, 5, 7].includes(rawBrokers) ? rawBrokers : 3);
+      const rawBrokers = rawOpts.brokers ?? rawOpts.broker_count ?? rawOpts.nodes ?? rawOpts.node_count ?? rawNeeds.nodes ?? rawNeeds.replicas ?? rawNeeds.brokers;
+      if (rawBrokers !== undefined) {
+        const parsed = Number(rawBrokers);
+        options.brokers = Number.isNaN(parsed) ? rawBrokers : parsed;
+      } else {
+        options.brokers = (specId.endsWith(".single") || isAmqp) ? 1 : 3;
+      }
+
       const stGb = toGB(rawOpts.storage_per_broker_gb ?? rawOpts.storage_gb ?? rawOpts.storage ?? rawOpts.capacity ?? rawOpts.size ?? rawNeeds.storage ?? rawNeeds.capacity, `${r.id}.storage`);
-      options.storage_gb = stGb !== undefined ? Math.max(100, Math.round(stGb)) : 100;
+      if (stGb !== undefined) {
+        options.storage_gb = Math.round(stGb);
+      } else {
+        options.storage_gb = 100;
+      }
+
       if (rawOpts.version !== undefined || rawOpts.engine_version !== undefined) {
         options.version = String(rawOpts.version ?? rawOpts.engine_version);
       } else if (isAmqp) {

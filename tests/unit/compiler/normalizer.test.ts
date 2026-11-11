@@ -205,4 +205,105 @@ describe("Compiler Normalizer Expansion and Scoped IaaS Mapping", () => {
       expect(card.options.ip_quantity).toBe(4);
     });
   });
+
+  describe("4. DMS Kafka and RabbitMQ Declarative Normalization", () => {
+    it("preserves explicit Kafka single-node spec with requested brokers 3 without substituting 1", () => {
+      const res = makeResource({
+        id: "kafka-explicit-invalid",
+        service: "kafka",
+        options: {
+          spec_id: "kafka.2u4g.single.small",
+          brokers: 3,
+        },
+      });
+      const card = normalizeResourceToCard(res);
+      expect(card.options.spec_id).toBe("kafka.2u4g.single.small");
+      expect(card.options.brokers).toBe(3);
+    });
+
+    it("preserves explicit RabbitMQ AMQP spec with requested brokers 3 without substituting 1", () => {
+      const res = makeResource({
+        id: "rabbit-amqp-invalid",
+        service: "rabbitmq",
+        options: {
+          spec_id: "amqp.p2.large.6",
+          version: "amqp",
+          brokers: 3,
+        },
+      });
+      const card = normalizeResourceToCard(res);
+      expect(card.options.spec_id).toBe("amqp.p2.large.6");
+      expect(card.options.brokers).toBe(3);
+      expect(card.options.version).toBe("amqp");
+    });
+
+    it("preserves explicit RabbitMQ c6 cluster with requested brokers 4 without substituting 3", () => {
+      const res = makeResource({
+        id: "rabbit-c6-invalid-brokers",
+        service: "rabbitmq",
+        options: {
+          spec_id: "c6.2u4g.cluster",
+          version: "3.8",
+          brokers: 4,
+        },
+      });
+      const card = normalizeResourceToCard(res);
+      expect(card.options.spec_id).toBe("c6.2u4g.cluster");
+      expect(card.options.brokers).toBe(4);
+    });
+
+    it("preserves explicit unknown spec_id without silently replacing with arbitrary known default", () => {
+      const res = makeResource({
+        id: "kafka-unknown-spec",
+        service: "kafka",
+        options: {
+          spec_id: "unknown-explicit-spec",
+          brokers: 3,
+        },
+      });
+      const card = normalizeResourceToCard(res);
+      expect(card.options.spec_id).toBe("unknown-explicit-spec");
+      expect(card.options.brokers).toBe(3);
+    });
+
+    it("uses heuristic selection when specification and broker inputs are omitted", () => {
+      const kafkaDefault = normalizeResourceToCard(makeResource({ id: "k-def", service: "kafka" }));
+      expect(kafkaDefault.options.spec_id).toBe("kafka.2u4g.single.small");
+      expect(kafkaDefault.options.brokers).toBe(1);
+
+      const rabbitDefault = normalizeResourceToCard(makeResource({ id: "r-def", service: "rabbitmq" }));
+      expect(rabbitDefault.options.spec_id).toBe("c6.2u4g.single");
+      expect(rabbitDefault.options.brokers).toBe(1);
+
+      const kafkaCluster = normalizeResourceToCard(makeResource({ id: "k-cluster", service: "kafka", availability: "multi-az" }));
+      expect(kafkaCluster.options.spec_id).toBe("c6.2u4g.cluster");
+      expect(kafkaCluster.options.brokers).toBe(3);
+    });
+
+    it("respects flavor, spec, broker_count and nodes aliases", () => {
+      const resKafka = makeResource({
+        id: "k-alias",
+        service: "kafka",
+        options: {
+          flavor: "c6.4u8g.cluster",
+          broker_count: 5,
+        },
+      });
+      const cardKafka = normalizeResourceToCard(resKafka);
+      expect(cardKafka.options.spec_id).toBe("c6.4u8g.cluster");
+      expect(cardKafka.options.brokers).toBe(5);
+
+      const resRabbit = makeResource({
+        id: "r-alias",
+        service: "rabbitmq",
+        options: {
+          spec: "c6.4u8g.cluster",
+          nodes: 5,
+        },
+      });
+      const cardRabbit = normalizeResourceToCard(resRabbit);
+      expect(cardRabbit.options.spec_id).toBe("c6.4u8g.cluster");
+      expect(cardRabbit.options.brokers).toBe(5);
+    });
+  });
 });
