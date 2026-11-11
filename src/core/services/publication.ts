@@ -76,5 +76,14 @@ export const SPEC_RULES: Record<string, (spec: string, options: Record<string, u
     const want = HSS_EDITIONS[spec];
     return want && options.edition !== undefined && options.edition !== want ? `HSS spec ${spec} is page edition ${want}, not ${String(options.edition)}.` : null;
   },
+  vpn: (_spec, options) => {
+    const set = (...names: string[]) => names.filter(n => options[n] !== undefined);
+    const p2c = options.mode === "dataInfo_21_", priv = options.network_type === "dataInfo_15_";
+    if (p2c) { const bad = set("eip1_mbps", "eip2_mbps", "spec", "connection_groups", "private_spec", "network_type"); if (bad.length) return `VPN Point-to-Cloud has its own controls (p2c_*); ${bad.join(", ")} exist only in Site-to-Cloud mode.`; }
+    else if (set("p2c_eip_mbps", "p2c_connections", "p2c_spec").length) return "p2c_* options need mode dataInfo_21_ (Point-to-Cloud).";
+    if (priv) { const bad = set("eip1_mbps", "eip2_mbps", "spec"); if (bad.length) return `A private-network VPN has no EIPs and uses private_spec; ${bad.join(", ")} exist only on a public network.`; }
+    else if (!p2c && options.private_spec !== undefined) return "private_spec needs network_type dataInfo_15_ (private network).";
+    return null;
+  },
   hrds: spec => /\.y1\./.test(spec) ? null : `Dedicated RDS (hrds) is sold as the y1 family (rds.<engine>.y1.*), not ${spec}.`,
 };

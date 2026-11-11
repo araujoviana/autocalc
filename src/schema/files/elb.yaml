@@ -47,8 +47,7 @@ controls:
   values: catalog
   after:
   - calculator_elb_type_elbType
-  unsupported: true
-  note: dedicated ELB control not used by shared ELB builder
+  option: az_type
 - id: calculator_elb_type_spec_flavorCatagory
   kind: base-radio-group
   title: Specifications
@@ -68,8 +67,7 @@ controls:
   values: catalog
   after:
   - calculator_elb_type_spec_flavorCatagory
-  unsupported: true
-  note: dedicated ELB control not used by shared ELB builder
+  option: protocol
 - id: calculator_tcp_new_connections_Stepper_0
   kind: base-stepper
   title: New Connections

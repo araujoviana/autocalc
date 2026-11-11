@@ -37,7 +37,7 @@ controls:
   after:
   - global_REGIONINFO_chargeMode
   unsupported: true
-  note: fixed to standard CCE cluster category by the builder
+  note: mapped by the builder based on cluster_type (dataInfo_13_ for standard/turbo, dataInfo_36_ for autopilot)
 - id: calculator_clustertype_radio_clusterType
   kind: base-radio-group
   title: Cluster Type

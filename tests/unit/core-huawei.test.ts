@@ -71,3 +71,9 @@ test("parseCompute reads vCPUs and memory in GB, or nothing", () => {
   expect(parseCompute("disk")).toEqual({});
   expect(parseCompute("Memory: 512 MB")).toEqual({ memory_gb: 0.5 });
 });
+
+test("a VPN gateway SKU outside the primary group is offered without a list price", async () => {
+  const p = new HuaweiProvider(source([sku("19_bgp", { monthly: { amount: 5 } }), { ...sku("V300", {}), group: "vpn_vpn.ipsecvpn" }]));
+  const found = await p.candidates(req({ service: "vpn", spec: "V300", group: "vpc_bandwidth" }));
+  expect(found.map(x => x.spec)).toContain("V300");
+});

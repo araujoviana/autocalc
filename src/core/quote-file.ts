@@ -153,7 +153,8 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
     const requirement = draft.requirements[index]!, row: Dict = { id: card.id, unmapped_options: await unmappedOptions(card, dir) }, decision = decided.get(requirement.id);
     if (decision) {
       const ranked = rank(requirement, await ctx.provider.candidates(requirement)).find(x => x.candidate.spec === decision.spec);
-      const price = ranked && !USAGE_PRICED.has(requirement.service.toLowerCase()) ? formatDecimal(ranked.candidate.price) : null;
+      const listed = ranked && !USAGE_PRICED.has(requirement.service.toLowerCase()) ? formatDecimal(ranked.candidate.price) : null;
+      const price = listed && parseFloat(listed) > 0 ? listed : null;
       Object.assign(row, { spec: decision.spec, price });
       if (USAGE_PRICED.has(requirement.service.toLowerCase())) row.price_note = "priced by usage: no list price at plan time, so the total is incomplete until the list is rated (apply-quote)";
       const conflict = SPEC_RULES[requirement.service.toLowerCase()]?.(decision.spec, requirement.options);

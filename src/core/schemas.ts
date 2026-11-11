@@ -68,7 +68,17 @@ const ecs = z.strictObject({ service: serviceCode("ecs"), ...common, billing: Ca
   image: textDefault(ECS_DEFAULT_IMAGE, "Image name"), system_disk: Disk.default(["GPSSD", 40]), data_disks: z.array(Disk).optional().describe("Data disks in GB"),
   bandwidth_mbit: Nonnegative.optional().describe("Public bandwidth in Mbit/s"), bandwidth_type: textDefault("19_bgp", "Bandwidth type"), ri_time: textDefault("1_3", "Reserved instance term") });
 const evs = z.strictObject({ service: serviceCode("evs"), ...common, billing: standardBilling("ondemand"), type: textDefault("GPSSD", "Disk type"), size_gb: count(100, "Disk size in GB"), iops: Nonnegative.optional(), throughput: Nonnegative.optional() });
-const cce = z.strictObject({ service: serviceCode("cce"), ...common, billing: standardBilling("ondemand"), cluster_type: textDefault("standard", "Cluster type"), ha: BooleanInput.default(true), scale: textDefault("small", "Cluster scale") });
+const cce = z.strictObject({
+  service: serviceCode("cce"),
+  ...common,
+  billing: standardBilling("ondemand"),
+  cluster_type: textDefault("standard", "Cluster type: standard, turbo, autopilot"),
+  spec: Nonempty.optional().describe("Explicit catalog spec, e.g. cce.s1.small, cce.s2.medium, cce.autopilot.cluster"),
+  ha: BooleanInput.default(true).describe("High availability (HA 3-master) for Standard/Turbo clusters"),
+  scale: textDefault("small", "Cluster scale: small (50), medium (200), large (1000), xlarge (2000)"),
+  vcpus: Nonnegative.optional().describe("Container vCPUs for Autopilot clusters"),
+  memory_gb: Nonnegative.optional().describe("Container memory in GiB for Autopilot clusters"),
+});
 const OBS_PACKAGE_SIZES = ["40gb", "100gb", "500gb", "1tb", "2tb", "5tb", "10tb", "20tb", "50tb", "100tb", "200tb", "300tb", "400tb", "500tb", "1pb", "10pb"] as const;
 const OBS_TRAFFIC_SIZES = ["50gb", "100gb", "1tb", "10tb", "30tb", "50tb", "100tb", "200tb", "300tb"] as const;
 /** Request lines are typed in the page's own unit (requests per step), 0 to 9,999. */
@@ -85,6 +95,8 @@ const elb = z.strictObject({
   type: z.enum(["shared", "dedicated"]).default("shared").optional().describe("Load balancer type"),
   flavor: Nonempty.optional().describe("Dedicated load balancer flavor/specification, e.g. elbv3.professional or elbv3.basic.1az"),
   spec: Nonempty.optional().describe("Alias for flavor"),
+  az_type: z.enum(["single", "multi"]).default("single").optional().describe("Availability zone placement: single (calc_64_) or multi (calc_67_)"),
+  protocol: z.enum(["tcp", "udp", "tls"]).default("tcp").optional().describe("Network protocol type for L4: tcp (calc_69_), udp (calc_70_), tls (calc_71_)"),
   public_ip_count: Nonnegative.pipe(z.number().int().min(1).max(2)).default(2).optional().describe("Network type selector of the shared load balancer page (1 or 2)"),
   l4_lcu: Nonnegative.optional().describe("Network load balancing LCUs"),
   l7_lcu: Nonnegative.optional().describe("Application load balancing LCUs"),

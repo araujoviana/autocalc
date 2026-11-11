@@ -48,8 +48,7 @@ controls:
   values: catalog
   after:
   - calculator_gatewayType_radio_gatewayType
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: mode
 - id: calculator_evpnNetworkType_switch_UNSET_Switch
   kind: base-radio-group
   title: Network Type
@@ -58,8 +57,7 @@ controls:
   values: catalog
   after:
   - calculator_gatewayMode_radio_gatewayMode
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: network_type
 - id: calculator_evpnGatewaySpec_radio_calGatewaySpec
   kind: base-radio-group
   title: Specification
@@ -154,3 +152,49 @@ controls:
   after:
   - calculator_evpnEip2_stepper_Stepper_0
   option: periods
+- id: calculator_evpnGatewaySpec_radio_calSpecNoBasic
+  kind: base-radio-group
+  title: Specification
+  value_type: Filter
+  option_key: calSpecNoBasic
+  values: catalog
+  after:
+  - calculator_evpnNetworkType_switch_UNSET_Switch
+  option: private_spec
+- id: calculator_p2cEip_stepper_Stepper_0
+  kind: base-stepper
+  title: EIP Bandwidth
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 300.0
+    default: 1.0
+    unit: Mbit/s
+  after:
+  - calculator_p2cGatewaySpec_radio_Stepper_0
+  option: p2c_eip_mbps
+- id: calculator_p2cGatewaySpec_radio_Stepper_0
+  kind: base-stepper
+  title: VPN Connections
+  value_type: Stepper_Resource
+  option_key: UNSET_Stepper_0
+  values: catalog
+  ranges:
+  - min: 1.0
+    max: 500.0
+    default: 1.0
+    when: P2C-VPN-Ent.Pro1
+  after:
+  - calculator_p2cGatewaySpec_radio_calP2cGatewaySpec
+  option: p2c_connections
+- id: calculator_p2cGatewaySpec_radio_calP2cGatewaySpec
+  kind: base-radio-group
+  title: Specification
+  value_type: Filter
+  option_key: calP2cGatewaySpec
+  values: catalog
+  after:
+  - calculator_gatewayMode_radio_gatewayMode
+  option: p2c_spec

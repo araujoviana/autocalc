@@ -7,18 +7,53 @@ export async function buildElb(input: Extract<CardInput, { service: "elb" }>, co
   if (input.type === "dedicated") {
     if (input.billing !== "ondemand") throw new CalculatorError("VALIDATION", "Dedicated ELB only supports on-demand billing");
     const flavor = input.flavor ?? input.spec ?? "elbv3.professional";
-    const base = await selectProduct(context, "elb", input.region, "elb_elbv3", flavor, "ondemand", input.hours, plan => plan.billingEvent === "event.type.elb.elbv3.instance_duration");
-    Object.assign(base, { addToList_title: "calc_44_", addToList_product: "dataInfo_3_", productNum: 1, inquiryTag: "normal" });
-    if (!Object.hasOwn(base, "usageFactor")) base.usageFactor = "instance_duration";
+    const azType = input.az_type === "multi" ? "calc_67_" : "calc_64_";
+    const protocolFlavor = ({ tcp: "calc_69_", udp: "calc_70_", tls: "calc_71_" } as Record<string, string>)[input.protocol ?? "tcp"] ?? "calc_69_";
+
+    // 1. Select the base instance product with matching azType and protocolFlavor
+    const base = await selectProduct(
+      context,
+      "elb",
+      input.region,
+      "elb_elbv3",
+      flavor,
+      "ondemand",
+      input.hours,
+      plan => plan.billingEvent === "event.type.elb.elbv3.instance_duration",
+      p => p.azType === azType && (p.flavorType === protocolFlavor || p.flavorType === "calc_69_")
+    );
+    Object.assign(base, {
+      addToList_title: "calc_44_",
+      addToList_product: `${azType} | dataInfo_3_`,
+      productNum: 1,
+      inquiryTag: "normal",
+      resouceSizeMeasureId: 14,
+      usageMeasureId: 4,
+      usageValue: input.hours,
+      usageFactor: "instance_duration",
+      elbType: "dataInfo_3_",
+      azType,
+      flavorType: protocolFlavor,
+    });
     const products = [base];
 
     const l4 = input.l4_lcu ?? input.lcu ?? 0;
     const l7 = input.l7_lcu ?? 0;
     if (l4 > 0) {
-      const pL4 = await selectProduct(context, "elb", input.region, "elb_elbv3", flavor, "ondemand", input.hours, plan => plan.billingEvent === "event.type.elb.elbv3.l4_lcu_duration");
+      const pL4 = await selectProduct(
+        context,
+        "elb",
+        input.region,
+        "elb_elbv3",
+        flavor,
+        "ondemand",
+        input.hours,
+        plan => plan.billingEvent === "event.type.elb.elbv3.l4_lcu_duration",
+        p => p.azType === azType && (p.flavorType === protocolFlavor || p.flavorType === "calc_38_" || p.flavorType === "calc_69_")
+      );
       Object.assign(pL4, {
-        addToList_title: "calc_45_",
-        addToList_product: "calc_60_",
+        addToList_title: protocolFlavor,
+        addToList_product: `${azType} | ${l4} LCU`,
         productNum: 1,
         inquiryTag: "normal",
         resourceSize: l4,
@@ -26,14 +61,27 @@ export async function buildElb(input: Extract<CardInput, { service: "elb" }>, co
         usageFactor: "l4_lcu_duration",
         usageMeasureId: 4,
         usageValue: input.hours,
+        cpqPurchaseCapacity: l4,
+        azType,
+        flavorType: protocolFlavor,
       });
       products.push(pL4);
     }
     if (l7 > 0) {
-      const pL7 = await selectProduct(context, "elb", input.region, "elb_elbv3", flavor, "ondemand", input.hours, plan => plan.billingEvent === "event.type.elb.elbv3.l7_lcu_duration");
+      const pL7 = await selectProduct(
+        context,
+        "elb",
+        input.region,
+        "elb_elbv3",
+        flavor,
+        "ondemand",
+        input.hours,
+        plan => plan.billingEvent === "event.type.elb.elbv3.l7_lcu_duration",
+        p => p.azType === azType && p.flavorType === "calc_39_"
+      );
       Object.assign(pL7, {
-        addToList_title: "calc_45_",
-        addToList_product: "calc_61_",
+        addToList_title: "calc_39_",
+        addToList_product: `${azType} | ${l7} LCU`,
         productNum: 1,
         inquiryTag: "normal",
         resourceSize: l7,
@@ -41,11 +89,16 @@ export async function buildElb(input: Extract<CardInput, { service: "elb" }>, co
         usageFactor: "l7_lcu_duration",
         usageMeasureId: 4,
         usageValue: input.hours,
+        cpqPurchaseCapacity: l7,
+        azType,
+        flavorType: "calc_39_",
       });
       products.push(pL7);
     }
     const render: Record<string, unknown> = {
       calculator_elb_type: { elbType: "dataInfo_3_" },
+      calculator_elb_type_spec: { azType, flavorCatagory: "calc_43_" },
+      calculator_flavor_checkboxGroup: { flavorType: [protocolFlavor, ...(l7 > 0 ? ["calc_39_"] : [])] },
     };
     if (l4 > 0) {
       render.calculator_lcu_network = { UNSET_Stepper_0: stepper(14, l4, "calc_37_", "calc_37_") };

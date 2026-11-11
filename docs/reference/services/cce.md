@@ -64,6 +64,9 @@ Top-level card fields: `id` (required), `service: cce`, `region`, `billing` (`on
 | `options.cluster_type` | `string` | Catalog / Enum | Cluster edition (`standard`). CCE Turbo is currently blocked pending verification. *(Portal controls: `calculator_clustertype_radio_clusterType`)* |
 | `options.scale` | `string` | Catalog / Enum | Maximum worker node scale (`small` = 50 nodes, `medium` = 200 nodes, `large` = 1000 nodes, `xlarge` = 2000 nodes). Accepts `50nodes`, `200nodes`, `1000nodes`, `2000nodes`. *(Portal controls: `calculator_clustertype_radio_clusterNodeScale`)* |
 | `options.ha` | `string` | Catalog / Enum | High-availability multi-master control plane (`true` selects `cce.s2.*` multi-master, `false` selects `cce.s1.*` single-master). Alias: `control_plane_ha: true` or `master_az: 3AZ`. *(Portal controls: `calculator_clustertype_radio_clusterMasterScale`)* |
+| `options.memory_gb` | `any` | Builder-validated | Builder option `memory_gb`. |
+| `options.spec` | `any` | Builder-validated | Builder option `spec`. |
+| `options.vcpus` | `any` | Builder-validated | Builder option `vcpus`. |
 
 ---
 
@@ -83,7 +86,7 @@ Top-level card fields: `id` (required), `service: cce`, `region`, `billing` (`on
     | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
     | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
     | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-    | `calculator_clustertype_radio_productType` | Product Category | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (fixed to standard CCE cluster category by the builder) |
+    | `calculator_clustertype_radio_productType` | Product Category | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (mapped by the builder based on cluster_type (dataInfo_13_ for standard/turbo, dataInfo_36_ for autopilot)) |
     | `calculator_clustertype_radio_clusterType` | Cluster Type | `base-radio-group` | Catalog / Enum | Mapped → `cluster_type` |
     | `calculator_clustertype_radio_clusterNodeScale` | Cluster Scale | `base-radio-group` | Catalog / Enum | Mapped → `scale` |
     | `calculator_clustertype_radio_clusterMasterScale` | Master Nodes | `base-radio-group` | Catalog / Enum | Mapped → `ha` |

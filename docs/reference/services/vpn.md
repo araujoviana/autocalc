@@ -8,7 +8,7 @@
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `monthly`, `yearly`, `ondemand` |
 | **Primary Catalog Group** | `vpc_bandwidth` |
-| **Schema Coverage** | 13 controls (7 mapped, 6 intentionally fixed/unsupported) |
+| **Schema Coverage** | 17 controls (13 mapped, 4 intentionally fixed/unsupported) |
 
 ---
 
@@ -64,10 +64,16 @@ Top-level card fields: `id` (required), `service: vpn`, `region`, `billing` (`mo
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `vpc_bandwidth`. |
+| `options.mode` | `string` | Catalog / Enum | **Mode**. Maps to portal control `calculator_gatewayMode_radio_gatewayMode`. |
+| `options.network_type` | `string` | Catalog / Enum | **Network Type**. Maps to portal control `calculator_evpnNetworkType_switch_UNSET_Switch`. |
 | `options.spec` | `string` | Catalog / Enum | VPN gateway specification (`Basic`, `Professional1`, `Professional2`). *(Portal controls: `calculator_evpnGatewaySpec_radio_calGatewaySpec`)* |
 | `options.connection_groups` | `number / unit` | Default `10` when `S2C-VPN-Ent.Basic`<br>`10..100` (step 1) when `V300||V1G||S2C-VPN-Ent.GM`<br>`1..10` (step 1) when `S2C-VPN-Ent.Basic`<br>`1..100` (step 1) when `V300||V1G||S2C-VPN-Ent.GM` | Number of IPsec VPN connection groups (default: 10; max 100). Alias: `connections`. *(Portal controls: `calculator_evpnGatewaySpec_radio_Stepper_1`)* |
 | `options.eip1_mbps` | `number / unit` | `1..300 Mbit/s` (step 1) | Primary active tunnel EIP bandwidth in Mbit/s (1–300 Mbit/s). In declarative quotes, write `bandwidth: 20 Mbps` (sets both tunnels). *(Portal controls: `calculator_evpnEip1_stepper_Stepper_0`)* |
 | `options.eip2_mbps` | `number / unit` | `1..300 Mbit/s` (step 1) | Secondary active tunnel EIP bandwidth in Mbit/s (1–300 Mbit/s). *(Portal controls: `calculator_evpnEip2_stepper_Stepper_0`)* |
+| `options.private_spec` | `string` | Catalog / Enum | **Specification**. Maps to portal control `calculator_evpnGatewaySpec_radio_calSpecNoBasic`. |
+| `options.p2c_eip_mbps` | `number / unit` | `1..300 Mbit/s` (step 1) | **EIP Bandwidth**. Maps to portal control `calculator_p2cEip_stepper_Stepper_0`. |
+| `options.p2c_connections` | `number / unit` | `1..500` (step 1) when `P2C-VPN-Ent.Pro1` | **VPN Connections**. Maps to portal control `calculator_p2cGatewaySpec_radio_Stepper_0`. |
+| `options.p2c_spec` | `string` | Catalog / Enum | **Specification**. Maps to portal control `calculator_p2cGatewaySpec_radio_calP2cGatewaySpec`. |
 
 ---
 
@@ -78,7 +84,7 @@ Top-level card fields: `id` (required), `service: vpn`, `region`, `billing` (`mo
 
 ---
 
-??? note "Portal Control Schema (autocalc://schema/vpn) — 13 controls"
+??? note "Portal Control Schema (autocalc://schema/vpn) — 17 controls"
 
     Source file: `src/schema/files/vpn.yaml`
     
@@ -88,8 +94,8 @@ Top-level card fields: `id` (required), `service: vpn`, `region`, `billing` (`mo
     | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
     | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
     | `calculator_gatewayType_radio_gatewayType` | VPN Edition | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-    | `calculator_gatewayMode_radio_gatewayMode` | Mode | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-    | `calculator_evpnNetworkType_switch_UNSET_Switch` | Network Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_gatewayMode_radio_gatewayMode` | Mode | `base-radio-group` | Catalog / Enum | Mapped → `mode` |
+    | `calculator_evpnNetworkType_switch_UNSET_Switch` | Network Type | `base-radio-group` | Catalog / Enum | Mapped → `network_type` |
     | `calculator_evpnGatewaySpec_radio_calGatewaySpec` | Specification | `base-radio-group` | Catalog / Enum | Mapped → `spec` |
     | `calculator_evpnGatewaySpec_radio_calNonFixedIP` | Access via Non-fixed IP Addresses | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
     | `calculator_evpnGatewaySpec_radio_Stepper_1` | VPN Connection Groups | `base-radio-stepper` | Default `10` when `S2C-VPN-Ent.Basic`<br>`10..100` (step 1) when `V300||V1G||S2C-VPN-Ent.GM`<br>`1..10` (step 1) when `S2C-VPN-Ent.Basic`<br>`1..100` (step 1) when `V300||V1G||S2C-VPN-Ent.GM` | Mapped → `connection_groups` |
@@ -97,6 +103,10 @@ Top-level card fields: `id` (required), `service: vpn`, `region`, `billing` (`mo
     | `calculator_evpnEip1_stepper_Stepper_0` | EIP 1 Bandwidth | `base-stepper` | `1..300 Mbit/s` (step 1) | Mapped → `eip1_mbps` |
     | `calculator_evpnEip2_stepper_Stepper_0` | EIP 2 Bandwidth | `base-stepper` | `1..300 Mbit/s` (step 1) | Mapped → `eip2_mbps` |
     | `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
+    | `calculator_evpnGatewaySpec_radio_calSpecNoBasic` | Specification | `base-radio-group` | Catalog / Enum | Mapped → `private_spec` |
+    | `calculator_p2cEip_stepper_Stepper_0` | EIP Bandwidth | `base-stepper` | `1..300 Mbit/s` (step 1) | Mapped → `p2c_eip_mbps` |
+    | `calculator_p2cGatewaySpec_radio_Stepper_0` | VPN Connections | `base-stepper` | `1..500` (step 1) when `P2C-VPN-Ent.Pro1` | Mapped → `p2c_connections` |
+    | `calculator_p2cGatewaySpec_radio_calP2cGatewaySpec` | Specification | `base-radio-group` | Catalog / Enum | Mapped → `p2c_spec` |
 
 ---
 

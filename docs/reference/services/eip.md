@@ -8,7 +8,7 @@
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `monthly`, `yearly`, `ondemand` |
 | **Primary Catalog Group** | `vpc_bandwidth` |
-| **Schema Coverage** | 9 controls (5 mapped, 4 intentionally fixed/unsupported) |
+| **Schema Coverage** | 10 controls (7 mapped, 3 intentionally fixed/unsupported) |
 
 ---
 
@@ -59,8 +59,10 @@ Top-level card fields: `id` (required), `service: eip`, `region`, `billing` (`mo
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `vpc_bandwidth`. |
+| `options.billed_by` | `string` | Catalog / Enum | **Billed By**. Maps to portal control `calculator_eip_radio_eipType`. |
 | `options.bandwidth_mbps` | `number / unit` | `1..2000` (step 1) when `^19_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`5..2000` (step 1) when `^19_share$`<br>`1..99 calc_29_` (step 1) when `^19_share$`<br>`1..9999` (step 1) when `^12_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`1..9999` (step 1) when `^12_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`300..2000` (step 1) | Dedicated public IP bandwidth in Mbit/s (1–2000 Mbit/s for BGP). In declarative quotes, write `bandwidth: 10 Mbps`. *(Portal controls: `calculator_eip_radio_Stepper_0`)* |
 | `options.ip_quantity` | `number / unit` | `1..99  ` (step 1) | Number of public IP addresses (1–99). In declarative quotes, write `count: 1` or `quantity: 1`. *(Portal controls: `calculator_ipQuantity_stepper_Stepper_0`)* |
+| `options.traffic_gb` | `number / unit` | `1..2000` (step 1) when `^19_(s?|(youxuan)?)bgp(-.*-los1a)?$` | **Traffic**. Maps to portal control `calculator_eip_radio_Stepper_3`. |
 
 ---
 
@@ -72,7 +74,7 @@ Top-level card fields: `id` (required), `service: eip`, `region`, `billing` (`mo
 
 ---
 
-??? note "Portal Control Schema (autocalc://schema/eip) — 9 controls"
+??? note "Portal Control Schema (autocalc://schema/eip) — 10 controls"
 
     Source file: `src/schema/files/eip.yaml`
     
@@ -83,10 +85,11 @@ Top-level card fields: `id` (required), `service: eip`, `region`, `billing` (`mo
     | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
     | `calculator_eip_radio_type_shareType` | Product Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
     | `calculator_eip_radio_type_eipSpec` | Routing Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-    | `calculator_eip_radio_eipType` | Billed By | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_eip_radio_eipType` | Billed By | `base-radio-group` | Catalog / Enum | Mapped → `billed_by` |
     | `calculator_eip_radio_Stepper_0` | Bandwidth | `base-stepper` | `1..2000` (step 1) when `^19_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`5..2000` (step 1) when `^19_share$`<br>`1..99 calc_29_` (step 1) when `^19_share$`<br>`1..9999` (step 1) when `^12_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`1..9999` (step 1) when `^12_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`300..2000` (step 1) | Mapped → `bandwidth_mbps` |
     | `calculator_ipQuantity_stepper_Stepper_0` | EIP Quantity | `base-stepper` | `1..99  ` (step 1) | Mapped → `ip_quantity` |
     | `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
+    | `calculator_eip_radio_Stepper_3` | Traffic | `base-stepper` | `1..2000` (step 1) when `^19_(s?|(youxuan)?)bgp(-.*-los1a)?$` | Mapped → `traffic_gb` |
 
 ---
 

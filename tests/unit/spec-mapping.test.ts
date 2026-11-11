@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { PRIMARY_GROUP, specOption } from "../../src/core/services/publication.ts";
+import { PRIMARY_GROUP, SPEC_RULES, specOption } from "../../src/core/services/publication.ts";
 
 test("a catalog spec becomes the value its builder option expects", () => {
   expect(specOption("nat", "natgateway_small")).toBe("small");
@@ -54,4 +54,15 @@ test("MaaS is publishable, and a service listed only under regionBeta counts as 
   const menu = { menuInfos: [{ subCategoryLists: [{ urlPath: "maas", regionBeta: { regionList: ["ap-southeast-1"], "ap-southeast-1": { common: ["ONDEMAND"] } } }] }] };
   expect(() => checkAvailability(menu, "maas", "ap-southeast-1", "ondemand")).not.toThrow();
   expect(() => checkAvailability(menu, "maas", "sa-brazil-1", "ondemand")).toThrow("not sold in sa-brazil-1");
+});
+
+test("VPN plan rules keep each mode's controls apart", () => {
+  const rule = SPEC_RULES.vpn!;
+  expect(rule("19_bgp", { eip1_mbps: 5 })).toBeNull();
+  expect(rule("19_bgp", { mode: "dataInfo_21_", p2c_eip_mbps: 5, p2c_connections: 10 })).toBeNull();
+  expect(rule("19_bgp", { mode: "dataInfo_21_", eip1_mbps: 5 })).toContain("Point-to-Cloud");
+  expect(rule("19_bgp", { p2c_spec: "dataInfo_300_" })).toContain("p2c_*");
+  expect(rule("19_bgp", { network_type: "dataInfo_15_", private_spec: "dataInfo_300_", connection_groups: 10 })).toBeNull();
+  expect(rule("19_bgp", { network_type: "dataInfo_15_", eip1_mbps: 5 })).toContain("private-network");
+  expect(rule("19_bgp", { private_spec: "dataInfo_300_" })).toContain("private_spec");
 });

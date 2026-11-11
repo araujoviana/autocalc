@@ -152,6 +152,12 @@ export const RECIPES: Record<string, Recipe> = {
     eip2_mbps: "calculator_evpnEip2_stepper_Stepper_0",
     spec: "calculator_evpnGatewaySpec_radio_calGatewaySpec",
     connection_groups: "calculator_evpnGatewaySpec_radio_Stepper_1",
+    mode: "calculator_gatewayMode_radio_gatewayMode",
+    network_type: "calculator_evpnNetworkType_switch_UNSET_Switch",
+    private_spec: "calculator_evpnGatewaySpec_radio_calSpecNoBasic",
+    p2c_eip_mbps: "calculator_p2cEip_stepper_Stepper_0",
+    p2c_connections: "calculator_p2cGatewaySpec_radio_Stepper_0",
+    p2c_spec: "calculator_p2cGatewaySpec_radio_calP2cGatewaySpec",
   }, { modes: PM_OD }),
   cfw: recipe("Cloud Firewall", {
     edition: "calculator_cfw_editionRadio_edition",

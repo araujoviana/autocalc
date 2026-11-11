@@ -128,3 +128,54 @@ test("CCE builds unified Standard/Turbo cluster family and verifies vendor contr
   };
   await expect(buildCce({ service: "cce", region: "sa-brazil-1", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "standard", ha: true, scale: "small" }, brokenContext)).rejects.toThrow(/missing required vendor control/i);
 });
+
+test("CCE Autopilot is supported in sa-brazil-1 and verified unavailable in la-south-2", async () => {
+  const { createSyntheticBusinessCatalog } = await import("../support/business-catalog.ts");
+  const { catalog } = createSyntheticBusinessCatalog();
+  const context = {
+    productInfo: (service: string, region: string) => catalog.productInfo(service, region),
+    rate: async (body: Record<string, unknown>) => ({
+      productRatingResult: (body.productInfos as Array<{ id: string }>).map(({ id }) => ({ id, amount: 1, originalAmount: 1 })),
+    }),
+  };
+
+  // 1. sa-brazil-1 Autopilot base cluster
+  const spAutopilot = await buildCce(
+    { service: "cce", region: "sa-brazil-1", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "autopilot", ha: true, scale: "small" },
+    context
+  );
+  expect((spAutopilot.selectedProduct.productAllInfos as any[]).length).toBe(1);
+  const clusterProd = (spAutopilot.selectedProduct.productAllInfos as any[])[0];
+  expect(clusterProd.resourceSpecCode).toBe("cce.autopilot.cluster");
+  expect(clusterProd.productType).toBe("dataInfo_36_");
+  expect(clusterProd.addToList_product).toBe("dataInfo_36_");
+  const render = (spAutopilot.rewriteValue.template_RENDER as any);
+  expect(render.calculator_clustertype_radio.productType).toBe("dataInfo_36_");
+  expect(render.calculator_cce_cciType_switch.cciType).toBe("calc_17_");
+
+  // 2. sa-brazil-1 Autopilot with container vCPUs and memory
+  const spAutopilotWithResources = await buildCce(
+    { service: "cce", region: "sa-brazil-1", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "autopilot", ha: true, scale: "small", vcpus: 4, memory_gb: 16 },
+    context
+  );
+  expect((spAutopilotWithResources.selectedProduct.productAllInfos as any[]).length).toBe(3);
+  const products = spAutopilotWithResources.selectedProduct.productAllInfos as any[];
+  expect(products[0].resourceSpecCode).toBe("cce.autopilot.cluster");
+  expect(products[1].resourceSpecCode).toBe("autopilot.container.cpu");
+  expect(products[1].resourceSize).toBe(4);
+  expect(products[2].resourceSpecCode).toBe("autopilot.container.mem");
+  expect(products[2].resourceSize).toBe(16);
+  const renderResources = spAutopilotWithResources.rewriteValue.template_RENDER as any;
+  expect(renderResources.calculator_vCPUs_stepper.UNSET_Stepper_0.measureValue).toBe(4);
+  expect(renderResources.calculator_mem_stepper.UNSET_Stepper_0.measureValue).toBe(16);
+
+  // 3. la-south-2 Autopilot is unavailable -> fails closed
+  await expect(
+    buildCce({ service: "cce", region: "la-south-2", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "autopilot", ha: true, scale: "small" }, context)
+  ).rejects.toThrow(/CCE Autopilot is not offered in la-south-2/);
+
+  // 4. Standalone legacy cce.t* request fails closed with portal limitation error
+  await expect(
+    buildCce({ service: "cce", region: "sa-brazil-1", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "standard", ha: true, scale: "small", spec: "cce.t2.small" }, context)
+  ).rejects.toThrow(/Standalone CCE Turbo legacy SKU 'cce.t2.small' cannot be encoded/);
+});

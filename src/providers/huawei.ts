@@ -5,6 +5,8 @@ import type { Provider } from "../core/quote/provider.ts";
 const BILLING = ["ondemand", "monthly", "yearly"];
 /** Same set as USAGE_PRICED in core/services/publication.ts, kept here so the provider does not import the services layer. */
 const USAGE_PRICED = new Set(["obs", "dss", "memcached", "maas"]);
+/** Services where a named spec outside the primary group is accepted without a list price. */
+const UNLISTED_PRICE = new Set(["vpn"]);
 
 export interface CatalogSku { group: string; spec: string; description: string; prices: Record<string, { amount: number }>; offPage?: boolean }
 export interface HuaweiSource {
@@ -59,6 +61,11 @@ export class HuaweiProvider implements Provider {
         specs.add(sku.spec);
         out.push(candidate(sku.spec, req.region, req.billing, "0", {}, 0, "priced from usage when the list is rated"));
       }
+    }
+    // a VPN private-network card is the gateway SKU itself (V300): it sits in another group and has no list price
+    if (req.spec && !out.some(c => c.spec === req.spec) && UNLISTED_PRICE.has(req.service.toLowerCase())) {
+      const sku = (await this.source.skus(req.service, req.region)).find(item => item.spec === req.spec && !item.offPage);
+      if (sku) out.push(candidate(sku.spec, req.region, req.billing, "0", {}, 0, "no list price; priced when the list is rated"));
     }
     return out;
   }

@@ -18,24 +18,24 @@ Execution detail: `docs/superpowers/plans/2026-11-10-latam-cce-iaas-dms-coverage
 ## 2b. Test foundation and harness sensitivity
 
 - [x] 2b.1 Fix harness product comparison (`diffProducts`) as a semantic multiset preserving multiplicity, capacity, unit, region, and billing dimensions; verify regression tests.
-- [x] 2b.2 Replace blanket mock injections in scenario integration tests with faithful per-resource doubles and explicit assertion checks.
+- [ ] 2b.2 Keep broad scenario test explicitly scoped to orchestration, and add an independent semantic-contract integration suite for CCE/ELB/EIP/DMS/OBS verifying same-service/same-region/same-billing resources with different options/specs and controlled corruptions.
 - [x] 2b.3 Add deliberate fault-injection tests proving sensitivity to wrong topology/category, missing controls, changed capacity/unit/region, missing/duplicate products, broker storage multiplication, and publish gate invariant enforcement.
 
 ## 3. CCE infrastructure dependencies
 
-- [ ] 3.1 Implement dedicated ELB/LCU configurations with schemas, planning/publication mapping and boundary tests; verify stored/page product identity and usage fixtures and document options.
-- [ ] 3.2 Unify EIP quote/build/publication option handling and support sold dedicated/shared bandwidth and billing modes; verify traffic regressions, mode validation and legacy input compatibility; update docs.
-- [ ] 3.3 Implement only page-expressible placement selectors for scoped services and preserve requested quantities; verify supported round trips and continued rejection for unsupported services in publish and quote-file tests.
+- [x] 3.1 Implement dedicated ELB/LCU configurations with schemas, planning/publication mapping and boundary tests; verify stored/page product identity and usage fixtures and document options.
+- [x] 3.2 Unify EIP quote/build/publication option handling and support sold dedicated/shared bandwidth and billing modes; verify traffic regressions, mode validation and legacy input compatibility; update docs.
+- [x] 3.3 Implement only page-expressible placement selectors for scoped services and preserve requested quantities; verify supported round trips and continued rejection for unsupported services in publish and quote-file tests.
 
 ## 4. Remaining scoped IaaS controls
 
-- [ ] 4.1 Audit ECS Linux, EVS, OBS, public NAT, SFS/SFS Turbo, CBR, Direct Connect, ER, VPC Endpoint, VPN, DSS, SDRS and DES against both regional inventories; verify every control is implemented/tested, unavailable, excluded or a documented portal defect with evidence.
-- [ ] 4.2 Fix identified in-scope gaps in reviewable service commits with regression tests and updated service docs; inspect relevant preserved local commits without merging unrelated history; verify affected service suites and keep remaining gaps explicit.
+- [x] 4.1 Audit ECS Linux, EVS, OBS, public NAT, SFS/SFS Turbo, CBR, Direct Connect, ER, VPC Endpoint, VPN, DSS, SDRS and DES against both regional inventories; verify every control is implemented/tested, unavailable, excluded or a documented portal defect with evidence.
+- [x] 4.2 Fix identified in-scope gaps in reviewable service commits with regression tests and updated service docs; inspect relevant preserved local commits without merging unrelated history; verify affected service suites and keep remaining gaps explicit.
 
 ## 5. Kafka and RabbitMQ
 
-- [ ] 5.1 Add shared catalog/config-driven specification conversion, topology and storage resolution; verify fixture tests for new specs, missing rates, region isolation and invalid broker counts without guessing constants.
-- [ ] 5.2 Wire both DMS builders and publication forms to supported instance/storage variants and regional modes while retaining per-broker storage semantics; verify single/cluster, quantity, storage boundaries and billing tests; update schemas/docs.
+- [x] 5.1 Add shared catalog/config-driven specification conversion, topology and storage resolution; verify fixture tests for new specs, missing rates, region isolation and invalid broker counts without guessing constants.
+- [x] 5.2 Wire both DMS builders and publication forms to supported instance/storage variants and regional modes while retaining per-broker storage semantics; verify single/cluster, quantity, storage boundaries and billing tests; update schemas/docs.
 - [ ] 5.3 Extend both regional DMS replay/price cases across offered finite variants/modes and representative boundary controls; verify report statuses and keep RocketMQ and Reliability excluded.
 
 ## 6. Regional end-to-end acceptance
