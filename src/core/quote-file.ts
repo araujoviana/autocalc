@@ -173,6 +173,7 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
       const listed = ranked && !USAGE_PRICED.has(requirement.service.toLowerCase()) ? formatDecimal(ranked.candidate.price) : null;
       const price = listed && parseFloat(listed) > 0 ? listed : null;
       Object.assign(row, { spec: decision.spec, price, billing: requirement.billing, price_unit: price ? priceUnit(requirement.service, requirement.billing) : null });
+      if (requirement.service.toLowerCase() === "nosql") row.note = `engine ${String(requirement.options.engine ?? "dynamodb")}: DynamoDB-compatible API, sold as ${decision.spec}`;
       const asked = requestedBilling(card.id);
       if (asked === "ondemand" && requirement.billing !== "ondemand") row.billing_note = `${requirement.service} has no pay-per-use form, so this card is priced ${requirement.billing}`;
       if (USAGE_PRICED.has(requirement.service.toLowerCase())) row.price_note = "priced by usage: no list price at plan time, so the total is incomplete until the list is rated (apply-quote)";

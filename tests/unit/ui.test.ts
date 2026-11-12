@@ -133,6 +133,8 @@ test("plan_view_shows_the_price_unit_and_billing_note", () => {
   expect(out).toContain("73.101/mo");
   expect(out).toContain("0.0000000586/request");
   expect(out).toContain("has no pay-per-use form");
+  const nosql = ui.quoteView("plan-quote", { cards: [{ id: "n", spec: "geminidb.cassandra-geminifs.large.4", price: "1", price_unit: "hour", note: "engine dynamodb: DynamoDB-compatible API", unmapped_options: [] }], pending: [] })!;
+  expect(nosql).toContain("engine dynamodb");
 });
 
 test("plan_view_lists_cards_and_says_whether_apply_is_ready", () => {

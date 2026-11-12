@@ -149,6 +149,7 @@ export function quoteView(cmd: string, result: unknown, stream?: StreamLike): st
         notes.push(c.spec_not_found ? `spec ${c.spec_not_found} not sold here; ${c.candidates.length} closest: choose a spec` : `${c.candidates.length} candidates: choose a spec`);
       }
       if (c.billing_note) notes.push(String(c.billing_note));
+      if (c.note) notes.push(String(c.note));
       if (c.price_note && !notes.length) {
         notes.push("usage-priced at publish time");
       }

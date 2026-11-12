@@ -172,7 +172,7 @@ autocalc apply-quote --path quote.yaml   # plan, then publish through the fail-c
 ## 3. Lockfiles (`quote.lock.yaml` / `quote.lock.json`)
 
 Planning a quote file writes a deterministic lockfile beside the quote:
-- `quote.lock.yaml` for `version: "1"` declarative quotes (records `input_hash`, `total_amount`, `shards`, and per-resource `sku_code`, `unit_price`, `total_price`, and `physical_cards`).
+- `quote.lock.yaml` for `version: "1"` declarative quotes (records `input_hash`, `total_amount`, `shards`, and per-resource `sku_code`, `unit_price` with its `price_unit`, `total_price`, and `physical_cards`). `unit_price` is the list price as sold (per hour, month, year or request); `total_price` and `total_amount` are estimates projected over `horizon.duration` from list prices (hourly x 730 h per month, monthly x months, yearly x months/12). Per-request and usage-priced resources (OBS, FunctionGraph) are not projected: they carry `excluded_from_total: true` and are listed in `total_excludes`, so the total is incomplete until the list is rated at publish time.
 - `quote.lock.json` for plain `cards:` quotes (records `{ spec, price, needs }` per card ID).
 
 If the live catalog price changes after a lockfile is written, `plan-quote` reports `lock_drift` and `apply-quote` blocks publication until you review and remove the drifted lock entry. Do not commit quote or lock files that hold client data.
