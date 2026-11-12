@@ -13,8 +13,8 @@ test.each(
   expect(() => buildRecipe(service, { region: "test", billing: mode, quantity: 3 })).toThrow();
 });
 
-test("redis rejects zero-priced ondemand mode", () => {
-  expect(() => buildRecipe("redis", { region: "test", billing: "ondemand" })).toThrow();
+test("redis accepts pay-per-use (portal prices DCS hourly, e.g. 0.068/h for 2 GB master/standby in sa-brazil-1)", () => {
+  expect(() => buildRecipe("redis", { region: "test", billing: "ondemand" })).not.toThrow();
 });
 
 test.each([

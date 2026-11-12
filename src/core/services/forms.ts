@@ -41,7 +41,7 @@ export const RECIPES: Record<string, Recipe> = {
     cpu_storage: "calculator_redis_version_cpu_storage",
     spec: "calculator_redis_version_spec",
     instances: "calculator_redis_quantity_Stepper_0",
-  }, { modes: PM }),
+  }, { hours: true, modes: PM_OD }),
   memcached: recipe("Distributed Cache Service (Memcached)", {
     instance_type: "calculator_memcached_version_instance_type",
     memory_gb: "calculator_memcached_version_Stepper_0",
