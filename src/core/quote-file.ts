@@ -136,6 +136,7 @@ async function ambiguousImages(ctx: ActionContext, region: string, spec: string,
 function primaryGroupFor(card: Dict): string | undefined {
   if (card.group) return card.group;
   const svc = card.service.toLowerCase();
+  if (svc === "cce" && (card.spec === "cce.autopilot.cluster" || String(card.options?.cluster_type ?? "").toLowerCase() === "autopilot")) return "cce_cce.autopilot";
   if (svc === "elb" && (card.spec?.startsWith("elbv3") || card.options?.type === "dedicated")) return "elb_elbv3";
   return PRIMARY_GROUP[svc];
 }

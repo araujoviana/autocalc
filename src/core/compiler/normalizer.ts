@@ -439,7 +439,18 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
       else if (["200", "medium", "m", "mid"].includes(scaleRaw)) scale = "medium";
       else scale = "small";
 
-      const clusterType = String(rawOpts.cluster_type ?? (spec?.startsWith("cce.t") ? "turbo" : "standard")).toLowerCase();
+      const clusterType = String(rawOpts.cluster_type ?? (spec === "cce.autopilot.cluster" ? "autopilot" : spec?.startsWith("cce.t") ? "turbo" : "standard")).toLowerCase();
+      if (clusterType === "autopilot") {
+        // CCE Autopilot: one cluster SKU plus optional sustained container vCPU / memory (GiB).
+        spec = "cce.autopilot.cluster";
+        options.cluster_type = "autopilot";
+        const apVcpus = rawOpts.vcpus ?? rawOpts.vcpu ?? vcpus;
+        const apMem = toGB(rawOpts.memory_gb ?? rawOpts.memory ?? rawOpts.mem_gb ?? memory_gb, `${r.id}.memory`);
+        if (apVcpus !== undefined) options.vcpus = Math.max(1, Math.round(Number(apVcpus)));
+        if (apMem !== undefined) options.memory_gb = Math.max(1, Math.round(apMem));
+        needs = undefined;
+        break;
+      }
       const isTurbo = clusterType === "turbo" || (spec ? /^cce\.t[12]\./.test(spec) : false);
 
       if (isTurbo) {
@@ -823,7 +834,6 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
     }
 
     case "redis": {
-      if (billing === "ondemand") billing = "monthly";
       const instances = Math.max(1, Math.round(Number(rawOpts.instances ?? rawOpts.quantity ?? (quantity > 1 ? quantity : 1))));
       if (instances > 1 || rawOpts.instances !== undefined) options.instances = instances;
       quantity = 1;
