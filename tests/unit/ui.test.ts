@@ -234,9 +234,11 @@ test("apply-quote renders all partition shard names and links when multi-shard q
     ],
   }, tty)!;
 
-  expect(out).toContain("Published Acme Prod: 2 cards verified across 2 lists");
-  expect(out).toContain("Acme Prod - Part 1: https://calculator.huaweicloud.com/#/share?token=part1");
-  expect(out).toContain("Acme Prod - Part 2: https://calculator.huaweicloud.com/#/share?token=part2");
+  // shard titles are rendered bold on a TTY; compare the visible text
+  const plain = out.replace(/\u001b\[[0-9;]*m/g, "");
+  expect(plain).toContain("Published Acme Prod: 2 cards verified across 2 lists");
+  expect(plain).toContain("Acme Prod - Part 1: https://calculator.huaweicloud.com/#/share?token=part1");
+  expect(plain).toContain("Acme Prod - Part 2: https://calculator.huaweicloud.com/#/share?token=part2");
 });
 
 test("a failed publish gate reads as one line per card, not a JSON blob", () => {
