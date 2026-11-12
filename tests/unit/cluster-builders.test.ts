@@ -141,10 +141,10 @@ test("CCE Autopilot is supported in sa-brazil-1 and verified unavailable in la-s
 
   // 1. sa-brazil-1 Autopilot base cluster
   const spAutopilot = await buildCce(
-    { service: "cce", region: "sa-brazil-1", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "autopilot", ha: true, scale: "small" },
+    { service: "cce", region: "sa-brazil-1", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "autopilot", ha: true, scale: "small", vcpus: 1, memory_gb: 1 },
     context
   );
-  expect((spAutopilot.selectedProduct.productAllInfos as any[]).length).toBe(1);
+  expect((spAutopilot.selectedProduct.productAllInfos as any[]).length).toBe(3);
   const clusterProd = (spAutopilot.selectedProduct.productAllInfos as any[])[0];
   expect(clusterProd.resourceSpecCode).toBe("cce.autopilot.cluster");
   expect(clusterProd.productType).toBe("dataInfo_36_");
@@ -171,11 +171,21 @@ test("CCE Autopilot is supported in sa-brazil-1 and verified unavailable in la-s
 
   // 3. la-south-2 Autopilot is unavailable -> fails closed
   await expect(
-    buildCce({ service: "cce", region: "la-south-2", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "autopilot", ha: true, scale: "small" }, context)
+    buildCce({ service: "cce", region: "la-south-2", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "autopilot", ha: true, scale: "small", vcpus: 1, memory_gb: 1 }, context)
   ).rejects.toThrow(/CCE Autopilot is not offered in la-south-2/);
 
   // 4. Standalone legacy cce.t* request fails closed with portal limitation error
   await expect(
     buildCce({ service: "cce", region: "sa-brazil-1", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "standard", ha: true, scale: "small", spec: "cce.t2.small" }, context)
   ).rejects.toThrow(/Standalone CCE Turbo legacy SKU 'cce.t2.small' cannot be encoded/);
+});
+
+test("CCE Autopilot rejects a cluster-only card the page cannot price", async () => {
+  const { createSyntheticBusinessCatalog } = await import("../support/business-catalog.ts");
+  const { catalog } = createSyntheticBusinessCatalog();
+  const context = { productInfo: (service: string, region: string) => catalog.productInfo(service, region), rate: async () => ({ productRatingResult: [] }) };
+  const base = { service: "cce", region: "sa-brazil-1", billing: "ondemand", quantity: 1, periods: 1, hours: 730, cluster_type: "autopilot", ha: true, scale: "small" } as const;
+  await expect(buildCce({ ...base }, context)).rejects.toThrow(/needs both options\.vcpus and options\.memory_gb/);
+  await expect(buildCce({ ...base, vcpus: 4 }, context)).rejects.toThrow(/needs both/);
+  await expect(buildCce({ ...base, memory_gb: 8 }, context)).rejects.toThrow(/needs both/);
 });

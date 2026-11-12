@@ -41,6 +41,16 @@ export async function buildCce(input: Extract<CardInput, { service: "cce" }>, co
       );
     }
 
+    // The calculator page prices Autopilot as cluster + container vCPU + container memory and leaves the
+    // container lines unpriced (so Add to List / encode fails with "unpriced products") unless both are >= 1.
+    if (!((input.vcpus ?? 0) >= 1) || !((input.memory_gb ?? 0) >= 1)) {
+      throw new CalculatorError(
+        "VALIDATION",
+        "CCE Autopilot needs both options.vcpus and options.memory_gb (each >= 1): the calculator page cannot price a cluster-only Autopilot card (container vCPU/memory lines stay unpriced).",
+        "Set options: { cluster_type: autopilot, vcpus: N, memory_gb: M }; use 1 and 1 for a minimal placeholder."
+      );
+    }
+
     const p = await selectProduct(context, "cce", input.region, "cce_cce.autopilot", "cce.autopilot.cluster", input.billing, input.hours);
     if (!p.productType) {
       throw new CalculatorError("SPEC_NOT_FOUND", `CCE Autopilot SKU in ${input.region} is missing required vendor control 'productType'`);

@@ -1,5 +1,6 @@
 /** Translates compiled `version: "1"` NormalizedResources into canonical Quote card records
  * compatible with `validate()`, `plan()`, and `publishQuoteTool()`. */
+import { CalculatorError } from "../errors.ts";
 import { modesOf, SINGLE_QUANTITY } from "../services/publication.ts";
 import type { NormalizedResource } from "./horizon.ts";
 import { parseBandwidth, parseCapacity, parseDuration, parseRequestRate, parseTraffic } from "./units.ts";
@@ -446,8 +447,12 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
         options.cluster_type = "autopilot";
         const apVcpus = rawOpts.vcpus ?? rawOpts.vcpu ?? vcpus;
         const apMem = toGB(rawOpts.memory_gb ?? rawOpts.memory ?? rawOpts.mem_gb ?? memory_gb, `${r.id}.memory`);
-        if (apVcpus !== undefined) options.vcpus = Math.max(1, Math.round(Number(apVcpus)));
-        if (apMem !== undefined) options.memory_gb = Math.max(1, Math.round(apMem));
+        // The calculator page leaves the container lines unpriced unless both are >= 1, so a cluster-only card cannot be encoded.
+        if (apVcpus === undefined || apMem === undefined) {
+          throw new CalculatorError("VALIDATION", `${r.id}: CCE Autopilot needs both options.vcpus and options.memory_gb (each >= 1); the calculator page cannot price a cluster-only Autopilot card.`, "Set options: { cluster_type: autopilot, vcpus: N, memory_gb: M }; 1 and 1 is the smallest valid card.");
+        }
+        options.vcpus = Math.max(1, Math.round(Number(apVcpus)));
+        options.memory_gb = Math.max(1, Math.round(apMem));
         needs = undefined;
         break;
       }
