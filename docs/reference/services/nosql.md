@@ -59,12 +59,6 @@
 
 ---
 
-## DynamoDB-compatible SKU naming
-
-The DynamoDB-compatible GeminiDB API is sold under the `geminidb.cassandra-geminifs.*` SKUs (for example `geminidb.cassandra-geminifs.large.4`). That is expected, not a mismatch: the builder selects only catalog rows whose portal version type is `DynamoDB` (`dataInfo_71_`) in the cloud-native deployment, plus the `geminidb.cassandra-geminifs.ultrahigh` storage SKU. `engine: dynamodb` is the only engine supported.
-
----
-
 ## Argument Reference (`needs` & `options`)
 
 Top-level card fields: `id` (required), `service: nosql`, `region`, `billing` (`monthly` | `yearly` | `ondemand`), `quantity` (fixed to `1`), `needs` (for automatic SKU ranking by `vcpus` / `memory_gb`), `spec` (explicit catalog SKU), and `options`.
@@ -82,6 +76,7 @@ Top-level card fields: `id` (required), `service: nosql`, `region`, `billing` (`
 ## Behavioral Rules & Constraints
 
 - **Single-Quantity Form**: The calculator form for this service has no global quantity stepper (`quantity` must be `1`, or use service-specific instance/node/key counts).
+- **DynamoDB SKU naming**: the DynamoDB-compatible GeminiDB API is sold as `geminidb.cassandra-geminifs.*` (for example `geminidb.cassandra-geminifs.large.4`) with storage `geminidb.cassandra-geminifs.ultrahigh`; the builder keeps only catalog rows whose portal version type is DynamoDB. `engine: dynamodb` is the only engine supported.
 
 ---
 

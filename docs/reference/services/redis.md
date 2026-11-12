@@ -6,7 +6,7 @@
 | **Category** | Databases & Cache |
 | **Publish Gate Status** | <span class="badge badge--verified">VERIFIED</span> (Full Publish Gate) |
 | **Verified Frontend** | `11.4.201` |
-| **Supported Billing Modes** | `monthly`, `yearly` |
+| **Supported Billing Modes** | `monthly`, `yearly`, `ondemand` |
 | **Primary Catalog Group** | `dcs_dcs3` |
 | **Schema Coverage** | 10 controls (9 mapped, 1 intentionally fixed/unsupported) |
 
@@ -58,7 +58,7 @@
 
 ## Argument Reference (`needs` & `options`)
 
-Top-level card fields: `id` (required), `service: redis`, `region`, `billing` (`monthly` | `yearly`), `quantity` (fixed to `1`), `needs` (for automatic SKU ranking by `vcpus` / `memory_gb`), `spec` (explicit catalog SKU), and `options`.
+Top-level card fields: `id` (required), `service: redis`, `region`, `billing` (`monthly` | `yearly` | `ondemand`), `quantity` (fixed to `1`), `needs` (for automatic SKU ranking by `vcpus` / `memory_gb`), `spec` (explicit catalog SKU), and `options`.
 
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |

@@ -77,15 +77,7 @@ Top-level card fields: `id` (required), `service: elb`, `region`, `billing` (`on
 
 - **Single-Quantity Form**: The calculator form for this service has no global quantity stepper (`quantity` must be `1`, or use service-specific instance/node/key counts).
 - **Anti-Splitting Invariant (`FIXED_BASE_COST_SERVICES`)**: Carries a baseline instance or cluster fee. The compiler never splits this resource across multiple cards.
-- **Dedicated load balancers are built** (`elbv3.*`, LCU billing). Request one with `options.type: dedicated` (or an `elbv3.*` `spec` / `flavor`; the default flavor is `elbv3.professional`). It is pay-per-use only (`billing: ondemand`). Set `options.protocol` to `tcp`, `udp` or `tls` (default `tcp`), and size the traffic with `options.l7_lcu` (application LCUs) and/or `options.l4_lcu` (network LCUs, alias `lcu`). `options.az_type` defaults to `single`; multi-zone (`az_type: multi`) is rejected in `sa-brazil-1` and `la-south-2`, where the calculator does not offer it. Without `type: dedicated` the card resolves to the shared `elbv2.basic.default`.
-
-    ```yaml
-    resources:
-      - id: prod-alb
-        service: elb
-        billing: ondemand
-        options: { type: dedicated, protocol: tls, l7_lcu: 10, l4_lcu: 5 }
-    ```
+- Dedicated load balancers (`elbv3.*`, LCU billing) are built: request one with `options.type: dedicated` (or an `elbv3.*` `spec`), `protocol: tcp|udp|tls`, and `l7_lcu` / `l4_lcu` (for example `options: { type: dedicated, protocol: tcp, l7_lcu: 1 }`). Pay-per-use only.
 
 ---
 

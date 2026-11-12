@@ -54,20 +54,6 @@
 
 ---
 
-## CCE Autopilot
-
-Autopilot is requested with `options.cluster_type: autopilot` (it needs no spec choice; the cluster SKU is `cce.autopilot.cluster`). It is offered in `sa-brazil-1`, not in `la-south-2`. Both `options.vcpus` and `options.memory_gb` (each at least 1) are required: the calculator page prices the container vCPU and memory lines together with the cluster and refuses a card where either is missing, so a cluster-only Autopilot card is rejected at plan time.
-
-```yaml
-resources:
-  - id: apps
-    service: cce
-    billing: ondemand
-    options: { cluster_type: autopilot, vcpus: 8, memory_gb: 16 }
-```
-
----
-
 ## Argument Reference (`needs` & `options`)
 
 Top-level card fields: `id` (required), `service: cce`, `region`, `billing` (`ondemand` | `monthly` | `yearly`), `quantity` (positive integer), `needs` (for automatic SKU ranking by `vcpus` / `memory_gb`), `spec` (explicit catalog SKU), and `options`.
@@ -88,6 +74,7 @@ Top-level card fields: `id` (required), `service: cce`, `region`, `billing` (`on
 
 - **Multi-Quantity Form**: Supports `quantity: N` directly on the calculator card.
 - **Anti-Splitting Invariant (`FIXED_BASE_COST_SERVICES`)**: Carries a baseline instance or cluster fee. The compiler never splits this resource across multiple cards.
+- **CCE Autopilot**: request with `options.cluster_type: autopilot` plus both `options.vcpus` and `options.memory_gb` (≥ 1; the portal refuses to price an Autopilot card without both). The cluster SKU is `cce.autopilot.cluster`; sustained container vCPU/memory are priced per second from `cci_cci.autopilot`. Offered in `sa-brazil-1`, not `la-south-2`.
 
 ---
 

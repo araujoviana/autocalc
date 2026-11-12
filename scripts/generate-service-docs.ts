@@ -499,7 +499,7 @@ const OPTION_NOTES: Record<string, Record<string, string>> = {
     storage_gb: "Database volume size in GB (40–4000 GB). In declarative `version: \"1\"`, write `storage_gb: \"500 GB\"`.",
     storage_spec: "Volume SKU override; defaults to the selected engine's Cloud SSD volume.",
     db_version: "Database engine release version (e.g. `8.0`, `5.7`, `14`). Alias: `version`.",
-    flavor: "Database compute specification (group `rds_rds.vm`). Can also be synthesized from `needs: { vcpus, memory_gb }` and `topology: primary-standby`.",
+    flavor: "Database compute specification (group `rds_rds.vm`). Can also be synthesized from `needs: { vcpus, memory_gb }` and `topology: primary-standby`. An explicit `options.type` (`single`, `primary-standby`/`ha`) wins over `availability: multi-az`; unknown values are a validation error.",
     volume_type: "Storage media type selector (`cloud-ssd`, `common`).",
   },
   cce: {
@@ -921,6 +921,8 @@ async function main() {
         const mappedFields = recipeSpec.fields.map(f => Array.isArray(f) ? `\`${f[0]}\` (from SKU \`${f[1]}\`)` : `\`${f}\``).join(", ");
         behavioralNotes.push(`**SKU-to-Control Projection**: The resolved catalog SKU populates form controls: ${mappedFields}.`);
       }
+      if (service === "cce") behavioralNotes.push("**CCE Autopilot**: request with `options.cluster_type: autopilot` plus both `options.vcpus` and `options.memory_gb` (≥ 1; the portal refuses to price an Autopilot card without both). The cluster SKU is `cce.autopilot.cluster`; sustained container vCPU/memory are priced per second from `cci_cci.autopilot`. Offered in `sa-brazil-1`, not `la-south-2`.");
+      if (service === "nosql") behavioralNotes.push("**DynamoDB SKU naming**: the DynamoDB-compatible GeminiDB API is sold as `geminidb.cassandra-geminifs.*` (for example `geminidb.cassandra-geminifs.large.4`) with storage `geminidb.cassandra-geminifs.ultrahigh`; the builder keeps only catalog rows whose portal version type is DynamoDB. `engine: dynamodb` is the only engine supported.");
       if (service in SPEC_RULES) {
         if (service === "des") behavioralNotes.push("**Spec Rule**: `options.devices` (onsite days) is valid only on Teleport specs (`des.teleport.*`), not `des.disk`.");
         if (service === "hss") behavioralNotes.push("**Spec Rule**: `options.edition` must match the catalog SKU edition (`hss.version.basic`, `hss.version.premium`, `hss.version.wtp`, `hss.version.container.enterprise`, `hss.version.advanced`).");

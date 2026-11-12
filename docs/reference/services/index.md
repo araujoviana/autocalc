@@ -53,7 +53,7 @@ Relational, NoSQL, document, distributed databases, caching, and data replicatio
 | [`hrds`](hrds.md) | Dedicated RDS | — | `monthly`, `yearly` | <span class="badge badge--verified">VERIFIED</span> |
 | [`dds`](dds.md) | Document Database Service | `mongodb` | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
 | [`nosql`](nosql.md) | GeminiDB DynamoDB | `geminidb` | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
-| [`redis`](redis.md) | Distributed Cache Service (Redis) | `dcs` | `monthly`, `yearly` | <span class="badge badge--verified">VERIFIED</span> |
+| [`redis`](redis.md) | Distributed Cache Service (Redis) | `dcs` | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
 | [`memcached`](memcached.md) | Distributed Cache Service (Memcached) | — | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
 | [`ddm`](ddm.md) | Distributed Database Middleware | — | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
 | [`drs`](drs.md) | Data Replication Service | — | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
