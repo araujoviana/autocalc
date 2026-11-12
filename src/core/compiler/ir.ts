@@ -29,6 +29,10 @@ export interface CanonicalResourceIR {
   skuCode?: string | undefined;
   unitPrice?: number | undefined;
   totalPrice?: number | undefined;
+  /** Unit of unitPrice: hour, month, year or request. */
+  priceUnit?: string | undefined;
+  /** True when the resource has no price that can be projected over the horizon (usage-priced or per-request). */
+  excludedFromTotal?: boolean | undefined;
   physicalCards: PhysicalCardMapping[];
 }
 

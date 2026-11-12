@@ -1,3 +1,4 @@
+import { horizonAmount, priceUnit } from "../../../src/core/quote-file.ts";
 import { describe, expect, it } from "bun:test";
 import { compileQuote } from "../../../src/core/compiler/index.ts";
 import { buildCanonicalQuoteIR } from "../../../src/core/compiler/ir.ts";
@@ -125,5 +126,20 @@ resources:
     expect(reLoaded.shards[0]!.share_link).toBe("https://calculator.huaweicloud.com/#/share?token=part1");
     expect(reLoaded.shards[1]!.share_id).toBe("L2-PART2");
     expect(reLoaded.shards[1]!.share_link).toBe("https://calculator.huaweicloud.com/#/share?token=part2");
+  });
+});
+
+describe("lockfile horizon totals", () => {
+  it("projects hourly, monthly and yearly list prices over the horizon and flags per-request lines", () => {
+    expect(priceUnit("rds", "ondemand")).toBe("hour");
+    expect(priceUnit("redis", "monthly")).toBe("month");
+    expect(priceUnit("ecs", "yearly")).toBe("year");
+    expect(priceUnit("function", "ondemand")).toBe("request");
+    expect(horizonAmount(0.1, "hour", 1)).toBeCloseTo(73, 9);
+    expect(horizonAmount(0.1, "hour", 12)).toBeCloseTo(876, 9);
+    expect(horizonAmount(36.55, "month", 12)).toBeCloseTo(438.6, 9);
+    expect(horizonAmount(1200, "year", 12)).toBe(1200);
+    expect(horizonAmount(1200, "year", 1)).toBe(100);
+    expect(horizonAmount(5.86e-8, "request", 1)).toBeNull();
   });
 });

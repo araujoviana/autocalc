@@ -17,8 +17,13 @@ export interface LockedResource {
   region: string;
   billing: string;
   sku_code?: string | undefined;
+  /** List price as sold, in `price_unit`. */
   unit_price: number;
+  price_unit?: string | undefined;
+  /** unit_price projected over the quote horizon (hourly x 730 h per month, monthly x months, yearly x months/12). */
   total_price: number;
+  /** True when no horizon total could be computed (usage-priced or per-request): total_price is 0 and the grand total is incomplete. */
+  excluded_from_total?: boolean | undefined;
   physical_cards: LockedCard[];
 }
 
@@ -37,7 +42,10 @@ export interface QuoteLockfile {
   frontend_version?: string | undefined;
   input_hash: string;
   currency: string;
+  /** Estimate over the quote horizon from list prices only; resources flagged excluded_from_total are not in it. */
   total_amount: number;
+  total_horizon?: string | undefined;
+  total_excludes?: string[] | undefined;
   shards: LockedShard[];
   resources: Record<string, LockedResource>;
 }
@@ -71,7 +79,9 @@ export function generateLockfile(
       billing: res.billing,
       sku_code: res.skuCode,
       unit_price: res.unitPrice ?? 0,
+      ...(res.priceUnit ? { price_unit: res.priceUnit } : {}),
       total_price: res.totalPrice ?? 0,
+      ...(res.excludedFromTotal ? { excluded_from_total: true } : {}),
       physical_cards: res.physicalCards.map((c) => ({
         card_id: c.cardId,
         title: c.title,
@@ -89,6 +99,8 @@ export function generateLockfile(
     input_hash: ir.inputHash,
     currency: ir.metadata.currency,
     total_amount: ir.totalAmount,
+    total_horizon: ir.horizon.duration,
+    total_excludes: ir.resources.filter(res => res.excludedFromTotal).map(res => res.id),
     shards,
     resources,
   };

@@ -141,6 +141,19 @@ function primaryGroupFor(card: Dict): string | undefined {
   return PRIMARY_GROUP[svc];
 }
 
+/** The unit a card's list price is quoted in: ondemand per hour, monthly per month, yearly per year; FunctionGraph pay-per-use is per request. */
+export function priceUnit(service: string, billing: string): "hour" | "month" | "year" | "request" {
+  if (service.toLowerCase() === "function" && billing === "ondemand") return "request";
+  return billing === "ondemand" ? "hour" : billing === "yearly" ? "year" : "month";
+}
+/** A list price over the quote horizon (730 h per month): null when the unit cannot be projected (per request, usage-priced). */
+export function horizonAmount(price: number, unit: ReturnType<typeof priceUnit>, months: number): number | null {
+  if (unit === "hour") return price * 730 * months;
+  if (unit === "month") return price * months;
+  if (unit === "year") return price * months / 12;
+  return null;
+}
+
 export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
   await raiseIfInvalid(quote, dir);
   const lock = await readLock(quote);
@@ -150,13 +163,18 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
   const draft = await ctx.drafts.load(view.draft_id);
   const decided = new Map(draft.decisions.map(d => [d.requirement_id, d]));
   const rows: Dict[] = [], next: Dict = { ...lock };
+  // the billing a v1 resource asked for, to flag cards whose mode the service coerced
+  const askedBy = new Map<string, string>((quote.compiledResources ?? []).map((r: any) => [String(r.id), String(r.billing)]));
+  const requestedBilling = (cardId: string) => { const base = askedBy.get(cardId) ?? askedBy.get(cardId.replace(/-\d+$/, "")); return base === "pay-per-use" ? "ondemand" : base; };
   for (const [index, card] of quote.cards.entries()) {
     const requirement = draft.requirements[index]!, row: Dict = { id: card.id, unmapped_options: await unmappedOptions(card, dir) }, decision = decided.get(requirement.id);
     if (decision) {
       const ranked = rank(requirement, await ctx.provider.candidates(requirement)).find(x => x.candidate.spec === decision.spec);
       const listed = ranked && !USAGE_PRICED.has(requirement.service.toLowerCase()) ? formatDecimal(ranked.candidate.price) : null;
       const price = listed && parseFloat(listed) > 0 ? listed : null;
-      Object.assign(row, { spec: decision.spec, price });
+      Object.assign(row, { spec: decision.spec, price, billing: requirement.billing, price_unit: price ? priceUnit(requirement.service, requirement.billing) : null });
+      const asked = requestedBilling(card.id);
+      if (asked === "ondemand" && requirement.billing !== "ondemand") row.billing_note = `${requirement.service} has no pay-per-use form, so this card is priced ${requirement.billing}`;
       if (USAGE_PRICED.has(requirement.service.toLowerCase())) row.price_note = "priced by usage: no list price at plan time, so the total is incomplete until the list is rated (apply-quote)";
       const conflict = SPEC_RULES[requirement.service.toLowerCase()]?.(decision.spec, requirement.options);
       if (conflict) row.spec_problem = conflict;
@@ -203,6 +221,7 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
         const rowById = new Map(rows.map((r, idx) => [String(r.id), { row: r, card: quote.cards[idx]! }]));
         for (const irRes of ir.resources) {
           let resTotal = 0;
+          let counted = false;
           for (const physical of irRes.physicalCards) {
             const matched = rowById.get(physical.title);
             if (!matched) continue;
@@ -215,13 +234,20 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
               const p = parseFloat(String(row.price));
               if (!irRes.unitPrice) irRes.unitPrice = p;
               physical.unitAmount = p;
-              physical.totalAmount = p * (card.quantity ?? physical.quantity ?? 1);
+              // unit_amount stays the list price as sold; total_amount is projected over the quote horizon
+              const unit = priceUnit(irRes.service, String(row.billing ?? irRes.billing));
+              irRes.priceUnit = unit;
+              const projected = horizonAmount(p, unit, ir.horizon.effectiveMonths);
+              if (projected === null) { physical.totalAmount = 0; continue; }
+              physical.totalAmount = projected * (card.quantity ?? physical.quantity ?? 1);
               resTotal += physical.totalAmount;
+              counted = true;
             }
           }
           irRes.totalPrice = resTotal;
+          if (!counted) irRes.excludedFromTotal = true;
         }
-        // the SKU list prices of the planned resources; disks and other add-ons are priced when the list is published
+        // the SKU list prices of the planned resources over the horizon; disks and other add-ons are priced when the list is published
         ir.totalAmount = ir.resources.reduce((sum, resource) => sum + (resource.totalPrice ?? 0), 0);
 
         const titlePrefix = quote.name || compiled.document.metadata?.title_prefix || "Quote";

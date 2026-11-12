@@ -123,6 +123,18 @@ test("coverage_through_a_pipe_is_unchanged_json", async () => {
   expect(JSON.parse(pipe.getvalue()).service).toBe("ecs");
 });
 
+test("plan_view_shows_the_price_unit_and_billing_note", () => {
+  const out = ui.quoteView("plan-quote", { cards: [
+    { id: "db", spec: "rds.x", price: "0.13", price_unit: "hour", unmapped_options: [] },
+    { id: "cache", spec: "redis.x", price: "73.101", price_unit: "month", billing_note: "redis has no pay-per-use form, so this card is priced monthly", unmapped_options: [] },
+    { id: "fn", spec: "functionstage", price: "0.0000000586", price_unit: "request", unmapped_options: [] },
+  ], pending: [] })!;
+  expect(out).toContain("0.13/h");
+  expect(out).toContain("73.101/mo");
+  expect(out).toContain("0.0000000586/request");
+  expect(out).toContain("has no pay-per-use form");
+});
+
 test("plan_view_lists_cards_and_says_whether_apply_is_ready", () => {
   const ready = { cards: [{ id: "web", spec: "c7n.large.2", price: "10", unmapped_options: [] }] };
   const stuck = { cards: [{ id: "db", candidates: [{}, {}], unmapped_options: ["x"] }] };

@@ -1,3 +1,4 @@
+import { horizonAmount } from "../../src/core/quote-file.ts";
 import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -96,14 +97,14 @@ resources:
         "clusters", "workers", "worker-disks", "ingress", "public-addresses", "kafka", "rabbit",
       ].sort());
       const units: Record<string, number> = { clusters: 2, workers: 6, "worker-disks": 6, "ingress-1": 1, "ingress-2": 1, "public-addresses": 1, kafka: 2, rabbit: 1 };
-      const primarySubtotal = planned.cards.reduce((sum, row) => sum + Number(row.price ?? 0) * units[row.id]!, 0);
+      const primarySubtotal = planned.cards.reduce((sum, row) => sum + (row.price == null ? 0 : (horizonAmount(Number(row.price), row.price_unit, 1) ?? 0)) * units[row.id]!, 0);
       expect(logical.reduce((sum, resource) => sum + (resource.totalPrice ?? 0), 0)).toBeCloseTo(primarySubtotal, 8);
       for (const resource of logical) {
         const subtotal = resource.physicalCards.reduce((sum, physical) => {
           const row = planned.cards.find(row => row.id === physical.title)!;
           expect(row).toBeDefined();
           expect(physical.quantity).toBe(units[physical.title]!);
-          return sum + Number(row.price ?? 0) * units[physical.title]!;
+          return sum + (row.price == null ? 0 : (horizonAmount(Number(row.price), row.price_unit, 1) ?? 0)) * units[physical.title]!;
         }, 0);
         expect(resource.totalPrice).toBeCloseTo(subtotal, 8);
       }

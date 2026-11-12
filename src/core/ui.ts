@@ -124,6 +124,7 @@ export function kv(pairs: ReadonlyArray< readonly [string, unknown] >, stream?: 
 }
 
 /** A terminal summary for any CLI command; falls back to humanView and universal key-value/table rendering. */
+const PRICE_UNIT: Record<string, string> = { hour: "/h", month: "/mo", year: "/yr", request: "/request" };
 export function quoteView(cmd: string, result: unknown, stream?: StreamLike): string | null {
   const read = humanView(cmd, result, stream);
   if (read !== null) return read;
@@ -147,10 +148,11 @@ export function quoteView(cmd: string, result: unknown, stream?: StreamLike): st
       if ("candidates" in c && Array.isArray(c.candidates)) {
         notes.push(c.spec_not_found ? `spec ${c.spec_not_found} not sold here; ${c.candidates.length} closest: choose a spec` : `${c.candidates.length} candidates: choose a spec`);
       }
+      if (c.billing_note) notes.push(String(c.billing_note));
       if (c.price_note && !notes.length) {
         notes.push("usage-priced at publish time");
       }
-      rows.push([String(c.id), String(c.spec ?? "-"), String(c.price || "-"), notes.join("; ")]);
+      rows.push([String(c.id), String(c.spec ?? "-"), c.price ? `${c.price}${PRICE_UNIT[String(c.price_unit)] ?? ""}` : "-", notes.join("; ")]);
     }
     const problems = r.cards.filter(
       (c: any) => !("spec" in c) || c.spec_problem || (Array.isArray(c.unmapped_options) && c.unmapped_options.length) || c.lock_drift || c.price_anomaly || (Array.isArray(c.image_choices) && c.image_choices.length),
