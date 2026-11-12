@@ -50,10 +50,7 @@ shards with estimated card counts and wire byte sizes.
 ### Requirement: Apply publishes through the gate
 `apply` SHALL publish the planned cards through the existing fail-closed publish gate and SHALL
 return the share link and per-card checks. It SHALL refuse to apply a plan with unresolved
-requirements or options the schema does not map. When a quote partitions into multiple shards,
-`apply` SHALL publish each shard as an independent verified list named with the shard suffix
-(`Part 1`, `Part 2`, ...), verifying every card through the fail-closed gate before returning the
-complete list of share links.
+requirements or options the schema does not map.
 
 #### Scenario: Unresolved requirement
 - **WHEN** apply is called on a file with an unresolved requirement
@@ -66,6 +63,14 @@ complete list of share links.
 #### Scenario: Apply multi-shard quote
 - **WHEN** apply is called on a quote that partitions into multiple shards
 - **THEN** each shard is published as an independent verified list, verified through the publish gate, and all share links are returned
+
+### Requirement: Apply publishes each shard as its own list
+When a quote partitions into multiple shards, `apply` SHALL publish each shard as an independent
+verified list named with the shard suffix (`Part 1`, `Part 2`, ...) and SHALL return every share link.
+
+#### Scenario: Shard lists are named and linked
+- **WHEN** a quote partitions into two shards and is applied
+- **THEN** lists named `<title> - Part 1` and `<title> - Part 2` are published and both links are returned
 
 ### Requirement: A lock file pins resolved specs
 After a plan resolves a requirement, the system SHALL record the resolved spec in a lock file
