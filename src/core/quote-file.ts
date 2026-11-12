@@ -154,6 +154,20 @@ export function horizonAmount(price: number, unit: ReturnType<typeof priceUnit>,
   return null;
 }
 
+/** Hourly list price of sustained CCE Autopilot container vCPU and memory (catalog sells them per second). */
+async function autopilotContainerHourly(ctx: ActionContext, region: string, vcpus: number, memoryGb: number): Promise<number> {
+  if (!(vcpus > 0) && !(memoryGb > 0)) return 0;
+  const skus = await ctx.catalog.skus("cce", region);
+  const hourly = (spec: string) => {
+    const od = skus.find(sku => sku.group === "cci_cci.autopilot" && sku.spec === spec)?.prices.ondemand;
+    if (!od) return 0;
+    const [stepRaw, unitRaw = ""] = od.per.split(/\s+/), step = Number(stepRaw) || 1, unit = unitRaw.toLowerCase();
+    const perHour = unit.startsWith("second") ? 3600 : unit.startsWith("minute") ? 60 : 1;
+    return od.amount * perHour / step;
+  };
+  return vcpus * hourly("autopilot.container.cpu") + memoryGb * hourly("autopilot.container.mem");
+}
+
 export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
   await raiseIfInvalid(quote, dir);
   const lock = await readLock(quote);
@@ -171,7 +185,11 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
     if (decision) {
       const ranked = rank(requirement, await ctx.provider.candidates(requirement)).find(x => x.candidate.spec === decision.spec);
       const listed = ranked && !USAGE_PRICED.has(requirement.service.toLowerCase()) ? formatDecimal(ranked.candidate.price) : null;
-      const price = listed && parseFloat(listed) > 0 ? listed : null;
+      let price = listed && parseFloat(listed) > 0 ? listed : null;
+      if (price && decision.spec === "cce.autopilot.cluster" && requirement.billing === "ondemand") {
+        const extra = await autopilotContainerHourly(ctx, requirement.region, Number(requirement.options.vcpus ?? 0), Number(requirement.options.memory_gb ?? 0));
+        if (extra > 0) { price = String(Math.round((parseFloat(price) + extra) * 1e6) / 1e6); row.note = `includes container ${String(requirement.options.vcpus)} vCPU / ${String(requirement.options.memory_gb)} GiB sustained`; }
+      }
       Object.assign(row, { spec: decision.spec, price, billing: requirement.billing, price_unit: price ? priceUnit(requirement.service, requirement.billing) : null });
       if (requirement.service.toLowerCase() === "nosql") row.note = `engine ${String(requirement.options.engine ?? "dynamodb")}: DynamoDB-compatible API, sold as ${decision.spec}`;
       const asked = requestedBilling(card.id);
