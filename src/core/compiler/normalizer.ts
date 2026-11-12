@@ -588,7 +588,14 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
         const rawRatio = Math.round(m / v);
         const ratio = rawRatio >= 6 ? 8 : rawRatio >= 3 ? 4 : 2;
         const cls = ratio === 8 || v >= 32 ? "x1" : "n1";
-        const isHa = haHint || String(rawOpts.topology ?? rawOpts.type ?? "").toLowerCase().includes("standby") || String(rawOpts.topology ?? rawOpts.type ?? "").toLowerCase().includes("ha");
+        // An explicit type/topology wins over the environment availability default.
+        const explicit = String(rawOpts.type ?? rawOpts.topology ?? "").trim().toLowerCase();
+        const RDS_SINGLE = ["single", "single-node", "standalone"];
+        const RDS_HA = ["ha", "primary-standby", "primary_standby", "standby", "multi-az", "cluster"];
+        if (explicit && !RDS_SINGLE.includes(explicit) && !RDS_HA.includes(explicit)) {
+          throw new CalculatorError("VALIDATION", `${r.id}: unknown RDS options.type '${explicit}'.`, `Use one of: ${[...RDS_SINGLE.slice(0, 1), "primary-standby", "ha"].join(", ")} (also accepted: ${[...RDS_SINGLE.slice(1), ...RDS_HA.slice(2)].join(", ")}).`);
+        }
+        const isHa = explicit ? RDS_HA.includes(explicit) : haHint;
         spec = `rds.${eng}.${cls}.${sz}.${ratio}${isHa ? ".ha" : ""}`;
       }
       needs = undefined;

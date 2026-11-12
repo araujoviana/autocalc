@@ -306,4 +306,22 @@ describe("Compiler Normalizer Expansion and Scoped IaaS Mapping", () => {
       expect(cardRabbit.options.brokers).toBe(5);
     });
   });
+
+  describe("5. RDS single vs HA under the multi-az default", () => {
+    const rds = (options: Record<string, unknown>, availability: "multi-az" | "single-az" = "multi-az") =>
+      normalizeResourceToCard(makeResource({ id: "db", service: "rds", availability, needs: { engine: "mysql", vcpus: 2, memory: "4 GiB" }, options }));
+    it("keeps the multi-az default as .ha when no type is given", () => {
+      expect(rds({}).spec).toBe("rds.mysql.n1.large.2.ha");
+    });
+    it("lets explicit type: single override the multi-az default", () => {
+      expect(rds({ type: "single" }).spec).toBe("rds.mysql.n1.large.2");
+      expect(rds({ topology: "single" }).spec).toBe("rds.mysql.n1.large.2");
+    });
+    it("lets explicit primary-standby force .ha under single-az", () => {
+      expect(rds({ type: "primary-standby" }, "single-az").spec).toBe("rds.mysql.n1.large.2.ha");
+    });
+    it("rejects unknown type values", () => {
+      expect(() => rds({ type: "bogus" })).toThrow(/unknown RDS options\.type 'bogus'/);
+    });
+  });
 });
