@@ -14,6 +14,8 @@ export interface ExpandedResource {
   billing: string;
   availability: "single-az" | "multi-az";
   quantity: number;
+  periods?: number | undefined;
+  hours?: number | undefined;
   needs?: Record<string, unknown> | undefined;
   spec?: string | undefined;
   options?: Record<string, unknown> | undefined;
@@ -115,6 +117,8 @@ export function expandResources(doc: QuoteDocument): ExpandedResource[] {
       billing,
       availability,
       quantity,
+      ...(res.periods !== undefined ? { periods: res.periods } : {}),
+      ...(res.hours !== undefined ? { hours: res.hours } : {}),
       needs: mergedNeeds,
       spec: res.spec,
       options: mergedOptions,

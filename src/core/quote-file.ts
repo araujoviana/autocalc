@@ -7,7 +7,7 @@ import { invalid } from "./quote/model.ts";
 import { rank } from "./quote/ranking.ts";
 import { publishQuoteTool } from "./publish.ts";
 import { loadService } from "./schema-model.ts";
-import { legalOptions, modesOf, PRIMARY_GROUP, SPEC_ARG, SPEC_RULES, USAGE_PRICED, VERIFIED } from "./services/publication.ts";
+import { legalOptions, modesOf, termOptions, PRIMARY_GROUP, SPEC_ARG, SPEC_RULES, USAGE_PRICED, VERIFIED } from "./services/publication.ts";
 import { draftQuoteTool } from "./workflow.ts";
 import { compileQuote, detectCatalogPricingAnomalies, buildCanonicalQuoteIR, generateLockfile, stringifyLockfile, parseLockfile, sanitizeTitle, normalizeResourceToCards, partitionResources, type QuoteDocument, type ShardPartition, type LockedShard, type CanonicalResourceIR, MAX_LIST_CARDS, MAX_LIST_BYTES } from "./compiler/index.ts";
 import type { ActionContext } from "./types.ts";
@@ -83,6 +83,7 @@ export async function validate(quote: Quote, dir?: string): Promise<Dict[]> {
     }
     const controls = new Map((await loadService(service, dir))?.controls.filter(c => c.option).map(c => [c.option!, c]) ?? []);
     for (const [option, value] of Object.entries(card.options ?? {})) {
+      if (option === "periods" || option === "hours") continue; // the billing term, set at resource level and checked by the builder schema
       if (!legal.includes(option)) { bad(card, option, `${service} has no option '${option}'.`, { allowed: legal, hint: SCHEMA_HINT }); continue; }
       if (typeof value !== "number") continue;
       const unconditionalRanges = (controls.get(option)?.ranges.some(range => range.when != null) ? [] : controls.get(option)?.ranges.filter(range => range.min !== range.max)) /* a control whose ranges depend on page state has no single limit */ /* min = max is the page default of a state-dependent control, not a limit */ ?? [];
@@ -99,7 +100,7 @@ export async function validate(quote: Quote, dir?: string): Promise<Dict[]> {
 export async function unmappedOptions(card: Dict, dir?: string): Promise<string[]> {
   const service = String(card.service).toLowerCase();
   // An option is applied when a schema control names it or the service's builder takes it (publish builds the card from the builder's own input, which rejects anything else).
-  const mapped = new Set<string | null | undefined>([...((await loadService(service, dir))?.controls.map(c => c.option).filter(Boolean) ?? []), ...(legalOptions(service) ?? [])]);
+  const mapped = new Set<string | null | undefined>([...((await loadService(service, dir))?.controls.map(c => c.option).filter(Boolean) ?? []), ...(legalOptions(service) ?? []), ...termOptions(service)]);
   return Object.keys(card.options ?? {}).filter(option => !mapped.has(option)).sort();
 }
 

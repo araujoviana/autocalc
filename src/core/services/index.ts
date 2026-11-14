@@ -27,6 +27,8 @@ export function supportedServices() {
         ? ["ondemand"]
         : service === "dline"
           ? ["monthly", "yearly"]
+          : service === "ecs"
+            ? ["monthly", "yearly", "ondemand", "ri"]
           : onDemandFirst.has(service)
             ? ["ondemand", "monthly", "yearly"]
             : ["monthly", "yearly", "ondemand"];

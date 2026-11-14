@@ -1270,6 +1270,10 @@ export function normalizeResourceToCard(r: NormalizedResource, docBillingPolicy?
     }
   }
 
+  // resource-level billing term: periods (monthly/yearly packages) and hours (pay-per-use) go to the builder
+  const term = r;
+  if (typeof term.periods === "number" && billing !== "ondemand" && billing !== "ri") options.periods = term.periods;
+  if (typeof term.hours === "number" && billing === "ondemand") options.hours = term.hours;
   return {
     id: r.id,
     service,

@@ -54,6 +54,12 @@ export const modesOf = (service: string): string[] => {
 };
 
 const NOT_OPTIONS = new Set(["service", "region", "billing", "quantity", "periods", "hours"]);
+/** The billing-term fields (periods, hours) this service's builder takes; they come from the resource, not from options. */
+export function termOptions(service: string): string[] {
+  if (service in RECIPES) return RECIPES[service]!.hours ? ["hours", "periods"] : ["periods"];
+  const entry = (CardInput as unknown as { options: Array<{ shape: Record<string, any> }> }).options.find(option => option.shape.service.def.values[0] === service);
+  return entry ? ["periods", "hours"].filter(key => key in entry.shape) : [];
+}
 /** The option names a card of this service may carry: the builder input minus what a requirement has itself. */
 export function legalOptions(service: string): string[] | null {
   if (service in RECIPES) return Object.keys(RECIPES[service]!.controls).sort();

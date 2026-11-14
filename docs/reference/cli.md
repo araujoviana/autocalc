@@ -106,6 +106,7 @@ autocalc publish-quote --draft-id d-1a2b3c4d --name "acme web tier"
 | `AUTOCALC_DATA` | Drafts, run records, and browser profiles directory (default `~/.local/share/autocalc`) |
 | `AUTOCALC_CACHE` | Catalog cache directory (default `~/.cache/autocalc`) |
 | `AUTOCALC_BROWSER` | Path of the Chromium-family browser to drive; overrides auto-detection |
+| `AUTOCALC_DEFER_EDIT` | Set to `1` to skip the Edit-view check while publishing (stored and rating checks still run); run `autocalc edit-check <id>` afterwards |
 | `AUTOCALC_ENCODE_WORKERS` | Concurrent anonymous browser contexts used during card encoding (default `3 (or CPU/RAM budget)`) |
 | `AUTOCALC_PAGE_HEADED` | Set to `1` to show browser windows during card encoding and gate checks |
 | `AUTOCALC_SCHEMA_DIR` | Override directory path for service page schema definitions |

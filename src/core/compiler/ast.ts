@@ -42,6 +42,10 @@ export interface ResourceDeclaration {
   use?: string;
   quantity?: number;
   billing?: string;
+  /** Billing periods for monthly/yearly packages (e.g. 3 yearly periods = 3 years). */
+  periods?: number;
+  /** Pay-per-use hours (default 730). */
+  hours?: number;
   availability?: "single-az" | "multi-az";
   needs?: Record<string, unknown>;
   spec?: string;
@@ -209,6 +213,12 @@ export function validateQuoteAst(data: unknown): { ok: true; value: QuoteDocumen
         errors.push({ path: p, message: `Resource '${res.id ?? index}' must specify either 'service' or 'use' (a template reference).` });
       }
 
+      if (res.periods !== undefined && (typeof res.periods !== "number" || res.periods <= 0 || !Number.isInteger(res.periods))) {
+        errors.push({ path: `${p}.periods`, message: "periods must be a positive integer." });
+      }
+      if (res.hours !== undefined && (typeof res.hours !== "number" || res.hours <= 0)) {
+        errors.push({ path: `${p}.hours`, message: "hours must be a positive number." });
+      }
       if (res.quantity !== undefined && (typeof res.quantity !== "number" || res.quantity <= 0 || !Number.isInteger(res.quantity))) {
         errors.push({ path: `${p}.quantity`, message: "quantity must be a positive integer." });
       }

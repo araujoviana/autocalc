@@ -35,11 +35,16 @@ test("an unavailable region throws instead of returning empty", async () => {
   expect(error.details.available_regions).toEqual(["sa-brazil-1"]);
 });
 
-test("ri is rejected before any catalog call", async () => {
+test("ri is rejected before any catalog call, except for ECS", async () => {
   const counter = { calls: 0 };
-  const error = await new HuaweiProvider(source(standard, counter)).candidates(req({ billing: "ri" })).catch(e => e);
+  const error = await new HuaweiProvider(source(standard, counter)).candidates(req({ service: "rds", billing: "ri" })).catch(e => e);
   expect(error.details).toEqual({ field: "billing", allowed: ["ondemand", "monthly", "yearly"] });
   expect(counter.calls).toBe(0);
+});
+
+test("ECS ri picks its spec from the monthly catalog", async () => {
+  const c = await new HuaweiProvider(source(standard)).candidates(req({ billing: "ri" }));
+  expect(c.map(x => x.spec)).toEqual(["c7n.xlarge.4", "SSD"]);
 });
 
 test("ECS flavors are offered for the OS of the requested image", async () => {

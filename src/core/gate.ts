@@ -22,14 +22,14 @@ const BILLING = { MONTHLY: "monthly", YEARLY: "yearly", ONDEMAND: "ondemand" } a
 /** ADR-0010: reads, at most 4 in flight. */
 export const RATING_WORKERS = 4;
 
-export interface CardCheck { index: number; title: string; stored: Dec; rated: Dec | null; edit: Dec | null; problems: string[]; /** Set when a known portal defect made the Edit price untrustworthy and the rating-engine price stood in. */ edit_skipped?: string }
+export interface CardCheck { index: number; title: string; stored: Dec; rated: Dec | null; edit: Dec | null; problems: string[]; /** Set when a known portal defect made the Edit price untrustworthy and the rating-engine price stood in. */ edit_skipped?: string; /** Set for RI cards: the rating engine has no RI inquiry, so the stored and Edit prices alone must agree. */ rating_skipped?: string }
 export const cardOk = (check: CardCheck) => !check.problems.length;
 export function cardCheck(index: number, title: string, stored: Dec, extra: Partial<CardCheck> = {}): CardCheck {
   return { index, title, stored, rated: null, edit: null, problems: [], ...extra };
 }
 export function checkToJson(check: CardCheck) {
   const text = (value: Dec | null) => value === null ? null : formatCents(value);
-  return { index: check.index, title: check.title, stored: formatCents(check.stored), rated: text(check.rated), edit: text(check.edit), problems: check.problems, ok: cardOk(check), ...(check.edit_skipped ? { edit_skipped: check.edit_skipped } : {}) };
+  return { index: check.index, title: check.title, stored: formatCents(check.stored), rated: text(check.rated), edit: text(check.edit), problems: check.problems, ok: cardOk(check), ...(check.edit_skipped ? { edit_skipped: check.edit_skipped } : {}), ...(check.rating_skipped ? { rating_skipped: check.rating_skipped } : {}) };
 }
 
 /** The card's total, recomputed by the rating engine from its own stored products, in cents. */
@@ -100,7 +100,8 @@ export async function verify(listId: string, deps: VerifyDeps, expectedCards?: D
     const selected = cards[index]!.selectedProduct, billing = BILLING[selected.chargeModeName as keyof typeof BILLING] ?? "";
     const { tier, defect } = resolveExecutionTier(String(selected.serviceCode ?? ""), billing);
     if (typeof value === "string") {
-      if (tier === "CACHED_CATALOG_ESTIMATE" && defect) check.edit_skipped = `${defect.advisory} (${defect.defectId})`;
+      if (selected.chargeModeName === "RI") check.rating_skipped = "RI card: no rating-engine inquiry for reserved instances; checked by stored vs Edit price";
+      else if (tier === "CACHED_CATALOG_ESTIMATE" && defect) check.edit_skipped = `${defect.advisory} (${defect.defectId})`;
       else check.problems.push(value);
     } else {
       check.rated = value;
@@ -111,6 +112,12 @@ export async function verify(listId: string, deps: VerifyDeps, expectedCards?: D
     }
   });
 
+  // AUTOCALC_DEFER_EDIT=1: skip the Edit-view check now and run `autocalc edit-check <id>` later (stored and rating checks still run)
+  if (process.env.AUTOCALC_DEFER_EDIT === "1") {
+    for (const check of checks) check.edit_skipped = "Edit check deferred (AUTOCALC_DEFER_EDIT=1); run edit-check on this list";
+    for (const check of checks) check.problems.push(...issues.filter(issue => issue.startsWith(`[${check.title}]`)));
+    return { checks, issues: issues.filter(issue => !checks.some(check => issue.startsWith(`[${check.title}]`))) };
+  }
   const editResults = await deps.edit(listId), indices = editResults.map(result => result.index);
   if (indices.length !== new Set(indices).size || indices.some(index => !(index >= 0 && index < cards.length && Number.isInteger(index)))) issues.push("the Edit check returned duplicate or unexpected card indices");
   const byIndex = new Map(editResults.map(result => [result.index, result]));

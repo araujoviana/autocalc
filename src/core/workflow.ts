@@ -29,7 +29,7 @@ export async function draftQuoteTool(ctx: ActionContext, input: { customer: stri
     return requirementFromJSON(raw);
   });
   for (const r of reqs) {
-    const allowed = legalOptions(r.service), unknown = Object.keys(r.options).filter(name => allowed && !allowed.includes(name)).sort();
+    const allowed = legalOptions(r.service), unknown = Object.keys(r.options).filter(name => allowed && !allowed.includes(name) && name !== "periods" && name !== "hours").sort(); // periods/hours: the billing term, checked by the builder schema
     if (unknown.length) throw invalid(`${r.service} has no option '${unknown[0]}'.`, unknown[0], allowed!, "supported_services lists each service's options.");
   }
   return view(ctx, await draftQuote(ctx.provider, input.customer, reqs, ctx.drafts));

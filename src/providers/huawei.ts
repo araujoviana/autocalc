@@ -36,8 +36,10 @@ export class HuaweiProvider implements Provider {
   }
 
   async candidates(req: Requirement): Promise<Candidate[]> {
-    if (!BILLING.includes(req.billing)) throw invalid(`Billing '${req.billing}' is not supported here.`, "billing", BILLING);
-    await this.source.checkMode(req.service, req.region, req.billing);
+    // ECS RI: the spec is chosen from the monthly catalog; the ECS builder rates the RI plan itself at publish time
+    const ri = req.billing === "ri" && req.service.toLowerCase() === "ecs";
+    if (!BILLING.includes(req.billing) && !ri) throw invalid(`Billing '${req.billing}' is not supported here.`, "billing", BILLING);
+    await this.source.checkMode(req.service, req.region, ri ? "monthly" : req.billing);
     // an ECS flavor is sold once per OS (.linux, .win, .byol); the image the quote asks for picks one
     // a spec that names its own OS (t7.large.05.byol) wins over the image
     const named = /\.(linux|win|byol)$/.exec(req.spec ?? "")?.[0];
@@ -46,7 +48,7 @@ export class HuaweiProvider implements Provider {
     for (const sku of await this.source.skus(req.service, req.region)) {
       if (sku.offPage) continue;
       if (osSuffix && sku.group === "ec2_vm" && /\.(linux|win|byol)$/.test(sku.spec) && !sku.spec.endsWith(osSuffix)) continue;
-      const plan = sku.prices[req.billing];
+      const plan = sku.prices[ri ? "monthly" : req.billing];
       if (plan && seen.has(sku.spec)) continue;
       if (!plan || (req.group && sku.group !== req.group)) continue;
       if (plan) seen.add(sku.spec);
