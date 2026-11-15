@@ -6,6 +6,7 @@
  * the form's final state matches the stored one (the page's own rule) and the amounts are equal
  * to the cent. Per-card failures are reported, never thrown.
  */
+import { availableParallelism, freemem } from "node:os";
 import type { BrowserManager } from "../browser.ts";
 import { CalculatorError } from "../errors.ts";
 import { shareLink } from "../endpoints.ts";
@@ -99,32 +100,93 @@ export async function checkCard(driver: Driver, index: number, card: Dict): Prom
   return { index, stored, edit: repriced, equal: true, reason: undefined, warning };
 }
 
-export interface EditCheckOptions { driver?: DriverOptions; makeDriver?: (page: PageLike, service: string, options: DriverOptions) => Driver }
-
-/** One result per card of the saved list, in list order. Throws only if the list cannot be read. */
-export async function editCheck(reader: { getUncached(url: string): Promise<unknown> }, manager: BrowserManager, listId: string, options: EditCheckOptions = {}): Promise<EditResult[]> {
-  const cards = (await shareDetail(reader, listId)).cartListData as Dict[];
-  // One retry when the page itself would not open: no price was compared yet, so a retry cannot hide a mismatch
-  // (a load timeout is usually transient). A card that fails or differs after the page opened is never retried.
-  let attempt = await editCheckOnce(manager, listId, cards, options);
-  if (attempt.openFailed) attempt = await editCheckOnce(manager, listId, cards, options);
-  return attempt.results;
+export interface EditCheckOptions {
+  driver?: DriverOptions;
+  makeDriver?: (page: PageLike, service: string, options: DriverOptions) => Driver;
+  workers?: number;
+  staggerMs?: number;
 }
 
-async function editCheckOnce(manager: BrowserManager, listId: string, cards: Dict[], options: EditCheckOptions): Promise<{ results: EditResult[]; openFailed: boolean }> {
+const REMOTE_OPEN_STAGGER_MS = 1500;
+
+/** Conservative parallel browser budget for anonymous Edit checks (ADR-0010, ADR-0020); an explicit override is checked on use. */
+export function editWorkers(
+  env: Record<string, string | undefined> = process.env,
+  memory = freemem(),
+  cpus = availableParallelism(),
+): number {
+  const override = env.AUTOCALC_EDIT_WORKERS;
+  if (override !== undefined) {
+    const workers = /^\d+$/.test(override.trim()) ? Number(override) : 0;
+    if (!(workers >= 1 && workers <= 16)) {
+      throw new CalculatorError("VALIDATION", "AUTOCALC_EDIT_WORKERS must be an integer from 1 to 16.");
+    }
+    return workers;
+  }
+  return Math.min(3, cpus, Math.max(1, Math.floor((memory - 512 * 1024 ** 2) / (768 * 1024 ** 2))));
+}
+
+interface CardSliceEntry {
+  index: number;
+  card: Dict;
+}
+
+function partitionCards(cards: Dict[], workerCount: number): CardSliceEntry[][] {
+  const entries = cards.map((card, index): CardSliceEntry => ({ index, card }));
+  const slices: CardSliceEntry[][] = [];
+  const base = Math.floor(entries.length / workerCount);
+  const rem = entries.length % workerCount;
+  let offset = 0;
+  for (let w = 0; w < workerCount; w++) {
+    const size = base + (w < rem ? 1 : 0);
+    if (size > 0) slices.push(entries.slice(offset, offset + size));
+    offset += size;
+  }
+  return slices;
+}
+
+/** One result per card of the saved list, in list order. Throws only if the list cannot be read or AUTOCALC_EDIT_WORKERS is invalid. */
+export async function editCheck(reader: { getUncached(url: string): Promise<unknown> }, manager: BrowserManager, listId: string, options: EditCheckOptions = {}): Promise<EditResult[]> {
+  const requestedWorkers = options.workers ?? editWorkers();
+  if (!(Number.isInteger(requestedWorkers) && requestedWorkers >= 1 && requestedWorkers <= 16)) {
+    throw new CalculatorError("VALIDATION", "AUTOCALC_EDIT_WORKERS must be an integer from 1 to 16.");
+  }
+  const cards = (await shareDetail(reader, listId)).cartListData as Dict[];
+  if (!cards.length) return [];
+  const workerCount = Math.min(cards.length, requestedWorkers);
+  const slices = partitionCards(cards, workerCount);
+  const url = shareLink(listId);
+  const staggerMs = options.staggerMs
+    ?? (options.makeDriver || (options.driver?.timeout ?? 20) < 1 ? 0 : url.startsWith("https://") ? REMOTE_OPEN_STAGGER_MS : 0);
+
+  // Bounded read-only fan-out across isolated anonymous contexts (ADR-0020): each slice opens the saved list,
+  // retries once only when opening the page itself fails (never after price comparisons start), and reassembles
+  // by original 0..N-1 card index so fail-closed verification sees the exact deterministic list order.
+  const nested = await Promise.all(slices.map(async (slice, workerIndex) => {
+    if (workerIndex > 0 && staggerMs > 0) {
+      await new Promise(resolve => setTimeout(resolve, workerIndex * staggerMs));
+    }
+    let attempt = await editCheckSliceOnce(manager, url, slice, options);
+    if (attempt.openFailed) attempt = await editCheckSliceOnce(manager, url, slice, options);
+    return attempt.results;
+  }));
+  return nested.flat().sort((a, b) => a.index - b.index);
+}
+
+async function editCheckSliceOnce(manager: BrowserManager, url: string, slice: CardSliceEntry[], options: EditCheckOptions): Promise<{ results: EditResult[]; openFailed: boolean }> {
   return manager.withAnonymousContext(async context => {
     const page = asPageLike(await context.newPage() as never), driver = (options.makeDriver ?? ((p, s, o) => new Driver(p, s, o)))(page, "shared-list", options.driver ?? {});
     try {
-      await driver.open(shareLink(listId));
+      await driver.open(url);
       await driver.settle();
       await js(page, "removeOverlays", OVERLAYS);
       await (page as EditPage).getByRole("button", { name: "View Details" }).click({ timeout: driver.timeout * 1000 });
     } catch (error) {
       const reason = error instanceof CalculatorError && error.code === "PAGE_ENCODE_FAILED" ? error.message : "the shared list did not open";
-      return { results: cards.map((card, index): EditResult => ({ index, stored: cents(card.selectedProduct.amount), edit: null, equal: false, reason })), openFailed: true };
+      return { results: slice.map(({ card, index }): EditResult => ({ index, stored: cents(card.selectedProduct.amount), edit: null, equal: false, reason })), openFailed: true };
     }
     const results: EditResult[] = [];
-    for (const [index, card] of cards.entries()) results.push(await checkCard(driver, index, card));
+    for (const { index, card } of slice) results.push(await checkCard(driver, index, card));
     return { results, openFailed: false };
   }, { lean: true });
 }

@@ -147,8 +147,11 @@ const FNS = {
     return v ? { amount: v.selectedProduct.amount, timeTag: v.selectedProduct.timeTag } : null;
   },
   tagCard(key) {
-    const hit = findAll((i) => i.type.__name === 'collapse-card-item'
-      && JSON.stringify(plain(i.props.sourceData || {})).includes(key))[0];
+    const items = findAll((i) => i.type.__name === 'collapse-card-item');
+    const hit = items.find((i) => {
+      const sd = i.props && i.props.sourceData;
+      return sd && (sd._cartId === key || (sd.selectedProduct && sd.selectedProduct._cartId === key));
+    }) || items.find((i) => JSON.stringify(plain(i.props.sourceData || {})).includes(key));
     if (!hit) return false;
     hit.subTree.el.setAttribute('data-autocalc-card', key);
     return true;
