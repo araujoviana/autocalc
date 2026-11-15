@@ -332,3 +332,19 @@ test("asPageLike invokes a string script with its JSON argument (Playwright JS d
   expect(await asPageLike(raw as never).evaluate("(x) => x", { a: 1 })).toBe("ok");
   expect(seen).toEqual(['((x) => x)({"a":1})']);
 });
+
+test("encodeCard uses warm reuse on first attempt and cold fresh context on retry", async () => {
+  const optsSeen: Array<{ lean?: boolean; reuse?: boolean } | undefined> = [];
+  const served = [cardOf({ region: "ap-southeast-1" }), cardOf()];
+  const manager = {
+    withAnonymousContext: async (operation: (context: unknown) => Promise<unknown>, opts?: { lean?: boolean; reuse?: boolean }) => {
+      optsSeen.push(opts);
+      return operation({ newPage: async () => ({}) });
+    },
+  };
+  const result = await encodeCard(manager as never, "sfsturbo", STATE, {
+    makeDriver: () => ({ frontendVersion: "11.4.201", open: async () => {}, run: async () => {}, capture: async () => served.shift() as Record<string, unknown> }),
+  });
+  expect(result.selectedProduct.region).toBe("sa-brazil-1");
+  expect(optsSeen).toEqual([{ lean: true, reuse: true }, { lean: true, reuse: false }]);
+});

@@ -18,6 +18,56 @@ export function discoverBrowserExecutable(override?: string): string | undefined
   return undefined;
 }
 
+const MAX_SLOT_USES = 25;
+const MAX_IDLE_SLOTS = 8;
+
+type AnonymousPage = Awaited<ReturnType<BrowserContext["newPage"]>>;
+interface AnonymousSlot {
+  context: BrowserContext;
+  page: AnonymousPage;
+  uses: number;
+}
+
+function wrapPooledPage(page: AnonymousPage, tracked: Array<[string, (...args: unknown[]) => void]>): AnonymousPage {
+  return new Proxy(page, {
+    get(target, prop) {
+      if (prop === "on" || prop === "addListener") {
+        return (event: string, listener: (...args: unknown[]) => void) => {
+          tracked.push([String(event), listener]);
+          return (target.on as (e: string, l: (...args: unknown[]) => void) => unknown)(event, listener);
+        };
+      }
+      if (prop === "once") {
+        return (event: string, listener: (...args: unknown[]) => void) => {
+          tracked.push([String(event), listener]);
+          return (target.once as (e: string, l: (...args: unknown[]) => void) => unknown)(event, listener);
+        };
+      }
+      const value = Reflect.get(target, prop, target);
+      return typeof value === "function" ? (value as (...args: unknown[]) => unknown).bind(target) : value;
+    },
+  });
+}
+
+function wrapPooledContext(context: BrowserContext, page: AnonymousPage): BrowserContext {
+  let handedOut = false;
+  return new Proxy(context, {
+    get(target, prop) {
+      if (prop === "newPage") {
+        return async () => {
+          if (!handedOut) {
+            handedOut = true;
+            return page;
+          }
+          return target.newPage();
+        };
+      }
+      const value = Reflect.get(target, prop, target);
+      return typeof value === "function" ? (value as (...args: unknown[]) => unknown).bind(target) : value;
+    },
+  });
+}
+
 export class BrowserManager {
   private browser: Browser | undefined;
   private starting: Promise<Browser> | undefined;
@@ -27,6 +77,7 @@ export class BrowserManager {
   private profileHeaded: boolean | undefined;
   private lease: ProfileLease | undefined;
   private queue: Promise<void> = Promise.resolve();
+  private idleSlots: AnonymousSlot[] = [];
   constructor(private readonly options: { headed?: boolean; executable?: string; profilePath?: string } = {}) {}
   async getBrowser(): Promise<Browser> {
     if (this.closed) throw new CalculatorError("BROWSER_UNAVAILABLE", "Browser manager is closed");
@@ -44,15 +95,82 @@ export class BrowserManager {
   }
   /** A fresh, cookie-less context. `page` options mirror the Python page_context: en-US at the form's viewport,
    * `lean` skips images, fonts and media (the form needs none; about 15% faster loads) unless watching headed. */
-  async withAnonymousContext<T>(operation: (context: BrowserContext) => Promise<T>, page?: { lean?: boolean }): Promise<T> {
+  private takeIdleSlot(): AnonymousSlot | undefined {
+    while (this.idleSlots.length > 0) {
+      const slot = this.idleSlots.pop()!;
+      if (!slot.page.isClosed()) return slot;
+      void slot.context.close().catch(() => {});
+    }
+    return undefined;
+  }
+
+  private async releasePooledSlot(slot: AnonymousSlot, failed: boolean, tracked: Array<[string, (...args: unknown[]) => void]>): Promise<void> {
+    if (failed || this.closed || slot.page.isClosed() || slot.uses + 1 >= MAX_SLOT_USES || this.idleSlots.length >= MAX_IDLE_SLOTS) {
+      await slot.context.close().catch(() => {});
+      return;
+    }
+    try {
+      for (const [event, listener] of tracked) {
+        (slot.page.off as (e: string, l: (...args: unknown[]) => void) => unknown)(event, listener);
+      }
+      for (const extra of slot.context.pages()) {
+        if (extra !== slot.page) await extra.close().catch(() => {});
+      }
+      // Clear web storage on the active origin before navigating to about:blank (about:blank denies localStorage access).
+      await slot.page.evaluate(() => {
+        try { globalThis.localStorage?.clear(); } catch { /* ignore */ }
+        try { globalThis.sessionStorage?.clear(); } catch { /* ignore */ }
+      });
+      await slot.context.clearCookies();
+      await slot.page.goto("about:blank", { waitUntil: "load" });
+      if (this.closed || slot.page.isClosed() || this.idleSlots.length >= MAX_IDLE_SLOTS) {
+        await slot.context.close().catch(() => {});
+        return;
+      }
+      this.idleSlots.push({ context: slot.context, page: slot.page, uses: slot.uses + 1 });
+    } catch {
+      await slot.context.close().catch(() => {});
+    }
+  }
+
+  async withAnonymousContext<T>(operation: (context: BrowserContext) => Promise<T>, page?: { lean?: boolean; reuse?: boolean }): Promise<T> {
     const browser = await this.getBrowser();
     if (this.closed) throw new CalculatorError("CANCELLED", "Browser operation cancelled during shutdown");
-    const context = await browser.newContext(page ? { viewport: { width: 1366, height: 900 }, locale: "en-US" } : {});
+    const pooled = Boolean(page?.lean && page?.reuse && !this.options.headed);
+    if (!pooled) {
+      const context = await browser.newContext(page ? { viewport: { width: 1366, height: 900 }, locale: "en-US" } : {});
+      try {
+        if (page?.lean && !this.options.headed) await context.route("**/*", route => ["image", "font", "media"].includes(route.request().resourceType()) ? route.abort() : route.continue());
+        if (this.closed) throw new CalculatorError("CANCELLED", "Browser operation cancelled during shutdown");
+        return await operation(context);
+      } finally { await context.close(); }
+    }
+
+    let slot = this.takeIdleSlot();
+    if (!slot) {
+      const context = await browser.newContext({ viewport: { width: 1366, height: 900 }, locale: "en-US" });
+      try {
+        await context.route("**/*", route => ["image", "font", "media"].includes(route.request().resourceType()) ? route.abort() : route.continue());
+        if (this.closed) throw new CalculatorError("CANCELLED", "Browser operation cancelled during shutdown");
+        slot = { context, page: await context.newPage(), uses: 0 };
+      } catch (error) {
+        await context.close().catch(() => {});
+        throw error;
+      }
+    }
+    const tracked: Array<[string, (...args: unknown[]) => void]> = [];
+    const proxiedPage = wrapPooledPage(slot.page, tracked);
+    const proxiedContext = wrapPooledContext(slot.context, proxiedPage);
+    let failed = false;
     try {
-      if (page?.lean && !this.options.headed) await context.route("**/*", route => ["image", "font", "media"].includes(route.request().resourceType()) ? route.abort() : route.continue());
       if (this.closed) throw new CalculatorError("CANCELLED", "Browser operation cancelled during shutdown");
-      return await operation(context);
-    } finally { await context.close(); }
+      return await operation(proxiedContext);
+    } catch (error) {
+      failed = true;
+      throw error;
+    } finally {
+      await this.releasePooledSlot(slot, failed, tracked);
+    }
   }
   async withProfile<T>(headed: boolean, operation: (context: BrowserContext) => Promise<T>): Promise<T> {
     if (this.closed) throw new CalculatorError("BROWSER_UNAVAILABLE", "Browser manager is closed");
@@ -78,13 +196,14 @@ export class BrowserManager {
   async close(): Promise<void> {
     if (this.closing) return this.closing;
     this.closed = true;
+    const pooled = this.idleSlots.splice(0);
     this.closing = (async () => {
       // Closing an active context interrupts navigation and lets queued work finish.
       const initialProfile = this.profile;
-      const initialClose = Promise.allSettled([initialProfile?.close()]);
+      const initialClose = Promise.allSettled([initialProfile?.close(), ...pooled.map(slot => slot.context.close())]);
       await this.queue;
       const browser = this.browser ?? await this.starting?.catch(() => undefined);
-      const results = [...await initialClose, ...await Promise.allSettled([this.profile !== initialProfile ? this.profile?.close() : undefined, browser?.close()])];
+      const results = [...await initialClose, ...await Promise.allSettled([this.profile !== initialProfile ? this.profile?.close() : undefined, ...this.idleSlots.splice(0).map(slot => slot.context.close()), browser?.close()])];
       this.profile = undefined;
       this.browser = undefined;
       try { await this.lease?.release(); } finally { this.lease = undefined; }

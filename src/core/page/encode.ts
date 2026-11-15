@@ -20,7 +20,7 @@ export async function encodeCard(manager: BrowserManager, service: string, rewri
       const captured = await driver.capture();
       frontend = driver.frontendVersion;
       return captured;
-    }, { lean: true });
+    }, { lean: true, reuse: attempt === 0 });
     const fail = (message: string, step: string, key: string) => pageEncodeFailed(message, { service, step, field: key, frontendVersion: frontend });
     const asked = Object.fromEntries(Object.entries(globalValues(wanted)).filter(([, value]) => value != null)), got = globalValues(card.rewriteValue as Dict);
     const period = wanted.global_PERIODTIME?.UNSET_PeriodTime;
