@@ -105,4 +105,39 @@ resources:
       { factor: "get", value: 5002 },
     ]);
   });
+
+  it("changes inputHash on resource quantity/options/metadata edits and ignores key insertion order", () => {
+    const base = compileQuote(quoteYaml);
+    const baseHash = computeInputHash(base.document, base.resources);
+
+    // Reordered keys inside doc and resources produce the exact same hash
+    const reorderedDoc = {
+      horizon: { duration: base.document.horizon!.duration },
+      resources: base.document.resources,
+      defaults: { billing: "monthly", availability: "single-az", region: "sa-brazil-1" },
+      metadata: { currency: "USD", title_prefix: "Fintech - Core", customer: "Fintech SA", id: "test-ir-quote" },
+      version: "1" as const,
+    };
+    const reorderedRes = base.resources.map(r => ({
+      horizon: r.horizon,
+      needs: { memory: "16 GiB", vcpus: 4 },
+      quantity: r.quantity,
+      availability: r.availability,
+      billing: r.billing,
+      region: r.region,
+      service: r.service,
+      id: r.id,
+    }));
+    expect(computeInputHash(reorderedDoc as typeof base.document, reorderedRes as typeof base.resources)).toBe(baseHash);
+
+    // Quantity / options / metadata edits produce distinct hashes
+    const qtyEdited = base.resources.map((r, i) => (i === 0 ? { ...r, quantity: r.quantity + 1 } : r));
+    expect(computeInputHash(base.document, qtyEdited)).not.toBe(baseHash);
+
+    const optEdited = base.resources.map((r, i) => (i === 0 ? { ...r, options: { image: "Ubuntu 24.04" } } : r));
+    expect(computeInputHash(base.document, optEdited)).not.toBe(baseHash);
+
+    const metaEdited = { ...base.document, metadata: { ...base.document.metadata, customer: "Other Co" } };
+    expect(computeInputHash(metaEdited, base.resources)).not.toBe(baseHash);
+  });
 });

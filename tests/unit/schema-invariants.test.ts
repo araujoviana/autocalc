@@ -1,11 +1,12 @@
 import { expect, test } from "bun:test";
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { main } from "../../src/cli.ts";
 import {
   build,
+  clearServiceSchemaCache,
   coverage,
   diff,
   dump,
@@ -245,5 +246,33 @@ test("CLI pull writes the canonical file", async () => {
     expect(saved.frontend).toBe("9");
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("loadService memoizes per resolved directory and returns isolated clones", async () => {
+  const dir1 = mkdtempSync(join(tmpdir(), "autocalc-schema-memo1-"));
+  const dir2 = mkdtempSync(join(tmpdir(), "autocalc-schema-memo2-"));
+  try {
+    writeFileSync(join(dir1, "demo.yaml"), "service: demo\nfrontend: '1'\ncontrols: []\n");
+    writeFileSync(join(dir2, "demo.yaml"), "service: demo\nfrontend: '2'\ncontrols: []\n");
+    clearServiceSchemaCache();
+
+    const first = await loadService("demo", dir1);
+    expect(first?.frontend).toBe("1");
+    expect((await loadService("demo", dir2))?.frontend).toBe("2");
+
+    // Mutating caller copy does not corrupt cache, and deleting file still hits dir1 cache until cleared
+    first!.controls.push({ id: "x", kind: "k", title: null, value_type: null, option_key: null, default: null, values: null, ranges: [], after: [], after_source: "order", option: null, unsupported: false, note: null, modes: [] });
+    rmSync(join(dir1, "demo.yaml"));
+    const cached = await loadService("demo", dir1);
+    expect(cached?.frontend).toBe("1");
+    expect(cached?.controls).toEqual([]);
+
+    clearServiceSchemaCache();
+    expect(await loadService("demo", dir1)).toBeNull();
+  } finally {
+    clearServiceSchemaCache();
+    rmSync(dir1, { recursive: true, force: true });
+    rmSync(dir2, { recursive: true, force: true });
   }
 });

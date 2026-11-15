@@ -53,10 +53,24 @@ export interface CanonicalQuoteIR {
   inputHash: string;
 }
 
+function canonicalizeForHash(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalizeForHash);
+  if (value !== null && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return Object.fromEntries(
+      Object.keys(record)
+        .sort()
+        .filter(k => record[k] !== undefined)
+        .map(k => [k, canonicalizeForHash(record[k])]),
+    );
+  }
+  return value;
+}
+
 /** Computes a deterministic SHA-256 hash of the normalized resources input. */
 export function computeInputHash(doc: QuoteDocument, resources: NormalizedResource[]): string {
   const hasher = new Bun.CryptoHasher("sha256");
-  hasher.update(JSON.stringify({ doc, resources }, Object.keys(doc).sort()));
+  hasher.update(JSON.stringify(canonicalizeForHash({ doc, resources })));
   return hasher.digest("hex");
 }
 

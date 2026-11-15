@@ -225,16 +225,15 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
   if (quote.version === "1") {
     try {
       let compiled: { document: any; resources: any[] } | null = null;
-      if (quote.path) {
+      if (quote.rawDocument && quote.compiledResources) {
+        compiled = { document: quote.rawDocument, resources: quote.compiledResources };
+      } else if (quote.path) {
         try {
           const text = await readFile(quote.path, "utf8");
           compiled = compileQuote(text);
         } catch {
-          // fallback to in-memory parsed resources
+          // Non-fatal fallback
         }
-      }
-      if (!compiled && quote.rawDocument && quote.compiledResources) {
-        compiled = { document: quote.rawDocument, resources: quote.compiledResources };
       }
       if (compiled) {
         const ir = buildCanonicalQuoteIR(compiled.document, compiled.resources);

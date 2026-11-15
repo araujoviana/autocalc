@@ -46,7 +46,7 @@ import { apply, parse, plan, validate } from "../src/core/quote-file.ts";
 import { Draft, requirement } from "../src/core/quote/model.ts";
 import { DraftStore } from "../src/core/quote/store.ts";
 import { RunRecord } from "../src/core/quote/runs.ts";
-import { loadService } from "../src/core/schema-model.ts";
+import { loadService, clearServiceSchemaCache } from "../src/core/schema-model.ts";
 import { buildRecipe, RECIPES } from "../src/core/services/forms.ts";
 import { buildCard as buildServiceCard } from "../src/core/services/index.ts";
 import { PublicTransport } from "../src/core/transport.ts";
@@ -738,6 +738,7 @@ async function measureOfflineScenario(
 
   for (let runIdx = 0; runIdx < warmup + repetitions; runIdx++) {
     const isWarmup = runIdx < warmup;
+    clearServiceSchemaCache();
     const runDir = await mkdtemp(join(tmpdir(), `autocalc-bench-${spec.id}-`));
     try {
       server.resetLists();
@@ -1031,10 +1032,12 @@ async function measureBottlenecks(
   const valUnique: number[] = [];
   const uniqueServices = [...new Set(parsed153.cards.map(c => String(c.service).toLowerCase()))];
   for (let i = 0; i < reps + 1; i++) {
+    clearServiceSchemaCache();
     const t0 = performance.now();
     await validate(parsed153);
     const dt0 = performance.now() - t0;
 
+    clearServiceSchemaCache();
     const t1 = performance.now();
     await Promise.all(uniqueServices.map(s => loadService(s)));
     const dt1 = performance.now() - t1;
@@ -1086,12 +1089,14 @@ async function measureBottlenecks(
     };
 
     for (let i = 0; i < reps + 1; i++) {
+      clearServiceSchemaCache();
       const d1 = join(planDir, `d-disk-${i}`);
       reader.enableRamMemo(false);
       const t0 = performance.now();
       await plan(makeCtx(d1), parsed100);
       const dt0 = performance.now() - t0;
 
+      clearServiceSchemaCache();
       const d2 = join(planDir, `d-ram-${i}`);
       reader.enableRamMemo(true);
       const t1 = performance.now();

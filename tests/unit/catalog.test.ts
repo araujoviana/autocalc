@@ -39,3 +39,57 @@ test("menu listing excludes hidden services and filters by name", async () => {
   expect(await catalog.services("maas")).toEqual([{ service: "maas", name: "ModelArts Studio", category: "Compute", regions: ["b"] }]);
   expect(await catalog.regions()).toEqual({ r: "Region", b: "Beta Region" });
 });
+
+test("catalog memoizes menu, labels, productInfo, and skus per instance and invalidates on refresh", async () => {
+  let version = 1;
+  const gets: Array<{ url: string; refresh?: boolean }> = [];
+  const catalog = new Catalog({
+    async get(url, options = {}) {
+      gets.push({ url, ...(options.refresh !== undefined ? { refresh: options.refresh } : {}) });
+      if (url.includes("productInfo")) {
+        return { product: { g: [{ resourceSpecCode: `sku.v${version}`, productSpecSysDesc: "dataInfo_1_", planList: [{ billingMode: "MONTHLY", planType: "PRICEPLAN", amount: version, measureUnit: 1 }] }] } };
+      }
+      if (url.includes("language?")) return { ecs: { dataInfo_1_: `Label v${version}` } };
+      return { global: {}, measureID: { "1": { unit: "month" } }, regionsOfSite: { HWC: ["sa-brazil-1"] }, menuInfos: [] };
+    },
+  });
+
+  const [first, second] = await Promise.all([
+    catalog.skus("ecs", "sa-brazil-1"),
+    catalog.skus("ecs", "sa-brazil-1"),
+  ]);
+  const third = await catalog.skus("ecs", "sa-brazil-1");
+  expect(first[0]?.spec).toBe("sku.v1");
+  expect(second).toEqual(first);
+  expect(third).toEqual(first);
+  // Only 1 productInfo + 1 labels + 1 menu read across 3 calls
+  expect(gets).toHaveLength(3);
+
+  version = 2;
+  const refreshed = await catalog.skus("ecs", "sa-brazil-1", true);
+  expect(refreshed[0]?.spec).toBe("sku.v2");
+  expect(gets).toHaveLength(6);
+  expect(gets.slice(3).every(g => g.refresh === true)).toBe(true);
+
+  const cachedAfterRefresh = await catalog.skus("ecs", "sa-brazil-1");
+  expect(cachedAfterRefresh[0]?.spec).toBe("sku.v2");
+  expect(gets).toHaveLength(6);
+});
+
+test("catalog evicts failed promises so transient transport errors can retry", async () => {
+  let fail = true;
+  let calls = 0;
+  const catalog = new Catalog({
+    async get() {
+      calls++;
+      if (fail) throw new Error("transient failure");
+      return { product: { g: [{ resourceSpecCode: "ok.spec" }] } };
+    },
+  });
+
+  await expect(catalog.productInfo("ecs", "sa-brazil-1")).rejects.toThrow("transient failure");
+  fail = false;
+  const retried = await catalog.productInfo("ecs", "sa-brazil-1");
+  expect(retried.product.g?.[0]?.resourceSpecCode).toBe("ok.spec");
+  expect(calls).toBe(2);
+});

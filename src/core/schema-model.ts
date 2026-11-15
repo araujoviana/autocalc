@@ -1,6 +1,6 @@
 /** The schema file format and generator (mirrors `src/autocalc/schema/model.py` and `generate.py`). */
 import { readdir, readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { z } from "zod";
 import { PAGE } from "./endpoints.ts";
 import { SCHEMA_DIR } from "./schema-files.ts";
@@ -31,12 +31,35 @@ export function loadSchema(text: string): ServiceSchema {
 }
 export const load = loadSchema;
 
+const serviceSchemaCache = new Map<string, Promise<ServiceSchema | null>>();
+
+export function clearServiceSchemaCache(): void {
+  serviceSchemaCache.clear();
+}
+
 /** The committed schema of a service, or null when none exists. A malformed file throws. */
 export async function loadService(service: string, dir = SCHEMA_DIR): Promise<ServiceSchema | null> {
   if (!/^[a-z0-9]+$/i.test(service)) throw new Error(`Not a service id: ${service}`);
-  let text: string;
-  try { text = await readFile(join(dir, `${service}.yaml`), "utf8"); } catch { return null; }
-  return loadSchema(text);
+  const key = `${resolve(dir)}:${service.toLowerCase()}`;
+  let pending = serviceSchemaCache.get(key);
+  if (!pending) {
+    pending = (async () => {
+      let text: string;
+      try { text = await readFile(join(dir, `${service}.yaml`), "utf8"); } catch { return null; }
+      return loadSchema(text);
+    })();
+    pending.then(
+      schema => {
+        if (schema === null && serviceSchemaCache.get(key) === pending) serviceSchemaCache.delete(key);
+      },
+      () => {
+        if (serviceSchemaCache.get(key) === pending) serviceSchemaCache.delete(key);
+      },
+    );
+    serviceSchemaCache.set(key, pending);
+  }
+  const loaded = await pending;
+  return loaded ? structuredClone(loaded) : null;
 }
 
 /** Controls in form order (top, then left); hand-written fields carried over by control id. */
@@ -292,6 +315,7 @@ export async function runSchemaCommand(
   if (action === "pull") {
     const schema = await pullFn(service);
     await writeFile(join(dir, `${service}.yaml`), dump(schema), "utf8");
+    serviceSchemaCache.delete(`${resolve(dir)}:${service.toLowerCase()}`);
     const msg = `Wrote schema for ${service}.`;
     out(human ? ui.status("ok", msg, options.stream) : msg);
     return 0;
