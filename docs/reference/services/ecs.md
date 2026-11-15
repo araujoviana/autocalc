@@ -64,7 +64,7 @@
 
 ## Argument Reference (`needs` & `options`)
 
-Top-level card fields: `id` (required), `service: ecs`, `region`, `billing` (`monthly` | `yearly` | `ondemand`), `quantity` (positive integer), `needs` (for automatic SKU ranking by `vcpus` / `memory_gb`), `spec` (explicit catalog SKU), and `options`.
+Top-level card fields: `id` (required), `service: ecs`, `region`, `billing` (`monthly` | `yearly` | `ondemand` | `ri`), `quantity` (positive integer), `needs` (for automatic SKU ranking by `vcpus` / `memory_gb`), `spec` (explicit catalog SKU), and `options`.
 
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |

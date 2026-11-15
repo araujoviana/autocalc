@@ -95,6 +95,7 @@ plugins:
 nav:
   - Overview:
       - Home: index.md
+      - Code Architecture: architecture.md
       - Project status: status.md
       - Roadmap: roadmap.md
   - Tutorials:
@@ -210,6 +211,7 @@ nav:
       - "0017: TypeScript on Bun target": adr/0017-typescript-on-bun-is-the-target.md
       - "0018: Declarative quotes and card schema": adr/0018-declarative-quotes-and-generated-card-schema.md
       - "0019: Distribution via bun": adr/0019-distribution-bun-from-git-tags.md
+      - "0020: Bounded browser context pool & edit-check": adr/0020-bounded-browser-context-pool-and-staggered-edit-check.md
   - Research:
       - Overview: research/index.md
       - General Architecture & Quirks: research/general.md

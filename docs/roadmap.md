@@ -1,5 +1,7 @@
 # Roadmap
 
+> **Role**: Single backlog of delivered OpenSpec changes and remaining open items. Add new open items here instead of GitHub issues. For current status and metrics see [Project Status](status.md); for code navigation see [Code Architecture](architecture.md).
+
 Work moves through OpenSpec changes in this order; every row below is delivered. Each change carries its own spec delta and
 lands when its code does ([ADR-0000](adr/0000-record-architecture-decisions.md)). Archived changes
 live in `openspec/changes/archive/`.
@@ -20,6 +22,7 @@ live in `openspec/changes/archive/`.
 | 12 | `ts-parity` | TypeScript on Bun reaches parity and replaces Python; v0.2.0 ([ADR-0017](adr/0017-typescript-on-bun-is-the-target.md)) |
 | 13 | `yaml-spec` | Declarative `version: "1"` quote files: unit-checked YAML, templates, canonical IR, lock file, wire budgeting and partitioning, 4-tier circuit breaker |
 | 14 | `research-knowledge-and-mcp-workflow` | Searchable research section, Huawei SPA discoveries (OBS, Kafka, Vue 3 reactivity, timeTag), and MCP-first workflow guidance |
+| 15 | `perf-arch-docs` | Performance diagnosis & benchmark harness (`ADR-0020`), catalog/IR memoization, bounded `editCheck` + anonymous page pool concurrency, normalizer modularization & zero-cycle boundaries, and architecture/status/roadmap consolidation |
 
 AWS is v2.
 
@@ -40,7 +43,8 @@ Each item is either assigned to the change that will close it or left unschedule
 | Region sweep (`tests/support/region-sweep.ts`, 2026-10-23): in `eu-west-101` 34 of the 100 verified combinations fail because the builders' default SKUs are not sold there (`CBC.6006` / `SPEC_NOT_FOUND`); `hecs` is not offered there. In the primary regions (São Paulo, Santiago, Singapore) all 300 combinations pass | unscheduled |
 | Saved-list naming and prune (ADR-0014, superseded by ADR-0016): `apply-quote` now warns when a list of the same name exists, but nothing replaces or prunes it | unscheduled |
 | Restore publication for LTS storage/retention, FunctionGraph compute, CCE turbo and the default-only recipes once their control mappings and prices are verified ([audit remediation](how-to/audit-remediation.md)) | unscheduled |
-| Profile browser reuse and memory under concurrent tool calls | unscheduled |
+| Re-run live benchmark suite (`bun run bench -- --live`) after Fase 3 changes | next |
+| Verify and graduate remaining 10 `DEFAULT_ONLY` / `CATALOG_ONLY` services to `VERIFIED` | next |
 | The calculator's EU and China sites | unscheduled, after v1 |
 | Update a saved list in place from a quote (`update` was removed in ts-parity 4.3: it saved without the publish gate; needs a gated, rollback-safe design, see [share update](explanation/huawei/share-update.md)) | unscheduled |
 | Map the builder services' options to page controls where they are still partial (`autocalc schema coverage <service>` is the to-do list); builders already take options through `apply_quote` | unscheduled |

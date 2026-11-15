@@ -15,6 +15,7 @@ not a cosmetic one ([ADR-0002](adr/0002-share-link-is-the-deliverable.md)).
 | You want to… | Read |
 |---|---|
 | get a first quote and link working | [Tutorial: your first quote](tutorials/first-quote.md) |
+| navigate the codebase, pipeline & concurrency | [Code Architecture](architecture.md) |
 | browse all 51 Huawei Cloud services & YAML arguments | [Huawei Cloud Service Catalog](reference/services/index.md) |
 | write a declarative `version: "1"` quote or card file | [Quote files & schemas](reference/quote-files.md) |
 | look up a CLI command, an error code or an endpoint | [CLI Reference](reference/cli.md) |

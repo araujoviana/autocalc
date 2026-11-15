@@ -15,8 +15,8 @@ Every service page documents:
 
 ## Verification Tiers
 
-- **`VERIFIED` (40 services)**: 100% control mapping coverage in `src/schema/files/*.yaml` and full support in `plan-quote` / `apply-quote` through the 3-way fail-closed publish gate (`stored == rated == Edit`).
-- **`DEFAULT_ONLY` / `CATALOG_ONLY` (11 services)**: Supported for catalog search (`autocalc search`), standalone rating (`autocalc quote`), and anonymous replay (`bun run compat`), but blocked from `apply-quote` / `publish-quote` until custom option or spec mappings are verified against the Edit gate.
+- **`VERIFIED` (41 services)**: 100% control mapping coverage in `src/schema/files/*.yaml` and full support in `plan-quote` / `apply-quote` through the 3-way fail-closed publish gate (`stored == rated == Edit`).
+- **`DEFAULT_ONLY` / `CATALOG_ONLY` (10 services)**: Supported for catalog search (`autocalc search`), standalone rating (`autocalc quote`), and anonymous replay (`bun run compat`), but blocked from `apply-quote` / `publish-quote` until custom option or spec mappings are verified against the Edit gate.
 
 ---
 
@@ -26,7 +26,7 @@ Virtual machines, serverless functions, and dedicated compute instances.
 
 | Service | Name | Declarative Aliases | Billing Modes | Publish Gate |
 | :--- | :--- | :--- | :--- | :--- |
-| [`ecs`](ecs.md) | Elastic Cloud Server | — | `monthly`, `yearly`, `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
+| [`ecs`](ecs.md) | Elastic Cloud Server | — | `monthly`, `yearly`, `ondemand`, `ri` | <span class="badge badge--verified">VERIFIED</span> |
 | [`function`](function.md) | FunctionGraph | `fg`, `functiongraph` | `ondemand` | <span class="badge badge--verified">VERIFIED</span> |
 | [`hecs`](hecs.md) | Flexus X Instance | `flexus`, `flexus-x`, `flexus_x` | `monthly`, `yearly`, `ondemand` | <span class="badge badge--default">DEFAULT_ONLY</span> |
 

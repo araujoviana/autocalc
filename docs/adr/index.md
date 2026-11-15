@@ -26,6 +26,6 @@ accepted ADR is never edited: a reversal is a new ADR that supersedes it (see
 | [0017](0017-typescript-on-bun-is-the-target.md) | TypeScript on Bun is the target implementation | accepted |
 | [0018](0018-declarative-quotes-and-generated-card-schema.md) | Declarative quotes: a generated card schema, with plan and apply | accepted |
 | [0019](0019-distribution-bun-from-git-tags.md) | Distribution: `bun add -g` from git tags, with an update notice | accepted |
-| [0020](0020-bounded-browser-context-pool-and-staggered-edit-check.md) | Bounded anonymous browser context pool for encoding and staggered parallel Edit checks | proposed |
+| [0020](0020-bounded-browser-context-pool-and-staggered-edit-check.md) | Bounded anonymous browser context pool for encoding and staggered parallel Edit checks | accepted |
 
 New ADR: copy the newest file, take the next number, set `status: proposed` until it is agreed.

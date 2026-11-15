@@ -9,8 +9,9 @@ test.skipIf(!live)("public catalog and rating are available", async () => {
     expect(Array.isArray(services)).toBe(true);
     const names = (services as Array<{ service: string }>).map(item => item.service);
     for (const name of ["ecs", "rds", "obs", "cce", "evs"]) expect(names).toContain(name);
-    const regions = await core.invoke("list_regions", { region: "Santiago" });
-    expect(regions).toMatchObject({ resolved: "la-south-2" });
+    const regions = await core.invoke("list_regions", {}) as Record<string, string>;
+    expect(regions).toHaveProperty("la-south-2");
+    expect(typeof regions["la-south-2"]).toBe("string");
     const result = await core.invoke("quote", { region: "Santiago", billing: "monthly", items: [{ service: "ecs", spec: "c7n.large.2.linux" }] });
     expect((result as { total: number }).total).toBeGreaterThan(0);
   } finally { await core.close(); }

@@ -503,7 +503,7 @@ const OPTION_NOTES: Record<string, Record<string, string>> = {
     volume_type: "Storage media type selector (`cloud-ssd`, `common`).",
   },
   cce: {
-    cluster_type: "Cluster edition (`standard`). CCE Turbo is currently blocked pending verification.",
+    cluster_type: "Cluster edition (`standard`, `turbo` mapped onto unified `cce.s1`/`cce.s2`, or `autopilot` where available; legacy standalone `cce.t1`/`cce.t2` SKUs are rejected fail-closed).",
     ha: "High-availability multi-master control plane (`true` selects `cce.s2.*` multi-master, `false` selects `cce.s1.*` single-master). Alias: `control_plane_ha: true` or `master_az: 3AZ`.",
     scale: "Maximum worker node scale (`small` = 50 nodes, `medium` = 200 nodes, `large` = 1000 nodes, `xlarge` = 2000 nodes). Accepts `50nodes`, `200nodes`, `1000nodes`, `2000nodes`.",
   },
@@ -968,7 +968,7 @@ async function main() {
 | **Category** | ${category.title} |
 | **Publish Gate Status** | ${statusBadge}${info.publication_blocked_reason ? ` — *${info.publication_blocked_reason}*` : ""} |
 | **Verified Frontend** | \`${schema?.frontend ?? VERIFIED_FRONTEND}\` |
-| **Supported Billing Modes** | ${info.modes.map(m => `\`${m}\``).join(", ")}${service === "ecs" ? ", `ri` (Reserved Instance)" : ""} |
+| **Supported Billing Modes** | ${info.modes.map(m => m === "ri" ? "`ri` (Reserved Instance)" : `\`${m}\``).join(", ")}${service === "ecs" && !info.modes.includes("ri") ? ", `ri` (Reserved Instance)" : ""} |
 | **Primary Catalog Group** | ${primaryGroup ? `\`${primaryGroup}\`` : "—"} |
 | **Schema Coverage** | ${totalControls} controls (${mappedControls} mapped, ${unsupportedControls} intentionally fixed/unsupported) |
 
@@ -1030,7 +1030,7 @@ ${rows.join("\n")}`;
 
   const indexMd = `# Huawei Cloud Service Catalog
 
-This section is the **Terraform Registry-style provider reference** for all **51 Huawei Cloud calculator services** in \`autocalc\`.
+This section is the **Terraform Registry-style provider reference** for all **${allSupported.size} Huawei Cloud calculator services** in \`autocalc\`.
 
 Every service page documents:
 - **Example Usage**: Ready-to-use \`version: "1"\` declarative YAML snippets.
@@ -1045,8 +1045,8 @@ Every service page documents:
 
 ## Verification Tiers
 
-- **\`VERIFIED\` (40 services)**: 100% control mapping coverage in \`src/schema/files/*.yaml\` and full support in \`plan-quote\` / \`apply-quote\` through the 3-way fail-closed publish gate (\`stored == rated == Edit\`).
-- **\`DEFAULT_ONLY\` / \`CATALOG_ONLY\` (11 services)**: Supported for catalog search (\`autocalc search\`), standalone rating (\`autocalc quote\`), and anonymous replay (\`bun run compat\`), but blocked from \`apply-quote\` / \`publish-quote\` until custom option or spec mappings are verified against the Edit gate.
+- **\`VERIFIED\` (${VERIFIED.size} services)**: 100% control mapping coverage in \`src/schema/files/*.yaml\` and full support in \`plan-quote\` / \`apply-quote\` through the 3-way fail-closed publish gate (\`stored == rated == Edit\`).
+- **\`DEFAULT_ONLY\` / \`CATALOG_ONLY\` (${allSupported.size - VERIFIED.size} services)**: Supported for catalog search (\`autocalc search\`), standalone rating (\`autocalc quote\`), and anonymous replay (\`bun run compat\`), but blocked from \`apply-quote\` / \`publish-quote\` until custom option or spec mappings are verified against the Edit gate.
 
 ---
 

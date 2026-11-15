@@ -43,16 +43,23 @@ autocalc quote Santiago 'ecs:c7n.large.2.linux*3' 'ecs:SSD*3@100' --billing mont
 
 ### 2. Declarative Quotes (`quote.yaml`)
 
+Preferred `version: "1"` syntax (legacy `cards:` manifests are also accepted):
+
 ```yaml
-customer: Example Corp
-name: "[autocalc] web-tier"
-defaults: { region: sa-brazil-1, billing: monthly }
-cards:
+version: "1"
+metadata:
+  id: web-tier-example
+  customer: Example Corp
+  title_prefix: "[autocalc] web-tier"
+defaults:
+  region: sa-brazil-1
+  billing: monthly
+resources:
   - id: web
     service: ecs
     quantity: 2
-    needs: { vcpus: 4, memory_gb: 8 }
-    options: { image: "Ubuntu 22.04 server 64bit" }
+    needs: { vcpus: 4, memory: "8 GiB" }
+    options: { os: ubuntu-22.04 }
 ```
 
 ```bash
@@ -128,10 +135,12 @@ Full reference: [CLI Reference](docs/reference/cli.md).
 | Variable | Default | Description |
 | :--- | :--- | :--- |
 | `AUTOCALC_PROFILE` | `default` | Named authentication profile for browser sessions |
-| `AUTOCALC_CONFIG` | `~/.config/autocalc` | Directory for drafts, run records, and profiles |
+| `AUTOCALC_CONFIG` | `~/.config/autocalc` | Directory for configuration and update-check state |
+| `AUTOCALC_DATA` | `~/.local/share/autocalc` | Directory for drafts, run records, and browser auth profiles |
 | `AUTOCALC_CACHE` | `~/.cache/autocalc` | Directory for 24h catalog cache |
 | `AUTOCALC_BROWSER` | *Auto-detected* | Custom path to Chrome/Chromium binary |
-| `AUTOCALC_ENCODE_WORKERS` | `6` | Concurrency for headless browser encoding |
+| `AUTOCALC_ENCODE_WORKERS` | Auto (`<= 3`, 1–16) | Concurrency for headless browser encoding (`apply` / `publish`) |
+| `AUTOCALC_EDIT_WORKERS` | Auto (`<= 3`, 1–16) | Concurrency for headless Edit-view verification |
 | `AUTOCALC_NO_UPDATE_CHECK` | `0` | Set to `1` to disable daily update notices |
 
 ---
@@ -144,9 +153,11 @@ bun run check            # Typecheck (tsc --noEmit)
 bun run check:boundaries # Verify architecture layer boundaries
 bun run test:offline     # Unit and integration tests (deterministic, offline)
 bun run test:live        # Live tests against calculator endpoints
+bun run bench            # Run offline loopback benchmark suite
+bun run bench:report     # Generate self-contained bench/dashboard.html
 ```
 
-Detailed documentation: [docs/](docs/index.md) · [CLI Reference](docs/reference/cli.md) · [ADRs](docs/adr/index.md).
+Detailed documentation: [Code Architecture](docs/architecture.md) · [docs/](docs/index.md) · [CLI Reference](docs/reference/cli.md) · [ADRs](docs/adr/index.md).
 
 ## License
 

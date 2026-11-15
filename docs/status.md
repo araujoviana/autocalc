@@ -1,10 +1,25 @@
 # Project status
 
-Last updated 2026-11-11. The current implementation is TypeScript on Bun, version
-0.6.0. The LATAM work is available on the local
-`feat/latam-cce-iaas-dms-coverage` branch; it has not been merged or released.
+> **Role**: Current release, service-coverage, and benchmark snapshot. For code navigation see [Code Architecture](architecture.md); for open items see [Roadmap](roadmap.md); for session resumption see `docs/handoff.md`.
+
+Last updated 2026-11-15. The current implementation is TypeScript on Bun, version
+0.7.0, on `main`.
 There are 51 committed service schemas. The publication registry labels
 41 verified services; this label does not certify every regional configuration.
+
+## Performance Snapshot (Offline Loopback vs Live Baseline)
+
+Measured with `bun run bench` (`warmup=1`, `reps=3` offline loopback harness; Change 4 working tree committed as `794876e` [run parent `c92cb3e`] vs `bench/baseline.json` at `0c4b73c`):
+
+| Scenario | Baseline median (`0c4b73c`) | Current median (`794876e`) | Current p95 | Delta |
+| --- | ---: | ---: | ---: | ---: |
+| `1-resource` | 669.25 ms | 405.13 ms | 429.89 ms | -39.5% |
+| `10-resources` | 3526.65 ms | 1685.43 ms | 1736.83 ms | -52.2% |
+| `50-resources` | 13886.92 ms | 6083.7 ms | 6170.07 ms | -56.2% |
+| `100-resources` | 32431.34 ms | 11174.11 ms | 11464.85 ms | -65.5% |
+| `153-resources-multishard` (213 cards, 2 shards) | 59683.06 ms | 24231.77 ms | 24412.32 ms | -59.4% |
+
+- **Live baseline** (`bench/baseline-live.json`, pre-Fase-3, `warmup=0`, `reps=1`): `1-resource` = `29459.06 ms`, `5-resources` = `47266.59 ms`, `10-resources` = `82388.22 ms`. Post-Fase-3 live benchmarks have not been re-run (`bun run bench -- --live`).
 
 ## Usable checkpoint
 

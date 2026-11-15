@@ -20,10 +20,11 @@ modules ([ADR-0015](../adr/0015-strangler-core-and-aws-second.md)).
 
 ## How a draft is made
 
-`draft_quote(provider, customer, requirements, store)` asks the provider for candidates for each
-requirement, ranks them and writes the requirement and the ranking to the run record. If the top
+`draftQuote(provider, customer, requirements, store)` (`src/core/quote/draft.ts`) asks the
+provider for candidates for each requirement, ranks them (`rank()` in `src/core/quote/ranking.ts`),
+and writes the requirement and top ranked candidates to the run record. If the top
 candidate is an exact match it records an `auto` decision whose justification is the candidate's
-reason. Anything else stays pending. `decide(...)` records the human's choice, after checking that the
+reason. Anything else stays pending. `decideMany(...)` records human choices after checking that the
 spec was among the recorded candidates.
 
 "Exact" is strict: every minimum is met with an equal value and, when the requirement names a
@@ -36,7 +37,13 @@ Under `AUTOCALC_DATA` (default `~/.local/share/autocalc`): `drafts/<id>.json` an
 `runs/<id>.jsonl`. Run records hold customer requirements, so they never leave the machine and
 are never committed.
 
-## What is not here yet
+## Pipeline integration (TypeScript on Bun)
 
-The core does not publish, total a draft or expose tools. The tool surface is
-`workflow-surface`, the gate is `publish-gate`, and RI billing arrives with the page encoder.
+Since [ADR-0017](../adr/0017-typescript-on-bun-is-the-target.md), the core drafts, workflow tools,
+page encoder, and publish gate live together in one TypeScript codebase on Bun:
+
+- Workflow actions (`draft_quote`, `revise_quote`, `list_drafts`, `inspect_draft`, `recover_draft`) live in `src/core/workflow.ts`.
+- Declarative quotes (`version: "1"` YAML + compilation + plan/apply) live in `src/core/quote-file.ts` and `src/core/compiler/`.
+- Publication (`src/core/publish.ts`) and the fail-closed 3-way verification gate (`src/core/gate.ts`) support `ondemand`, `monthly`, `yearly`, and ECS `ri` billing.
+
+See [Code Architecture](../architecture.md) for the full `draft → plan → apply → gate → publish` pipeline diagram and concurrency model.

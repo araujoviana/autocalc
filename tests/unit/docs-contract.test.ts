@@ -31,6 +31,26 @@ describe("Documentation & Codebase Synchronization Contract", () => {
     expect(statusDoc.includes(`${VERIFIED.size} verified services`) || statusDoc.includes(`${VERIFIED.size} services verified`)).toBe(true);
   });
 
+  test("docs/architecture.md exists and is registered in mkdocs.yml and docs/index.md", async () => {
+    const [archDoc, mkdocsDoc, indexDoc] = await Promise.all([
+      readFile("docs/architecture.md", "utf-8"),
+      readFile("mkdocs.yml", "utf-8"),
+      readFile("docs/index.md", "utf-8"),
+    ]);
+    expect(archDoc.length).toBeGreaterThan(200);
+    expect(archDoc).toContain("draft");
+    expect(archDoc).toContain("publish");
+    expect(mkdocsDoc).toContain("architecture.md");
+    expect(indexDoc).toContain("architecture.md");
+  });
+
+  test("generated service index matches VERIFIED.size and supported service count", async () => {
+    const servicesIndex = await readFile("docs/reference/services/index.md", "utf-8");
+    const totalSchemas = (await readdir("src/schema/files")).filter(f => f.endsWith(".yaml")).length;
+    expect(servicesIndex).toContain(`**\`VERIFIED\` (${VERIFIED.size} services)**`);
+    expect(servicesIndex).toContain(`**${totalSchemas} Huawei Cloud calculator services**`);
+  });
+
   test("every process.env.AUTOCALC_* in src/ is documented in docs/reference/cli.md", async () => {
     const cliDoc = await readFile("docs/reference/cli.md", "utf-8");
 
