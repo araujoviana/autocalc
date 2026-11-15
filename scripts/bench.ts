@@ -568,7 +568,8 @@ class LoopbackCalculatorServer {
       }));
       wrap.appendChild(mkBtn('Save', () => {
         if (cartState.cartListDataBase[key]) {
-          cartState.cartListDataBase[key].selectedProduct.timeTag = Date.now() + Math.floor(Math.random() * 1000) + 1;
+          cartState.cartListDataBase[key].selectedProduct.timeTag =
+            Math.max(Date.now(), (cartState.cartListDataBase[key].selectedProduct.timeTag || 0) + 1) + (++seq);
         }
         cartState.editInfo = null;
       }));
@@ -619,6 +620,8 @@ class LoopbackCalculatorServer {
   }
 }
 
+let loopbackCardSeq = 0;
+
 function makeLoopbackCard(input: Dict, rewriteValue: Dict, spec: string): Dict {
   const service = String(input.service).toLowerCase();
   const region = String(input.region ?? "sa-brazil-1");
@@ -633,7 +636,7 @@ function makeLoopbackCard(input: Dict, rewriteValue: Dict, spec: string): Dict {
   } as const;
   const [chargeMode, chargeModeName, periodType] = charges[billing];
   const timeTag = Date.now();
-  const suffix = Math.random().toString(16).slice(2, 8);
+  const suffix = `${++loopbackCardSeq}_${Math.random().toString(16).slice(2, 8)}`;
   const baseProd: Dict = {
     selectIndex: 0,
     productId: `bench-${service}-${suffix}`,

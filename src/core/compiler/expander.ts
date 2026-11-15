@@ -4,7 +4,7 @@
 import { CalculatorError } from "../errors.ts";
 import { RegionResolver } from "../regions.ts";
 import type { QuoteDocument, ResourceDeclaration, ResourceTemplate } from "./ast.ts";
-import { normalizeServiceAlias } from "./normalizer.ts";
+import { normalizeServiceAlias } from "./normalizer/aliases.ts";
 
 export interface ExpandedResource {
   id: string;

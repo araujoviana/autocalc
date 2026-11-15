@@ -7,21 +7,36 @@ import { invalid } from "./quote/model.ts";
 import { rank } from "./quote/ranking.ts";
 import { publishQuoteTool } from "./publish.ts";
 import { loadService } from "./schema-model.ts";
-import { legalOptions, modesOf, termOptions, PRIMARY_GROUP, SPEC_ARG, SPEC_RULES, USAGE_PRICED, VERIFIED } from "./services/publication.ts";
+import { legalOptions, modesOf, termOptions, SPEC_ARG, SPEC_RULES, USAGE_PRICED, VERIFIED } from "./services/publication.ts";
 import { draftQuoteTool } from "./workflow.ts";
-import { compileQuote, detectCatalogPricingAnomalies, buildCanonicalQuoteIR, generateLockfile, stringifyLockfile, parseLockfile, sanitizeTitle, normalizeResourceToCards, partitionResources, type QuoteDocument, type ShardPartition, type LockedShard, type CanonicalResourceIR, MAX_LIST_CARDS, MAX_LIST_BYTES } from "./compiler/index.ts";
+import { compileQuote, detectCatalogPricingAnomalies, normalizeResourceToCards, sanitizeTitle } from "./compiler/index.ts";
 import type { ActionContext } from "./types.ts";
 import { progress } from "./progress.ts";
-import { CardInput, ECS_DEFAULT_IMAGE } from "./schemas.ts";
+import { CardInput } from "./schemas.ts";
 import { RECIPES } from "./services/forms.ts";
-import { imageLabel, matchImages } from "./services/ecs.ts";
+import {
+  type Dict,
+  type Quote,
+  SCHEMA_HINT,
+  isObject,
+  formatBound,
+  sortKeys,
+  sameNeeds,
+  lockPath,
+  readLock,
+  ambiguousImages,
+  primaryGroupFor,
+  priceUnit,
+  horizonAmount,
+  autopilotContainerHourly,
+  buildShardsAndWriteLockfile,
+  extractSkippedEditWarnings,
+  persistShareLinksToLockfile,
+} from "./quote-file-helpers.ts";
 
-type Dict = Record<string, any>;
+export { SCHEMA_HINT, type Quote, priceUnit, horizonAmount };
+
 const CARD_FIELDS = ["id", "service", "region", "billing", "quantity", "needs", "spec", "options"];
-export const SCHEMA_HINT = "Read the autocalc://schema/<service> resource, or run `autocalc schema coverage <service>`.";
-const isObject = (v: unknown): v is Dict => typeof v === "object" && v !== null && !Array.isArray(v);
-
-export interface Quote { customer: string; cards: Dict[]; name?: string | undefined; settlement: string; path?: string | undefined; version?: string | undefined; rawDocument?: QuoteDocument | undefined; compiledResources?: any[] | undefined }
 
 export function parse(text: string, path?: string): Quote {
   let doc: unknown;
@@ -58,8 +73,6 @@ export async function load(path: string): Promise<Quote> {
   return parse(text, path);
 }
 
-const g = (v: number | null | undefined) => v == null ? "" : String(v);
-
 /** Offline: no browser, no network. Every error names the card and field and the legal values. */
 export async function validate(quote: Quote, dir?: string): Promise<Dict[]> {
   const errors: Dict[] = [];
@@ -89,7 +102,7 @@ export async function validate(quote: Quote, dir?: string): Promise<Dict[]> {
       const unconditionalRanges = (controls.get(option)?.ranges.some(range => range.when != null) ? [] : controls.get(option)?.ranges.filter(range => range.min !== range.max)) /* a control whose ranges depend on page state has no single limit */ /* min = max is the page default of a state-dependent control, not a limit */ ?? [];
       if (unconditionalRanges.length && unconditionalRanges.every(r => (r.min != null && value < r.min) || (r.max != null && value > r.max))) {
         const r = unconditionalRanges[0]!;
-        bad(card, option, `${value} is outside the range ${g(r.min)}..${g(r.max)} ${r.unit ?? ""}`.trim(), { range: { min: r.min ?? null, max: r.max ?? null, step: r.step }, hint: SCHEMA_HINT });
+        bad(card, option, `${value} is outside the range ${formatBound(r.min)}..${formatBound(r.max)} ${r.unit ?? ""}`.trim(), { range: { min: r.min ?? null, max: r.max ?? null, step: r.step }, hint: SCHEMA_HINT });
       }
     }
   }
@@ -104,71 +117,18 @@ export async function unmappedOptions(card: Dict, dir?: string): Promise<string[
   return Object.keys(card.options ?? {}).filter(option => !mapped.has(option)).sort();
 }
 
-const lockPath = (quote: Quote) => quote.path?.replace(/\.[^./\\]+$/, "") + ".lock.json";
-async function readLock(quote: Quote): Promise<Dict> {
-  if (!quote.path) return {};
-  let text: string;
-  try { text = await readFile(lockPath(quote), "utf8"); } catch { return {}; }
-  try { const lock = JSON.parse(text); if (isObject(lock)) return lock; } catch { /* reported below */ }
-  throw invalid(`The lock file ${lockPath(quote)} is not valid JSON; fix or delete it.`, "lock"); // never silently replace a pin
-}
-
 async function raiseIfInvalid(quote: Quote, dir?: string) {
   const ids = quote.cards.map(card => card.id), duplicate = ids.find((id, i) => ids.indexOf(id) !== i);
   if (duplicate !== undefined) throw invalid(`Card ids must be unique; '${duplicate}' repeats.`, "id");
   const errors = await validate(quote, dir);
   if (!errors.length) return;
   const first = errors[0]!, legal = first.allowed ?? first.range;
-  const legalStr = Array.isArray(legal) ? legal.join(", ") : isObject(legal) ? `${g(legal.min)}..${g(legal.max)}` : "";
+  const legalStr = Array.isArray(legal) ? legal.join(", ") : isObject(legal) ? `${formatBound(legal.min)}..${formatBound(legal.max)}` : "";
   throw new CalculatorError("VALIDATION", `Card '${first.card}': ${first.error}`,
     (legalStr ? `Legal ${first.field}: ${legalStr}. ` : "") + SCHEMA_HINT, { field: first.field, ...(first.allowed ? { allowed: first.allowed } : {}), errors });
 }
 
-const sameNeeds = (a: unknown, b: unknown) => JSON.stringify(sortKeys(a ?? {})) === JSON.stringify(sortKeys(b ?? {}));
-
 /** Validate, resolve through the ranking, rate. Saves nothing on the website; writes the lock file. */
-/** Catalog images a card's image request cannot tell apart; empty when it names exactly one. */
-async function ambiguousImages(ctx: ActionContext, region: string, spec: string, image: unknown): Promise<string[]> {
-  const info = await ctx.catalog.productInfo("ecs", region);
-  const matched = matchImages(info.product["ec2_vm.image.special"] ?? [], spec.split(".")[0]!, typeof image === "string" && image ? image : ECS_DEFAULT_IMAGE);
-  return matched.length > 1 ? matched.map(imageLabel) : [];
-}
-
-function primaryGroupFor(card: Dict): string | undefined {
-  if (card.group) return card.group;
-  const svc = card.service.toLowerCase();
-  if (svc === "cce" && (card.spec === "cce.autopilot.cluster" || String(card.options?.cluster_type ?? "").toLowerCase() === "autopilot")) return "cce_cce.autopilot";
-  if (svc === "elb" && (card.spec?.startsWith("elbv3") || card.options?.type === "dedicated")) return "elb_elbv3";
-  return PRIMARY_GROUP[svc];
-}
-
-/** The unit a card's list price is quoted in: ondemand per hour, monthly per month, yearly per year; FunctionGraph pay-per-use is per request. */
-export function priceUnit(service: string, billing: string): "hour" | "month" | "year" | "request" {
-  if (service.toLowerCase() === "function" && billing === "ondemand") return "request";
-  return billing === "ondemand" ? "hour" : billing === "yearly" ? "year" : "month";
-}
-/** A list price over the quote horizon (730 h per month): null when the unit cannot be projected (per request, usage-priced). */
-export function horizonAmount(price: number, unit: ReturnType<typeof priceUnit>, months: number): number | null {
-  if (unit === "hour") return price * 730 * months;
-  if (unit === "month") return price * months;
-  if (unit === "year") return price * months / 12;
-  return null;
-}
-
-/** Hourly list price of sustained CCE Autopilot container vCPU and memory (catalog sells them per second). */
-async function autopilotContainerHourly(ctx: ActionContext, region: string, vcpus: number, memoryGb: number): Promise<number> {
-  if (!(vcpus > 0) && !(memoryGb > 0)) return 0;
-  const skus = await ctx.catalog.skus("cce", region);
-  const hourly = (spec: string) => {
-    const od = skus.find(sku => sku.group === "cci_cci.autopilot" && sku.spec === spec)?.prices.ondemand;
-    if (!od) return 0;
-    const [stepRaw, unitRaw = ""] = od.per.split(/\s+/), step = Number(stepRaw) || 1, unit = unitRaw.toLowerCase();
-    const perHour = unit.startsWith("second") ? 3600 : unit.startsWith("minute") ? 60 : 1;
-    return od.amount * perHour / step;
-  };
-  return vcpus * hourly("autopilot.container.cpu") + memoryGb * hourly("autopilot.container.mem");
-}
-
 export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
   await raiseIfInvalid(quote, dir);
   const lock = await readLock(quote);
@@ -221,97 +181,9 @@ export async function plan(ctx: ActionContext, quote: Quote, dir?: string) {
     rows.push(row);
   }
   if (quote.path && JSON.stringify(next) !== JSON.stringify(lock)) await writeFile(lockPath(quote), JSON.stringify(sortKeys(next), null, 2) + "\n", "utf8");
-  let shards: ShardPartition[] | undefined = undefined;
-  if (quote.version === "1") {
-    try {
-      let compiled: { document: any; resources: any[] } | null = null;
-      if (quote.rawDocument && quote.compiledResources) {
-        compiled = { document: quote.rawDocument, resources: quote.compiledResources };
-      } else if (quote.path) {
-        try {
-          const text = await readFile(quote.path, "utf8");
-          compiled = compileQuote(text);
-        } catch {
-          // Non-fatal fallback
-        }
-      }
-      if (compiled) {
-        const ir = buildCanonicalQuoteIR(compiled.document, compiled.resources);
-        const rowById = new Map(rows.map((r, idx) => [String(r.id), { row: r, card: quote.cards[idx]! }]));
-        for (const irRes of ir.resources) {
-          let resTotal = 0;
-          let counted = false;
-          for (const physical of irRes.physicalCards) {
-            const matched = rowById.get(physical.title);
-            if (!matched) continue;
-            const { row, card } = matched;
-            if (row.spec && !irRes.skuCode) {
-              irRes.spec = row.spec;
-              irRes.skuCode = row.spec;
-            }
-            if (row.price != null) {
-              const p = parseFloat(String(row.price));
-              if (!irRes.unitPrice) irRes.unitPrice = p;
-              physical.unitAmount = p;
-              // unit_amount stays the list price as sold; total_amount is projected over the quote horizon
-              const unit = priceUnit(irRes.service, String(row.billing ?? irRes.billing));
-              irRes.priceUnit = unit;
-              const projected = horizonAmount(p, unit, ir.horizon.effectiveMonths);
-              if (projected === null) { physical.totalAmount = 0; continue; }
-              physical.totalAmount = projected * (card.quantity ?? physical.quantity ?? 1);
-              resTotal += physical.totalAmount;
-              counted = true;
-            }
-          }
-          irRes.totalPrice = resTotal;
-          if (!counted) irRes.excludedFromTotal = true;
-        }
-        // the SKU list prices of the planned resources over the horizon; disks and other add-ons are priced when the list is published
-        ir.totalAmount = ir.resources.reduce((sum, resource) => sum + (resource.totalPrice ?? 0), 0);
-
-        const titlePrefix = quote.name || compiled.document.metadata?.title_prefix || "Quote";
-        shards = partitionResources(ir.resources, titlePrefix);
-
-        const lockedShards: LockedShard[] = shards.map(s => ({
-          index: s.index,
-          title: s.title,
-          card_count: s.cardCount,
-          estimated_bytes: s.estimatedBytes,
-        }));
-
-        const lockObj = generateLockfile(ir, undefined, lockedShards);
-        if (quote.path) {
-          const lockYamlPath = quote.path.replace(/\.[^./\\]+$/, "") + ".lock.yaml";
-          await writeFile(lockYamlPath, stringifyLockfile(lockObj), "utf8");
-        }
-      }
-    } catch {
-      // Non-fatal if lockfile write fails
-    }
-  } else if (quote.cards.length > MAX_LIST_CARDS) {
-    const pseudoResources: CanonicalResourceIR[] = quote.cards.map((c, i) => ({
-      id: String(c.id ?? `card-${i}`),
-      service: String(c.service || "custom"),
-      region: String(c.region || "default"),
-      availability: (c.availability === "multi-az" ? "multi-az" : "single-az") as "single-az" | "multi-az",
-      billing: String(c.billing || "monthly"),
-      quantity: Number(c.quantity ?? 1),
-      physicalCards: [{
-        cardIndex: i,
-        cardId: `${c.id ?? `card-${i}`}-0`,
-        title: String(c.id ?? `card-${i}`),
-        options: c.options ?? {},
-        quantity: Number(c.quantity ?? 1),
-        unitAmount: 0,
-        totalAmount: 0,
-      }],
-    }));
-    shards = partitionResources(pseudoResources, quote.name || "Quote");
-  }
+  const shards = await buildShardsAndWriteLockfile(quote, rows);
   return { draft_id: view.draft_id, cards: rows, pending: view.pending, ...(shards ? { shards } : {}) };
 }
-
-const sortKeys = (v: any): any => Array.isArray(v) ? v.map(sortKeys) : isObject(v) ? Object.fromEntries(Object.keys(v).sort().map(k => [k, sortKeys(v[k])])) : v;
 
 /** Plan, then publish through the fail-closed gate. Refuses unresolved cards and unmapped options. */
 export async function apply(ctx: ActionContext, quote: Quote, name?: string, dir?: string): Promise<Dict> {
@@ -387,10 +259,7 @@ export async function apply(ctx: ActionContext, quote: Quote, name?: string, dir
         throw err;
       }
 
-      const skipped = (((published as Dict).checks ?? []) as Dict[])
-        .filter(check => check.edit_skipped)
-        .map(check => `Card "${check.title}": Edit check skipped for a known portal defect. ${check.edit_skipped}`);
-      if (skipped.length) allWarnings.push(...skipped);
+      allWarnings.push(...extractSkippedEditWarnings(published));
       if (Array.isArray(published.warnings)) allWarnings.push(...published.warnings);
 
       publishedShards.push({
@@ -403,24 +272,7 @@ export async function apply(ctx: ActionContext, quote: Quote, name?: string, dir
       });
     }
 
-    // Persist verified share links to quote.lock.yaml
-    if (quote.version === "1" && quote.path) {
-      try {
-        const lockYamlPath = quote.path.replace(/\.[^./\\]+$/, "") + ".lock.yaml";
-        const lockYamlText = await readFile(lockYamlPath, "utf8");
-        const lockObj = parseLockfile(lockYamlText);
-        for (const pub of publishedShards) {
-          const match = lockObj.shards.find(s => s.index === pub.index);
-          if (match) {
-            match.share_id = String(pub.id);
-            match.share_link = String(pub.url);
-          }
-        }
-        await writeFile(lockYamlPath, stringifyLockfile(lockObj), "utf8");
-      } catch {
-        // Non-fatal if lockfile update fails
-      }
-    }
+    await persistShareLinksToLockfile(quote, publishedShards.map(pub => ({ index: pub.index, id: pub.id, url: pub.url })));
 
     const uniqueWarnings = [...new Set(allWarnings)];
     return {
@@ -438,23 +290,9 @@ export async function apply(ctx: ActionContext, quote: Quote, name?: string, dir
   const same = existing.filter(list => list.name === title);
   const duplicate = same.length ? `A list named "${title}" already exists (id ${String(same[0]!.key)}); this creates another.` : null;
   const published = await publishQuoteTool(ctx, { draft_id: result.draft_id, name: title, settlement: quote.settlement as "total" | "monthly", currency: "USD" });
-  const skipped = (((published as Dict).checks ?? []) as Dict[]).filter(check => check.edit_skipped).map(check => `Card "${check.title}": Edit check skipped for a known portal defect. ${check.edit_skipped}`);
-  const warnings = [...((published as Dict).warnings ?? []), ...(duplicate ? [duplicate] : []), ...anomalies, ...skipped];
+  const warnings = [...((published as Dict).warnings ?? []), ...(duplicate ? [duplicate] : []), ...anomalies, ...extractSkippedEditWarnings(published)];
 
-  if (quote.version === "1" && quote.path) {
-    try {
-      const lockYamlPath = quote.path.replace(/\.[^./\\]+$/, "") + ".lock.yaml";
-      const lockYamlText = await readFile(lockYamlPath, "utf8");
-      const lockObj = parseLockfile(lockYamlText);
-      if (lockObj.shards.length > 0) {
-        lockObj.shards[0]!.share_id = String((published as Dict).id);
-        lockObj.shards[0]!.share_link = String((published as Dict).url);
-        await writeFile(lockYamlPath, stringifyLockfile(lockObj), "utf8");
-      }
-    } catch {
-      // Non-fatal
-    }
-  }
+  await persistShareLinksToLockfile(quote, [{ index: 0, id: (published as Dict).id, url: (published as Dict).url }]);
 
   return warnings.length ? { ...published, name: title, warnings } : { ...published, name: title };
 }

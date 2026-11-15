@@ -12,21 +12,10 @@ import { buildRecipe, RECIPES } from "./services/forms.ts";
 import { warnings as frontendWarnings } from "./frontend.ts";
 import { modesOf, RECIPE_SPEC_FIELDS, SINGLE_QUANTITY, SPEC_ARG, specOption, VERIFIED } from "./services/publication.ts";
 export { frontendWarnings };
-import type { ActionContext } from "./types.ts";
+import type { ActionContext, PublishPorts } from "./types.ts";
+export type { PublishPorts };
 
 type Dict = Record<string, any>;
-
-/** What publishing needs from the outside world; tests substitute fakes (Python monkeypatches the same seams). */
-export interface PublishPorts {
-  /** The requested page state for one builder input, resolved against the catalog and never rated. */
-  form(input: Dict): Promise<Dict>;
-  /** The card the calculator page builds from that state. */
-  encode(service: string, rewriteValue: Dict): Promise<Dict>;
-  /** Save, verify on the website, or delete and throw GATE_FAILED. */
-  publish(name: string, cards: Dict[], options: { settlement: "total" | "monthly"; currency: string }): Promise<Dict>;
-  /** The frontend version the live calculator page loads, or undefined when it cannot be read. */
-  liveVersion(): Promise<string | undefined>;
-}
 
 /** Conservative parallel browser budget (ADR-0010); an explicit override is checked on use. */
 export function encodeWorkers(env: Record<string, string | undefined> = process.env, memory = freemem(), cpus = availableParallelism()): number {

@@ -1,7 +1,7 @@
 /** Terminal views for all CLI commands. Formats every command as readable tables, status verdicts, and summaries. */
 
 import { formatRegion, regionLocation } from "./regions.ts";
-import { kv, paint, status, table, type StreamLike } from "./ui.ts";
+import { kv, paint, status, table, type StreamLike } from "./ui-primitives.ts";
 
 type Row = Record<string, any>;
 const isRow = (v: unknown): v is Row => typeof v === "object" && v !== null && !Array.isArray(v);
