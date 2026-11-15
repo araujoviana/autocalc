@@ -1,0 +1,686 @@
+{
+  "schema_version": "1.0.0",
+  "timestamp": "2026-11-14T22:16:25.293Z",
+  "mode": "offline",
+  "metadata": {
+    "commit": "0c4b73c",
+    "branch": "main",
+    "dirty": true,
+    "os_platform": "linux",
+    "os_release": "7.3.3-1-cachyos",
+    "arch": "x64",
+    "cpu_model": "12th Gen Intel(R) Core(TM) i5-12450H",
+    "cpu_count": 12,
+    "total_mem_mb": 31791,
+    "free_mem_mb": 22362,
+    "bun_version": "1.4.4",
+    "warmup": 1,
+    "repetitions": 3,
+    "encode_workers_default": 3,
+    "rating_workers_default": 4
+  },
+  "scenarios": [
+    {
+      "id": "1-resource",
+      "label": "1 recurso (baseline mínimo)",
+      "resource_count": 1,
+      "card_count": 1,
+      "shard_count": 1,
+      "warmup": 1,
+      "repetitions": 3,
+      "total_median_ms": 669.25,
+      "total_p95_ms": 681.51,
+      "stages": [
+        {
+          "stage": "compilar",
+          "label": "Compilar / Validar",
+          "samples_ms": [
+            1.41,
+            1.62,
+            1.74
+          ],
+          "median_ms": 1.62,
+          "p95_ms": 1.74,
+          "share_pct": 0.24
+        },
+        {
+          "stage": "normalizar",
+          "label": "Normalizar / Plan / Shards",
+          "samples_ms": [
+            31.25,
+            31.24,
+            47.02
+          ],
+          "median_ms": 31.25,
+          "p95_ms": 47.02,
+          "share_pct": 4.67
+        },
+        {
+          "stage": "pagina",
+          "label": "Página / Forms / Encode",
+          "samples_ms": [
+            257.11,
+            247.23,
+            287.59
+          ],
+          "median_ms": 257.11,
+          "p95_ms": 287.59,
+          "share_pct": 38.42
+        },
+        {
+          "stage": "salvar",
+          "label": "Salvar Lista / Detail",
+          "samples_ms": [
+            1.54,
+            1.57,
+            1.57
+          ],
+          "median_ms": 1.57,
+          "p95_ms": 1.57,
+          "share_pct": 0.23
+        },
+        {
+          "stage": "rating",
+          "label": "Rating Engine (rerate)",
+          "samples_ms": [
+            0.75,
+            0.76,
+            0.91
+          ],
+          "median_ms": 0.76,
+          "p95_ms": 0.91,
+          "share_pct": 0.11
+        },
+        {
+          "stage": "edit",
+          "label": "Edit Check (Browser)",
+          "samples_ms": [
+            375.61,
+            378.62,
+            341.3
+          ],
+          "median_ms": 375.61,
+          "p95_ms": 378.62,
+          "share_pct": 56.12
+        },
+        {
+          "stage": "publicar",
+          "label": "Publicar / Lock / Persist",
+          "samples_ms": [
+            1.59,
+            1.48,
+            1.4
+          ],
+          "median_ms": 1.48,
+          "p95_ms": 1.59,
+          "share_pct": 0.22
+        }
+      ]
+    },
+    {
+      "id": "10-resources",
+      "label": "10 recursos (cotação pequena)",
+      "resource_count": 10,
+      "card_count": 10,
+      "shard_count": 1,
+      "warmup": 1,
+      "repetitions": 3,
+      "total_median_ms": 3526.65,
+      "total_p95_ms": 3879.52,
+      "stages": [
+        {
+          "stage": "compilar",
+          "label": "Compilar / Validar",
+          "samples_ms": [
+            7.82,
+            5.81,
+            6.03
+          ],
+          "median_ms": 6.03,
+          "p95_ms": 7.82,
+          "share_pct": 0.17
+        },
+        {
+          "stage": "normalizar",
+          "label": "Normalizar / Plan / Shards",
+          "samples_ms": [
+            186.53,
+            208.16,
+            185.56
+          ],
+          "median_ms": 186.53,
+          "p95_ms": 208.16,
+          "share_pct": 5.29
+        },
+        {
+          "stage": "pagina",
+          "label": "Página / Forms / Encode",
+          "samples_ms": [
+            2271.17,
+            2333.22,
+            2711.44
+          ],
+          "median_ms": 2333.22,
+          "p95_ms": 2711.44,
+          "share_pct": 66.16
+        },
+        {
+          "stage": "salvar",
+          "label": "Salvar Lista / Detail",
+          "samples_ms": [
+            3.22,
+            3.05,
+            2.42
+          ],
+          "median_ms": 3.05,
+          "p95_ms": 3.22,
+          "share_pct": 0.09
+        },
+        {
+          "stage": "rating",
+          "label": "Rating Engine (rerate)",
+          "samples_ms": [
+            3.21,
+            4.17,
+            3.33
+          ],
+          "median_ms": 3.33,
+          "p95_ms": 4.17,
+          "share_pct": 0.09
+        },
+        {
+          "stage": "edit",
+          "label": "Edit Check (Browser)",
+          "samples_ms": [
+            971.36,
+            970.05,
+            967.66
+          ],
+          "median_ms": 970.05,
+          "p95_ms": 971.36,
+          "share_pct": 27.51
+        },
+        {
+          "stage": "publicar",
+          "label": "Publicar / Lock / Persist",
+          "samples_ms": [
+            2.18,
+            2.19,
+            3.09
+          ],
+          "median_ms": 2.19,
+          "p95_ms": 3.09,
+          "share_pct": 0.06
+        }
+      ]
+    },
+    {
+      "id": "50-resources",
+      "label": "50 recursos (cotação média)",
+      "resource_count": 50,
+      "card_count": 50,
+      "shard_count": 1,
+      "warmup": 1,
+      "repetitions": 3,
+      "total_median_ms": 13886.92,
+      "total_p95_ms": 14015.53,
+      "stages": [
+        {
+          "stage": "compilar",
+          "label": "Compilar / Validar",
+          "samples_ms": [
+            21.52,
+            15.44,
+            14.15
+          ],
+          "median_ms": 15.44,
+          "p95_ms": 21.52,
+          "share_pct": 0.11
+        },
+        {
+          "stage": "normalizar",
+          "label": "Normalizar / Plan / Shards",
+          "samples_ms": [
+            573.97,
+            584.94,
+            548.67
+          ],
+          "median_ms": 573.97,
+          "p95_ms": 584.94,
+          "share_pct": 4.13
+        },
+        {
+          "stage": "pagina",
+          "label": "Página / Forms / Encode",
+          "samples_ms": [
+            9592.18,
+            9826.42,
+            9693.23
+          ],
+          "median_ms": 9693.23,
+          "p95_ms": 9826.42,
+          "share_pct": 69.8
+        },
+        {
+          "stage": "salvar",
+          "label": "Salvar Lista / Detail",
+          "samples_ms": [
+            5.28,
+            5.05,
+            6.23
+          ],
+          "median_ms": 5.28,
+          "p95_ms": 6.23,
+          "share_pct": 0.04
+        },
+        {
+          "stage": "rating",
+          "label": "Rating Engine (rerate)",
+          "samples_ms": [
+            12.24,
+            10.17,
+            9.96
+          ],
+          "median_ms": 10.17,
+          "p95_ms": 12.24,
+          "share_pct": 0.07
+        },
+        {
+          "stage": "edit",
+          "label": "Edit Check (Browser)",
+          "samples_ms": [
+            3603.73,
+            3570.95,
+            3612.16
+          ],
+          "median_ms": 3603.73,
+          "p95_ms": 3612.16,
+          "share_pct": 25.95
+        },
+        {
+          "stage": "publicar",
+          "label": "Publicar / Lock / Persist",
+          "samples_ms": [
+            3.3,
+            2.57,
+            2.53
+          ],
+          "median_ms": 2.57,
+          "p95_ms": 3.3,
+          "share_pct": 0.02
+        }
+      ]
+    },
+    {
+      "id": "100-resources",
+      "label": "100 recursos (cotação grande, 1 shard)",
+      "resource_count": 100,
+      "card_count": 100,
+      "shard_count": 1,
+      "warmup": 1,
+      "repetitions": 3,
+      "total_median_ms": 32431.34,
+      "total_p95_ms": 32988.76,
+      "stages": [
+        {
+          "stage": "compilar",
+          "label": "Compilar / Validar",
+          "samples_ms": [
+            42.91,
+            26.98,
+            46.09
+          ],
+          "median_ms": 42.91,
+          "p95_ms": 46.09,
+          "share_pct": 0.13
+        },
+        {
+          "stage": "normalizar",
+          "label": "Normalizar / Plan / Shards",
+          "samples_ms": [
+            1379.39,
+            1118.17,
+            1426.72
+          ],
+          "median_ms": 1379.39,
+          "p95_ms": 1426.72,
+          "share_pct": 4.25
+        },
+        {
+          "stage": "pagina",
+          "label": "Página / Forms / Encode",
+          "samples_ms": [
+            23530.87,
+            23848.18,
+            22818.64
+          ],
+          "median_ms": 23530.87,
+          "p95_ms": 23848.18,
+          "share_pct": 72.56
+        },
+        {
+          "stage": "salvar",
+          "label": "Salvar Lista / Detail",
+          "samples_ms": [
+            12.95,
+            16.02,
+            16.31
+          ],
+          "median_ms": 16.02,
+          "p95_ms": 16.31,
+          "share_pct": 0.05
+        },
+        {
+          "stage": "rating",
+          "label": "Rating Engine (rerate)",
+          "samples_ms": [
+            19.24,
+            24.67,
+            22.37
+          ],
+          "median_ms": 22.37,
+          "p95_ms": 24.67,
+          "share_pct": 0.07
+        },
+        {
+          "stage": "edit",
+          "label": "Edit Check (Browser)",
+          "samples_ms": [
+            7441.59,
+            7949.38,
+            7849.61
+          ],
+          "median_ms": 7849.61,
+          "p95_ms": 7949.38,
+          "share_pct": 24.2
+        },
+        {
+          "stage": "publicar",
+          "label": "Publicar / Lock / Persist",
+          "samples_ms": [
+            4.38,
+            5.38,
+            4.21
+          ],
+          "median_ms": 4.38,
+          "p95_ms": 5.38,
+          "share_pct": 0.01
+        }
+      ]
+    },
+    {
+      "id": "153-resources-multishard",
+      "label": "153 recursos (213 cartões, 2 shards)",
+      "resource_count": 153,
+      "card_count": 213,
+      "shard_count": 2,
+      "warmup": 1,
+      "repetitions": 3,
+      "total_median_ms": 59683.06,
+      "total_p95_ms": 63098.39,
+      "stages": [
+        {
+          "stage": "compilar",
+          "label": "Compilar / Validar",
+          "samples_ms": [
+            60.35,
+            67.33,
+            72.1
+          ],
+          "median_ms": 67.33,
+          "p95_ms": 72.1,
+          "share_pct": 0.11
+        },
+        {
+          "stage": "normalizar",
+          "label": "Normalizar / Plan / Shards",
+          "samples_ms": [
+            2985.9,
+            3199.26,
+            3011.01
+          ],
+          "median_ms": 3011.01,
+          "p95_ms": 3199.26,
+          "share_pct": 5.04
+        },
+        {
+          "stage": "pagina",
+          "label": "Página / Forms / Encode",
+          "samples_ms": [
+            44692.84,
+            40464.06,
+            41358.83
+          ],
+          "median_ms": 41358.83,
+          "p95_ms": 44692.84,
+          "share_pct": 69.3
+        },
+        {
+          "stage": "salvar",
+          "label": "Salvar Lista / Detail",
+          "samples_ms": [
+            21.03,
+            20.43,
+            17.95
+          ],
+          "median_ms": 20.43,
+          "p95_ms": 21.03,
+          "share_pct": 0.03
+        },
+        {
+          "stage": "rating",
+          "label": "Rating Engine (rerate)",
+          "samples_ms": [
+            24.74,
+            26.5,
+            23.13
+          ],
+          "median_ms": 24.74,
+          "p95_ms": 26.5,
+          "share_pct": 0.04
+        },
+        {
+          "stage": "edit",
+          "label": "Edit Check (Browser)",
+          "samples_ms": [
+            15150.19,
+            14716.22,
+            15034.91
+          ],
+          "median_ms": 15034.91,
+          "p95_ms": 15150.19,
+          "share_pct": 25.19
+        },
+        {
+          "stage": "publicar",
+          "label": "Publicar / Lock / Persist",
+          "samples_ms": [
+            163.33,
+            168.34,
+            165.13
+          ],
+          "median_ms": 165.13,
+          "p95_ms": 168.34,
+          "share_pct": 0.28
+        }
+      ]
+    }
+  ],
+  "bottlenecks": [
+    {
+      "id": "cpu_compiler_pure",
+      "name": "CPU puro: Compilar + Normalizar + IR + Particionar (153 rec.)",
+      "category": "cpu",
+      "scenario": "153-resources-multishard",
+      "repetitions": 5,
+      "median_ms": 18,
+      "p95_ms": 19.9,
+      "summary": "compileQuote + buildCanonicalQuoteIR + normalizeResourceToCards (213 cartões) + partitionResources (2 shards) sem I/O.",
+      "share_of_total_pct": 0.03
+    },
+    {
+      "id": "schema_yaml_uncached",
+      "name": "YAML schemas sem cache: validate() (153 cartões vs 1×/serviço)",
+      "category": "io_cache",
+      "scenario": "153-resources-multishard",
+      "repetitions": 5,
+      "median_ms": 44.44,
+      "p95_ms": 46.4,
+      "comparison_ms": 3.78,
+      "delta_pct": -91.49,
+      "summary": "loadService() relê e faz Zod/YAML.parse a cada cartão em validate() e plan(); com 1 leitura por serviço único (40), cai de 44.44 ms para 3.78 ms.",
+      "share_of_total_pct": 0.07
+    },
+    {
+      "id": "plan_disk_cache_zod",
+      "name": "plan(): Leitura repetida CatalogCache disco + Zod (100 rec.)",
+      "category": "io_cache",
+      "scenario": "100-resources",
+      "repetitions": 5,
+      "median_ms": 1089.82,
+      "p95_ms": 1110.82,
+      "comparison_ms": 410.16,
+      "delta_pct": -62.36,
+      "summary": "plan() chama CatalogCache.get() do disco + JSON.parse + Zod até 3×/cartão (draftQuote + view + plan loop); só memoizar o leitor em RAM reduz de 1089.82 ms para 410.16 ms (e skus() ainda repete parsing sem cache de SKUs).",
+      "share_of_total_pct": 3.36
+    },
+    {
+      "id": "draft_store_runrecord",
+      "name": "Serialização DraftStore + 100× RunRecord.append (100 rec.)",
+      "category": "serialization",
+      "scenario": "100-resources",
+      "repetitions": 5,
+      "median_ms": 3.07,
+      "p95_ms": 5.06,
+      "summary": "lockdir fs + 100× (mkdir + appendFile em events.jsonl) + writeFile atomic JSON em DraftStore.",
+      "share_of_total_pct": 0.01
+    },
+    {
+      "id": "browser_cold_context_overhead",
+      "name": "Browser encode: Contexto frio por cartão vs Página quente reusada (12×)",
+      "category": "browser",
+      "scenario": "loopback-12-cards",
+      "repetitions": 3,
+      "median_ms": 2703.48,
+      "p95_ms": 2717.14,
+      "comparison_ms": 1146.52,
+      "delta_pct": -57.59,
+      "summary": "withAnonymousContext cria e fecha um BrowserContext por cartão (2703.48 ms p/ 12); reusar 1 contexto/página leva 1146.52 ms no loopback Chromium."
+    },
+    {
+      "id": "edit_check_sequential",
+      "name": "Edit check sequencial (1 página, 100 cartões) vs 4 contextos paralelos",
+      "category": "browser",
+      "scenario": "100-resources",
+      "repetitions": 3,
+      "median_ms": 6962.77,
+      "p95_ms": 6988.23,
+      "comparison_ms": 2559.43,
+      "delta_pct": -63.24,
+      "summary": "editCheckOnce itera sequencialmente for-of (6962.77 ms no loopback); fatiar em 4 contextos paralelos reduz para 2559.43 ms preservando verificação idêntica por índice.",
+      "share_of_total_pct": 21.47
+    }
+  ],
+  "concurrency": [
+    {
+      "kind": "browser_encode",
+      "workers": 1,
+      "item_count": 24,
+      "repetitions": 3,
+      "median_ms": 5466.12,
+      "p95_ms": 5534.3,
+      "speedup": 1,
+      "efficiency_pct": 100
+    },
+    {
+      "kind": "browser_encode",
+      "workers": 2,
+      "item_count": 24,
+      "repetitions": 3,
+      "median_ms": 4734.65,
+      "p95_ms": 4745.88,
+      "speedup": 1.15,
+      "efficiency_pct": 57.5
+    },
+    {
+      "kind": "browser_encode",
+      "workers": 3,
+      "item_count": 24,
+      "repetitions": 3,
+      "median_ms": 4489.28,
+      "p95_ms": 4505.06,
+      "speedup": 1.22,
+      "efficiency_pct": 40.67
+    },
+    {
+      "kind": "browser_encode",
+      "workers": 4,
+      "item_count": 24,
+      "repetitions": 3,
+      "median_ms": 4451.41,
+      "p95_ms": 4479.1,
+      "speedup": 1.23,
+      "efficiency_pct": 30.75
+    },
+    {
+      "kind": "browser_encode",
+      "workers": 6,
+      "item_count": 24,
+      "repetitions": 3,
+      "median_ms": 4364.67,
+      "p95_ms": 4470.49,
+      "speedup": 1.25,
+      "efficiency_pct": 20.83
+    },
+    {
+      "kind": "browser_encode",
+      "workers": 8,
+      "item_count": 24,
+      "repetitions": 3,
+      "median_ms": 4349.65,
+      "p95_ms": 4572.2,
+      "speedup": 1.26,
+      "efficiency_pct": 15.75
+    },
+    {
+      "kind": "catalog_lookup",
+      "workers": 1,
+      "item_count": 40,
+      "repetitions": 3,
+      "median_ms": 184.51,
+      "p95_ms": 244.39,
+      "speedup": 1,
+      "efficiency_pct": 100
+    },
+    {
+      "kind": "catalog_lookup",
+      "workers": 2,
+      "item_count": 40,
+      "repetitions": 3,
+      "median_ms": 172.28,
+      "p95_ms": 172.88,
+      "speedup": 1.07,
+      "efficiency_pct": 53.5
+    },
+    {
+      "kind": "catalog_lookup",
+      "workers": 4,
+      "item_count": 40,
+      "repetitions": 3,
+      "median_ms": 159.72,
+      "p95_ms": 167.21,
+      "speedup": 1.16,
+      "efficiency_pct": 29
+    },
+    {
+      "kind": "catalog_lookup",
+      "workers": 8,
+      "item_count": 40,
+      "repetitions": 3,
+      "median_ms": 157.64,
+      "p95_ms": 163.67,
+      "speedup": 1.17,
+      "efficiency_pct": 14.63
+    }
+  ]
+}
