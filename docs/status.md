@@ -3,13 +3,15 @@
 > **Role**: Current release, service-coverage, and benchmark snapshot. For code navigation see [Code Architecture](architecture.md); for open items see [Roadmap](roadmap.md); for session resumption see `docs/handoff.md`.
 
 Last updated 2026-11-15. The current implementation is TypeScript on Bun, version
-0.7.0, on `main`.
+0.7.1, on `main`.
 There are 51 committed service schemas. The publication registry labels
 41 verified services; this label does not certify every regional configuration.
 
-## Performance Snapshot (Offline Loopback vs Live Baseline)
+## Performance Snapshot (Offline Loopback & Live Huawei Portal)
 
-Measured with `bun run bench` (`warmup=1`, `reps=3` offline loopback harness; Change 4 working tree committed as `794876e` [run parent `c92cb3e`] vs `bench/baseline.json` at `0c4b73c`):
+### Offline Loopback (`warmup=1`, `reps=3`)
+
+Measured with `bun run bench` (`794876e` [run parent `c92cb3e`] vs `bench/baseline.json` at `0c4b73c`):
 
 | Scenario | Baseline median (`0c4b73c`) | Current median (`794876e`) | Current p95 | Delta |
 | --- | ---: | ---: | ---: | ---: |
@@ -19,7 +21,17 @@ Measured with `bun run bench` (`warmup=1`, `reps=3` offline loopback harness; Ch
 | `100-resources` | 32431.34 ms | 11174.11 ms | 11464.85 ms | -65.5% |
 | `153-resources-multishard` (213 cards, 2 shards) | 59683.06 ms | 24231.77 ms | 24412.32 ms | -59.4% |
 
-- **Live baseline** (`bench/baseline-live.json`, pre-Fase-3, `warmup=0`, `reps=1`): `1-resource` = `29459.06 ms`, `5-resources` = `47266.59 ms`, `10-resources` = `82388.22 ms`. Post-Fase-3 live benchmarks have not been re-run (`bun run bench -- --live`).
+### Live Huawei Portal (`warmup=0`, `reps=1`)
+
+Measured with `bun run bench -- --live` at `9c707ff` (`bench/results/2026-11-15T15-35-46-588Z.json`) vs `bench/baseline-live.json` (`0c4b73c`):
+
+| Scenario | Baseline live (`0c4b73c`) | Post-Fase 3 live (`9c707ff`) | `pagina` delta | `edit` delta | Total delta |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `1-resource` | 29459.06 ms | 24099.58 ms | 11395.01 → 9530.64 ms (-16.4%) | 10907.95 → 10054.40 ms (-7.8%) | **-18.2%** |
+| `5-resources` | 47266.59 ms | 95394.44 ms | 18318.23 → 12219.81 ms (-33.3%) | 24054.05 → 77531.57 ms (+222.3%) | **+101.8%** |
+| `10-resources` | 82388.22 ms | 50755.39 ms | 33317.30 → 21537.22 ms (-35.4%) | 42042.39 → 22990.27 ms (-45.3%) | **-38.4%** |
+
+In the single-sample (`reps=1`) live capture at `9c707ff`, `pagina` dropped consistently across all three scenarios (`-16.4%`, `-33.3%`, `-35.4%`) and `10-resources` dropped `-38.4%` overall (`-31.63 s`), while `5-resources` experienced a single `edit` outlier (`77531.57 ms`). All temporary benchmark lists were deleted (`0` remaining).
 
 ## Usable checkpoint
 

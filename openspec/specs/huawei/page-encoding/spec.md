@@ -29,12 +29,24 @@ browser profile. The encoder SHALL NOT create, change or delete any saved list.
 - **THEN** the card is returned and no saved list exists afterwards that did not exist before
 
 ### Requirement: Each run uses its own browser context
-Each encode and each Edit-price check SHALL run in a fresh browser context that shares no
-storage with another run, so concurrent runs cannot see or change each other's cart.
+Concurrent encodes and concurrent Edit-price checks SHALL execute in isolated browser contexts
+that share no storage with another concurrent run, so overlapping runs cannot see or change
+each other's cart. When an idle headless anonymous context is reused sequentially for a later
+encode after a prior run completed cleanly, its storage (`localStorage`, `sessionStorage`, and
+cookies) SHALL be cleared before the next run starts, and a context whose run failed SHALL be
+closed rather than reused.
 
 #### Scenario: Two encodes at once
 - **WHEN** two different ECS cards are encoded concurrently
 - **THEN** each result holds exactly the card for its own options
+
+#### Scenario: Sequential context reuse clears prior cart state
+- **WHEN** two cards are encoded sequentially through the pooled headless encoder
+- **THEN** the second run starts with an empty cart and returns only the second card without opening residual storage from the first run
+
+#### Scenario: Failed encode closes its context instead of recycling it
+- **WHEN** a pooled encode attempt throws an error
+- **THEN** that browser context is closed and a subsequent retry acquires a clean context
 
 ### Requirement: Encoding fails closed
 When a field cannot be set, a requested value is not offered by the form, the page reports a
@@ -52,7 +64,9 @@ naming the field or step, and SHALL return no card.
 ### Requirement: Edit price of a saved card can be checked
 Given a share link, the Edit-price check SHALL open each card's Edit view anonymously and SHALL
 report, per card, the stored amount, the amount the Edit view recomputes, and whether they are
-equal to the cent.
+equal to the cent. For multi-card lists, the check MAY partition disjoint card slices across
+bounded parallel isolated anonymous browser contexts (`AUTOCALC_EDIT_WORKERS`), reassembling
+per-card results in original list order.
 
 #### Scenario: Faithful card
 - **WHEN** the check runs on a list whose card re-prices on Edit to its stored amount
@@ -61,6 +75,10 @@ equal to the cent.
 #### Scenario: Edit view cannot be read
 - **WHEN** a card's Edit view does not open or does not finish re-pricing in time
 - **THEN** that card is reported as failed with the reason, never as equal
+
+#### Scenario: Parallel Edit check preserves deterministic list order and failures
+- **WHEN** a multi-card list is checked across multiple parallel anonymous browser contexts and one card or slice fails
+- **THEN** results are returned sorted by card index (`0..N-1`), passing cards retain their amounts, and every card in a failing slice or with a mismatch is reported as failed
 
 ### Requirement: Page-encoded ECS cards are Edit-faithful
 An ECS card encoded by the page, saved and re-read, SHALL have its stored amount equal its Edit

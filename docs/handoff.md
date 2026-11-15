@@ -2,7 +2,7 @@
 
 > **Role**: Short session-resumption pointer. Avoid duplicating status tables or backlogs here — those live in their canonical pages below.
 
-Last updated 2026-11-15 (`v0.7.0` on `main`).
+Last updated 2026-11-15 (`v0.7.1` on `main`).
 
 ## Where to Start
 

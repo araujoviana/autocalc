@@ -90,6 +90,21 @@ Todas as medições abaixo foram produzidas pelo harness [`scripts/bench.ts`](fi
 | `2` | **15,136.79** | **1.92×** | **96.0%** |
 | `4` | **9,388.37** | **3.10×** | **77.5%** |
 
+#### Comparação Live Antes (`0c4b73c`) × Depois (`9c707ff`, Pós-Fase 3, `warmup=0, reps=1`, `[medido]`)
+
+Captura pós-Fase 3 gravada em `bench/results/2026-11-15T15-35-46-588Z.json` com limpeza verificada (`0` listas temporárias remanescentes, `380` totais na conta):
+
+| Cenário Live | Baseline (`0c4b73c`) | Pós-Fase 3 (`9c707ff`) | `normalizar` delta | `pagina` delta | `edit` delta | Total delta |
+|---|---:|---:|---:|---:|---:|---:|
+| `1-resource` | **29,459.06 ms** | **24,099.58 ms** | 2,421.65 → 1,807.41 ms (**-25.4%**) | 11,395.01 → 9,530.64 ms (**-16.4%**) | 10,907.95 → 10,054.40 ms (**-7.8%**) | **-18.2%** |
+| `5-resources` | **47,266.59 ms** | **95,394.44 ms** | 1,987.23 → 1,696.58 ms (**-14.6%**) | 18,318.23 → 12,219.81 ms (**-33.3%**) | 24,054.05 → 77,531.57 ms (**+222.3%**) | **+101.8%** |
+| `10-resources` | **82,388.22 ms** | **50,755.39 ms** | 1,425.13 → 1,526.38 ms (**+7.1%**) | 33,317.30 → 21,537.22 ms (**-35.4%**) | 42,042.39 → 22,990.27 ms (**-45.3%**) | **-38.4%** |
+
+Notas sobre as medições pós-Fase 3 (`[medido]` + `[lido no código]`):
+- Em **`10-resources`**, `edit` caiu de `42,042.39 ms` para **`22,990.27 ms`** (**`-45.3%`**) e `pagina` caiu de `33,317.30 ms` para **`21,537.22 ms`** (**`-35.4%`**), reduzindo o tempo total em **`31.63 s` (`-38.4%`)**.
+- Em **`5-resources`** (`reps=1`), `pagina` caiu **`-33.3%`** (`18,318.23 → 12,219.81 ms`), mas a amostra única teve um outlier em `edit` (**`77,531.57 ms`**), consistente com o retry de cold-boot de `this.timeout * 3 = 60,000 ms` descrito no item 3 abaixo `[suposição]`.
+- No Experimento B em `9c707ff`, as funções de produção já operam com memoização em RAM (`plan_disk_cache_zod`: `127.25 → 4.98 ms`, **`-96.1%`**), reuso de página aquecida em `encodeCard` (`browser_cold_context_overhead`: `20,911.02 → 14,621.15 ms`, **`-30.1%`**) e `editCheck` paralelo de produção (`22,990.27 ms`). No Experimento C live (`4` cartões), `encodeCard` registrou `20,405.49 ms` (`1` worker), `11,269.87 ms` (`2` workers, **`1.81×`**) e `7,261.93 ms` (`4` workers, **`2.81×`**).
+
 #### Descobertas críticas de confiabilidade e cold-boot no portal real (`[medido]` + `[lido no código]`)
 
 1. **No portal real, `edit` passa a ser o #1 absoluto (51.03% em 10 cartões) e `pagina + edit` somam `91.47%` (`75,359.69 ms` de `82,388.22 ms`):** diferentemente do loopback offline (onde `pagina` era ~66–73% e `edit` ~24–28%), em rede real cada cartão em `editCheckOnce` (`src/core/page/edit.ts:127`) paga latência real de reabertura do formulário Vue + XHR + `quiet = 1.5s` (`src/core/page/driver.ts:61`), levando **`42,042.39 ms`** sequencialmente para `10` cartões (`~4.2s/cartão`). Em `3` workers paralelos escalonados (`1.5s` de stagger + retry em `openFailed`), o tempo caiu para **`21,999.09 ms`** (**`-47.67%`**, `1.91×` speedup) com aprovação idêntica nos `10` cartões.
@@ -99,9 +114,10 @@ Todas as medições abaixo foram produzidas pelo harness [`scripts/bench.ts`](fi
 
 #### Suíte `tests/live/` executada (`[medido]`)
 
-- `AUTOCALC_LIVE=1 bun test tests/live/catalog.test.ts`: **`1 pass, 1 fail`** (`2` testes):
+- `AUTOCALC_LIVE=1 bun test tests/live/catalog.test.ts`: na Fase 1 (`0c4b73c`), **`1 pass, 1 fail`** (`2` testes):
   - **Passou (`2,343.17 ms`, 9 `expect()`):** `MCP quotes the live catalog through stdio`.
   - **Falhou (`10.85 ms`):** `public catalog and rating are available` falhou na linha `tests/live/catalog.test.ts:12` com `CalculatorError: Invalid action input` (`src/core/registry.ts:12`), defeito pré-existente do próprio teste ao chamar `list_regions` com `{ region: "Santiago" }`, sendo que `ListRegionsInput` (`src/core/schemas.ts:206`, `src/core/actions.ts:71`) é um `strictObject` que aceita apenas `{ service?: string }`.
+  - **Revalidação pós-correção (`9c707ff`, após Change 5):** após corrigir `tests/live/catalog.test.ts:12-14` para chamar `list_regions` com `{}`, `AUTOCALC_LIVE=1 bun test tests/live/catalog.test.ts` passou integralmente: **`2 pass, 0 fail, 12 expect() calls`** (`2.35s`).
 - `AUTOCALC_LIVE=1 AUTOCALC_LIVE_PUBLICATION=1 bun test tests/live/latam-publication.test.ts -t "cce/sa-brazil-1"`: **`1 pass, 5 filtered out, 0 fail`** (`28,389.38 ms`, 9 `expect()` calls) — portão completo de publicação passou ponta a ponta.
 - Limpeza final da conta verificada após benchmarks e testes live: `list_my_price_lists` retornou `380` listas totais (exato baseline inicial) e `temp: []` (`0` listas temporárias remanescentes).
 

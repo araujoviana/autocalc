@@ -2,11 +2,10 @@
 
 ### Requirement: Offline suite needs no network or credentials
 The offline test suite (`tests/unit` and `tests/integration`, excluding `tests/live`) SHALL pass on
-a fresh clone with no network access beyond installing dependencies, no saved session, and no
-corpus fixtures. Any test that calls the live calculator backend SHALL live under `tests/live/` or
-guard on corpus availability. Documentation contract tests in the offline suite SHALL verify
-that `docs/architecture.md` exists and is indexed, and that generated service reference counts match
-the runtime verified service set.
+a fresh clone with no network access, no saved session, and no corpus fixtures. Any test that calls
+the live calculator backend SHALL live under `tests/live/` or guard on corpus availability. Offline
+docs contract tests SHALL verify that `docs/architecture.md` is indexed and that generated service
+counts match runtime `VERIFIED` services.
 
 #### Scenario: Fresh clone runs offline tests
 - **WHEN** a contributor clones the repo, installs the dependencies (`bun install --frozen-lockfile`) and runs `bun run test:offline` with networking disabled and no session stored

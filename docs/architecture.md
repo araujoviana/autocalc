@@ -1,6 +1,6 @@
-# Code Architecture (`v0.7.0`)
+# Code Architecture (`v0.7.1`)
 
-`autocalc` is a TypeScript-on-Bun CLI and MCP server (`package.json` `0.7.0`) that compiles quote specs into canonical cards, encodes each card inside the real Huawei Cloud calculator SPA via Playwright ([ADR-0001](adr/0001-page-as-encoder.md)), and returns a share link **only after the fail-closed publish gate passes** (`stored == rated == Edit`, [ADR-0003](adr/0003-fail-closed-publish-gate.md)).
+`autocalc` is a TypeScript-on-Bun CLI and MCP server (`package.json` `0.7.1`) that compiles quote specs into canonical cards, encodes each card inside the real Huawei Cloud calculator SPA via Playwright ([ADR-0001](adr/0001-page-as-encoder.md)), and returns a share link **only after the fail-closed publish gate passes** (`stored == rated == Edit`, [ADR-0003](adr/0003-fail-closed-publish-gate.md)).
 
 For the conceptual layer rationale see [Explanation: Architecture](explanation/architecture.md); this page is the **code map** linking runtime stages to exact files, concurrency bounds, and documentation ownership.
 
@@ -89,7 +89,7 @@ Architectural boundaries are enforced automatically by `bun run check:boundaries
 | Document | Role | Source of Truth For |
 |---|---|---|
 | `docs/architecture.md` (this file) | Code entrypoint | Pipeline flow, module boundaries, concurrency limits, benchmark commands |
-| `docs/status.md` | Release snapshot | Current version (`0.7.0`), schema/service counts, latest measured benchmark deltas |
+| `docs/status.md` | Release snapshot | Current version (`0.7.1`), schema/service counts, latest measured benchmark deltas |
 | `docs/roadmap.md` | Single backlog | Delivered OpenSpec changes and all open items (no GitHub issues used) |
 | `docs/handoff.md` | Session pointer | Brief resumption note pointing to status, roadmap, and architecture |
 | `openspec/` & `docs/adr/` | Specs & decisions | Formal change proposals (`openspec/changes/`) and architectural ADRs |
