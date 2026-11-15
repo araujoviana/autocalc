@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: offline-seed-des
-        environment: prod
         service: des
         billing: ondemand
         options:

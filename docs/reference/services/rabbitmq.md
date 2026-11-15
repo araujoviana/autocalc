@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: command-dispatch-rabbitmq
-        environment: carajas_hub
         service: rabbitmq
         billing: monthly
         options:

@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: sap-hana-log-evs
-        environment: prod
         service: evs
         billing: monthly
         quantity: 4

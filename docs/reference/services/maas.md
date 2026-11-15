@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: maas-deepseek-tokens
-        environment: ai_prod
         service: maas
         billing: ondemand
         options:
@@ -64,7 +63,7 @@ Top-level card fields: `id` (required), `service: maas`, `region`, `billing` (`o
 | `options.reasoning_mode` | `string` | Catalog / Enum | Inference mode (`standard`). Automatically populated from the catalog model SKU. *(Portal controls: `calculator_ucsType_radio_ondemand_reasoningMode`)* |
 | `options.model_service_type` | `string` | Catalog / Enum | Model service class (`system`). Automatically populated from the catalog model SKU. *(Portal controls: `calculator_ucsType_radio_ondemand_modelServiceType`)* |
 | `options.model_series` | `string` | Catalog / Enum | Model family series (`deepseek`, `glm`). Automatically populated from the catalog model SKU. *(Portal controls: `calculator_ucsType_radio_ondemand_modelSeries`)* |
-| `options.model_name` | `string` | Catalog / Enum | Catalog model name (e.g. `deepseek-v3`, `deepseek-r1`). In declarative quotes, select via `options.model: deepseek-v3` or `spec`. *(Portal controls: `calculator_ucsType_radio_ondemand_modelName`)* |
+| `options.model_name` | `string` | Catalog / Enum | Catalog model name (e.g. `deepseek-v4.1-flash`, `glm-5.3`, `qwen3-32b`). In declarative quotes, select via `options.model: deepseek-v4.1-flash` or `spec`. *(Portal controls: `calculator_ucsType_radio_ondemand_modelName`)* |
 | `options.billing_mode_type` | `string` | Catalog / Enum | Pricing dimension (`tokens`). Automatically populated from the catalog model SKU. *(Portal controls: `calculator_ucsType_radio_ondemand_billingModeType`)* |
 | `options.input_mtokens` | `number / unit` | `1..999999999 million tokens` (step 1) | Monthly input tokens in units of million tokens (e.g. `50` for 50 million tokens). In declarative quotes, write `input_tokens: 50M` or `tokens_thousands: 50000`. *(Portal controls: `calculator_Input_stepper_Stepper_0`)* |
 | `options.output_mtokens` | `number / unit` | `1..999999999 million tokens` (step 1) | Monthly generated output tokens in units of million tokens (e.g. `10` for 10 million tokens). In declarative quotes, write `output_tokens: 10M`. *(Portal controls: `calculator_output_stepper_Stepper_0`)* |

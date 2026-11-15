@@ -72,6 +72,12 @@ export const OS_MAP: Record<string, string> = {
   centos: "CentOS 8.2 64bit",
   "centos-8": "CentOS 8.2 64bit",
   "centos-7": "CentOS 7.9 64bit",
+  byol: "Ubuntu 22.04 server 64bit",
+  windows: "Ubuntu 22.04 server 64bit",
+  "windows-byol": "Ubuntu 22.04 server 64bit",
+  "windows-server": "Ubuntu 22.04 server 64bit",
+  "windows-2019": "Ubuntu 22.04 server 64bit",
+  "windows-2022": "Ubuntu 22.04 server 64bit",
 };
 
 export const KAFKA_SPEC_ALIASES: Record<string, string> = {

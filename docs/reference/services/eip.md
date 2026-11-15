@@ -8,7 +8,7 @@
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `monthly`, `yearly`, `ondemand` |
 | **Primary Catalog Group** | `vpc_bandwidth` |
-| **Schema Coverage** | 10 controls (7 mapped, 3 intentionally fixed/unsupported) |
+| **Schema Coverage** | 10 controls (8 mapped, 2 intentionally fixed/unsupported) |
 
 ---
 
@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: nat-public-eip
-        environment: prod
         service: eip
         billing: ondemand
         options:
@@ -59,6 +58,7 @@ Top-level card fields: `id` (required), `service: eip`, `region`, `billing` (`mo
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `vpc_bandwidth`. |
+| `options.share_type` | `string` | Catalog / Enum | Bandwidth sharing mode: `dedicated` (`dataInfo_3_`) or `shared` (`19_share` / `dataInfo_4_`). Default: `dedicated`. *(Portal controls: `calculator_eip_radio_type_shareType`)* |
 | `options.billed_by` | `string` | Catalog / Enum | **Billed By**. Maps to portal control `calculator_eip_radio_eipType`. |
 | `options.bandwidth_mbps` | `number / unit` | `1..2000` (step 1) when `^19_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`5..2000` (step 1) when `^19_share$`<br>`1..99 calc_29_` (step 1) when `^19_share$`<br>`1..9999` (step 1) when `^12_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`1..9999` (step 1) when `^12_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`300..2000` (step 1) | Dedicated public IP bandwidth in Mbit/s (1–2000 Mbit/s for BGP). In declarative quotes, write `bandwidth: 10 Mbps`. *(Portal controls: `calculator_eip_radio_Stepper_0`)* |
 | `options.ip_quantity` | `number / unit` | `1..99  ` (step 1) | Number of public IP addresses (1–99). In declarative quotes, write `count: 1` or `quantity: 1`. *(Portal controls: `calculator_ipQuantity_stepper_Stepper_0`)* |
@@ -69,6 +69,7 @@ Top-level card fields: `id` (required), `service: eip`, `region`, `billing` (`mo
 ## Behavioral Rules & Constraints
 
 - **Single-Quantity Form**: The calculator form for this service has no global quantity stepper (`quantity` must be `1`, or use service-specific instance/node/key counts).
+- **SKU-to-Control Projection**: The resolved catalog SKU populates form controls: `share_type` (from SKU `shareType`), `billed_by` (from SKU `eipType`).
 - Traffic-only cards (`ip_reservation: false`): the page always adds the public IP line, so they are rejected.
 - Not built: bandwidth-billed EIPs, shared bandwidth and the other product types (`dataInfo_4_`, `_13_`, `_36_`), and the yearly/monthly (PERIOD) EIP.
 
@@ -83,7 +84,7 @@ Top-level card fields: `id` (required), `service: eip`, `region`, `billing` (`mo
     | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
     | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
     | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-    | `calculator_eip_radio_type_shareType` | Product Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_eip_radio_type_shareType` | Product Type | `base-radio-group` | Catalog / Enum | Mapped → `share_type` |
     | `calculator_eip_radio_type_eipSpec` | Routing Type | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
     | `calculator_eip_radio_eipType` | Billed By | `base-radio-group` | Catalog / Enum | Mapped → `billed_by` |
     | `calculator_eip_radio_Stepper_0` | Bandwidth | `base-stepper` | `1..2000` (step 1) when `^19_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`5..2000` (step 1) when `^19_share$`<br>`1..99 calc_29_` (step 1) when `^19_share$`<br>`1..9999` (step 1) when `^12_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`1..9999` (step 1) when `^12_(s?|(youxuan)?)bgp(-.*-los1a)?$`<br>`300..2000` (step 1) | Mapped → `bandwidth_mbps` |

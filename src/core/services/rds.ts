@@ -17,7 +17,7 @@ async function defaultVolume(context: BuilderContext, region: string, flavor: st
   return found;
 }
 export async function buildRds(input: Extract<CardInput, { service: "rds" }>, context: BuilderContext) {
-  const storageSpec = input.storage_spec ?? await defaultVolume(context, input.region, input.flavor);
+  const storageSpec = input.volume_type ?? input.storage_spec ?? await defaultVolume(context, input.region, input.flavor);
   const [vm, vol] = await Promise.all([
     selectProduct(context, "rds", input.region, "rds_rds.vm", input.flavor, input.billing, input.hours),
     selectProduct(context, "rds", input.region, "rds_rds.volume", storageSpec, input.billing, input.hours),

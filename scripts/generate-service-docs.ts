@@ -223,8 +223,9 @@ const PLAIN_EXAMPLES: Record<string, string> = {
     service: nat
     region: sa-brazil-1
     billing: ondemand
+    spec: middle
     options:
-      size: middle`,
+      nat_type: public`,
   elb: `cards:
   - id: shared-load-balancer
     service: elb
@@ -245,8 +246,8 @@ const PLAIN_EXAMPLES: Record<string, string> = {
     service: sfsturbo
     region: sa-brazil-1
     billing: yearly
+    spec: 20MBps
     options:
-      tier: 20MBps
       size_gb: 3686.4`,
   sfs: `cards:
   - id: shared-nfs
@@ -260,8 +261,8 @@ const PLAIN_EXAMPLES: Record<string, string> = {
     service: cbr
     region: sa-brazil-1
     billing: yearly
+    spec: vault.backup.server.normal
     options:
-      vault_spec: vault.backup.server.normal
       size_gb: 1000`,
   dew: `cards:
   - id: kms-keys
@@ -385,8 +386,7 @@ const PLAIN_EXAMPLES: Record<string, string> = {
     service: dline
     region: sa-brazil-1
     billing: monthly
-    options:
-      port: 1ge`,
+    spec: 1ge`,
   vpn: `cards:
   - id: ipsec-vpn
     service: vpn
@@ -460,8 +460,9 @@ const PLAIN_EXAMPLES: Record<string, string> = {
     service: apig
     region: sa-brazil-1
     billing: ondemand
+    spec: BASIC
     options:
-      edition: BASIC`,
+      bandwidth_mbps: 10`,
   ssa: `cards:
   - id: secmaster
     service: ssa
@@ -474,7 +475,7 @@ const PLAIN_EXAMPLES: Record<string, string> = {
 const OPTION_NOTES: Record<string, Record<string, string>> = {
   ecs: {
     flavor: "Resolved catalog CPU architecture and flavor specification (group `ec2_vm`). In declarative `version: \"1\"`, choose via `needs: { vcpus: N, memory_gb: N }`.",
-    image: "Operating system image label (e.g. `Ubuntu 22.04 server 64bit`, `AlmaLinux 9.4 64bit`). In declarative `version: \"1\"`, friendly shorthands like `os: ubuntu-22.04` or `alma-9.4` normalize automatically. Bare `AlmaLinux` is rejected as ambiguous.",
+    image: "Operating system image label (e.g. `Ubuntu 22.04 server 64bit`, `AlmaLinux 9.4 64bit`). In declarative `version: \"1\"`, friendly shorthands like `os: ubuntu-22.04`, `alma-9.4`, or `windows` (always mapped to `.byol` BYOL licensing; paid `.win` ECS SKUs are rejected) normalize automatically. Bare `AlmaLinux` is rejected as ambiguous.",
     system_disk: "System volume tuple `[TYPE, SIZE_GB]` or `{ type, size }` (40–1024 GB). Types: `GPSSD`, `SSD`, `SAS`, `GPSSD2`, `ESSD`. Default: `['GPSSD', 40]`.",
     data_disks: "List of attached data volumes `[[TYPE, SIZE_GB], ...]`.",
     bandwidth_mbit: "Dedicated EIP bandwidth in Mbit/s (1–2000 Mbit/s for BGP, 1–9999 GB for traffic). In declarative quotes, write `bandwidth: 10 Mbps`.",
@@ -559,12 +560,12 @@ const OPTION_NOTES: Record<string, Record<string, string>> = {
     reasoning_mode: "Inference mode (`standard`). Automatically populated from the catalog model SKU.",
     model_service_type: "Model service class (`system`). Automatically populated from the catalog model SKU.",
     model_series: "Model family series (`deepseek`, `glm`). Automatically populated from the catalog model SKU.",
-    model_name: "Catalog model name (e.g. `deepseek-v3`, `deepseek-r1`). In declarative quotes, select via `options.model: deepseek-v3` or `spec`.",
+    model_name: "Catalog model name (e.g. `deepseek-v4.1-flash`, `glm-5.3`, `qwen3-32b`). In declarative quotes, select via `options.model: deepseek-v4.1-flash` or `spec`.",
     billing_mode_type: "Pricing dimension (`tokens`). Automatically populated from the catalog model SKU.",
   },
   function: {
     requests_10k: "Average monthly invocations in units of 10,000 counts (e.g. `1000` = 10,000,000 invocations). In declarative quotes, write `requests: 10M` or `invocations: 10M`.",
-    memory_mb: "Memory allocated per function instance (128 MB to 1024 MB). Default: `512`.",
+    memory_mb: "Memory allocated per function instance (128 MB to 10240 MB). Default: `512`.",
     compute: "Execution compute units / duration (measured in GB-seconds or duration multiplier). In declarative quotes, write `execution_time_ms: 200` or `compute_units: 100`.",
   },
   lts: {
@@ -580,6 +581,7 @@ const OPTION_NOTES: Record<string, Record<string, string>> = {
   },
   apm: {
     spec: "APM 2.0 instance specification (`apm2.instance.normal`). In declarative quotes, write `instances: 5` or `probe_days: 150`.",
+    probes: "Number of APM probe instances (default: `1`). Scales monthly usage to `24 * probes` probe-hours across 30 days.",
   },
   hecs: {
     image: "Operating system image label (e.g. `AlmaLinux 9.4 64bit`, `Ubuntu 22.04 server 64bit`).",
@@ -588,8 +590,10 @@ const OPTION_NOTES: Record<string, Record<string, string>> = {
   },
   nat: {
     size: "NAT gateway scale: `small` (10k conns), `middle` / `medium` (50k conns), `large` (200k conns), `xlarge` (1M conns). Aliases: `s`, `m`, `l`, `xl`.",
+    nat_type: "NAT gateway type: `public` (`natgateway_*`, Public NAT) or `private` (`privatenat_*`, mapped onto `natgateway_privatenat`). Default: `public`.",
   },
   eip: {
+    share_type: "Bandwidth sharing mode: `dedicated` (`dataInfo_3_`) or `shared` (`19_share` / `dataInfo_4_`). Default: `dedicated`.",
     ip_quantity: "Number of public IP addresses (1–99). In declarative quotes, write `count: 1` or `quantity: 1`.",
     bandwidth_mbps: "Dedicated public IP bandwidth in Mbit/s (1–2000 Mbit/s for BGP). In declarative quotes, write `bandwidth: 10 Mbps`.",
   },
@@ -654,6 +658,10 @@ const OPTION_NOTES: Record<string, Record<string, string>> = {
     shard_spec: "Compute flavor SKU for shard nodes (e.g. `dds.mongodb.c6.large.8.shard`).",
     shards: "Number of shard clusters (2–32). Applicable only in `Cluster` mode. Alias: `nodes`.",
     shard_storage_gb: "Storage capacity per shard node in GB (10–5,000 GB). In ReplicaSet mode, represents node storage.",
+    mongos_spec: "Mongos router node specification SKU for `Cluster` deployments (e.g. `dds.mongodb.c6.large.4.mongos`).",
+    mongos: "Number of mongos router nodes for `Cluster` deployments (2–32).",
+    config_spec: "Config server node specification SKU for `Cluster` deployments.",
+    config_storage_gb: "Config server storage capacity per node in GB for `Cluster` deployments.",
   },
   memcached: {
     instance_type: "Cache topology: `single_node` or `master_standby` (High Availability). In declarative quotes, write `topology: master-standby`.",
@@ -684,6 +692,7 @@ const OPTION_NOTES: Record<string, Record<string, string>> = {
   },
   apig: {
     edition: "API Gateway dedicated instance tier: `BASIC` (2,000 TPS), `PROFESSIONAL` (10,000 TPS), `ENTERPRISE` (20,000 TPS), or `PLATINUM` (50,000 TPS).",
+    bandwidth_mbps: "Outbound public access EIP bandwidth in Mbit/s (`0`–`2000`; adds `apig_apig.publicip` when `> 0`). Default: `0`.",
     hours: "Operating duration in hours (default: 730).",
   },
   ssa: {
@@ -739,7 +748,7 @@ function renderExamples(
   v1Example?: ScenarioExample
 ): string {
   const v1Yaml = v1Example
-    ? `version: "1"\nmetadata:\n  id: example-${service}\n  customer: Example Corp\n  title_prefix: "Example ${service.toUpperCase()}"\ndefaults:\n  region: ${service === "maas" ? "ap-southeast-1" : "sa-brazil-1"}\n  billing: ${info.modes[0] ?? "monthly"}\nresources:\n${v1Example.snippet.split("\n").map(l => "  " + l).join("\n")}`
+    ? `version: "1"\nmetadata:\n  id: example-${service}\n  customer: Example Corp\n  title_prefix: "Example ${service.toUpperCase()}"\ndefaults:\n  region: ${service === "maas" ? "ap-southeast-1" : "sa-brazil-1"}\n  billing: ${info.modes[0] ?? "monthly"}\nresources:\n${v1Example.snippet.split("\n").filter(l => !/^\s*environment\s*:/.test(l)).map(l => "  " + l).join("\n")}`
     : `version: "1"\nmetadata:\n  id: example-${service}\n  customer: Example Corp\n  title_prefix: "Example ${service.toUpperCase()}"\ndefaults:\n  region: ${service === "maas" ? "ap-southeast-1" : "sa-brazil-1"}\n  billing: ${info.modes[0] ?? "monthly"}\nresources:\n  - id: ${service}-main\n    service: ${service}\n    billing: ${info.modes[0] ?? "monthly"}`;
 
   const plainCards = (

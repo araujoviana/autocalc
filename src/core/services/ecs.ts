@@ -56,7 +56,11 @@ export function matchImages(images: Record<string, unknown>[], family: string, i
 export function imageLabel(candidate: Record<string, unknown>): string { return imageName(candidate); }
 
 export async function buildEcs(input: Extract<CardInput, { service: "ecs" }>, context: BuilderContext) {
-  const spec = /\.(linux|win)$/.test(input.flavor) ? input.flavor : `${input.flavor}.linux`;
+  if (/\.win$/i.test(input.flavor)) {
+    throw new CalculatorError("VALIDATION", "Paid Windows (.win) is not supported on ECS; Windows on ECS is always BYOL.");
+  }
+  const baseFlavor = input.flavor.replace(/\.(linux|byol)$/i, "");
+  const spec = `${baseFlavor}.linux`;
   const catalog = await context.productInfo("ecs", input.region);
   const riKey = input.ri_time.replace(/^nodeData\./, ""), riTime = `nodeData.${riKey}`;
   if (input.billing === "ri" && !["1_3", "3_3"].includes(riKey)) throw new CalculatorError("VALIDATION", "Invalid RI term");
@@ -71,7 +75,9 @@ export async function buildEcs(input: Extract<CardInput, { service: "ecs" }>, co
   } else vm = await selectProduct(context, "ecs", input.region, "ec2_vm", spec, input.billing, input.hours);
   Object.assign(vm, { addToList_title: "calc_2_", addToList_product: ["arch", "vmType", "spec", "cpu", "mem"].map(key => display(vm[key])).join(" | ") });
   if (input.billing === "ri") vm.addToList_product = ["arch", "vmType", "spec", "cpu", "mem", "paymentType", "RITime"].map(key => display(vm[key])).join(" | ");
-  const matched = matchImages(catalog.product["ec2_vm.image.special"] ?? [], display(vm.spec).split(".")[0]!, input.image);
+  const imgLower = input.image.toLowerCase();
+  const imageQuery = imgLower.startsWith("windows") || imgLower.includes("byol") ? "Ubuntu 22.04 server 64bit" : input.image;
+  const matched = matchImages(catalog.product["ec2_vm.image.special"] ?? [], display(vm.spec).split(".")[0]!, imageQuery);
   if (!matched.length) throw new CalculatorError("SPEC_NOT_FOUND", `Image ${input.image} not found`);
   if (matched.length !== 1) throw new CalculatorError("VALIDATION", `Image '${input.image}' matches multiple catalog images; choose an exact name.`);
   const rawImage = matched[0]!;

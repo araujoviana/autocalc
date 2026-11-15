@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: product-media-obs
-        environment: edge
         service: obs
         billing: ondemand
         options:

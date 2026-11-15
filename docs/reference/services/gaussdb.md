@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: settlement-gaussdb
-        environment: prod
         service: gaussdb
         billing: monthly
         needs:

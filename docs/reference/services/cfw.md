@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: hospital-perimeter-cfw
-        environment: prod
         service: cfw
         billing: monthly
         options:

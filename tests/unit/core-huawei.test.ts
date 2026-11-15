@@ -47,18 +47,18 @@ test("ECS ri picks its spec from the monthly catalog", async () => {
   expect(c.map(x => x.spec)).toEqual(["c7n.xlarge.4", "SSD"]);
 });
 
-test("ECS flavors are offered for the OS of the requested image", async () => {
+test("ECS flavors are offered for Linux or BYOL (Windows on ECS is always BYOL)", async () => {
   const flavors = ["byol", "linux", "win"].map(os => sku(`c7n.xlarge.4.${os}`, { monthly: { amount: 1 } }));
   const p = new HuaweiProvider(source(flavors));
   expect((await p.candidates(req())).map(x => x.spec)).toEqual(["c7n.xlarge.4.linux"]);
-  expect((await p.candidates(req({ options: { image: "Windows Server 2022" } }))).map(x => x.spec)).toEqual(["c7n.xlarge.4.win"]);
+  expect((await p.candidates(req({ options: { image: "Windows Server 2022" } }))).map(x => x.spec)).toEqual(["c7n.xlarge.4.byol"]);
 });
 
-test("a spec that names its own OS is offered whatever the image", async () => {
+test("a spec that names its own OS is offered whatever the image, except .win on ECS which is rejected", async () => {
   const flavors = ["byol", "linux", "win"].map(os => sku(`c7n.xlarge.4.${os}`, { monthly: { amount: 1 } }));
   const p = new HuaweiProvider(source(flavors));
   expect((await p.candidates(req({ spec: "c7n.xlarge.4.byol" }))).map(x => x.spec)).toContain("c7n.xlarge.4.byol");
-  expect((await p.candidates(req({ spec: "c7n.xlarge.4.win" }))).map(x => x.spec)).toContain("c7n.xlarge.4.win");
+  await expect(p.candidates(req({ spec: "c7n.xlarge.4.win" }))).rejects.toThrow(/BYOL/);
 });
 
 test("flavors the page does not list are not offered", async () => {

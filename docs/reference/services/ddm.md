@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: sharding-middleware-ddm
-        environment: prod
         service: ddm
         billing: ondemand
         options:

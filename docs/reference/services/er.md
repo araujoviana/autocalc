@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: inter-vpc-enterprise-router
-        environment: prod
         service: er
         billing: ondemand
         options:

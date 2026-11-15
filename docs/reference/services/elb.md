@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: public-ingress-elb
-        environment: prod
         service: elb
         billing: ondemand
         options:

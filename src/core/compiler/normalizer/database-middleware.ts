@@ -17,17 +17,13 @@ export function normalizeDatabaseMiddlewareService(state: CardNormalizeState): b
     case "rds": {
       const stGb = toGB(rawOpts.storage_gb ?? rawOpts.storage ?? rawOpts.capacity ?? rawOpts.size ?? rawNeeds.storage ?? rawNeeds.capacity, `${r.id}.storage`);
       if (stGb !== undefined) options.storage_gb = Math.max(40, Math.round(stGb));
-      if (rawOpts.storage_spec !== undefined) {
-        options.storage_spec = rawOpts.storage_spec;
-      } else if (typeof rawOpts.storage_type === "string" && rawOpts.storage_type.startsWith("rds.")) {
-        options.storage_spec = rawOpts.storage_type;
-      }
       if (rawOpts.db_version !== undefined || rawOpts.version !== undefined || rawNeeds.version !== undefined) {
         options.db_version = String(rawOpts.db_version ?? rawOpts.version ?? rawNeeds.version);
       }
       if (!state.spec && rawOpts.flavor !== undefined) state.spec = String(rawOpts.flavor);
+      const isMssql = engine.includes("sqlserver") || engine.includes("mssql");
+      const eng = engine.includes("pg") || engine.includes("postgres") ? "pg" : isMssql ? "mssql" : "mysql";
       if (!state.spec) {
-        const eng = engine.includes("pg") || engine.includes("postgres") ? "pg" : "mysql";
         const v = vcpus ?? 2;
         const m = memory_gb ?? v * 4;
         const sz = sizeFromVcpu(v);
@@ -42,7 +38,46 @@ export function normalizeDatabaseMiddlewareService(state: CardNormalizeState): b
           throw new CalculatorError("VALIDATION", `${r.id}: unknown RDS options.type '${explicit}'.`, `Use one of: ${[...RDS_SINGLE.slice(0, 1), "primary-standby", "ha"].join(", ")} (also accepted: ${[...RDS_SINGLE.slice(1), ...RDS_HA.slice(2)].join(", ")}).`);
         }
         const isHa = explicit ? RDS_HA.includes(explicit) : haHint;
-        state.spec = `rds.${eng}.${cls}.${sz}.${ratio}${isHa ? ".ha" : ""}`;
+        if (isMssql) {
+          const edRaw = String(rawOpts.edition ?? rawOpts.version ?? rawOpts.db_version ?? "").toLowerCase();
+          const edition = edRaw.includes("web") && !isHa
+            ? "web"
+            : edRaw.includes("ee") || edRaw.includes("enterprise")
+              ? "ee"
+              : edRaw.includes("se") || edRaw.includes("standard")
+                ? "se"
+                : ratio === 8 || v >= 8
+                  ? "ee"
+                  : "se";
+          const mssqlRatio = edition === "se" && isHa && ratio === 4 ? 2 : ratio;
+          const mssqlCls = mssqlRatio === 2 ? "n1" : edition === "web" && mssqlRatio === 4 ? "n1" : "x1";
+          state.spec = `rds.mssql.byol.${mssqlCls}.${edition}.${sz}.${mssqlRatio}${isHa ? ".ha" : ""}`;
+        } else {
+          state.spec = `rds.${eng}.${cls}.${sz}.${ratio}${isHa ? ".ha" : ""}`;
+        }
+      }
+      const volRaw = rawOpts.storage_spec ?? rawOpts.volume_type ?? rawOpts.storage_type;
+      if (typeof volRaw === "string" && volRaw.trim() !== "") {
+        const volTrim = volRaw.trim();
+        if (volTrim.startsWith("rds.")) {
+          options.storage_spec = volTrim;
+        } else {
+          const specEng = state.spec?.split(".")[1] || eng;
+          const haSuffix = state.spec?.endsWith(".rha.rr") ? ".rha.rr" : state.spec?.endsWith(".ha") ? ".ha" : state.spec?.endsWith(".rr") ? ".rr" : "";
+          const norm = volTrim.toLowerCase();
+          const media = norm.includes("extreme") || norm === "essd"
+            ? "essd"
+            : norm.includes("ultra")
+              ? "ultrahigh"
+              : norm.includes("common") || norm.includes("sata")
+                ? "common"
+                : norm.includes("gpssd2")
+                  ? "gpssd2"
+                  : norm.includes("ssd")
+                    ? "cloudssd"
+                    : "";
+          if (media) options.storage_spec = `rds.${specEng}.volume.${media}${haSuffix}`;
+        }
       }
       state.needs = undefined;
       return true;
@@ -178,6 +213,11 @@ export function normalizeDatabaseMiddlewareService(state: CardNormalizeState): b
       if (!state.spec) {
         state.spec = `dds.mongodb.c6.${sizeFromVcpu(vcpus ?? 2)}.8.${shardCount ? "shard" : "repset"}`;
       }
+      for (const field of ["type", "flavor_type", "mongos_spec", "shard_spec", "config_spec"] as const) {
+        if (rawOpts[field] !== undefined) options[field] = String(rawOpts[field]);
+      }
+      if (rawOpts.mongos !== undefined) options.mongos = Math.min(32, Math.max(2, Math.round(Number(rawOpts.mongos))));
+      if (rawOpts.config_storage_gb !== undefined) options.config_storage_gb = Math.max(20, Math.round(Number(rawOpts.config_storage_gb) / 10) * 10);
       if (shardCount !== undefined) options.shards = Math.min(32, Math.max(2, Math.round(Number(shardCount))));
       const stGb = toGB(rawOpts.shard_storage_gb ?? rawOpts.storage_gb ?? rawOpts.storage ?? rawOpts.capacity ?? rawOpts.size ?? rawNeeds.storage ?? rawNeeds.capacity, `${r.id}.storage`);
       if (stGb !== undefined) options.shard_storage_gb = Math.min(5000, Math.max(10, Math.round(stGb / 10) * 10));
@@ -189,6 +229,9 @@ export function normalizeDatabaseMiddlewareService(state: CardNormalizeState): b
       if (rawOpts.deployment_mode !== undefined || rawOpts.deploy_model !== undefined || rawOpts.edition !== undefined) {
         const dm = String(rawOpts.deployment_mode ?? rawOpts.deploy_model ?? rawOpts.edition).toLowerCase();
         options.deploy_model = dm.includes("dist") ? "distributed" : "centralized";
+      }
+      for (const field of ["instance_type", "db_version", "database_type", "public_type", "spec"] as const) {
+        if (rawOpts[field] !== undefined) options[field] = String(rawOpts[field]);
       }
       if (!state.spec) {
         const v = vcpus ?? 16;
@@ -227,6 +270,9 @@ export function normalizeDatabaseMiddlewareService(state: CardNormalizeState): b
         const top = String(rawOpts.topology ?? rawOpts.instance_type).toLowerCase();
         options.instance_type = top.includes("single") ? "Single" : "Ha";
       }
+      for (const field of ["public_type", "spec"] as const) {
+        if (rawOpts[field] !== undefined) options[field] = String(rawOpts[field]);
+      }
       const stGb = toGB(rawOpts.storage_gb ?? rawOpts.storage ?? rawOpts.capacity ?? rawOpts.size ?? rawNeeds.storage ?? rawNeeds.capacity, `${r.id}.storage`);
       if (stGb !== undefined) options.storage_gb = Math.min(4000, Math.max(40, Math.round(stGb / 10) * 10));
       state.needs = undefined;
@@ -243,6 +289,9 @@ export function normalizeDatabaseMiddlewareService(state: CardNormalizeState): b
         const haSuffix = isHa ? ".ha" : "";
         state.spec = `rds.${eng}.y1.${sz}${haSuffix}`;
       }
+      for (const field of ["db_type", "instance_type", "spec"] as const) {
+        if (rawOpts[field] !== undefined) options[field] = String(rawOpts[field]);
+      }
       if (rawOpts.version !== undefined || rawOpts.db_version !== undefined) options.db_version = String(rawOpts.version ?? rawOpts.db_version);
       const stGb = toGB(rawOpts.storage_gb ?? rawOpts.storage ?? rawOpts.capacity ?? rawOpts.size ?? rawNeeds.storage ?? rawNeeds.capacity, `${r.id}.storage`);
       if (stGb !== undefined) options.storage_gb = Math.max(120, Math.round(stGb / 10) * 10);
@@ -256,6 +305,8 @@ export function normalizeDatabaseMiddlewareService(state: CardNormalizeState): b
         const sz = v >= 32 ? "8xlarge" : v >= 16 ? "4xlarge" : "2xlarge";
         state.spec = `ddm.c6.${sz}.2`;
       }
+      if (rawOpts.spec_type !== undefined) options.spec_type = String(rawOpts.spec_type);
+      if (rawOpts.spec !== undefined) options.spec = String(rawOpts.spec);
       const nodes = rawOpts.nodes ?? rawOpts.node_count;
       if (nodes !== undefined) state.quantity = Math.max(2, Math.round(Number(nodes)));
       state.needs = undefined;
@@ -267,6 +318,11 @@ export function normalizeDatabaseMiddlewareService(state: CardNormalizeState): b
         const flow = String(rawOpts.direction ?? rawOpts.flow ?? rawOpts.task_type ?? rawNeeds.flow ?? "").toLowerCase();
         state.spec = flow.includes("sync") ? "drs.xlg.sync" : "drs.med.dr";
       }
+      if (rawOpts.type !== undefined) options.type = String(rawOpts.type);
+      if (rawOpts.flow !== undefined) options.flow = String(rawOpts.flow);
+      else if (rawOpts.direction !== undefined) options.flow = String(rawOpts.direction);
+      if (rawOpts.specification !== undefined) options.specification = String(rawOpts.specification);
+      else if (rawOpts.scale !== undefined) options.specification = String(rawOpts.scale);
       state.needs = undefined;
       return true;
     }

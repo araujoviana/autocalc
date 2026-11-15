@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: manifest-generator-fn
-        environment: origin
         service: function
         billing: ondemand
         options:
@@ -64,7 +63,7 @@ Top-level card fields: `id` (required), `service: function`, `region`, `billing`
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `functionstage_functionstage`. |
 | `options.requests_10k` | `number / unit` | `0..1000000000000000 month` (step 1)<br>`0..1000000000000000 day` (step 1)<br>`0..1000000000000000 hour` (step 1) | Average monthly invocations in units of 10,000 counts (e.g. `1000` = 10,000,000 invocations). In declarative quotes, write `requests: 10M` or `invocations: 10M`. *(Portal controls: `calculator_fgs_request_Stepper_0`)* |
 | `options.compute` | `string` | Catalog / Enum | Execution compute units / duration (measured in GB-seconds or duration multiplier). In declarative quotes, write `execution_time_ms: 200` or `compute_units: 100`. *(Portal controls: `calculator_fgs_compute`)* |
-| `options.memory_mb` | `number / unit` | `128..1024 MB` (step 1)<br>`0..10 GB` (step 1) | Memory allocated per function instance (128 MB to 1024 MB). Default: `512`. *(Portal controls: `calculator_fgs_memory_Stepper_0`)* |
+| `options.memory_mb` | `number / unit` | `128..1024 MB` (step 1)<br>`0..10 GB` (step 1) | Memory allocated per function instance (128 MB to 10240 MB). Default: `512`. *(Portal controls: `calculator_fgs_memory_Stepper_0`)* |
 
 ---
 

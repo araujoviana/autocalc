@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: edge-waf-protection
-        environment: edge
         service: waf
         billing: monthly
         options:

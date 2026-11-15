@@ -36,8 +36,7 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
-  unsupported: true
-  note: fixed to public NAT gateway by the builder
+  option: nat_type
 - id: calculator_nat_radio_type
   kind: base-select
   title: Type

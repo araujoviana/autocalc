@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: playback-telemetry-lts
-        environment: origin
         service: lts
         billing: ondemand
         options:

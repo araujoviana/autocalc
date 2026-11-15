@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: sensor-timeseries-nosql
-        environment: carajas_hub
         service: nosql
         billing: ondemand
         needs:

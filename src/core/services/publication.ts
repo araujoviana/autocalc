@@ -25,7 +25,7 @@ export const SPEC_ARG: Record<string, string> = { apm: "spec", apig: "edition", 
 /** The catalog group that holds the thing a card's spec names; without it a plan's candidates mix in disks and add-ons of the same service. */
 export const PRIMARY_GROUP: Record<string, string> = { ecs: "ec2_vm", evs: "ebs_volume", rds: "rds_rds.vm", sfs: "sfs_sfs", sdrs: "sdrs_hdrsinst", er: "er_er.attachment", eip: "vpc_bandwidth", function: "functionstage_functionstage", lts: "lts_lts.logflow", vpcep: "vpc_vpcep", hss: "hss_hss", cfw: "cfw_cfw", vpn: "vpc_bandwidth", des: "des_des", dss: "dss_dss.pool", maas: "modelarts_modelarts.tokens", memcached: "dcs_dcs.memcached", drs: "drs_drs.vm", ddm: "ddm_ddm", dds: "dds_dds.vm", gaussdb: "gaussdb_gaussdb.vm", rdsformariadb: "rdsformariadb_rdsformariadb.vm", taurusdb: "taurus_taurus.vm", hrds: "rds_rds.vm", redis: "dcs_dcs3", cbr: "cbr_cbr.vault", cce: "cce_cce.cluster", apig: "apig_apig.instance", nat: "natgateway_natgateway", elb: "elb_elbv2", nosql: "nosql_nosql.vm", kafka: "dms_dms.platinum", rabbitmq: "dms_dms.platinum", sfsturbo: "sfsturbo_sfsturbo", apm: "apm_apm2.instance", dline: "dcaas_dcaas.port", ssa: "sa_secmaster.typical" };
 /** Catalog spec code -> the value the option expects. */
-export const specOption = (service: string, spec: string) => service === "nat" ? spec.replace(/^natgateway_/, "") : service === "evs" ? spec.replace(/\.storage$/, "") : spec;
+export const specOption = (service: string, spec: string) => service === "nat" ? spec.replace(/^(natgateway_|privatenat_)/, "") : service === "evs" ? spec.replace(/\.storage$/, "") : spec;
 /** Services whose pay-per-use SKUs carry usage plans with no list price in the catalog (OBS) or tiered by capacity (DSS): the card is priced from its usage components when rated, so a plan can only resolve the spec, not price it. */
 export const USAGE_PRICED = new Set(["obs", "dss", "memcached", "maas"]);
 /** Recipe services whose page controls are fields of the chosen catalog SKU: the ranked spec becomes these option values. The others have page controls (shards, storage, groups) that no catalog row carries. */
@@ -35,7 +35,7 @@ export const RECIPE_SPEC_FIELDS: Record<string, { group: string; fields: Array<s
   sdrs: { group: "sdrs_hdrsinst", fields: [] }, // one SKU; the protection-group count scales it
   function: { group: "functionstage_functionstage", fields: [] },
   lts: { group: "lts_lts.logflow", fields: [] },
-  eip: { group: "vpc_bandwidth", fields: [] }, // the dedicated-bandwidth SKU (19_bgp); the bandwidth control scales it
+  eip: { group: "vpc_bandwidth", fields: [["share_type", "shareType"], ["billed_by", "eipType"]] },
   vpcep: { group: "vpc_vpcep", fields: [] }, // one SKU (vpcep.basic); the hours control scales it
   hss: { group: "hss_hss", fields: [] }, // the edition option picks the page's edition; the spec has to agree, which the gate checks
   cfw: { group: "cfw_cfw", fields: [] }, // same: edition option vs spec
@@ -72,6 +72,7 @@ export function termOptions(service: string): string[] {
 }
 /** The option names a card of this service may carry: the builder input minus what a requirement has itself. */
 export function legalOptions(service: string): string[] | null {
+  if (service === "redis") return [...new Set([...Object.keys(RECIPES.redis!.controls), "bandwidth_mbit"])].sort();
   if (service in RECIPES) return Object.keys(RECIPES[service]!.controls).sort();
   const entry = (CardInput as unknown as { options: Array<{ shape: Record<string, any> }> }).options.find(option => option.shape.service.def.values[0] === service);
   return entry ? Object.keys(entry.shape).filter(key => !NOT_OPTIONS.has(key) && key !== SPEC_ARG[service]).sort() : null;

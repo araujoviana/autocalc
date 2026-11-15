@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: private-service-vpcep
-        environment: secops
         service: vpcep
         billing: ondemand
         options:

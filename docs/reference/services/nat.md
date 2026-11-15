@@ -8,7 +8,7 @@
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `ondemand`, `monthly`, `yearly` |
 | **Primary Catalog Group** | `natgateway_natgateway` |
-| **Schema Coverage** | 6 controls (4 mapped, 2 intentionally fixed/unsupported) |
+| **Schema Coverage** | 6 controls (5 mapped, 1 intentionally fixed/unsupported) |
 
 ---
 
@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: egress-nat-gateway
-        environment: prod
         service: nat
         billing: ondemand
         options:
@@ -45,8 +44,9 @@
         service: nat
         region: sa-brazil-1
         billing: ondemand
+        spec: middle
         options:
-          size: middle
+          nat_type: public
     ```
 
 ---
@@ -58,6 +58,7 @@ Top-level card fields: `id` (required), `service: nat`, `region`, `billing` (`on
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` / `options.size` | `string` | Catalog SKU | Resolved catalog specification code (group `natgateway_natgateway`). Can also be selected via `needs:`. |
+| `options.nat_type` | `string` | Catalog / Enum | NAT gateway type: `public` (`natgateway_*`, Public NAT) or `private` (`privatenat_*`, mapped onto `natgateway_privatenat`). Default: `public`. *(Portal controls: `calculator_nat_type_nattype`)* |
 | `options.size` | `string` | Catalog / Enum | NAT gateway scale: `small` (10k conns), `middle` / `medium` (50k conns), `large` (200k conns), `xlarge` (1M conns). Aliases: `s`, `m`, `l`, `xl`. *(Portal controls: `calculator_nat_radio_type`)* |
 
 ---
@@ -78,7 +79,7 @@ Top-level card fields: `id` (required), `service: nat`, `region`, `billing` (`on
     | `global_REGIONINFO_region` | Region | `base-region` | Catalog / Enum | Mapped → `region` |
     | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
     | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
-    | `calculator_nat_type_nattype` | Gateway | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (fixed to public NAT gateway by the builder) |
+    | `calculator_nat_type_nattype` | Gateway | `base-radio-group` | Catalog / Enum | Mapped → `nat_type` |
     | `calculator_nat_radio_type` | Type | `base-select` | Catalog / Enum | Mapped → `size` |
     | `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
 

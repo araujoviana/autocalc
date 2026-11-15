@@ -8,7 +8,7 @@
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `ondemand` |
 | **Primary Catalog Group** | `apig_apig.instance` |
-| **Schema Coverage** | 7 controls (4 mapped, 3 intentionally fixed/unsupported) |
+| **Schema Coverage** | 7 controls (6 mapped, 1 intentionally fixed/unsupported) |
 
 ---
 
@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: bacen-api-gateway
-        environment: prod
         service: apig
         billing: ondemand
         options:
@@ -46,8 +45,9 @@
         service: apig
         region: sa-brazil-1
         billing: ondemand
+        spec: BASIC
         options:
-          edition: BASIC
+          bandwidth_mbps: 10
     ```
 
 ---
@@ -60,6 +60,7 @@ Top-level card fields: `id` (required), `service: apig`, `region`, `billing` (`o
 | :--- | :--- | :--- | :--- |
 | `spec` / `options.edition` | `string` | Catalog SKU | Resolved catalog specification code (group `apig_apig.instance`). Can also be selected via `needs:`. |
 | `options.edition` | `string` | Catalog / Enum | API Gateway dedicated instance tier: `BASIC` (2,000 TPS), `PROFESSIONAL` (10,000 TPS), `ENTERPRISE` (20,000 TPS), or `PLATINUM` (50,000 TPS). *(Portal controls: `calculator_spec_radioGroups_type`)* |
+| `options.bandwidth_mbps` | `number / unit` | `1..2000 Mbit/s` (step 1) | Outbound public access EIP bandwidth in Mbit/s (`0`–`2000`; adds `apig_apig.publicip` when `> 0`). Default: `0`. *(Portal controls: `calculator_bandwidth_switch_UNSET_Switch`, `calculator_bandwidth_stepper_Stepper_0`)* |
 | `options.hours` | `number / unit` | `1..9999 hour` (step 1) | Operating duration in hours (default: 730). *(Portal controls: `global_ONDEMANDTIME_Stepper_0`)* |
 
 ---
@@ -80,8 +81,8 @@ Top-level card fields: `id` (required), `service: apig`, `region`, `billing` (`o
     | `global_REGIONINFO_locationType` | AZ | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (AZ is left at the page default) |
     | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
     | `calculator_spec_radioGroups_type` | Edition | `base-radio-group` | Catalog / Enum | Mapped → `edition` |
-    | `calculator_bandwidth_switch_UNSET_Switch` | Public Outbound Access | `base-radio-group` | Catalog / Enum | Fixed / Unsupported (fixed to no public outbound bandwidth by the builder) |
-    | `calculator_bandwidth_stepper_Stepper_0` | Bandwidth | `base-stepper` | `1..2000 Mbit/s` (step 1) | Fixed / Unsupported (outbound bandwidth add-on is not configured by the builder) |
+    | `calculator_bandwidth_switch_UNSET_Switch` | Public Outbound Access | `base-radio-group` | Catalog / Enum | Mapped → `bandwidth_mbps` |
+    | `calculator_bandwidth_stepper_Stepper_0` | Bandwidth | `base-stepper` | `1..2000 Mbit/s` (step 1) | Mapped → `bandwidth_mbps` |
     | `global_ONDEMANDTIME_Stepper_0` | Required Duration | `base-stepper` | `1..9999 hour` (step 1) | Mapped → `hours` |
 
 ---

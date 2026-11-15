@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: shared-segment-sfsturbo
-        environment: origin
         service: sfsturbo
         billing: monthly
         options:
@@ -46,8 +45,8 @@
         service: sfsturbo
         region: sa-brazil-1
         billing: yearly
+        spec: 20MBps
         options:
-          tier: 20MBps
           size_gb: 3686.4
     ```
 

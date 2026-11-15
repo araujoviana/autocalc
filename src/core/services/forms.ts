@@ -49,9 +49,13 @@ export const RECIPES: Record<string, Recipe> = {
   dds: recipe("Document Database Service", {
     type: "calculator_dds_versionType_radio_type",
     flavor_type: "calculator_dds_versionType_radio_flavorType",
+    mongos_spec: "calculator_dds_colony_mongos_spec",
+    mongos: "calculator_dds_colony_mongos_Stepper_0",
     shard_spec: "calculator_dds_colony_shard_spec",
     shards: "calculator_dds_colony_shard_Stepper_0",
     shard_storage_gb: "calculator_dds_colony_shard_volume_Stepper_0",
+    config_spec: "calculator_dds_colony_config_stepper_2_spec",
+    config_storage_gb: "calculator_dds_colony_config_stepper_3_Stepper_0",
   }, { quantity: true }),
   gaussdb: recipe("GaussDB", {
     deploy_model: "calculator_opgauss_radio_deployModel",
@@ -142,9 +146,10 @@ export const RECIPES: Record<string, Recipe> = {
     duration_hours: "calculator_vpcep_time_Stepper_0",
   }, { modes: OD }),
   eip: recipe("Elastic IP", {
+    share_type: "calculator_eip_radio_type_shareType",
+    billed_by: "calculator_eip_radio_eipType",
     ip_quantity: "calculator_ipQuantity_stepper_Stepper_0",
     bandwidth_mbps: "calculator_eip_radio_Stepper_0",
-    billed_by: "calculator_eip_radio_eipType",
     traffic_gb: "calculator_eip_radio_Stepper_3",
   }, { hours: true, modes: PM_OD }),
   vpn: recipe("Virtual Private Network", {
@@ -219,6 +224,10 @@ export function buildRecipe(
   for (const [k, controlId] of Object.entries(r.controls)) {
     if (service === "taurusdb" && billing === "ondemand" && k === "storage_gb") continue;
     let val = options[k];
+    if (service === "eip" && k === "share_type") {
+      if (val === "dedicated") val = "dataInfo_3_";
+      else if (val === "shared") val = "dataInfo_4_";
+    }
     if (service === "eip" && k === "billed_by") {
       if (val === "traffic") val = "dataInfo_6_";
       else if (val === "bandwidth") val = "dataInfo_5_";

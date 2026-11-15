@@ -8,7 +8,7 @@
 | **Verified Frontend** | `11.4.201` |
 | **Supported Billing Modes** | `monthly`, `yearly`, `ondemand` |
 | **Primary Catalog Group** | `dds_dds.vm` |
-| **Schema Coverage** | 16 controls (9 mapped, 7 intentionally fixed/unsupported) |
+| **Schema Coverage** | 16 controls (13 mapped, 3 intentionally fixed/unsupported) |
 
 ---
 
@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: player-profile-dds
-        environment: latam_south
         service: dds
         billing: monthly
         needs:
@@ -67,9 +66,13 @@ Top-level card fields: `id` (required), `service: dds`, `region`, `billing` (`mo
 | `spec` | `string` | Catalog SKU | Catalog specification code in group `dds_dds.vm`. |
 | `options.type` | `string` | Catalog / Enum | Document database topology: `ReplicaSet` (3-node Replica Set) or `Cluster` (Sharded Cluster). In declarative quotes, write `topology: replica-set`. *(Portal controls: `calculator_dds_versionType_radio_type`)* |
 | `options.flavor_type` | `string` | Catalog / Enum | Compute specification family: `dedicated` or `general-purpose`. *(Portal controls: `calculator_dds_versionType_radio_flavorType`)* |
+| `options.mongos_spec` | `string` | Catalog / Enum | Mongos router node specification SKU for `Cluster` deployments (e.g. `dds.mongodb.c6.large.4.mongos`). *(Portal controls: `calculator_dds_colony_mongos_spec`)* |
+| `options.mongos` | `number / unit` | `2..32 dataInfo_22_` (step 1) | Number of mongos router nodes for `Cluster` deployments (2–32). *(Portal controls: `calculator_dds_colony_mongos_Stepper_0`)* |
 | `options.shard_spec` | `string` | Catalog / Enum | Compute flavor SKU for shard nodes (e.g. `dds.mongodb.c6.large.8.shard`). *(Portal controls: `calculator_dds_colony_shard_spec`)* |
 | `options.shards` | `number / unit` | `2..32 dataInfo_22_` (step 1) | Number of shard clusters (2–32). Applicable only in `Cluster` mode. Alias: `nodes`. *(Portal controls: `calculator_dds_colony_shard_Stepper_0`)* |
 | `options.shard_storage_gb` | `number / unit` | `10..5000` (step 10) | Storage capacity per shard node in GB (10–5,000 GB). In ReplicaSet mode, represents node storage. *(Portal controls: `calculator_dds_colony_shard_volume_Stepper_0`)* |
+| `options.config_spec` | `string` | Catalog / Enum | Config server node specification SKU for `Cluster` deployments. *(Portal controls: `calculator_dds_colony_config_stepper_2_spec`)* |
+| `options.config_storage_gb` | `number / unit` | Default `20` | Config server storage capacity per node in GB for `Cluster` deployments. *(Portal controls: `calculator_dds_colony_config_stepper_3_Stepper_0`)* |
 
 ---
 
@@ -91,15 +94,15 @@ Top-level card fields: `id` (required), `service: dds`, `region`, `billing` (`mo
     | `global_REGIONINFO_chargeMode` | Billing Mode | `base-radio-group` | Catalog / Enum | Mapped → `billing` |
     | `calculator_dds_versionType_radio_type` | DB Instance Type | `base-radio-group` | Catalog / Enum | Mapped → `type` |
     | `calculator_dds_versionType_radio_flavorType` | Specifications | `base-radio-group` | Catalog / Enum | Mapped → `flavor_type` |
-    | `calculator_dds_colony_mongos_spec` | dds mongos Class | `base-select` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-    | `calculator_dds_colony_mongos_Stepper_0` | dds mongos Quantity | `base-stepper` | `2..32 dataInfo_22_` (step 1) | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_dds_colony_mongos_spec` | dds mongos Class | `base-select` | Catalog / Enum | Mapped → `mongos_spec` |
+    | `calculator_dds_colony_mongos_Stepper_0` | dds mongos Quantity | `base-stepper` | `2..32 dataInfo_22_` (step 1) | Mapped → `mongos` |
     | `calculator_dds_colony_shard_spec` | shard Class | `base-select` | Catalog / Enum | Mapped → `shard_spec` |
     | `calculator_dds_colony_shard_Stepper_0` | shard Quantity | `base-stepper` | `2..32 dataInfo_22_` (step 1) | Mapped → `shards` |
     | `calculator_dds_colony_shard_volume_ioType` | shard Storage Space | `base-select` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
     | `calculator_dds_colony_shard_volume_Stepper_0` | — | `base-stepper` | `10..5000` (step 10) | Mapped → `shard_storage_gb` |
-    | `calculator_dds_colony_config_stepper_2_spec` | config Class | `base-select` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_dds_colony_config_stepper_2_spec` | config Class | `base-select` | Catalog / Enum | Mapped → `config_spec` |
     | `calculator_dds_colony_config_stepper_3_ioType` | config Storage Space | `base-select` | Catalog / Enum | Fixed / Unsupported (not in the recipe; the page default is kept) |
-    | `calculator_dds_colony_config_stepper_3_Stepper_0` | — | `base-stepper` | Default `20` | Fixed / Unsupported (not in the recipe; the page default is kept) |
+    | `calculator_dds_colony_config_stepper_3_Stepper_0` | — | `base-stepper` | Default `20` | Mapped → `config_storage_gb` |
     | `global_PERIODTIME_UNSET_PeriodTime` | Required Duration | `base-radio-group` | Catalog / Enum | Mapped → `periods` |
     | `global_QUANTITY_Stepper_0` | Quantity | `base-stepper` | `1..50 PCS` (step 1) | Mapped → `quantity` |
 

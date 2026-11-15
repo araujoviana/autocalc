@@ -189,7 +189,7 @@ describe("Compiler Normalizer Expansion and Scoped IaaS Mapping", () => {
       expect(card.billing).toBe("ondemand");
       expect(card.options.billed_by).toBe("traffic");
       expect(card.options.traffic_gb).toBe(250);
-      expect(card.options.ip_reservation).toBe(true);
+      expect(card.options.ip_reservation).toBeUndefined();
     });
 
     it("preserves explicit multi-IP count on single card", () => {

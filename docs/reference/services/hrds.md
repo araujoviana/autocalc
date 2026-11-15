@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: erp-dedicated-hrds
-        environment: prod
         service: hrds
         billing: monthly
         needs:

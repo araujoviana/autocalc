@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: game-telemetry-apm
-        environment: latam_south
         service: apm
         billing: ondemand
         options:
@@ -57,6 +56,7 @@ Top-level card fields: `id` (required), `service: apm`, `region`, `billing` (`on
 | Field | Type | Range / Allowed | Description |
 | :--- | :--- | :--- | :--- |
 | `spec` / `options.spec` | `string` | Catalog SKU | Resolved catalog specification code (group `apm_apm2.instance`). Can also be selected via `needs:`. |
+| `options.probes` | `any` | Builder-validated | Number of APM probe instances (default: `1`). Scales monthly usage to `24 * probes` probe-hours across 30 days. |
 
 ---
 

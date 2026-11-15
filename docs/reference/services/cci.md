@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: tournament-burst-cci
-        environment: latam_south
         service: cci
         billing: ondemand
         options:

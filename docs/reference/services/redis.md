@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: cart-session-redis
-        environment: prod
         service: redis
         billing: monthly
         options:
@@ -69,6 +68,7 @@ Top-level card fields: `id` (required), `service: redis`, `region`, `billing` (`
 | `options.cpu_storage` | `string` | Catalog / Enum | **CPU | Memory**. Maps to portal control `calculator_redis_version_cpu_storage`. |
 | `options.spec` | `string` | Catalog / Enum | **Specification**. Maps to portal control `calculator_redis_version_spec`. |
 | `options.instances` | `number / unit` | `1..100 instance` (step 1) | **Quantity**. Maps to portal control `calculator_redis_quantity_Stepper_0`. |
+| `options.bandwidth_mbit` | `any` | Builder-validated | Builder option `bandwidth_mbit`. |
 
 ---
 

@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: payment-event-kafka
-        environment: prod
         service: kafka
         billing: ondemand
         options:

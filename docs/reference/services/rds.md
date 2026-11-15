@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: order-primary-rds
-        environment: prod
         service: rds
         billing: yearly
         needs:

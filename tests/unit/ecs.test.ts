@@ -29,3 +29,27 @@ test("ECS RI uses the last catalog plan for each origin type", async () => {
   const card = await buildEcs({ service: "ecs", region: "r", billing: "ri", quantity: 1, periods: 1, hours: 730, flavor: "c7", image: "AlmaLinux", system_disk: ["GPSSD", 40], bandwidth_type: "19_bgp", ri_time: "1_3" }, context);
   expect(card.selectedProduct).toMatchObject({ perAmount: 20, amount: 240 });
 });
+
+test("ECS maps Windows and .byol via BYOL while rejecting paid .win", async () => {
+  const planList = [{ billingMode: "MONTHLY", productId: "p" }];
+  const context = {
+    productInfo: async () => ({
+      product: {
+        ec2_vm: [{ resourceSpecCode: "c7.linux", cloudServiceType: "c", resourceType: "vm", spec: "c7", arch: "x", vmType: "v", cpu: "2", mem: "4", generation: "g", planList }],
+        "ec2_vm.image.special": [{ id: "u", __platform: "Ubuntu", name: "Ubuntu 22.04 server 64bit", type: ["c7"] }],
+        ebs_volume: [{ resourceSpecCode: "GPSSD", cloudServiceType: "c", resourceType: "disk", type: "ssd", planList }],
+      },
+    }),
+    rate: async (body: Record<string, unknown>) => ({
+      productRatingResult: (body.productInfos as Array<{ id: string }>).map(({ id }) => ({ id, amount: 1, originalAmount: 1 })),
+    }),
+  };
+  const byol = await buildEcs({ service: "ecs", region: "r", billing: "monthly", quantity: 1, periods: 1, hours: 730, flavor: "c7.byol", image: "Windows Server 2022", system_disk: ["GPSSD", 40], bandwidth_type: "19_bgp", ri_time: "1_3" }, context);
+  const products = byol.selectedProduct.productAllInfos as Array<Record<string, unknown>>;
+  expect(products[0]).toMatchObject({ resourceSpecCode: "c7.linux" });
+  expect(products[1]).toMatchObject({ name: "Ubuntu 22.04 server 64bit" });
+
+  await expect(
+    buildEcs({ service: "ecs", region: "r", billing: "monthly", quantity: 1, periods: 1, hours: 730, flavor: "c7.win", image: "Windows Server 2022", system_disk: ["GPSSD", 40], bandwidth_type: "19_bgp", ri_time: "1_3" }, context),
+  ).rejects.toThrow("Paid Windows (.win) is not supported on ECS");
+});

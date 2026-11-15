@@ -24,3 +24,21 @@ test("RDS without storage_spec picks the engine's Cloud SSD volume, else its com
   expect(common.rewriteValue).toMatchObject({ template_RENDER: { calculator_rdsvolume_stepper: { type: "rds.mysql.volume.common" } } });
   await expect(buildRds(input, make(["rds.pg.volume.common"]))).rejects.toThrow("No default volume for engine 'mysql'");
 });
+
+test("RDS supports volume_type as storage_spec alias", async () => {
+  const planList = [{ billingMode: "ONDEMAND", productId: "p", amount: 1 }];
+  const context = {
+    productInfo: async () => ({
+      product: {
+        "rds_rds.vm": [{ resourceSpecCode: "vm", cloudServiceType: "c", resourceType: "vm", cpu: "4", mem: "8", planList }],
+        "rds_rds.volume": [{ resourceSpecCode: "disk", cloudServiceType: "c", resourceType: "disk", type: "SSD", planList }],
+      },
+    }),
+    rate: async (body: Record<string, unknown>) => ({
+      productRatingResult: (body.productInfos as Array<{ id: string }>).map(({ id }) => ({ id, amount: 1, originalAmount: 1 })),
+    }),
+  };
+  const card = await buildRds({ service: "rds", region: "r", billing: "ondemand", quantity: 1, periods: 1, hours: 730, flavor: "vm", volume_type: "disk", storage_gb: 40 }, context);
+  expect(card.selectedProduct).toMatchObject({ amount: 2 });
+  expect(card.rewriteValue).toMatchObject({ template_RENDER: { calculator_rdsvolume_stepper: { type: "SSD", UNSET_Stepper_0: { measureValue: 40 } } } });
+});

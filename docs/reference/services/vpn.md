@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: clinic-site-vpn
-        environment: prod
         service: vpn
         billing: monthly
         options:

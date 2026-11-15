@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: merchant-ledger-taurusdb
-        environment: prod
         service: taurusdb
         billing: monthly
         needs:

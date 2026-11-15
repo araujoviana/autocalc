@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: storage-disaster-recovery-sdrs
-        environment: dr
         service: sdrs
         billing: ondemand
         options:

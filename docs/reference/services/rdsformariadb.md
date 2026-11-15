@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: legacy-billing-mariadb
-        environment: prod
         service: rdsformariadb
         billing: monthly
         needs:

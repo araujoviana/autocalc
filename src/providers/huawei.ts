@@ -40,10 +40,16 @@ export class HuaweiProvider implements Provider {
     const ri = req.billing === "ri" && req.service.toLowerCase() === "ecs";
     if (!BILLING.includes(req.billing) && !ri) throw invalid(`Billing '${req.billing}' is not supported here.`, "billing", BILLING);
     await this.source.checkMode(req.service, req.region, ri ? "monthly" : req.billing);
-    // an ECS flavor is sold once per OS (.linux, .win, .byol); the image the quote asks for picks one
-    // a spec that names its own OS (t7.large.05.byol) wins over the image
-    const named = /\.(linux|win|byol)$/.exec(req.spec ?? "")?.[0];
-    const osSuffix = req.service === "ecs" ? (named ?? (String(req.options.image ?? "").toLowerCase().startsWith("windows") ? ".win" : ".linux")) : null;
+    // an ECS flavor is sold as .linux or .byol (paid Windows .win is not supported on ECS; Windows is always BYOL)
+    // a spec that names its own OS (.linux or .byol) wins over the image
+    if (req.service === "ecs" && /\.win$/i.test(req.spec ?? "")) {
+      throw invalid("Paid Windows (.win) is not supported on ECS; Windows on ECS is always BYOL.", "spec", [".linux", ".byol"]);
+    }
+    const named = /\.(linux|byol)$/.exec(req.spec ?? "")?.[0];
+    const imgLower = String(req.options.image ?? req.options.os ?? "").toLowerCase();
+    const osSuffix = req.service === "ecs"
+      ? (named ?? (imgLower.startsWith("windows") || imgLower.includes("byol") ? ".byol" : ".linux"))
+      : null;
     const out: Candidate[] = [], seen = new Set<string>();
     for (const sku of await this.source.skus(req.service, req.region)) {
       if (sku.offPage) continue;

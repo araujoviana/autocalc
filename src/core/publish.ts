@@ -8,7 +8,7 @@ import { CalculatorError } from "./errors.ts";
 import { progress } from "./progress.ts";
 import { invalid } from "./quote/model.ts";
 import { CardInput } from "./schemas.ts";
-import { buildRecipe, RECIPES } from "./services/forms.ts";
+import { buildLtsForm, buildRecipe, RECIPES } from "./services/forms.ts";
 import { warnings as frontendWarnings } from "./frontend.ts";
 import { modesOf, RECIPE_SPEC_FIELDS, SINGLE_QUANTITY, SPEC_ARG, specOption, VERIFIED } from "./services/publication.ts";
 export { frontendWarnings };
@@ -74,15 +74,23 @@ export async function publishQuoteTool(ctx: ActionContext, input: { draft_id: st
       const service = r.service.toLowerCase(), modes = modesOf(service);
       if (!modes.includes(r.billing)) throw invalid(`${r.service} does not support '${r.billing}'.`, "billing", modes);
       if (r.quantity !== 1 && SINGLE_QUANTITY.has(service)) throw invalid(`${r.service} cannot express quantity on its form.`, "quantity", [1]);
-      const specArg = SPEC_ARG[service], chosen = specArg ? { [specArg]: specOption(service, spec.get(r.id)!) } : {};
+      const chosenSpec = spec.get(r.id)!;
+      const specArg = SPEC_ARG[service], chosen = specArg ? { [specArg]: specOption(service, chosenSpec) } : {};
+      if (service === "nat" && chosenSpec.startsWith("privatenat_") && !("nat_type" in r.options)) chosen.nat_type = "private";
       const duplicate = Object.keys(r.options).filter(key => key in chosen || ["region", "billing", "quantity"].includes(key)).sort();
       if (duplicate.length) throw invalid("Options duplicate requirement fields.", duplicate[0]);
-      if (service in RECIPES) {
-        const mapped = await specOptions(ctx, service, r.region, spec.get(r.id)!);
+      const useBuilder = service === "redis" && Number(r.options.bandwidth_mbit ?? 0) > 0;
+      if (service === "lts") {
+        const mapped = await specOptions(ctx, service, r.region, chosenSpec);
+        buildLtsForm({ region: r.region, billing: r.billing, quantity: r.quantity, ...mapped, ...r.options });
+        return { service, region: r.region, billing: r.billing, quantity: r.quantity, ...mapped, ...r.options } as Dict;
+      }
+      if (service in RECIPES && !useBuilder) {
+        const mapped = await specOptions(ctx, service, r.region, chosenSpec);
         buildRecipe(service, { region: r.region, billing: r.billing, quantity: r.quantity, ...mapped, ...r.options });
         return { service, region: r.region, billing: r.billing, quantity: r.quantity, ...mapped, ...r.options } as Dict;
       }
-      const parsed = CardInput.safeParse({ service, region: r.region, billing: r.billing, ...(r.quantity === 1 ? {} : { quantity: r.quantity }), ...chosen, ...r.options });
+      const parsed = CardInput.safeParse({ service, region: r.region, billing: r.billing, ...(r.quantity === 1 ? {} : { quantity: r.quantity }), ...(service === "redis" ? { spec: chosenSpec } : chosen), ...r.options });
       if (!parsed.success) throw invalid(`Invalid ${r.service} builder options: ${parsed.error.issues.map(issue => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`, "options");
       return parsed.data as Dict;
     }));

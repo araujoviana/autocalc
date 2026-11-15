@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: rsfn-direct-connect
-        environment: prod
         service: dline
         billing: monthly
         options:
@@ -45,8 +44,7 @@
         service: dline
         region: sa-brazil-1
         billing: monthly
-        options:
-          port: 1ge
+        spec: 1ge
     ```
 
 ---

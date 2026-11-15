@@ -36,8 +36,7 @@ controls:
   values: catalog
   after:
   - global_REGIONINFO_chargeMode
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: share_type
 - id: calculator_eip_radio_type_eipSpec
   kind: base-radio-group
   title: Routing Type

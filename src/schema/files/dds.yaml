@@ -54,8 +54,7 @@ controls:
   values: catalog
   after:
   - calculator_dds_versionType_radio_flavorType
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: mongos_spec
 - id: calculator_dds_colony_mongos_Stepper_0
   kind: base-stepper
   title: dds mongos Quantity
@@ -69,8 +68,7 @@ controls:
     unit: dataInfo_22_
   after:
   - calculator_dds_colony_mongos_spec
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: mongos
 - id: calculator_dds_colony_shard_spec
   kind: base-select
   title: shard Class
@@ -125,8 +123,7 @@ controls:
   values: catalog
   after:
   - calculator_dds_colony_shard_volume_Stepper_0
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: config_spec
 - id: calculator_dds_colony_config_stepper_3_ioType
   kind: base-select
   title: config Storage Space
@@ -149,8 +146,7 @@ controls:
     default: 20.0
   after:
   - calculator_dds_colony_config_stepper_3_ioType
-  unsupported: true
-  note: not in the recipe; the page default is kept
+  option: config_storage_gb
 - id: global_PERIODTIME_UNSET_PeriodTime
   kind: base-radio-group
   title: Required Duration

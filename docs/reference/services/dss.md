@@ -27,7 +27,6 @@
       billing: yearly
     resources:
       - id: dedicated-san-dss
-        environment: prod
         service: dss
         billing: monthly
         options:

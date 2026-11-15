@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: payment-signing-hsm
-        environment: prod
         service: dew
         billing: ondemand
         options:

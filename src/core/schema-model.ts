@@ -185,12 +185,20 @@ export function coverage(schema: ServiceSchema) {
   const unsupported = schema.controls.filter(c => c.unsupported).map(c => c.id);
   const unmapped = schema.controls.filter(c => !c.option && !c.unsupported).map(c => c.id);
   const total = mapped.length + unmapped.length;
+  const totalControls = schema.controls.length;
+  const serviceControls = schema.controls.filter(c => !c.id.startsWith("global_"));
+  const serviceSupported = serviceControls.filter(c => Boolean(c.option && !c.unsupported)).length;
   return {
     service: schema.service,
     mapped,
     unmapped,
     unsupported,
     mapped_percent: total ? Math.round((100 * mapped.length) / total) : 100,
+    total_controls: totalControls,
+    supported_percent: totalControls ? Math.round((100 * mapped.length) / totalControls) : 100,
+    service_controls_total: serviceControls.length,
+    service_controls_supported: serviceSupported,
+    service_controls_supported_percent: serviceControls.length ? Math.round((100 * serviceSupported) / serviceControls.length) : 100,
   };
 }
 

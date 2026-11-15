@@ -144,6 +144,11 @@ test("coverage counts mapped, unmapped, and unsupported", () => {
   expect(c.mapped).toEqual(["global_REGIONINFO_region"]);
   expect(c.unsupported).toEqual([s.controls[1]!.id]);
   expect(c.mapped_percent).toBe(Math.round(100 / 18));
+  expect(c.total_controls).toBe(19);
+  expect(c.supported_percent).toBe(Math.round(100 / 19));
+  expect(c.service_controls_total).toBe(14);
+  expect(c.service_controls_supported).toBe(0);
+  expect(c.service_controls_supported_percent).toBe(0);
 });
 
 test("diff reports added, removed, changed and ignores notes", () => {

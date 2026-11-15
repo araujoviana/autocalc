@@ -21,7 +21,7 @@ import { DraftStore } from "./quote/store.ts";
 import { checkAvailability } from "./availability.ts";
 import { mkdir } from "node:fs/promises";
 import { inFormOnlyMode } from "./cards.ts";
-import { buildRecipe, RECIPES } from "./services/forms.ts";
+import { buildLtsForm, buildRecipe, RECIPES } from "./services/forms.ts";
 import { buildCard as buildServiceCard } from "./services/index.ts";
 import { encodeCard } from "./page/encode.ts";
 import { editCheck } from "./page/edit.ts";
@@ -46,9 +46,14 @@ export function createCore(options: { reader?: ActionContext["reader"]; catalogR
   const rating: ActionContext["rating"] = options.rating ?? (body => inquiry(value => transport!.post(RATE, value), body));
   const reader = options.reader ?? transport!;
   const publish: PublishPorts = {
-    form: async input => String(input.service) in RECIPES
-      ? buildRecipe(String(input.service), input as never).rewriteValue
-      : (await inFormOnlyMode(() => buildServiceCard(input as never, { productInfo: (service, region) => catalog.productInfo(service, region), rate: async () => { throw new CalculatorError("AUTOCALC", "A form-only build must not rate."); } }))).rewriteValue as Record<string, unknown>,
+    form: async input => {
+      const svc = String(input.service);
+      if (svc === "lts") return buildLtsForm(input as never);
+      if (svc in RECIPES && !(svc === "redis" && Number((input as Record<string, unknown>).bandwidth_mbit ?? 0) > 0)) {
+        return buildRecipe(svc, input as never).rewriteValue;
+      }
+      return (await inFormOnlyMode(() => buildServiceCard(input as never, { productInfo: (service, region) => catalog.productInfo(service, region), rate: async () => { throw new CalculatorError("AUTOCALC", "A form-only build must not rate."); } }))).rewriteValue as Record<string, unknown>;
+    },
     encode: (service, rewriteValue) => encodeCard(browser, service, rewriteValue),
     publish: (name, cards, publishOptions) => publishChecked(name, cards, { ...publishOptions, lists, check: (listId, expected) => verify(listId, { reader, rate: rating, edit: id => editCheck(reader, browser, id) }, expected) }),
     liveVersion: () => liveVersion(),

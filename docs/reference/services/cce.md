@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: game-tick-cce-cluster
-        environment: latam_south
         service: cce
         billing: ondemand
         options:

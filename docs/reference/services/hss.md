@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: compliance-host-security-hss
-        environment: prod
         service: hss
         billing: monthly
         quantity: 4

@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: dicom-hot-share-sfs
-        environment: prod
         service: sfs
         billing: ondemand
         options:

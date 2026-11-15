@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: hospital-vault-cbr
-        environment: prod
         service: cbr
         billing: monthly
         options:
@@ -47,8 +46,8 @@
         service: cbr
         region: sa-brazil-1
         billing: yearly
+        spec: vault.backup.server.normal
         options:
-          vault_spec: vault.backup.server.normal
           size_gb: 1000
     ```
 

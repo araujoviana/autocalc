@@ -27,7 +27,6 @@
       billing: ondemand
     resources:
       - id: bi-query-cache-memcached
-        environment: analytics
         service: memcached
         billing: ondemand
         options:

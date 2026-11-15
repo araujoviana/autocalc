@@ -27,7 +27,6 @@
       billing: monthly
     resources:
       - id: db-replication-drs
-        environment: prod
         service: drs
         billing: ondemand
         options:

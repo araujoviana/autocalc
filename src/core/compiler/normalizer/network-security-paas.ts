@@ -1,4 +1,5 @@
 /** Networking, security, observability, serverless, and AI token service card normalization rules. */
+import { CalculatorError } from "../../errors.ts";
 import { parseCapacity, parseDuration } from "../units.ts";
 import {
   type CardNormalizeState,
@@ -47,12 +48,14 @@ export function normalizeNetworkSecurityPaasService(state: CardNormalizeState): 
 
     case "nat": {
       state.quantity = 1;
-      let natSize = String(state.spec ?? rawOpts.size ?? rawOpts.tier ?? rawNeeds.size ?? "small").toLowerCase().replace(/^natgateway_/, "");
-      if (["medium", "mid", "middle", "m"].includes(natSize)) natSize = "middle";
+      const isPrivate = rawOpts.nat_type === "private" || String(rawOpts.type ?? "").toLowerCase() === "private" || String(state.spec ?? "").startsWith("privatenat_") || String(rawOpts.size ?? "").startsWith("privatenat_");
+      let natSize = String(state.spec ?? rawOpts.size ?? rawOpts.tier ?? rawNeeds.size ?? "small").toLowerCase().replace(/^(natgateway_|privatenat_)/, "");
+      if (["medium", "mid", "middle", "m"].includes(natSize)) natSize = isPrivate ? "medium" : "middle";
       else if (["large", "l"].includes(natSize)) natSize = "large";
       else if (["xlarge", "xl", "extra-large"].includes(natSize)) natSize = "xlarge";
       else natSize = "small";
-      state.spec = `natgateway_${natSize}`;
+      if (isPrivate) options.nat_type = "private";
+      state.spec = isPrivate ? `privatenat_${natSize}` : `natgateway_${natSize}`;
       state.needs = undefined;
       return true;
     }
@@ -63,6 +66,10 @@ export function normalizeNetworkSecurityPaasService(state: CardNormalizeState): 
       const edRaw = String(state.spec ?? rawOpts.edition ?? rawNeeds.edition ?? "BASIC").toUpperCase();
       const ed = edRaw === "PRO" ? "PROFESSIONAL" : edRaw;
       state.spec = ["BASIC", "PROFESSIONAL", "ENTERPRISE", "PLATINUM"].includes(ed) ? ed : "BASIC";
+      if (rawOpts.bandwidth_mbps !== undefined || rawOpts.bandwidth !== undefined) {
+        const bw = toMbps(rawOpts.bandwidth_mbps ?? rawOpts.bandwidth, `${r.id}.bandwidth`);
+        if (bw !== undefined) options.bandwidth_mbps = Math.min(2000, Math.max(0, Math.round(bw)));
+      }
       state.needs = undefined;
       return true;
     }
@@ -70,7 +77,11 @@ export function normalizeNetworkSecurityPaasService(state: CardNormalizeState): 
     case "apm": {
       state.quantity = 1;
       state.billing = "ondemand";
-      state.spec = String(state.spec ?? rawOpts.spec ?? "apm2.instance.normal");
+      const validPkgDays = new Set(["150", "1200", "9600", "36500", "109500"]);
+      const pkg = rawOpts.probe_days !== undefined ? String(Math.round(Number(rawOpts.probe_days))) : "";
+      state.spec = String(state.spec ?? rawOpts.spec ?? (validPkgDays.has(pkg) ? `apm.pkg.enterprise.v2.${pkg}` : "apm2.instance.normal"));
+      const probes = rawOpts.probes ?? rawOpts.agents ?? rawOpts.instances;
+      if (probes !== undefined) options.probes = Math.max(1, Math.round(Number(probes)));
       state.needs = undefined;
       return true;
     }
@@ -168,8 +179,12 @@ export function normalizeNetworkSecurityPaasService(state: CardNormalizeState): 
     }
 
     case "eip": {
+      if (rawOpts.ip_reservation === false) {
+        throw new CalculatorError("VALIDATION", "The calculator always includes the public IP line; ip_reservation cannot be false");
+      }
       const isTraffic = rawOpts.billed_by === "traffic" || ((rawOpts.traffic_gb !== undefined || rawOpts.traffic !== undefined) && rawOpts.bandwidth_mbps === undefined && rawOpts.bandwidth === undefined);
       if (isTraffic) {
+        options.share_type = "dedicated";
         options.billed_by = "traffic";
         state.billing = "ondemand";
         state.spec = "12_bgp";
@@ -177,15 +192,15 @@ export function normalizeNetworkSecurityPaasService(state: CardNormalizeState): 
         options.traffic_gb = trafficGb !== undefined ? Math.max(1, Math.round(trafficGb)) : 1;
       } else {
         options.billed_by = "bandwidth";
-        const shareType = String(rawOpts.share_type ?? rawOpts.shareType ?? (state.spec === "19_share" ? "shared" : "dedicated")).toLowerCase();
-        options.share_type = shareType === "shared" ? "shared" : "dedicated";
-        state.spec = options.share_type === "shared" ? "19_share" : "19_bgp";
+        const shareRaw = String(rawOpts.share_type ?? rawOpts.shareType ?? "").toLowerCase();
+        const isShared = shareRaw === "shared" || shareRaw === "19_share" || shareRaw === "datainfo_4_" || state.spec === "19_share";
+        options.share_type = isShared ? "shared" : "dedicated";
+        state.spec = isShared ? "19_share" : "19_bgp";
         const bw = toMbps(rawOpts.bandwidth_mbps ?? rawOpts.bandwidth_mbit ?? rawOpts.bandwidth, `${r.id}.bandwidth`);
-        options.bandwidth_mbps = bw !== undefined && bw > 0 ? Math.max(1, Math.round(bw)) : 1;
+        options.bandwidth_mbps = bw !== undefined && bw > 0 ? Math.max(isShared ? 5 : 1, Math.round(bw)) : (isShared ? 5 : 1);
       }
       const ipQty = Number(rawOpts.count ?? rawOpts.ip_quantity ?? rawOpts.eip_count ?? 1);
       if (ipQty >= 1) options.ip_quantity = Math.min(99, Math.round(ipQty));
-      if (rawOpts.ip_reservation !== undefined) options.ip_reservation = Boolean(rawOpts.ip_reservation);
       state.quantity = 1;
       state.needs = undefined;
       return true;
@@ -193,7 +208,25 @@ export function normalizeNetworkSecurityPaasService(state: CardNormalizeState): 
 
     case "vpn": {
       state.quantity = 1;
-      state.spec = "19_bgp";
+      state.spec = state.spec ?? "19_bgp";
+      if (rawOpts.mode !== undefined) {
+        const m = String(rawOpts.mode).trim().toLowerCase();
+        options.mode = ["p2c", "point-to-cloud", "point_to_cloud", "datainfo_21_"].includes(m)
+          ? "dataInfo_21_"
+          : ["s2s", "site-to-site", "site_to_site", "datainfo_1_"].includes(m)
+            ? "dataInfo_1_"
+            : String(rawOpts.mode);
+      }
+      if (rawOpts.network_type !== undefined) {
+        const nt = String(rawOpts.network_type).trim().toLowerCase();
+        options.network_type = ["private", "datainfo_15_"].includes(nt)
+          ? "dataInfo_15_"
+          : ["public", "datainfo_7_"].includes(nt)
+            ? "dataInfo_7_"
+            : String(rawOpts.network_type);
+      }
+      if (rawOpts.spec !== undefined) options.spec = String(rawOpts.spec);
+      if (rawOpts.private_spec !== undefined) options.private_spec = String(rawOpts.private_spec);
       const bw = toMbps(rawOpts.bandwidth ?? rawOpts.bandwidth_mbps ?? rawOpts.shared_bandwidth_mbps, `${r.id}.bandwidth`);
       const eip1 = toMbps(rawOpts.eip1_mbps ?? rawOpts.eip1_bandwidth_mbps, `${r.id}.eip1_mbps`) ?? bw;
       const eip2 = toMbps(rawOpts.eip2_mbps ?? rawOpts.eip2_bandwidth_mbps, `${r.id}.eip2_mbps`) ?? bw;
@@ -201,6 +234,9 @@ export function normalizeNetworkSecurityPaasService(state: CardNormalizeState): 
       if (eip2 !== undefined) options.eip2_mbps = Math.min(300, Math.max(1, Math.round(eip2)));
       const conns = rawOpts.connections ?? rawOpts.tunnels ?? rawOpts.connection_groups;
       if (conns !== undefined) options.connection_groups = Math.max(1, Math.round(Number(conns)));
+      if (rawOpts.p2c_eip_mbps !== undefined) options.p2c_eip_mbps = Math.min(300, Math.max(1, Math.round(Number(rawOpts.p2c_eip_mbps))));
+      if (rawOpts.p2c_connections !== undefined) options.p2c_connections = Math.max(1, Math.round(Number(rawOpts.p2c_connections)));
+      if (rawOpts.p2c_spec !== undefined) options.p2c_spec = String(rawOpts.p2c_spec);
       state.needs = undefined;
       return true;
     }
@@ -267,10 +303,10 @@ export function normalizeNetworkSecurityPaasService(state: CardNormalizeState): 
       }
       if (rawOpts.memory_mb !== undefined) {
         const mb = typeof rawOpts.memory_mb === "number" ? rawOpts.memory_mb : Math.round(parseCapacity(rawOpts.memory_mb, `${r.id}.memory_mb`).inGB * 1024);
-        options.memory_mb = Math.min(1024, Math.max(128, Math.round(mb)));
+        options.memory_mb = Math.min(10240, Math.max(128, Math.round(mb)));
       } else if (rawOpts.memory !== undefined || memory_gb !== undefined) {
         const memGb = toGB(rawOpts.memory ?? memory_gb, `${r.id}.memory`) ?? 0.5;
-        options.memory_mb = Math.min(1024, Math.max(128, Math.round(memGb * 1024)));
+        options.memory_mb = Math.min(10240, Math.max(128, Math.round(memGb * 1024)));
       } else {
         options.memory_mb = 512;
       }
@@ -299,7 +335,9 @@ export function normalizeNetworkSecurityPaasService(state: CardNormalizeState): 
                 ? Math.max(1, Math.round(((toTrafficGB(rawOpts.flow ?? rawOpts.traffic ?? rawOpts.capacity, `${r.id}.flow`)) ?? 30) / 30))
                 : 5;
       options.flow_gb_per_day = Math.max(1, Math.round(flowDay));
-      if (rawOpts.retention_days !== undefined) options.retention_days = Math.min(365, Math.max(1, Math.round(Number(rawOpts.retention_days))));
+      if (rawOpts.retention_days !== undefined || rawOpts.total_retention_days !== undefined) {
+        options.retention_days = Math.min(365, Math.max(1, Math.round(Number(rawOpts.retention_days ?? rawOpts.total_retention_days))));
+      }
       const idxPct = rawOpts.index_percent ?? rawOpts.index_ratio;
       if (idxPct !== undefined) {
         const num = typeof idxPct === "string" ? parseFloat(idxPct.replace("%", "")) : Number(idxPct);
@@ -309,7 +347,6 @@ export function normalizeNetworkSecurityPaasService(state: CardNormalizeState): 
         options.cold_enabled = Boolean(rawOpts.cold_enabled ?? rawOpts.cold_storage);
       }
       if (rawOpts.hot_retention_days !== undefined) options.hot_retention_days = Math.min(365, Math.max(1, Math.round(Number(rawOpts.hot_retention_days))));
-      if (rawOpts.total_retention_days !== undefined) options.total_retention_days = Math.min(365, Math.max(1, Math.round(Number(rawOpts.total_retention_days))));
       if (rawOpts.transfer_basic_gb_per_day !== undefined) options.transfer_basic_gb_per_day = Math.max(0, Number(rawOpts.transfer_basic_gb_per_day));
       if (rawOpts.transfer_senior_gb_per_day !== undefined) options.transfer_senior_gb_per_day = Math.max(0, Number(rawOpts.transfer_senior_gb_per_day));
       if (rawOpts.months !== undefined) options.months = Math.min(60, Math.max(1, Math.round(Number(rawOpts.months))));
@@ -320,7 +357,22 @@ export function normalizeNetworkSecurityPaasService(state: CardNormalizeState): 
     case "maas": {
       state.billing = "ondemand";
       state.quantity = 1;
-      state.spec = state.spec ?? "modelarts.tokens.deepseek.v4.1.flash";
+      const modelMap: Record<string, string> = {
+        "deepseek-v4.1-flash": "modelarts.tokens.deepseek.v4.1.flash",
+        "deepseek-v4-flash": "modelarts.tokens.deepseek.v4.flash",
+        "glm-5.3": "modelarts.tokens.glm.5.3",
+        "glm-5.2": "modelarts.tokens.glm.5.2",
+        "glm-5.1": "modelarts.tokens.glm.5.1",
+        "qwen3-32b": "modelarts.tokens.qwen3-32b",
+      };
+      const modelRaw = rawOpts.model ?? rawOpts.model_name;
+      if (!state.spec) {
+        const key = typeof modelRaw === "string" ? modelRaw.trim().toLowerCase() : "";
+        state.spec = key.startsWith("modelarts.") ? modelRaw : (modelMap[key] ?? "modelarts.tokens.deepseek.v4.1.flash");
+      }
+      for (const field of ["model_series", "model_name", "model_service_type", "reasoning_mode", "billing_mode_type"] as const) {
+        if (rawOpts[field] !== undefined) options[field] = String(rawOpts[field]);
+      }
 
       const inRaw = rawOpts.input_tokens ?? rawOpts.tokens ?? rawOpts.tokens_thousands ?? rawOpts.input_mtokens;
       let inMtokens: number | undefined;

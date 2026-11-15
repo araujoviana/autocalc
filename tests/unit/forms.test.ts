@@ -49,3 +49,25 @@ test.each(CASES)("public request controls are preserved ($service)", item => {
     expect(globalValues(form).global_QUANTITY_Stepper_0).toBe(item.quantity);
   }
 });
+
+test("eip recipe maps share_type dedicated and shared", () => {
+  const shared = buildRecipe("eip", {
+    region: "sa-brazil-1",
+    billing: "ondemand",
+    share_type: "shared",
+    billed_by: "bandwidth",
+    ip_quantity: 1,
+    bandwidth_mbps: 10,
+  }).rewriteValue;
+  expect(formValues(shared.template_RENDER).calculator_eip_radio_type_shareType).toBe("dataInfo_4_");
+
+  const dedicated = buildRecipe("eip", {
+    region: "sa-brazil-1",
+    billing: "ondemand",
+    share_type: "dedicated",
+    billed_by: "traffic",
+    ip_quantity: 1,
+    bandwidth_mbps: 10,
+  }).rewriteValue;
+  expect(formValues(dedicated.template_RENDER).calculator_eip_radio_type_shareType).toBe("dataInfo_3_");
+});
