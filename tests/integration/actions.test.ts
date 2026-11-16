@@ -225,3 +225,17 @@ test("slow sign-in returns waiting and a second call rejoins the same login", as
   expect(await second).toEqual({ logged_in: true });
   expect(opened).toBe(1);
 });
+
+test("list_regions filters by query and convert_currency throws VALIDATION on unknown currency", async () => {
+  const menu = { global: { "sa-brazil-1": "LA-Sao Paulo1", "la-south-2": "LA-Santiago" }, regionsOfSite: { HWC: ["sa-brazil-1", "la-south-2"] }, menuInfos: [] };
+  const core = createCore({ reader: { getUncached: async () => ({}) }, catalogReader: { get: async url => {
+    if (url.includes("exchange")) return { totalSize: 1, data: [{ baseCurrency: "USD", currency: "BRL", rate: 5 }] };
+    return menu;
+  } } });
+  try {
+    expect(await core.invoke("list_regions", { query: "Santiago" })).toEqual({ "la-south-2": "LA-Santiago" });
+    await expect(core.invoke("convert_currency", { amount_usd: 10, currency: "ZZZ" })).rejects.toMatchObject({ code: "VALIDATION", hint: expect.stringContaining("BRL") });
+  } finally {
+    await core.close();
+  }
+});

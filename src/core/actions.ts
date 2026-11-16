@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import type { z } from "zod";
-import { ListReferenceInput, ListRegionsInput, ListServicesInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, CompileQuoteInput, PlanQuoteInput, ApplyQuoteInput, ExportQuotesXlsxInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, DraftIdInput, RecoverDraftInput, PublishQuoteInput } from "./schemas.ts";
+import { ListReferenceInput, ListRegionsInput, ListServicesInput, ListMyPriceListsInput, SearchInput, QuoteInput, ConvertInput, CompareRegionsInput, CompareModesInput, EmptyInput, CompileQuoteInput, PlanQuoteInput, ApplyQuoteInput, ExportQuotesXlsxInput, RenameListInput, DuplicateListInput, LoginInput, DescribeInput, DraftQuoteInput, ReviseQuoteInput, InspectDraftInput, RecoverDraftInput, PublishQuoteInput } from "./schemas.ts";
 import { compileQuote, buildCanonicalQuoteIR } from "./compiler/index.ts";
 import { draftQuoteTool, reviseQuoteTool, listDraftsTool, inspectDraftTool, recoverDraftTool } from "./workflow.ts";
 import { publishQuoteTool } from "./publish.ts";
@@ -8,7 +8,7 @@ import * as quoteFile from "./quote-file.ts";
 import { exportQuotesXlsx } from "./xlsx.ts";
 import { readPriceList, shareDetail } from "./lists.ts";
 import { CalculatorError } from "./errors.ts";
-import { RegionResolver } from "./regions.ts";
+import { RegionResolver, regionLocation } from "./regions.ts";
 import { quote, exchangeRates, convertCurrency } from "./pricing.ts";
 import { buildCard, supportedServices } from "./services/index.ts";
 import { shareLink, vendorServiceCode } from "./endpoints.ts";
@@ -37,17 +37,17 @@ async function runQuote(ctx: ActionContext, input: z.output<typeof QuoteInput>) 
   return quote({ ...input, region }, async item => {
     checkAvailability(menu, item.service, region, input.billing);
     if (item.service.toLowerCase() === "obs" && input.billing === "ondemand") {
-      if (!item.usage_factor) throw new CalculatorError("VALIDATION", "OBS usage_factor is required to identify the billing line");
+      if (!item.usage_factor) throw new CalculatorError("VALIDATION", "OBS usage_factor is required to identify the billing line", "Pass usage_factor (e.g. size, size_3az, download.external, get, put) and usage_value.");
       const catalog = await ctx.catalog.productInfo(item.service, region);
       const classToken = item.storage_class ? { standard: "dataInfo_2_", warm: "dataInfo_3_", cold: "dataInfo_1_" }[item.storage_class] : undefined;
       const candidates = Object.values(catalog.product).flat().filter(product => product.resourceSpecCode === item.spec && (!classToken || product.storageType === classToken) && Array.isArray(product.planList) && product.planList.some(plan => typeof plan === "object" && plan !== null && (plan as Record<string, unknown>).usageFactor === item.usage_factor && (plan as Record<string, unknown>).billingMode === "ONDEMAND"));
-      if (!candidates.length) throw new CalculatorError("SPEC_NOT_FOUND", `No OBS SKU matches ${item.spec} and usage factor ${item.usage_factor}`);
+      if (!candidates.length) throw new CalculatorError("SPEC_NOT_FOUND", `No OBS SKU matches ${item.spec} and usage factor ${item.usage_factor}`, "Call search_skus('obs', region) to list valid OBS SKUs and usage_factor values.");
       if (candidates.length > 1) throw new CalculatorError("VALIDATION", `OBS SKU ${item.spec} and usage factor ${item.usage_factor} are ambiguous`, "Specify storage_class or use a more specific usage factor.");
       const product = candidates[0]!;
       return { cloudServiceType: product.cloudServiceType, resourceType: product.resourceType, description: String(product.productSpecSysDesc ?? ""), usageFactor: item.usage_factor };
     }
     const sku = (await ctx.catalog.skus(item.service, region)).find(product => product.spec === item.spec);
-    if (!sku) throw new CalculatorError("SPEC_NOT_FOUND", `Specification ${item.spec} not found`);
+    if (!sku) throw new CalculatorError("SPEC_NOT_FOUND", `Specification ${item.spec} not found`, `Call search_skus('${item.service}', '${region}') to find valid SKU specs.`);
     if (input.billing === "ondemand" && !sku.prices.ondemand) throw new CalculatorError("MODE_NOT_OFFERED", `On-demand billing is unavailable for ${item.spec}`);
     return { cloudServiceType: sku.cloudServiceType, resourceType: sku.resourceType, description: sku.description, usageFactor: sku.prices.ondemand?.usage_factor };
   }, ctx.rating);
@@ -67,12 +67,34 @@ export function flatSku(sku: { spec: string; description: string; prices: Record
 const logins = new WeakMap<object, Promise<unknown>>();
 export const handlers = {
   read_price_list: handler(ListReferenceInput, (ctx, input) => readPriceList(ctx.reader, input.url_or_id)),
-  list_services: handler(ListServicesInput, async (ctx, input) => (await ctx.catalog.services(input.query)).map(({ service, name, category }) => ({ service, name, category }))),
+  list_services: handler(ListServicesInput, async (ctx, input) => {
+    const catalogRows = await ctx.catalog.services(input.query);
+    if (!input.publishable_only) return catalogRows.map(({ service, name, category }) => ({ service, name, category }));
+    const catalogByCode = new Map((await ctx.catalog.services()).map(item => [item.service.toLowerCase(), item]));
+    const needle = input.query.trim().toLowerCase();
+    return supportedServices()
+      .filter(entry => entry.publication_supported)
+      .map(entry => {
+        const cat = catalogByCode.get(vendorServiceCode(entry.service).toLowerCase()) ?? catalogByCode.get(entry.service.toLowerCase());
+        return { service: entry.service, name: cat?.name ?? entry.description, category: cat?.category ?? "Cloud", modes: entry.modes, options: entry.options };
+      })
+      .filter(row => !needle || `${row.service} ${row.name} ${row.category}`.toLowerCase().includes(needle));
+  }),
   list_regions: handler(ListRegionsInput, async (ctx, input) => {
     const names = await ctx.catalog.regions();
-    if (!input.service) return names;
-    const service = (await ctx.catalog.services()).find(item => item.service === vendorServiceCode(input.service));
-    return Object.fromEntries((service?.regions ?? []).map(id => [id, names[id] ?? id]));
+    let base = names;
+    if (input.service) {
+      const service = (await ctx.catalog.services()).find(item => item.service === vendorServiceCode(input.service));
+      base = Object.fromEntries((service?.regions ?? []).map(id => [id, names[id] ?? id]));
+    }
+    const q = input.query.trim().toLowerCase();
+    if (!q) return base;
+    const resolved = new Set(new RegionResolver(base).candidates(input.query));
+    return Object.fromEntries(
+      Object.entries(base).filter(([id, label]) =>
+        resolved.has(id) || id.toLowerCase().includes(q) || String(label).toLowerCase().includes(q) || regionLocation(id, String(label)).toLowerCase().includes(q),
+      ),
+    );
   }),
   search_skus: handler(SearchInput, async (ctx, input) => {
     const names = await ctx.catalog.regions();
@@ -83,29 +105,48 @@ export const handlers = {
     const menu = await ctx.catalog.menu();
     const region = new RegionResolver(menu.global).resolve(input.region);
     const node = menu.menuInfos?.flatMap(category => category.subCategoryLists).find(service => service.urlPath === vendorServiceCode(input.service));
-    if (!node) throw new CalculatorError("SERVICE_NOT_SOLD", `Unknown service ${input.service}`);
+    if (!node) throw new CalculatorError("SERVICE_NOT_SOLD", `Unknown service ${input.service}`, "Call list_services to see valid calculator service codes.");
     const onlineMap = (node.regionOnline?.regionList?.length ? node.regionOnline : node.regionBeta) as Record<string, unknown> | undefined ?? {};
     const entry = onlineMap[region];
     const modes = entry && typeof entry === "object" && Array.isArray((entry as Record<string, unknown>).common) ? (entry as { common: unknown[] }).common : [];
     const catalog = await ctx.catalog.productInfo(input.service, region);
-    const groups = Object.fromEntries(Object.entries(catalog.product).map(([name, items]) => [name, { count: items.length, sample_specs: items.map(item => item.resourceSpecCode).filter(Boolean).slice(0, 8) }]));
+    const sampleLimit = input.group ? 15 : 3;
+    const productEntries = input.group && Object.hasOwn(catalog.product, input.group)
+      ? [[input.group, catalog.product[input.group]!] as const]
+      : Object.entries(catalog.product);
+    const groups = Object.fromEntries(productEntries.map(([name, items]) => [name, { count: items.length, sample_specs: items.map(item => item.resourceSpecCode).filter(Boolean).slice(0, sampleLimit) }]));
     const regionsList = ((onlineMap.regionList as string[] | undefined) ?? []);
     return { service: input.service, region, modes_in_region: modes, sold_in_region: regionsList.includes(region), groups, builders: supportedServices().filter(item => vendorServiceCode(item.service) === vendorServiceCode(input.service)) };
   }),
   quote: handler(QuoteInput, runQuote),
-  convert_currency: handler(ConvertInput, async (ctx, input) => convertCurrency(input.amount_usd, input.currency, await exchangeRates(page => ctx.catalog.exchangePage(page)))),
+  convert_currency: handler(ConvertInput, async (ctx, input) => {
+    const res = convertCurrency(input.amount_usd, input.currency, await exchangeRates(page => ctx.catalog.exchangePage(page)));
+    if ("error" in res) {
+      const avail = res.available ?? [];
+      throw new CalculatorError(
+        "VALIDATION",
+        `No exchange rate for ${input.currency.toUpperCase()}`,
+        `Available currencies include: ${avail.slice(0, 12).join(", ")}.`,
+        { available: avail },
+      );
+    }
+    return res;
+  }),
   compare_regions: handler(CompareRegionsInput, async (ctx, input) => {
     const rows = [];
     for (const region of input.regions) {
       ensureNotCancelled(ctx);
       try { const result = await runQuote(ctx, { region, items: input.items, billing: input.billing, periods: 1, hours: 730 }); rows.push({ region: result.region, total_usd: result.total, currency: result.currency }); }
-      catch (error) { if (!(error instanceof CalculatorError) || error.code === "CANCELLED") throw error; rows.push({ region, error: error.code, message: error.message, hint: error.hint ?? null }); }
+      catch (error) {
+        if (!(error instanceof CalculatorError) || error.code === "CANCELLED") throw error;
+        rows.push({ region, error: error.code, message: error.message, ...(error.hint ? { hint: error.hint } : {}) });
+      }
     }
     return { billing: input.billing, regions: rows };
   }),
   compare_modes: handler(CompareModesInput, async (ctx, input) => {
     const region = new RegionResolver(await ctx.catalog.regions()).resolve(input.region);
-    const rows: Array<{ mode: string; total_usd?: number; monthly_equivalent_usd?: number; saving_vs_ondemand_pct?: number; total?: number; monthly_equivalent?: number; error?: string }> = [];
+    const rows: Array<{ mode: string; total_usd?: number; monthly_equivalent_usd?: number; saving_vs_ondemand_pct?: number; total?: number; monthly_equivalent?: number; error?: string; message?: string; hint?: string }> = [];
     let base: number | undefined;
     for (const mode of input.modes.length ? input.modes : ["ondemand", "monthly", "yearly"] as const) {
       ensureNotCancelled(ctx);
@@ -114,7 +155,10 @@ export const handlers = {
         const monthly = mode === "ondemand" ? result.total : result.total / (input.periods * (mode === "yearly" ? 12 : 1));
         rows.push({ mode, total_usd: result.total, monthly_equivalent_usd: roundPython(monthly, 2) });
         if (mode === "ondemand") base = monthly;
-      } catch (error) { if (!(error instanceof CalculatorError) || error.code === "CANCELLED") throw error; rows.push({ mode, error: error.message }); }
+      } catch (error) {
+        if (!(error instanceof CalculatorError) || error.code === "CANCELLED") throw error;
+        rows.push({ mode, error: error.code, message: error.message, ...(error.hint ? { hint: error.hint } : {}) });
+      }
     }
     if (base) for (const row of rows) if (row.monthly_equivalent_usd !== undefined) row.saving_vs_ondemand_pct = roundPython((1 - row.monthly_equivalent_usd / base) * 100, 1);
     const currency = input.currency.toUpperCase(), out: Record<string, unknown> = { region, modes: rows, hours: input.hours, periods: input.periods };
@@ -125,7 +169,25 @@ export const handlers = {
     return { ...out, currency, rate };
   }),
   supported_services: handler(EmptyInput, async () => supportedServices()),
-  list_my_price_lists: handler(EmptyInput, async ctx => (await ctx.lists.lists()).map(raw => { const row = raw && typeof raw === "object" ? raw as Record<string, unknown> : {}; const id = String(row.key ?? ""); return { name: row.name ?? null, id, url: shareLink(id), total: row.totalPrice ?? null, updated: row.updateTime ?? null }; })),
+  list_my_price_lists: handler(ListMyPriceListsInput, async (ctx, input) => {
+    const q = input.query.trim().toLowerCase();
+    const mapped = (await ctx.lists.lists()).map(raw => {
+      const row = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
+      const id = String(row.key ?? "");
+      return {
+        ...(row.name != null ? { name: row.name } : {}),
+        id,
+        url: shareLink(id),
+        ...(row.totalPrice != null ? { total: row.totalPrice } : {}),
+        ...(row.updateTime != null ? { updated: row.updateTime } : {}),
+      };
+    });
+    const filtered = q
+      ? mapped.filter(item => `${String(item.name ?? "")} ${item.id}`.toLowerCase().includes(q))
+      : mapped;
+    filtered.sort((a, b) => Number(b.updated ?? 0) - Number(a.updated ?? 0));
+    return input.limit !== undefined ? filtered.slice(0, input.limit) : filtered;
+  }),
   delete_price_list: handler(ListReferenceInput, async (ctx, input) => { ensureNotCancelled(ctx); await ctx.lists.delete(input.url_or_id); return { deleted: input.url_or_id }; }),
   rename_price_list: handler(RenameListInput, async (ctx, input) => { const detail = await shareDetail(ctx.reader, input.url_or_id); ensureNotCancelled(ctx); await ctx.lists.update(input.url_or_id, { ...detail, name: input.new_name }); return { id: input.url_or_id, name: input.new_name }; }),
   duplicate_price_list: handler(DuplicateListInput, async (ctx, input) => {
@@ -133,7 +195,7 @@ export const handlers = {
     const id = await ctx.lists.copy(input.url_or_id);
     if (input.new_name) try { const detail = await shareDetail(ctx.reader, id); ensureNotCancelled(ctx); await ctx.lists.update(id, { ...detail, name: input.new_name }); }
     catch { throw new CalculatorError("UPSTREAM", "List was copied but could not be renamed", "Find the copied list using its ID before retrying.", { created_id: id }); }
-    return { id, name: input.new_name ?? null, url: shareLink(id) };
+    return { id, ...(input.new_name ? { name: input.new_name } : {}), url: shareLink(id) };
   }),
   draft_quote: handler(DraftQuoteInput, draftQuoteTool),
   revise_quote: handler(ReviseQuoteInput, reviseQuoteTool),
@@ -166,7 +228,7 @@ export const handlers = {
   apply_quote: handler(ApplyQuoteInput, async (ctx, input) => quoteFile.apply(ctx, await quoteFile.load(input.path), input.name || undefined)),
   export_quotes_xlsx: handler(ExportQuotesXlsxInput, exportQuotesXlsx),
   list_drafts: handler(EmptyInput, listDraftsTool),
-  inspect_draft: handler(DraftIdInput, inspectDraftTool),
+  inspect_draft: handler(InspectDraftInput, inspectDraftTool),
   recover_draft: handler(RecoverDraftInput, recoverDraftTool),
   auth_status: handler(EmptyInput, async ctx => ctx.auth.status()),
   auth_login: handler(LoginInput, async (ctx, input) => {

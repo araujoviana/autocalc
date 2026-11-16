@@ -53,8 +53,65 @@ export function pageEncodeFailed(message: string, info: { service: string; step?
   return new CalculatorError("PAGE_ENCODE_FAILED", message, info.hint ?? "Re-run with AUTOCALC_PAGE_HEADED=1 to watch the calculator page.", details);
 }
 
-function isZodError(err: unknown): err is { issues: Array<{ path: (string | number)[]; message: string }> } {
+interface ZodIssueLike {
+  code?: string;
+  path?: ReadonlyArray<PropertyKey>;
+  message?: string;
+  errors?: ReadonlyArray<ReadonlyArray<ZodIssueLike>>;
+}
+
+function isZodError(err: unknown): err is { issues: ZodIssueLike[] } {
   return typeof err === "object" && err !== null && (err as { name?: string }).name === "ZodError" && Array.isArray((err as { issues?: unknown }).issues);
+}
+
+/** Flatten Zod 4 union issues into concise `{ path, message }` entries for LLMs and CLI users. */
+export function formatZodIssues(issues: readonly ZodIssueLike[], max = 5): Array<{ path: string; message: string }> {
+  const flat: Array<{ path: string; message: string }> = [];
+  const seen = new Set<string>();
+  const push = (path: string, message: string) => {
+    const key = `${path}\0${message}`;
+    if (seen.has(key) || flat.length >= max) return;
+    seen.add(key);
+    flat.push({ path, message });
+  };
+  const visit = (issue: ZodIssueLike, prefix: string) => {
+    if (flat.length >= max) return;
+    const rawPath = (issue.path ?? []).map(p => String(p)).join(".");
+    const path = rawPath || prefix;
+    if (issue.code === "invalid_union" && Array.isArray(issue.errors) && issue.errors.length > 0) {
+      const branches = issue.errors.filter(branch => branch.length > 0);
+      // Simple primitive unions (like number | decimal string) share the same path with short messages.
+      const leafMsgs = branches.flat().filter(b => b.code !== "invalid_union" && (!b.path || b.path.length === 0));
+      if (leafMsgs.length === branches.flat().length && leafMsgs.length > 0) {
+        const summary = [...new Set(leafMsgs.map(b => b.message ?? "Invalid value"))].slice(0, 2).join(" or ");
+        push(path, summary);
+        return;
+      }
+      for (const branch of branches) {
+        for (const sub of branch) visit(sub, path);
+        if (flat.length >= max) return;
+      }
+      if (flat.length > 0) return;
+    }
+    push(path, issue.message ?? "Invalid value");
+  };
+  for (const issue of issues) visit(issue, "");
+  return flat;
+}
+
+export function zodValidationError(err: { issues: readonly ZodIssueLike[] }, hint = "Check option names, argument types, and required fields."): CalculatorError {
+  const flat = formatZodIssues(err.issues);
+  const summary = flat
+    .slice(0, 3)
+    .map(issue => (issue.path ? `Invalid '${issue.path}': ${issue.message}` : issue.message))
+    .join("; ");
+  const singleField = flat.length === 1 && flat[0]!.path ? { field: flat[0]!.path } : {};
+  return new CalculatorError(
+    "VALIDATION",
+    summary || "Validation failed",
+    hint,
+    { ...singleField, issues: flat },
+  );
 }
 
 function isSystemError(err: unknown): err is NodeJS.ErrnoException {
@@ -64,17 +121,7 @@ function isSystemError(err: unknown): err is NodeJS.ErrnoException {
 export function normalizeError(err: unknown): CalculatorError {
   if (err instanceof CalculatorError) return err;
 
-  if (isZodError(err)) {
-    const first = err.issues[0];
-    const path = first?.path.length ? first.path.join(".") : undefined;
-    const msg = first ? `${path ? `${path}: ` : ""}${first.message}` : "Validation failed";
-    return new CalculatorError(
-      "VALIDATION",
-      msg,
-      "Check option names, argument types, and required fields.",
-      { issues: err.issues },
-    );
-  }
+  if (isZodError(err)) return zodValidationError(err);
 
   if (isSystemError(err)) {
     const code = err.code;

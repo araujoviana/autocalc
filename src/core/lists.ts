@@ -18,13 +18,28 @@ export async function shareDetail(reader: UncachedReader, reference: string): Pr
   if (!result.success) throw new CalculatorError("UNEXPECTED_RESPONSE", "Invalid shared-list detail");
   return result.data;
 }
+const omitNulls = <T extends Record<string, unknown>>(obj: T): Partial<T> =>
+  Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== null && v !== undefined)) as Partial<T>;
+
 export async function readPriceList(reader: UncachedReader, reference: string) {
   const id = ListReference.parse(reference);
   const data = await shareDetail(reader, id);
-  const items = data.cartListData.map(({ selectedProduct: sp }) => ({ service: sp.serviceCode ?? null, region: sp.region ?? null, mode: sp.chargeModeName ?? null, title: sp._customTitle ?? null, amount: sp.amount ?? null,
-    products: (sp.productAllInfos ?? []).map(p => ({ spec: p.resourceSpecCode ?? null, num: p.productNum ?? null, size: p.resourceSize ?? null, amount: p.inquiryResult?.amount ?? null, ...(p.usageFactor === undefined ? {} : { usageFactor: p.usageFactor, usageValue: p.usageValue ?? null, usageMeasureId: p.usageMeasureId ?? null }) })) }));
+  const items = data.cartListData.map(({ selectedProduct: sp }) => omitNulls({
+    service: sp.serviceCode,
+    region: sp.region,
+    mode: sp.chargeModeName,
+    title: sp._customTitle,
+    amount: sp.amount,
+    products: (sp.productAllInfos ?? []).map(p => omitNulls({
+      spec: p.resourceSpecCode,
+      num: p.productNum,
+      size: p.resourceSize,
+      amount: p.inquiryResult?.amount,
+      ...(p.usageFactor === undefined ? {} : { usageFactor: p.usageFactor, usageValue: p.usageValue, usageMeasureId: p.usageMeasureId }),
+    })),
+  }));
   const total = data.totalPrice !== null && typeof data.totalPrice === "object" && !Array.isArray(data.totalPrice) ? (data.totalPrice as Record<string, unknown>).amount : data.totalPrice;
-  return { id, name: data.name ?? null, items, total: total ?? null };
+  return { id, ...(data.name != null ? { name: data.name } : {}), items, ...(total != null ? { total } : {}) };
 }
 
 type AuthRequest = (method: "GET" | "POST", url: string, body?: Record<string, unknown>) => Promise<{ status: number; body: unknown }>;

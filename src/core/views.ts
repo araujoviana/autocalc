@@ -438,6 +438,7 @@ export function humanView(cmd: string, result: unknown, s?: StreamLike): string 
   if ((cmd === "login" || cmd === "auth-login" || cmd === "auth_login" || cmd === "auth status" || cmd === "auth-status" || cmd === "auth_status") && ("logged_in" in result || "waiting" in result)) return authStatusView(result, s);
   if ((cmd === "draft-quote" || cmd === "draft_quote") && Array.isArray(result.requirements)) return draftView(result, s);
   if ((cmd === "revise-quote" || cmd === "revise_quote") && typeof result.draft_id === "string" && Array.isArray(result.pending)) return reviseView(result, s);
+  if ((cmd === "inspect-draft" || cmd === "inspect_draft") && Array.isArray(result.drafts)) return listDraftsView(result.drafts, s);
   if ((cmd === "inspect-draft" || cmd === "inspect_draft" || cmd === "recover-draft" || cmd === "recover_draft") && (typeof result.id === "string" || typeof result.draft_id === "string")) return inspectDraftView(result, s);
   return null;
 }

@@ -23,14 +23,18 @@ async function view(ctx: ActionContext, draft: Draft) {
 export async function draftQuoteTool(ctx: ActionContext, input: { customer: string; requirements: unknown[] }) {
   if (!Array.isArray(input.requirements) || input.requirements.length === 0) throw invalid("requirements must be a nonempty list.", "requirements");
   const resolver = new RegionResolver(await ctx.catalog.regions());
-  const reqs = input.requirements.map(raw => {
+  const reqs = input.requirements.map((raw, index) => {
     if (raw && typeof raw === "object" && !Array.isArray(raw) && typeof (raw as { region?: unknown }).region === "string" && (raw as { region: string }).region)
       raw = { ...raw, region: resolver.resolve((raw as { region: string }).region) };
-    return requirementFromJSON(raw);
+    try { return requirementFromJSON(raw); }
+    catch (err) {
+      if (err instanceof Error && "code" in err) throw invalid(`Requirement [${index}]: ${err.message}`, "requirements");
+      throw err;
+    }
   });
   for (const r of reqs) {
     const allowed = legalOptions(r.service), unknown = Object.keys(r.options).filter(name => allowed && !allowed.includes(name) && name !== "periods" && name !== "hours").sort(); // periods/hours: the billing term, checked by the builder schema
-    if (unknown.length) throw invalid(`${r.service} has no option '${unknown[0]}'.`, unknown[0], allowed!, "supported_services lists each service's options.");
+    if (unknown.length) throw invalid(`${r.service} has no option '${unknown[0]}'.`, unknown[0], allowed!, `Read autocalc://schema/${r.service} for legal options and ranges.`);
   }
   return view(ctx, await draftQuote(ctx.provider, input.customer, reqs, ctx.drafts));
 }
@@ -41,6 +45,11 @@ export async function reviseQuoteTool(ctx: ActionContext, input: { draft_id: str
 }
 
 export const listDraftsTool = (ctx: ActionContext) => ctx.drafts.list();
-export const inspectDraftTool = (ctx: ActionContext, input: { draft_id: string }) => ctx.drafts.inspect(input.draft_id);
+export async function inspectDraftTool(ctx: ActionContext, input: { draft_id?: string | undefined; limit?: number | undefined }) {
+  if (input.draft_id) return ctx.drafts.inspect(input.draft_id);
+  const all = await ctx.drafts.list();
+  const limit = input.limit ?? 20;
+  return { total: all.length, drafts: all.slice(0, limit) };
+}
 export const recoverDraftTool = (ctx: ActionContext, input: { draft_id: string; confirmed_no_remote_list: boolean; justification: string }) =>
   ctx.drafts.recover(input.draft_id, input.confirmed_no_remote_list, input.justification);

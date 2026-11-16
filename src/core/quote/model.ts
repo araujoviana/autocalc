@@ -43,10 +43,17 @@ export function requirement(input: Partial<Requirement> & Pick<Requirement, "id"
 
 const REQUIREMENT_KEYS = ["id", "service", "region", "billing", "quantity", "needs", "spec", "az", "group", "options"];
 export function requirementFromJSON(d: unknown): Requirement {
-  if (!isObject(d)) throw invalid("Each requirement must be an object.");
+  if (!isObject(d)) throw invalid("Each requirement must be an object.", "requirements");
   const unknown = Object.keys(d).filter(k => !REQUIREMENT_KEYS.includes(k)).sort();
   const missing = ["id", "service", "region", "billing"].filter(k => !(k in d)).sort();
-  if (unknown.length || missing.length) throw invalid(`Invalid requirement keys: unknown=${JSON.stringify(unknown)}, missing=${JSON.stringify(missing)}.`);
+  if (unknown.length || missing.length) {
+    throw invalid(
+      `Invalid requirement keys: unknown=${JSON.stringify(unknown)}, missing=${JSON.stringify(missing)}.`,
+      unknown[0] ?? missing[0] ?? "requirements",
+      undefined,
+      "Each requirement needs {id, service, region, billing} and optional {quantity, needs, spec, group, options}.",
+    );
+  }
   return requirement(d as never);
 }
 
